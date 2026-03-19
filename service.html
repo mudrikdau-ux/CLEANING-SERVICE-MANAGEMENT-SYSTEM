@@ -10,6 +10,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .service-card {
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .service-card .btn {
+            pointer-events: auto;
+        }
+    </style>
 </head>
 <body>
 
@@ -41,7 +54,7 @@
         <button><i class="fas fa-search"></i> Search</button>
     </div>
 
-    <a href="login.html" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Login</a>
+    <a href="login.html" class="btn btn-primary" id="headerLoginBtn"><i class="fas fa-sign-in-alt"></i> Login</a>
     <span class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></span>
 </div>
 
@@ -55,135 +68,177 @@
     <div class="row g-4" id="servicesContainer">
         <!-- Service 1 -->
         <div class="col-md-4">
-            <div class="service-card">
+            <div class="service-card" data-service-id="home" data-service-name="Home Cleaning" data-service-price="50000">
                 <img src="images/service1.jpg" alt="Home Cleaning">
                 <div class="title">Home Cleaning</div>
                 <div class="description">Complete home cleaning including kitchen, bathrooms, and living areas. Eco-friendly products used.</div>
                 <div class="price">TZS 50,000</div>
                 <div class="card-actions">
-                    <a href="moreservice.html" class="btn btn-primary"><i class="fas fa-plus"></i> Add More</a>
-                    <button class="btn btn-success"><i class="fas fa-calendar-check"></i> Book</button>
-                    <button class="info-btn"><i class="fas fa-info"></i></button>
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="home" data-service-name="Home Cleaning" data-service-price="50000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('home')"><i class="fas fa-info"></i></button>
                 </div>
             </div>
         </div>
         
         <!-- Service 2 -->
         <div class="col-md-4">
-            <div class="service-card">
+            <div class="service-card" data-service-id="office" data-service-name="Office Cleaning" data-service-price="75000">
                 <img src="images/service2.jpg" alt="Office Cleaning">
                 <div class="title">Office Cleaning</div>
                 <div class="description">Professional office cleaning to maintain hygiene and productivity. After-hours service available.</div>
                 <div class="price">TZS 75,000</div>
                 <div class="card-actions">
-                    <a href="moreservice.html" class="btn btn-primary"><i class="fas fa-plus"></i> Add More</a>
-                    <button class="btn btn-success"><i class="fas fa-calendar-check"></i> Book</button>
-                    <button class="info-btn"><i class="fas fa-info"></i></button>
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="office" data-service-name="Office Cleaning" data-service-price="75000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('office')"><i class="fas fa-info"></i></button>
                 </div>
             </div>
         </div>
         
         <!-- Service 3 -->
         <div class="col-md-4">
-            <div class="service-card">
+            <div class="service-card" data-service-id="carpet" data-service-name="Carpet Cleaning" data-service-price="60000">
                 <img src="images/service3.jpg" alt="Carpet Cleaning">
                 <div class="title">Carpet Cleaning</div>
                 <div class="description">Deep carpet cleaning with eco-friendly solutions. Steam cleaning available for tough stains.</div>
                 <div class="price">TZS 60,000</div>
                 <div class="card-actions">
-                    <a href="moreservice.html" class="btn btn-primary"><i class="fas fa-plus"></i> Add More</a>
-                    <button class="btn btn-success"><i class="fas fa-calendar-check"></i> Book</button>
-                    <button class="info-btn"><i class="fas fa-info"></i></button>
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="carpet" data-service-name="Carpet Cleaning" data-service-price="60000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('carpet')"><i class="fas fa-info"></i></button>
                 </div>
             </div>
         </div>
         
         <!-- Service 4 -->
         <div class="col-md-4">
-            <div class="service-card">
+            <div class="service-card" data-service-id="window" data-service-name="Window Cleaning" data-service-price="40000">
                 <img src="images/service4.jpg" alt="Window Cleaning">
                 <div class="title">Window Cleaning</div>
                 <div class="description">Professional window cleaning for homes and offices. Streak-free guarantee.</div>
                 <div class="price">TZS 40,000</div>
                 <div class="card-actions">
-                    <a href="moreservice.html" class="btn btn-primary"><i class="fas fa-plus"></i> Add More</a>
-                    <button class="btn btn-success"><i class="fas fa-calendar-check"></i> Book</button>
-                    <button class="info-btn"><i class="fas fa-info"></i></button>
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="window" data-service-name="Window Cleaning" data-service-price="40000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('window')"><i class="fas fa-info"></i></button>
                 </div>
             </div>
         </div>
         
         <!-- Service 5 -->
         <div class="col-md-4">
-            <div class="service-card">
+            <div class="service-card" data-service-id="vehicle" data-service-name="Vehicle Cleaning" data-service-price="45000">
                 <img src="images/service5.jpg" alt="Vehicle Cleaning">
                 <div class="title">Vehicle Cleaning</div>
                 <div class="description">Complete interior and exterior vehicle cleaning. Waxing and polishing available.</div>
                 <div class="price">TZS 45,000</div>
                 <div class="card-actions">
-                    <a href="moreservice.html" class="btn btn-primary"><i class="fas fa-plus"></i> Add More</a>
-                    <button class="btn btn-success"><i class="fas fa-calendar-check"></i> Book</button>
-                    <button class="info-btn"><i class="fas fa-info"></i></button>
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="vehicle" data-service-name="Vehicle Cleaning" data-service-price="45000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('vehicle')"><i class="fas fa-info"></i></button>
                 </div>
             </div>
         </div>
         
         <!-- Service 6 -->
         <div class="col-md-4">
-            <div class="service-card">
+            <div class="service-card" data-service-id="pool" data-service-name="Pool Cleaning" data-service-price="80000">
                 <img src="images/service6.jpg" alt="Pool Cleaning">
                 <div class="title">Pool Cleaning</div>
                 <div class="description">Professional pool cleaning and maintenance. Chemical balancing and filter cleaning.</div>
                 <div class="price">TZS 80,000</div>
                 <div class="card-actions">
-                    <a href="moreservice.html" class="btn btn-primary"><i class="fas fa-plus"></i> Add More</a>
-                    <button class="btn btn-success"><i class="fas fa-calendar-check"></i> Book</button>
-                    <button class="info-btn"><i class="fas fa-info"></i></button>
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="pool" data-service-name="Pool Cleaning" data-service-price="80000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('pool')"><i class="fas fa-info"></i></button>
                 </div>
             </div>
         </div>
         
         <!-- Service 7 -->
         <div class="col-md-4">
-            <div class="service-card">
+            <div class="service-card" data-service-id="mattress" data-service-name="Mattress Cleaning" data-service-price="55000">
                 <img src="images/service7.jpg" alt="Mattress Cleaning">
                 <div class="title">Mattress Cleaning</div>
                 <div class="description">Deep mattress cleaning to remove dust mites and allergens. UV sanitization available.</div>
                 <div class="price">TZS 55,000</div>
                 <div class="card-actions">
-                    <a href="moreservice.html" class="btn btn-primary"><i class="fas fa-plus"></i> Add More</a>
-                    <button class="btn btn-success"><i class="fas fa-calendar-check"></i> Book</button>
-                    <button class="info-btn"><i class="fas fa-info"></i></button>
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="mattress" data-service-name="Mattress Cleaning" data-service-price="55000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('mattress')"><i class="fas fa-info"></i></button>
                 </div>
             </div>
         </div>
         
         <!-- Service 8 -->
         <div class="col-md-4">
-            <div class="service-card">
+            <div class="service-card" data-service-id="upholstery" data-service-name="Upholstery Cleaning" data-service-price="65000">
                 <img src="images/service8.jpg" alt="Upholstery Cleaning">
                 <div class="title">Upholstery Cleaning</div>
                 <div class="description">Professional cleaning for sofas, chairs, and furniture. Stain removal specialists.</div>
                 <div class="price">TZS 65,000</div>
                 <div class="card-actions">
-                    <a href="moreservice.html" class="btn btn-primary"><i class="fas fa-plus"></i> Add More</a>
-                    <button class="btn btn-success"><i class="fas fa-calendar-check"></i> Book</button>
-                    <button class="info-btn"><i class="fas fa-info"></i></button>
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="upholstery" data-service-name="Upholstery Cleaning" data-service-price="65000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('upholstery')"><i class="fas fa-info"></i></button>
                 </div>
             </div>
         </div>
         
         <!-- Service 9 -->
         <div class="col-md-4">
-            <div class="service-card">
+            <div class="service-card" data-service-id="construction" data-service-name="Post-Construction Cleaning" data-service-price="90000">
                 <img src="images/service9.jpg" alt="Post-Construction">
                 <div class="title">Post-Construction Cleaning</div>
                 <div class="description">Complete cleaning after construction. Dust removal and debris cleanup.</div>
                 <div class="price">TZS 90,000</div>
                 <div class="card-actions">
-                    <a href="moreservice.html" class="btn btn-primary"><i class="fas fa-plus"></i> Add More</a>
-                    <button class="btn btn-success"><i class="fas fa-calendar-check"></i> Book</button>
-                    <button class="info-btn"><i class="fas fa-info"></i></button>
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="construction" data-service-name="Post-Construction Cleaning" data-service-price="90000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('construction')"><i class="fas fa-info"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="service-card" data-service-id="construction" data-service-name="Post-Construction Cleaning" data-service-price="54000">
+                <img src="images/service9.jpg" alt="Post-Construction">
+                <div class="title">New Service1</div>
+                <div class="description"></div>
+                <div class="price">TZS 54,000</div>
+                <div class="card-actions">
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="construction" data-service-name="Post-Construction Cleaning" data-service-price="54000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('construction')"><i class="fas fa-info"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="service-card" data-service-id="construction" data-service-name="Post-Construction Cleaning" data-service-price="54000">
+                <img src="images/service9.jpg" alt="Post-Construction">
+                <div class="title">New Service1</div>
+                <div class="description"></div>
+                <div class="price">TZS 54,000</div>
+                <div class="card-actions">
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="construction" data-service-name="Post-Construction Cleaning" data-service-price="54000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('construction')"><i class="fas fa-info"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="service-card" data-service-id="construction" data-service-name="Post-Construction Cleaning" data-service-price="54000">
+                <img src="images/service9.jpg" alt="Post-Construction">
+                <div class="title">New Service1</div>
+                <div class="description"></div>
+                <div class="price">TZS 54,000</div>
+                <div class="card-actions">
+                    <a href="moreservice.html" class="btn btn-primary" onclick="event.stopPropagation()"><i class="fas fa-plus"></i> Add More</a>
+                    <button class="btn btn-success book-service-btn" data-service-id="construction" data-service-name="Post-Construction Cleaning" data-service-price="54000"><i class="fas fa-calendar-check"></i> Book</button>
+                    <button class="info-btn" onclick="event.stopPropagation(); showServiceModal('construction')"><i class="fas fa-info"></i></button>
                 </div>
             </div>
         </div>

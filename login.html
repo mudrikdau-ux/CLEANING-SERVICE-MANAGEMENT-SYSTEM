@@ -44,13 +44,16 @@
             <input type="text" class="form-control" id="otpInput" placeholder="Enter 6-digit OTP" maxlength="6">
         </div>
         
+        <input type="hidden" id="redirectAfterLogin" value="">
+        <input type="hidden" id="serviceData" value="">
+        
         <button type="submit" class="btn btn-primary w-100" id="loginBtn">
             <i class="fas fa-paper-plane"></i> Send OTP
         </button>
     </form>
     
     <div class="social-login">
-        <button><i class="fab fa-google"></i> Login with Google</button>
+        <button onclick="handleGoogleLogin()"><i class="fab fa-google"></i> Login with Google</button>
     </div>
     
     <p class="text-center mt-3">

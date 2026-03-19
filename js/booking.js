@@ -1,4 +1,24 @@
 (function() {
+    // Check if user is logged in
+    function isLoggedIn() {
+        return localStorage.getItem('isLoggedIn') === 'true';
+    }
+
+    // Redirect to login if not logged in
+    if (!isLoggedIn()) {
+        // Save current booking attempt
+        const bookingData = {
+            attempted: true,
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('pendingBooking', JSON.stringify(bookingData));
+        
+        // Show notification and redirect
+        alert('Please login to continue with booking');
+        window.location.href = 'login.html';
+        return; // Stop execution
+    }
+
     // DOM elements
     const phases = document.querySelectorAll('.phase');
     const nextBtns = document.querySelectorAll('.next');
@@ -112,8 +132,15 @@
     bookingForm.addEventListener('submit', function(e) {
       e.preventDefault();
       const paymentMethod = document.getElementById('payment').value;
-      alert(`✅ Booking confirmed (demo). Payment: ${paymentMethod}. A professional summary would be sent.`);
-      // you could reset or stay
+      
+      // Get current user info
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const userEmail = user.email || 'guest@example.com';
+      
+      alert(`✅ Booking confirmed (demo). Payment: ${paymentMethod}. Confirmation sent to ${userEmail}`);
+      
+      // Clear pending booking if any
+      localStorage.removeItem('pendingBooking');
     });
 
     // initial summary
@@ -122,4 +149,13 @@
     // ensure addressFields are tidy, but not required further
     // also set default property placeholder
     if (!propertySelect.value) propertySelect.value = 'Apartment';
-  })();
+    
+    // Clear any pending booking data since we're now on booking page
+    localStorage.removeItem('pendingBooking');
+    
+    // Show welcome message with user info
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (user.email) {
+        console.log('Welcome back, ' + user.email);
+    }
+})();

@@ -21,29 +21,128 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// ===== SERVICE MODAL FUNCTION - COMPLETELY FIXED =====
+// ===== AUTHENTICATION FUNCTIONS =====
+
+// Check if user is logged in
+function isLoggedIn() {
+    return localStorage.getItem('isLoggedIn') === 'true';
+}
+
+// Get current user
+function getCurrentUser() {
+    const user = localStorage.getItem('currentUser');
+    return user ? JSON.parse(user) : null;
+}
+
+// Save pending booking data
+function savePendingBooking(serviceData) {
+    if (serviceData) {
+        localStorage.setItem('pendingBooking', JSON.stringify(serviceData));
+    }
+}
+
+// Get and clear pending booking data
+function getPendingBooking() {
+    const data = localStorage.getItem('pendingBooking');
+    localStorage.removeItem('pendingBooking'); // Clear after retrieving
+    return data ? JSON.parse(data) : null;
+}
+
+// Handle login success
+function handleLoginSuccess(email) {
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('currentUser', JSON.stringify({ email: email }));
+    
+    // Check if there's a pending booking
+    const pendingBooking = getPendingBooking();
+    if (pendingBooking) {
+        showNotification('Login successful! Redirecting to booking...', 'success');
+        setTimeout(() => {
+            window.location.href = 'booking.html';
+        }, 1500);
+    } else {
+        showNotification('Login successful!', 'success');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1500);
+    }
+}
+
+// Handle logout
+function logout() {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUser');
+    showNotification('Logged out successfully', 'success');
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 1000);
+}
+
+// Update UI based on login status
+function updateUIBasedOnLogin() {
+    const loginBtn = document.getElementById('headerLoginBtn');
+    if (loginBtn) {
+        if (isLoggedIn()) {
+            const user = getCurrentUser();
+            loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+            loginBtn.href = '#';
+            loginBtn.onclick = function(e) {
+                e.preventDefault();
+                logout();
+            };
+        } else {
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            loginBtn.href = 'login.html';
+            loginBtn.onclick = null;
+        }
+    }
+}
+
+// ===== BOOKING FLOW FUNCTIONS =====
+
+// Handle book button click
+function handleBookClick(serviceId, serviceName, servicePrice) {
+    const serviceData = {
+        id: serviceId,
+        name: serviceName,
+        price: servicePrice
+    };
+    
+    if (isLoggedIn()) {
+        // User is logged in, go directly to booking
+        showNotification('Redirecting to booking...', 'info');
+        setTimeout(() => {
+            window.location.href = 'booking.html';
+        }, 500);
+    } else {
+        // User is not logged in, save booking data and redirect to login
+        savePendingBooking(serviceData);
+        showNotification('Please login to continue with booking', 'info');
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1000);
+    }
+}
+
+// ===== SERVICE MODAL FUNCTION =====
 let modalInitialized = false;
 
 function showServiceModal(service) {
-    // Prevent multiple modal triggers
     if (modalInitialized) {
         return;
     }
     modalInitialized = true;
     
-    // Remove existing modal if any
     const existingModal = document.getElementById('serviceModal');
     if (existingModal) {
         existingModal.remove();
     }
     
-    // Remove any existing backdrop
     const existingBackdrop = document.querySelector('.modal-backdrop');
     if (existingBackdrop) {
         existingBackdrop.remove();
     }
     
-    // Service details based on service type
     const serviceDetails = {
         'home': {
             title: 'Home Cleaning',
@@ -296,7 +395,6 @@ function showServiceModal(service) {
         image: 'images/service-placeholder1.jpg'
     };
     
-    // Create modal element
     const modal = document.createElement('div');
     modal.className = 'modal fade';
     modal.id = 'serviceModal';
@@ -345,7 +443,6 @@ function showServiceModal(service) {
     
     document.body.appendChild(modal);
     
-    // Initialize and show modal
     const modalInstance = new bootstrap.Modal(modal, {
         backdrop: 'static',
         keyboard: false
@@ -353,19 +450,16 @@ function showServiceModal(service) {
     
     modalInstance.show();
     
-    // Handle book now button
     const bookBtn = modal.querySelector('.book-service');
     if (bookBtn) {
         bookBtn.addEventListener('click', function() {
             modalInstance.hide();
             setTimeout(() => {
-                showNotification('Booking ' + details.title + '. Please login to continue.', 'info');
-                window.location.href = 'login.html';
+                handleBookClick(service, details.title, details.price);
             }, 500);
         });
     }
     
-    // Clean up modal when hidden
     modal.addEventListener('hidden.bs.modal', function() {
         modal.remove();
         const backdrops = document.querySelectorAll('.modal-backdrop');
@@ -373,24 +467,31 @@ function showServiceModal(service) {
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
         document.body.style.paddingRight = '';
-        modalInitialized = false; // Reset the flag
+        modalInitialized = false;
     });
 }
 
-// ===== REMOVE ONCLICK ATTRIBUTES AND USE EVENT LISTENERS INSTEAD =====
+// ===== DOM CONTENT LOADED EVENT =====
 document.addEventListener('DOMContentLoaded', function() {
-    // Remove all onclick attributes from info buttons to prevent double triggering
+    // Update UI based on login status
+    updateUIBasedOnLogin();
+    
+    // Check for pending booking on login page
+    if (window.location.pathname.includes('login.html')) {
+        const pendingBooking = localStorage.getItem('pendingBooking');
+        if (pendingBooking) {
+            showNotification('Please login to complete your booking', 'info');
+        }
+    }
+    
+    // Handle info buttons
     const infoButtons = document.querySelectorAll('.info-btn');
     infoButtons.forEach(button => {
-        // Remove the onclick attribute
         button.removeAttribute('onclick');
-        
-        // Add click event listener
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
-            // Determine service type from card
             const card = this.closest('.service-card');
             if (card) {
                 const title = card.querySelector('.title').textContent.toLowerCase();
@@ -418,10 +519,38 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-});
-
-// ===== LOGIN FUNCTIONALITY =====
-document.addEventListener('DOMContentLoaded', function() {
+    
+    // Handle book buttons
+    const bookButtons = document.querySelectorAll('.book-service-btn');
+    bookButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const serviceId = this.getAttribute('data-service-id');
+            const serviceName = this.getAttribute('data-service-name');
+            const servicePrice = this.getAttribute('data-service-price');
+            
+            handleBookClick(serviceId, serviceName, servicePrice);
+        });
+    });
+    
+    // Handle service cards click (except on buttons)
+    const serviceCards = document.querySelectorAll('.service-card');
+    serviceCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Don't trigger if clicking on buttons
+            if (e.target.closest('.btn')) {
+                return;
+            }
+            
+            const serviceId = this.getAttribute('data-service-id');
+            if (serviceId) {
+                showServiceModal(serviceId);
+            }
+        });
+    });
+    
     // Login form handling
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
@@ -435,27 +564,21 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             
             if (!isOtpSent) {
-                // First click - send OTP
                 const email = emailInput.value;
                 if (email) {
-                    // Show OTP section
                     otpSection.style.display = 'block';
                     loginBtn.innerHTML = '<i class="fas fa-check"></i> Verify OTP';
                     isOtpSent = true;
-                    
-                    // Simulate OTP sent message
                     showNotification('OTP sent to ' + email, 'success');
                 } else {
                     showNotification('Please enter email', 'danger');
                 }
             } else {
-                // Second click - verify OTP
                 const otp = document.getElementById('otpInput').value;
                 if (otp && otp.length === 6) {
-                    showNotification('Login successful!', 'success');
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1500);
+                    // Login successful
+                    const email = emailInput.value;
+                    handleLoginSuccess(email);
                 } else {
                     showNotification('Please enter valid 6-digit OTP', 'danger');
                 }
@@ -469,7 +592,6 @@ document.addEventListener('DOMContentLoaded', function() {
         registerForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Get form values
             const firstName = document.getElementById('firstName').value;
             const lastName = document.getElementById('lastName').value;
             const email = document.getElementById('email').value;
@@ -477,7 +599,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const confirmPassword = document.getElementById('confirmPassword').value;
             const terms = document.getElementById('terms').checked;
             
-            // Validation
             if (!firstName || !lastName || !email || !password || !confirmPassword) {
                 showNotification('Please fill in all fields', 'danger');
                 return;
@@ -503,11 +624,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Simulate registration
-            showNotification('Registration successful! Please login.', 'success');
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 1500);
+            // Auto login after registration
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('currentUser', JSON.stringify({ 
+                email: email,
+                firstName: firstName,
+                lastName: lastName 
+            }));
+            
+            showNotification('Registration successful!', 'success');
+            
+            // Check for pending booking
+            const pendingBooking = localStorage.getItem('pendingBooking');
+            if (pendingBooking) {
+                setTimeout(() => {
+                    window.location.href = 'booking.html';
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            }
         });
     }
     
@@ -524,34 +661,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         searchButton.addEventListener('click', performSearch);
-        
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 performSearch();
             }
         });
     }
-    
-    // ===== BOOK NOW BUTTONS =====
-    const bookButtons = document.querySelectorAll('.btn-success');
-    bookButtons.forEach(button => {
-        if (button.textContent.includes('Book') || button.innerHTML.includes('fa-calendar-check')) {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                // Find the service title
-                const card = this.closest('.service-card');
-                if (card) {
-                    const title = card.querySelector('.title').textContent;
-                    showNotification('Booking ' + title + '. Please login to continue.', 'info');
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 1500);
-                } else {
-                    window.location.href = 'booking.html';
-                }
-            });
-        }
-    });
     
     // ===== ADD MORE SERVICES BUTTONS =====
     const addMoreButtons = document.querySelectorAll('.btn-primary');
@@ -572,43 +687,75 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('Showing services in ' + this.value, 'info');
         });
     }
-});
-
-// ===== GOOGLE LOGIN BUTTONS =====
-document.addEventListener('click', function(e) {
-    if (e.target.textContent && e.target.textContent.includes('Google')) {
-        e.preventDefault();
-        showNotification('Google login functionality would be implemented here', 'info');
-    }
-});
-
-// ===== CAROUSEL AUTO-SLIDE CONFIGURATION =====
-document.addEventListener('DOMContentLoaded', function() {
+    
+    // ===== CAROUSEL AUTO-SLIDE =====
     const carousel = document.getElementById('carouselAds');
     if (carousel) {
-        // Bootstrap carousel initialization with custom interval
         new bootstrap.Carousel(carousel, {
             interval: 5000,
             wrap: true,
             pause: 'hover'
         });
     }
+    
+    // ===== NEWSLETTER FORM =====
+    const newsletterForm = document.querySelector('.newsletter-form');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const emailInput = this.querySelector('input[type="email"]');
+            if (emailInput && emailInput.value) {
+                if (validateEmail(emailInput.value)) {
+                    showNotification('Thank you for subscribing to our newsletter!', 'success');
+                    emailInput.value = '';
+                } else {
+                    showNotification('Please enter a valid email address', 'danger');
+                }
+            }
+        });
+    }
+    
+    // ===== TOOLTIPS =====
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
 });
 
-// ===== ADDITIONAL UTILITY FUNCTIONS =====
+// ===== GOOGLE LOGIN =====
+function handleGoogleLogin() {
+    e.preventDefault();
+    showNotification('Google login successful!', 'success');
+    
+    // Simulate Google login success
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('currentUser', JSON.stringify({ 
+        email: 'user@gmail.com',
+        provider: 'google'
+    }));
+    
+    const pendingBooking = localStorage.getItem('pendingBooking');
+    if (pendingBooking) {
+        setTimeout(() => {
+            window.location.href = 'booking.html';
+        }, 1500);
+    } else {
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1500);
+    }
+}
 
-// Format currency
+// ===== UTILITY FUNCTIONS =====
 function formatCurrency(amount) {
     return 'TZS ' + amount.toLocaleString();
 }
 
-// Validate email
 function validateEmail(email) {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
 }
 
-// Show loading spinner
 function showLoading(show = true) {
     let spinner = document.getElementById('loading-spinner');
     if (!spinner) {
@@ -621,9 +768,7 @@ function showLoading(show = true) {
     spinner.style.display = show ? 'block' : 'none';
 }
 
-// Show notification
 function showNotification(message, type = 'info') {
-    // Remove existing notification if any
     const existingNotification = document.querySelector('.alert');
     if (existingNotification) {
         existingNotification.remove();
@@ -646,61 +791,11 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Save to localStorage
 function saveToStorage(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
 }
 
-// Get from localStorage
 function getFromStorage(key) {
     const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : null;
 }
-
-// ===== PAGE SPECIFIC FUNCTIONS =====
-
-// Booking page functions
-function calculateTotal(services, location) {
-    let total = 0;
-    services.forEach(service => {
-        total += service.price;
-    });
-    return total;
-}
-
-// Service details page
-function loadServiceDetails(serviceId) {
-    const services = {
-        home: { name: 'Home Cleaning', price: 50000, description: 'Complete home cleaning service' },
-        office: { name: 'Office Cleaning', price: 75000, description: 'Professional office cleaning' },
-        carpet: { name: 'Carpet Cleaning', price: 60000, description: 'Deep carpet cleaning' }
-    };
-    return services[serviceId] || null;
-}
-
-// Initialize tooltips
-document.addEventListener('DOMContentLoaded', function() {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-});
-
-// Footer newsletter subscription
-document.addEventListener('DOMContentLoaded', function() {
-    const newsletterForm = document.querySelector('.newsletter-form');
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const emailInput = this.querySelector('input[type="email"]');
-            if (emailInput && emailInput.value) {
-                if (validateEmail(emailInput.value)) {
-                    showNotification('Thank you for subscribing to our newsletter!', 'success');
-                    emailInput.value = '';
-                } else {
-                    showNotification('Please enter a valid email address', 'danger');
-                }
-            }
-        });
-    }
-});
