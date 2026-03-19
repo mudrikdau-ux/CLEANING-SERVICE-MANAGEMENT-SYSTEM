@@ -21,8 +21,16 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// ===== SERVICE MODAL FUNCTION - FIXED =====
+// ===== SERVICE MODAL FUNCTION - COMPLETELY FIXED =====
+let modalInitialized = false;
+
 function showServiceModal(service) {
+    // Prevent multiple modal triggers
+    if (modalInitialized) {
+        return;
+    }
+    modalInitialized = true;
+    
     // Remove existing modal if any
     const existingModal = document.getElementById('serviceModal');
     if (existingModal) {
@@ -295,25 +303,36 @@ function showServiceModal(service) {
     modal.setAttribute('tabindex', '-1');
     modal.setAttribute('aria-labelledby', 'serviceModalLabel');
     modal.setAttribute('aria-hidden', 'true');
+    modal.setAttribute('data-bs-backdrop', 'static');
     
     modal.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="serviceModalLabel"><i class="fas fa-info-circle"></i> Service Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <img src="${details.image}" alt="${details.title}" onerror="this.src='images/logo.png'">
-                    <h4 class="service-detail-title">${details.title}</h4>
-                    <div class="service-detail-price">${details.price}</div>
-                    <p class="service-detail-description">${details.description}</p>
-                    <h6><i class="fas fa-check-circle"></i> What's Included:</h6>
-                    <ul class="service-features">
-                        ${details.features.map(feature => `<li><i class="fas fa-check"></i> ${feature}</li>`).join('')}
-                    </ul>
-                    <div class="mt-3 p-3 bg-light rounded">
-                        <strong><i class="far fa-clock"></i> Duration:</strong> ${details.duration}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <img src="${details.image}" alt="${details.title}" class="img-fluid rounded" onerror="this.src='images/logo.png'">
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="service-detail-title">${details.title}</h4>
+                            <div class="service-detail-price">${details.price}</div>
+                            <p class="service-detail-description">${details.description}</p>
+                            <div class="mt-3 p-3 bg-light rounded">
+                                <strong><i class="far fa-clock"></i> Duration:</strong> ${details.duration}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6><i class="fas fa-check-circle text-success"></i> What's Included:</h6>
+                            <ul class="service-features row">
+                                ${details.features.map(feature => `<li class="col-md-6"><i class="fas fa-check text-success"></i> ${feature}</li>`).join('')}
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -328,9 +347,8 @@ function showServiceModal(service) {
     
     // Initialize and show modal
     const modalInstance = new bootstrap.Modal(modal, {
-        backdrop: true,
-        keyboard: true,
-        focus: true
+        backdrop: 'static',
+        keyboard: false
     });
     
     modalInstance.show();
@@ -353,10 +371,54 @@ function showServiceModal(service) {
         const backdrops = document.querySelectorAll('.modal-backdrop');
         backdrops.forEach(backdrop => backdrop.remove());
         document.body.classList.remove('modal-open');
-        document.body.style.overflow = 'auto';
+        document.body.style.overflow = '';
         document.body.style.paddingRight = '';
+        modalInitialized = false; // Reset the flag
     });
 }
+
+// ===== REMOVE ONCLICK ATTRIBUTES AND USE EVENT LISTENERS INSTEAD =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Remove all onclick attributes from info buttons to prevent double triggering
+    const infoButtons = document.querySelectorAll('.info-btn');
+    infoButtons.forEach(button => {
+        // Remove the onclick attribute
+        button.removeAttribute('onclick');
+        
+        // Add click event listener
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Determine service type from card
+            const card = this.closest('.service-card');
+            if (card) {
+                const title = card.querySelector('.title').textContent.toLowerCase();
+                let serviceType = 'home';
+                
+                if (title.includes('home')) serviceType = 'home';
+                else if (title.includes('office')) serviceType = 'office';
+                else if (title.includes('carpet')) serviceType = 'carpet';
+                else if (title.includes('window')) serviceType = 'window';
+                else if (title.includes('vehicle') || title.includes('car')) serviceType = 'vehicle';
+                else if (title.includes('pool')) serviceType = 'pool';
+                else if (title.includes('mattress')) serviceType = 'mattress';
+                else if (title.includes('upholstery')) serviceType = 'upholstery';
+                else if (title.includes('construction')) serviceType = 'construction';
+                else if (title.includes('pest')) serviceType = 'pest';
+                else if (title.includes('laundry')) serviceType = 'laundry';
+                else if (title.includes('ac')) serviceType = 'ac';
+                else if (title.includes('water')) serviceType = 'watertank';
+                else if (title.includes('curtain')) serviceType = 'curtain';
+                else if (title.includes('garden')) serviceType = 'garden';
+                else if (title.includes('exterior')) serviceType = 'exterior';
+                else serviceType = 'home';
+                
+                showServiceModal(serviceType);
+            }
+        });
+    });
+});
 
 // ===== LOGIN FUNCTIONALITY =====
 document.addEventListener('DOMContentLoaded', function() {
@@ -491,44 +553,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // ===== INFO BUTTONS (Modal Trigger) =====
-    const infoButtons = document.querySelectorAll('.info-btn');
-    infoButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Determine service type from card
-            const card = this.closest('.service-card');
-            if (card) {
-                const title = card.querySelector('.title').textContent.toLowerCase();
-                let serviceType = 'home';
-                
-                if (title.includes('home')) serviceType = 'home';
-                else if (title.includes('office')) serviceType = 'office';
-                else if (title.includes('carpet')) serviceType = 'carpet';
-                else if (title.includes('window')) serviceType = 'window';
-                else if (title.includes('vehicle') || title.includes('car')) serviceType = 'vehicle';
-                else if (title.includes('pool')) serviceType = 'pool';
-                else if (title.includes('mattress')) serviceType = 'mattress';
-                else if (title.includes('upholstery')) serviceType = 'upholstery';
-                else if (title.includes('construction')) serviceType = 'construction';
-                else if (title.includes('pest')) serviceType = 'pest';
-                else if (title.includes('laundry')) serviceType = 'laundry';
-                else if (title.includes('ac')) serviceType = 'ac';
-                else if (title.includes('water')) serviceType = 'watertank';
-                else if (title.includes('curtain')) serviceType = 'curtain';
-                else if (title.includes('garden')) serviceType = 'garden';
-                else if (title.includes('exterior')) serviceType = 'exterior';
-                else serviceType = 'home';
-                
-                showServiceModal(serviceType);
-            } else {
-                showServiceModal('home');
-            }
-        });
-    });
-    
     // ===== ADD MORE SERVICES BUTTONS =====
     const addMoreButtons = document.querySelectorAll('.btn-primary');
     addMoreButtons.forEach(button => {
@@ -567,6 +591,116 @@ document.addEventListener('DOMContentLoaded', function() {
             interval: 5000,
             wrap: true,
             pause: 'hover'
+        });
+    }
+});
+
+// ===== ADDITIONAL UTILITY FUNCTIONS =====
+
+// Format currency
+function formatCurrency(amount) {
+    return 'TZS ' + amount.toLocaleString();
+}
+
+// Validate email
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// Show loading spinner
+function showLoading(show = true) {
+    let spinner = document.getElementById('loading-spinner');
+    if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.id = 'loading-spinner';
+        spinner.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+        spinner.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;';
+        document.body.appendChild(spinner);
+    }
+    spinner.style.display = show ? 'block' : 'none';
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    // Remove existing notification if any
+    const existingNotification = document.querySelector('.alert');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.role = 'alert';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification && notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Save to localStorage
+function saveToStorage(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+// Get from localStorage
+function getFromStorage(key) {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+}
+
+// ===== PAGE SPECIFIC FUNCTIONS =====
+
+// Booking page functions
+function calculateTotal(services, location) {
+    let total = 0;
+    services.forEach(service => {
+        total += service.price;
+    });
+    return total;
+}
+
+// Service details page
+function loadServiceDetails(serviceId) {
+    const services = {
+        home: { name: 'Home Cleaning', price: 50000, description: 'Complete home cleaning service' },
+        office: { name: 'Office Cleaning', price: 75000, description: 'Professional office cleaning' },
+        carpet: { name: 'Carpet Cleaning', price: 60000, description: 'Deep carpet cleaning' }
+    };
+    return services[serviceId] || null;
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+// Footer newsletter subscription
+document.addEventListener('DOMContentLoaded', function() {
+    const newsletterForm = document.querySelector('.newsletter-form');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const emailInput = this.querySelector('input[type="email"]');
+            if (emailInput && emailInput.value) {
+                if (validateEmail(emailInput.value)) {
+                    showNotification('Thank you for subscribing to our newsletter!', 'success');
+                    emailInput.value = '';
+                } else {
+                    showNotification('Please enter a valid email address', 'danger');
+                }
+            }
         });
     }
 });
