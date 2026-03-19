@@ -1,17 +1,143 @@
-<div class="container mt-5">
-    <h2>Book Service</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booking - CSMS</title>
 
-    <input type="text" class="form-control mb-2" placeholder="Full Name">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/booking.css">
+</head>
 
-    <input type="text" class="form-control mb-2" placeholder="Location">
+<body>
 
-    <select class="form-control mb-2">
-        <option>Home Cleaning</option>
-        <option>Office Cleaning</option>
-    </select>
+<div class="container mt-4">
 
-    <input type="date" class="form-control mb-2">
+<div class="row">
 
-    <button class="btn btn-success w-100">Submit Booking</button>
+    <!-- LEFT: SUMMARY -->
+    <div class="col-md-4">
+        <div class="summary-box">
+            <h5>Booking Summary</h5>
+            <div id="summary"></div>
+        </div>
+    </div>
+
+    <!-- RIGHT: FORM -->
+    <div class="col-md-8">
+
+        <form id="bookingForm">
+
+            <!-- PHASE 1 -->
+            <div class="phase active">
+                <h4>Service Details</h4>
+
+                <label>How many cleaners?</label>
+                <input type="number" id="cleaners" class="form-control mb-2">
+
+                <label>How many hours? (TZS 20,000/hour)</label>
+                <input type="number" id="hours" class="form-control mb-2">
+
+                <label>How often?</label>
+                <select id="frequency" class="form-control mb-2">
+                    <option>One time</option>
+                    <option>Weekly</option>
+                    <option>Multiple</option>
+                </select>
+
+                <label>Need materials? (+TZS 10,000)</label>
+                <select id="materials" class="form-control mb-2">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select>
+
+                <label>Special instructions</label>
+                <textarea id="instructions" class="form-control mb-3"></textarea>
+
+                <button type="button" class="btn btn-primary next">Next</button>
+            </div>
+
+            <!-- PHASE 2 -->
+            <div class="phase">
+                <h4>Address</h4>
+
+                <select id="propertyType" class="form-control mb-2">
+                    <option value="">Select type</option>
+                    <option>Apartment</option>
+                    <option>Villa</option>
+                    <option>Office</option>
+                    <option>Other</option>
+                </select>
+
+                <div id="addressFields"></div>
+
+                <button type="button" class="btn btn-primary next">Next</button>
+            </div>
+
+            <!-- PHASE 3 -->
+            <div class="phase">
+                <h4>Location</h4>
+
+                <input type="text" placeholder="Search location..." class="form-control mb-2">
+                <div class="map-box">Map will appear here</div>
+
+                <button type="button" class="btn btn-primary next">Next</button>
+            </div>
+
+            <!-- PHASE 4 -->
+            <div class="phase">
+                <h4>Date & Time</h4>
+
+                <label>Date</label>
+                <input type="date" id="date" class="form-control mb-2">
+
+                <label>Time</label>
+                <input type="time" id="time" class="form-control mb-3">
+
+                <button type="button" class="btn btn-primary next">Next</button>
+            </div>
+
+            <!-- PHASE 5 -->
+            <div class="phase">
+                <h4>Contact Info</h4>
+
+                <input type="text" id="fname" placeholder="First Name" class="form-control mb-2">
+                <input type="text" id="lname" placeholder="Last Name" class="form-control mb-2">
+                <input type="email" id="email" placeholder="Email" class="form-control mb-3">
+
+                <button type="button" class="btn btn-primary next">Next</button>
+            </div>
+
+            <!-- PHASE 6 -->
+            <div class="phase">
+                <h4>Review & Confirm</h4>
+                <div id="review"></div>
+
+                <p class="text-success">Discount may apply!</p>
+
+                <button type="button" class="btn btn-success next">Book Now</button>
+            </div>
+
+            <!-- PHASE 7 -->
+            <div class="phase">
+                <h4>Payment</h4>
+
+                <select id="payment" class="form-control mb-2">
+                    <option>Mobile Money</option>
+                    <option>Bank</option>
+                    <option>Visa</option>
+                    <option>Cash (+TZS 5,000)</option>
+                </select>
+
+                <button type="submit" class="btn btn-success">Proceed</button>
+            </div>
+
+        </form>
+
+    </div>
 </div>
+</div>
+
 <script src="js/booking.js"></script>
+</body>
+</html>
