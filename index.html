@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSMS - Professional Cleaning Services in Zanzibar</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Right Sidebar -->
+<div id="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeSidebar()"><i class="fas fa-times"></i></a>
+    <a href="index.html"><i class="fas fa-home"></i> Home</a>
+    <a href="service.html"><i class="fas fa-broom"></i> Services</a>
+    <a href="aboutus.html"><i class="fas fa-info-circle"></i> About Us</a>
+    <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+    <a href="login.html"><i class="fas fa-sign-in-alt"></i> Login</a>
+    <a href="register.html"><i class="fas fa-user-plus"></i> Register</a>
+    <a href="account.html"><i class="fas fa-user"></i> My Account</a>
+    <a href="admin.html"><i class="fas fa-cog"></i> Admin Panel</a>
+    <a href="service-details.html"><i class="fas fa-info-circle"></i> Service Details</a>
+    <a href="booking.html"><i class="fas fa-calendar-check"></i> Booking</a>
+</div>
+
+<!-- Top bar -->
+<div class="top-bar">
+    <a href="index.html"><img src="images/logo.png" alt="CSMS Logo" class="logo"></a>
+
+    <div class="search-container">
+        <select>
+            <option value="unguja">Unguja</option>
+            <option value="pemba">Pemba</option>
+        </select>
+        <input type="search" placeholder="Search services...">
+        <button><i class="fas fa-search"></i> Search</button>
+    </div>
+
+    <a href="login.html" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Login</a>
+    <span class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></span>
+</div>
+
+<!-- Carousel Section - FIXED -->
+<div id="carouselAds" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselAds" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselAds" data-bs-slide-to="1" aria-label="Slide 2"></button>
+    </div>
+    <div class="carousel-inner">
+        <div class="carousel-item active">
+            <img src="images/slider1.jpg" class="d-block w-100" alt="Professional Cleaning">
+            <div class="carousel-caption d-none d-md-block">
+                <h3>Professional Cleaning Services</h3>
+                <p>Experience the best cleaning in Zanzibar</p>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="images/slider2.jpg" class="d-block w-100" alt="Trusted Cleaners">
+            <div class="carousel-caption d-none d-md-block">
+                <h3>Trusted by Thousands</h3>
+                <p>Book reliable cleaners today</p>
+            </div>
+        </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselAds" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselAds" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+
+<!-- Hero Section -->
+<div class="container text-center mt-5">
+    <h1 class="display-4">Professional Cleaning Services in Zanzibar</h1>
+    <p class="lead">Book trusted cleaners for your home or office with just a few clicks</p>
+    <a href="service.html" class="btn btn-success btn-lg mt-3"><i class="fas fa-broom"></i> View Our Services</a>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <h5>About CSMS</h5>
+                <p>CSMS is Zanzibar's premier cleaning service provider, offering professional and reliable cleaning solutions for homes and businesses since 2020.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <h5>Quick Links</h5>
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
+                    <li><a href="service.html"><i class="fas fa-chevron-right"></i> Our Services</a></li>
+                    <li><a href="aboutus.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                    <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
+                    <li><a href="login.html"><i class="fas fa-chevron-right"></i> Login</a></li>
+                    <li><a href="register.html"><i class="fas fa-chevron-right"></i> Register</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <h5>Contact Info</h5>
+                <ul class="contact-info">
+                    <li><i class="fas fa-map-marker-alt"></i> Stone Town, Zanzibar</li>
+                    <li><i class="fas fa-phone"></i> +255 777 123 456</li>
+                    <li><i class="fas fa-envelope"></i> info@csms.co.tz</li>
+                    <li><i class="fas fa-clock"></i> Mon-Sat: 8:00 AM - 8:00 PM</li>
+                </ul>
+                
+                <h5 class="mt-4">Newsletter</h5>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email" required>
+                    <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>&copy; 2024 CSMS - Cleaning Service Management System. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JS -->
+<script src="js/main.js"></script>
+<script src="js/script.js"></script>
+</body>
+</html>
