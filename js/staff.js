@@ -366,11 +366,6 @@ function loadProfile() {
                 <span class="info-value">⭐ 4.8 (24 reviews)</span>
             </div>
         </div>
-        <div class="text-center mt-4">
-            <button class="btn-action btn-start" onclick="editProfile()">
-                <i class="bi bi-pencil"></i> Edit Profile
-            </button>
-        </div>
     `;
 }
 
