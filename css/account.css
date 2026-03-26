@@ -1,0 +1,445 @@
+/* ========== GLOBAL STYLES ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #f5f7fc 0%, #eef2f8 100%);
+    min-height: 100vh;
+    padding: 40px 0;
+}
+
+.account-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ========== SIDEBAR CARD ========== */
+.sidebar-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    position: sticky;
+    top: 20px;
+    transition: all 0.3s ease;
+}
+
+.user-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    padding: 30px 20px;
+    text-align: center;
+    color: white;
+}
+
+.user-avatar {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 40px;
+    backdrop-filter: blur(10px);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.user-header h5 {
+    margin-bottom: 5px;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.user-header p {
+    margin-bottom: 0;
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+/* Account Menu */
+.account-menu {
+    list-style: none;
+    padding: 15px 10px;
+    margin: 0;
+}
+
+.account-menu li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    margin: 5px 0;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: #4a5568;
+    font-weight: 500;
+    position: relative;
+}
+
+.account-menu li i:first-child {
+    font-size: 1.25rem;
+    width: 24px;
+    color: #718096;
+    transition: color 0.25s;
+}
+
+.account-menu li i:last-child {
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: all 0.25s;
+    color: #cbd5e0;
+}
+
+.account-menu li:hover {
+    background: #f7fafc;
+    transform: translateX(5px);
+}
+
+.account-menu li:hover i:last-child {
+    opacity: 1;
+    transform: translateX(3px);
+}
+
+.account-menu li.active {
+    background: linear-gradient(135deg, #eef2ff, #e8edff);
+    color: #0d6efd;
+}
+
+.account-menu li.active i:first-child {
+    color: #0d6efd;
+}
+
+.account-menu li.active i:last-child {
+    opacity: 1;
+    color: #0d6efd;
+}
+
+.account-menu li span {
+    flex: 1;
+}
+
+.logout-item {
+    margin-top: 20px !important;
+    border-top: 1px solid #e2e8f0;
+    border-radius: 0 !important;
+    color: #dc3545 !important;
+}
+
+.logout-item i:first-child {
+    color: #dc3545 !important;
+}
+
+.logout-item:hover {
+    background: #fff5f5 !important;
+}
+
+/* ========== CONTENT CARD ========== */
+.content-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.05);
+    padding: 40px;
+    min-height: 600px;
+    transition: all 0.3s ease;
+}
+
+.account-section {
+    display: none;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.account-section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-header {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #eef2f8;
+}
+
+.section-header h3 {
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 8px;
+    font-size: 1.75rem;
+}
+
+.section-header p {
+    color: #718096;
+    margin-bottom: 0;
+    font-size: 0.95rem;
+}
+
+/* Form Styles */
+.form-label {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.form-control, .form-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.btn {
+    border-radius: 12px;
+    font-weight: 600;
+    padding: 12px 24px;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    border: none;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(13, 110, 253, 0.35);
+}
+
+.btn-outline-primary {
+    border: 2px solid #0d6efd;
+    color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+    background: #0d6efd;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Locations Container */
+.locations-container {
+    margin-top: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.location-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.location-item:hover {
+    background: white;
+    border-color: #0d6efd;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.location-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.location-info i {
+    font-size: 1.5rem;
+    color: #0d6efd;
+}
+
+.location-info span {
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.location-actions button {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+}
+
+/* Payment Methods */
+.payment-methods-container {
+    margin-top: 10px;
+}
+
+.payment-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.payment-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.payment-icon {
+    width: 50px;
+    height: 50px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #0d6efd;
+}
+
+.payment-details h6 {
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.payment-details p {
+    margin-bottom: 0;
+    font-size: 0.85rem;
+    color: #718096;
+}
+
+/* Notification Settings */
+.notification-settings, .preferences-settings {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.notification-item, .preference-item {
+    padding: 15px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.notification-item:last-child, .preference-item:last-child {
+    border-bottom: none;
+}
+
+.form-switch .form-check-input {
+    width: 50px;
+    height: 24px;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Password Strength */
+.password-strength {
+    font-size: 0.85rem;
+    padding: 5px 0;
+}
+
+.strength-weak { color: #dc3545; }
+.strength-medium { color: #ffc107; }
+.strength-strong { color: #198754; }
+
+/* Toast Notification */
+.toast-notification {
+    background: white;
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        padding: 20px 0;
+    }
+    
+    .content-card {
+        padding: 25px;
+    }
+    
+    .sidebar-card {
+        position: relative;
+        top: 0;
+        margin-bottom: 20px;
+    }
+    
+    .section-header h3 {
+        font-size: 1.5rem;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .add-location-box .input-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .add-location-box .btn {
+        width: 100%;
+    }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}

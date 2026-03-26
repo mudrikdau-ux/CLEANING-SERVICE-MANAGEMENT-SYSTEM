@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Staff Panel - CSMS | Professional Cleaning Management</title>
+
+<!-- External Dependencies -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+
+<!-- External CSS -->
+<link rel="stylesheet" href="css/staff.css">
+</head>
+<body>
+
+<!-- LOGIN SECTION -->
+<div id="loginSection" class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo-icon">
+                <i class="bi bi-brush-fill"></i>
+            </div>
+            <h3>Staff Portal</h3>
+            <p>CSMS Cleaning Service Management</p>
+        </div>
+        
+        <form id="loginForm" onsubmit="return false;">
+            <div class="input-group-custom">
+                <i class="bi bi-envelope-fill"></i>
+                <input type="email" id="email" placeholder="Email Address" class="form-control" autocomplete="off">
+            </div>
+            
+            <div class="input-group-custom">
+                <i class="bi bi-lock-fill"></i>
+                <input type="password" id="password" placeholder="Password" class="form-control">
+            </div>
+            
+            <button type="submit" onclick="loginStaff()" class="btn-login">
+                <i class="bi bi-box-arrow-in-right"></i> Sign In
+            </button>
+            
+            <div class="login-footer">
+                <a href="#" onclick="showForgotPassword()">Forgot Password?</a>
+                <span>|</span>
+                <a href="#" onclick="showDemoCredentials()">Demo Credentials</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- DASHBOARD SECTION -->
+<div id="dashboard" class="dashboard-container" style="display:none;">
+    <!-- Top Navigation Bar -->
+    <nav class="dashboard-nav">
+        <div class="nav-brand">
+            <i class="bi bi-brush-fill"></i>
+            <span>CSMS Staff Portal</span>
+        </div>
+        <div class="nav-menu">
+            <button class="nav-btn active" data-view="jobs">
+                <i class="bi bi-briefcase-fill"></i> Assigned Jobs
+            </button>
+            <button class="nav-btn" data-view="history">
+                <i class="bi bi-clock-history"></i> Job History
+            </button>
+            <button class="nav-btn" data-view="stats">
+                <i class="bi bi-graph-up"></i> My Stats
+            </button>
+            <button class="nav-btn" data-view="profile">
+                <i class="bi bi-person-circle"></i> Profile
+            </button>
+        </div>
+        <div class="nav-user">
+            <div class="user-info">
+                <span id="staffName">Staff Member</span>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+            <button class="logout-btn" onclick="logoutStaff()">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="dashboard-content">
+        <!-- ASSIGNED JOBS VIEW -->
+        <div id="jobsView" class="content-view active">
+            <div class="view-header">
+                <h2><i class="bi bi-briefcase-fill"></i> Assigned Jobs</h2>
+                <p>View and manage your current cleaning assignments</p>
+            </div>
+            <div id="jobsContainer" class="jobs-grid">
+                <!-- Jobs will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- JOB HISTORY VIEW -->
+        <div id="historyView" class="content-view">
+            <div class="view-header">
+                <h2><i class="bi bi-clock-history"></i> Job History</h2>
+                <p>View your completed and past assignments</p>
+            </div>
+            <div id="historyContainer" class="jobs-grid">
+                <!-- History will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- STATS VIEW -->
+        <div id="statsView" class="content-view">
+            <div class="view-header">
+                <h2><i class="bi bi-graph-up"></i> My Performance Stats</h2>
+                <p>Track your work performance and achievements</p>
+            </div>
+            <div class="stats-grid" id="statsContainer">
+                <!-- Stats will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- PROFILE VIEW -->
+        <div id="profileView" class="content-view">
+            <div class="view-header">
+                <h2><i class="bi bi-person-circle"></i> Staff Profile</h2>
+                <p>Manage your personal information</p>
+            </div>
+            <div class="profile-card" id="profileContainer">
+                <!-- Profile will be dynamically loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+<!-- External JavaScript -->
+<script src="js/staff.js"></script>
+</body>
+</html>
