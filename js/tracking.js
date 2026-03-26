@@ -1,4 +1,4 @@
-// ========== BOOKINGS DATABASE (Enhanced with rich data) ==========
+// ========== BOOKINGS DATABASE ==========
 const bookings = [
     { id: 101, status: "upcoming", service: "Premium Home Deep Cleaning", date: "2026-04-05", price: "$89", address: "Stone Town, Unguja" },
     { id: 102, status: "upcoming", service: "AC Maintenance & Filter Replacement", date: "2026-04-12", price: "$120", address: "Mbweni Residence" },
@@ -11,7 +11,6 @@ const bookings = [
 
 // ========== DOM ELEMENTS ==========
 let bookingList = null;
-const tabs = document.querySelectorAll(".tab");
 const sidebarMenuItems = document.querySelectorAll(".menu li");
 const hamburgerBtn = document.getElementById("hamburgerToggle");
 const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
@@ -22,7 +21,6 @@ const notificationIcon = document.getElementById("notificationIcon");
 const messageIcon = document.getElementById("messageIcon");
 
 // ========== HELPER FUNCTIONS ==========
-// Escape HTML to prevent XSS
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
@@ -33,43 +31,47 @@ function escapeHtml(str) {
     });
 }
 
-// Show professional toast notification
 function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = 'position-fixed bottom-0 end-0 p-3 m-3 bg-white rounded-4 shadow-lg border-start border-4';
-    notification.style.zIndex = '9999';
-    notification.style.minWidth = '280px';
-    notification.style.maxWidth = '350px';
-    notification.style.animation = 'slideIn 0.3s ease-out';
+    const existingNotification = document.querySelector('.notification-toast');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
     
-    let borderColor = '#0d6efd';
+    const notification = document.createElement('div');
+    notification.className = 'notification-toast';
+    
     let icon = 'bi-info-circle-fill';
+    let borderColor = '#0d6efd';
     if (type === 'success') {
-        borderColor = '#198754';
         icon = 'bi-check-circle-fill';
+        borderColor = '#198754';
     } else if (type === 'danger') {
+        icon = 'bi-exclamation-triangle-fill';
         borderColor = '#dc3545';
-        icon = 'bi-exclamation-triangle-fill';
     } else if (type === 'warning') {
-        borderColor = '#ffc107';
         icon = 'bi-exclamation-triangle-fill';
+        borderColor = '#ffc107';
     }
     
     notification.style.borderLeftColor = borderColor;
     notification.innerHTML = `
-        <div class="d-flex align-items-center gap-2">
-            <i class="bi ${icon} text-${type === 'success' ? 'success' : type === 'danger' ? 'danger' : type === 'warning' ? 'warning' : 'primary'}" style="font-size: 1.2rem;"></i>
-            <span class="fw-medium flex-grow-1">${escapeHtml(message)}</span>
-            <button class="btn-close btn-sm" onclick="this.closest('div').remove()"></button>
+        <div class="notification-content">
+            <i class="bi ${icon}" style="color: ${borderColor};"></i>
+            <span>${escapeHtml(message)}</span>
+            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
         </div>
     `;
+    
     document.body.appendChild(notification);
+    
     setTimeout(() => {
-        if (notification && notification.remove) notification.remove();
-    }, 3000);
+        if (notification && notification.remove) {
+            notification.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 4000);
 }
 
-// Close sidebar function
 function closeSidebar() {
     if (window.innerWidth <= 992) {
         mainSidebar.classList.remove('mobile-open');
@@ -77,12 +79,16 @@ function closeSidebar() {
     }
 }
 
-// Open sidebar function
 function openSidebar() {
     if (window.innerWidth <= 992) {
         mainSidebar.classList.add('mobile-open');
         mobileOverlay.classList.add('active');
     }
+}
+
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
 }
 
 // ========== LOAD BOOKINGS FUNCTION ==========
@@ -120,7 +126,6 @@ function loadBookings(type) {
         else if (booking.status === "cancelled") badgeClass = "badge-cancelled";
         else if (booking.status === "unpaid") badgeClass = "badge-unpaid";
         
-        // Icon based on service type
         let iconName = "bi-brightness-alt-high";
         if (booking.service.includes("Clean")) iconName = "bi-droplet";
         if (booking.service.includes("AC")) iconName = "bi-snow2";
@@ -159,7 +164,6 @@ function loadBookings(type) {
     html += '</div>';
     bookingList.innerHTML = html;
     
-    // Attach pay now button events
     document.querySelectorAll(".pay-now-btn").forEach(btn => {
         btn.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -169,30 +173,7 @@ function loadBookings(type) {
     });
 }
 
-// ========== TAB HANDLERS ==========
-function initTabs() {
-    const tabsContainer = document.querySelectorAll(".tab");
-    if (!tabsContainer.length) return;
-    
-    // Get active tab or default to upcoming
-    const activeTab = document.querySelector(".tab.active");
-    const defaultType = activeTab ? activeTab.getAttribute("data-type") : "upcoming";
-    loadBookings(defaultType);
-    
-    tabsContainer.forEach(tab => {
-        tab.addEventListener("click", function() {
-            // Remove active class from all tabs
-            tabsContainer.forEach(t => t.classList.remove("active"));
-            // Add active class to clicked tab
-            this.classList.add("active");
-            // Load bookings based on type
-            const type = this.getAttribute("data-type");
-            loadBookings(type);
-        });
-    });
-}
-
-// ========== MENU ITEM HANDLERS (ALL MENUS WORK) ==========
+// ========== MENU ITEM HANDLERS ==========
 function renderPanel(menuType) {
     let title = "";
     let content = "";
@@ -213,7 +194,6 @@ function renderPanel(menuType) {
                 <div id="bookingList" class="booking-box"></div>
             `;
             dynamicPanel.innerHTML = content;
-            // Re-initialize tabs and booking list
             const newTabs = document.querySelectorAll(".tab");
             if (newTabs.length > 0) {
                 const activeType = document.querySelector(".tab.active")?.getAttribute("data-type") || "upcoming";
@@ -255,7 +235,6 @@ function renderPanel(menuType) {
                 </div>
             `;
             dynamicPanel.innerHTML = content;
-            // Add event listeners for quote buttons
             setTimeout(() => {
                 document.querySelectorAll('.accept-quote-btn, .proceed-quote-btn').forEach(btn => {
                     btn.addEventListener('click', () => showNotification('Quote accepted! Our team will contact you shortly.', 'success'));
@@ -290,84 +269,7 @@ function renderPanel(menuType) {
                 }
             }, 100);
             break;
-            
-        case "locations":
-            title = "Saved Locations";
-            content = `
-                <div class="section-header">
-                    <h1 class="page-title"><i class="bi bi-geo-alt text-primary me-2"></i>Saved Locations</h1>
-                </div>
-                <div class="booking-grid">
-                    <div class="booking-card">
-                        <div class="d-flex align-items-center gap-3">
-                            <i class="bi bi-house-heart fs-1 text-primary"></i>
-                            <div>
-                                <h5 class="fw-bold mb-1">Home</h5>
-                                <p class="mb-0 text-muted">Stone Town, Unguja, Zanzibar</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="booking-card">
-                        <div class="d-flex align-items-center gap-3">
-                            <i class="bi bi-briefcase fs-1 text-success"></i>
-                            <div>
-                                <h5 class="fw-bold mb-1">Office</h5>
-                                <p class="mb-0 text-muted">Vikokotoni Business Hub, Zanzibar</p>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="btn btn-outline-primary rounded-pill px-4 add-location-btn" style="align-self: flex-start;"><i class="bi bi-plus-circle"></i> Add New Location</button>
-                </div>
-            `;
-            dynamicPanel.innerHTML = content;
-            setTimeout(() => {
-                const addLocationBtn = document.querySelector('.add-location-btn');
-                if (addLocationBtn) {
-                    addLocationBtn.addEventListener('click', () => showNotification('Add new location form would open', 'info'));
-                }
-            }, 100);
-            break;
-            
-        case "methods":
-            title = "Payment Methods";
-            content = `
-                <div class="section-header">
-                    <h1 class="page-title"><i class="bi bi-wallet2 text-primary me-2"></i>Payment Methods</h1>
-                </div>
-                <div class="booking-grid">
-                    <div class="booking-card">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex gap-3 align-items-center">
-                                <i class="bi bi-credit-card-2-front fs-2 text-primary"></i>
-                                <div>
-                                    <h6 class="fw-bold mb-0">Visa •••• 1234</h6>
-                                    <small class="text-muted">Expires 12/2028</small>
-                                </div>
-                            </div>
-                            <span class="badge bg-success">Default</span>
-                        </div>
-                    </div>
-                    <div class="booking-card">
-                        <div class="d-flex gap-3 align-items-center">
-                            <i class="bi bi-bank2 fs-2 text-success"></i>
-                            <div>
-                                <h6 class="fw-bold mb-0">Mobile Money (Airtel Money)</h6>
-                                <small class="text-muted">+255 777 123 456</small>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="btn btn-outline-primary rounded-pill px-4 add-method-btn"><i class="bi bi-plus-circle"></i> Add New Payment Method</button>
-                </div>
-            `;
-            dynamicPanel.innerHTML = content;
-            setTimeout(() => {
-                const addMethodBtn = document.querySelector('.add-method-btn');
-                if (addMethodBtn) {
-                    addMethodBtn.addEventListener('click', () => showNotification('Add payment method form would open', 'info'));
-                }
-            }, 100);
-            break;
-            
+        
         case "support":
             title = "Support";
             content = `
@@ -582,7 +484,6 @@ function renderPanel(menuType) {
                 if (loginBtn) {
                     loginBtn.addEventListener('click', () => {
                         showNotification('Redirecting to login page...', 'info');
-                        // Reset to bookings view after demo login
                         setTimeout(() => {
                             renderPanel('bookings');
                             const bookingsMenuItem = document.querySelector('.menu li[data-menu="bookings"]');
@@ -610,7 +511,6 @@ function renderPanel(menuType) {
         showNotification(`${title} section loaded`, "success");
     }
     
-    // Close sidebar after menu click on mobile
     closeSidebar();
 }
 
@@ -618,15 +518,108 @@ function renderPanel(menuType) {
 sidebarMenuItems.forEach(item => {
     item.addEventListener("click", function() {
         const menuType = this.getAttribute("data-menu");
-        
-        // Update active class
         sidebarMenuItems.forEach(li => li.classList.remove("active"));
         this.classList.add("active");
-        
-        // Render selected panel
         renderPanel(menuType);
     });
 });
+
+// ========== FOOTER NEWSLETTER FORM HANDLING ==========
+function initFooterNewsletter() {
+    const newsletterForm = document.querySelector('.footer .newsletter-form');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const emailInput = this.querySelector('input[type="email"]');
+            if (emailInput && emailInput.value) {
+                if (validateEmail(emailInput.value)) {
+                    showNotification('Thank you for subscribing to our newsletter!', 'success');
+                    emailInput.value = '';
+                } else {
+                    showNotification('Please enter a valid email address', 'danger');
+                }
+            }
+        });
+    }
+}
+
+// ========== ADD NOTIFICATION STYLES ==========
+function addNotificationStyles() {
+    const notificationStyles = document.createElement('style');
+    notificationStyles.textContent = `
+        .notification-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            min-width: 280px;
+            max-width: 350px;
+            border-left: 4px solid #4bb543;
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+        }
+        
+        .notification-content i {
+            font-size: 1.2rem;
+        }
+        
+        .notification-content span {
+            flex: 1;
+            font-size: 0.9rem;
+            color: #1a202c;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .notification-close:hover {
+            color: #333;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(notificationStyles);
+}
 
 // ========== HAMBURGER MENU TOGGLE ==========
 if (hamburgerBtn) {
@@ -636,24 +629,20 @@ if (hamburgerBtn) {
     });
 }
 
-// Close button inside sidebar (for mobile)
 if (sidebarCloseBtn) {
     sidebarCloseBtn.addEventListener("click", closeSidebar);
 }
 
-// Close sidebar when clicking overlay
 if (mobileOverlay) {
     mobileOverlay.addEventListener("click", closeSidebar);
 }
 
-// Handle window resize - auto close sidebar on resize to desktop
 window.addEventListener("resize", () => {
     if (window.innerWidth > 992) {
         closeSidebar();
     }
 });
 
-// Top bar icon click handlers
 if (notificationIcon) {
     notificationIcon.addEventListener('click', () => showNotification('You have 3 new notifications', 'info'));
 }
@@ -663,12 +652,20 @@ if (messageIcon) {
 
 // ========== INITIALIZE ==========
 document.addEventListener("DOMContentLoaded", () => {
-    // Initialize with bookings view
+    addNotificationStyles();
     renderPanel("bookings");
-    // Ensure bookings menu is active
+    initFooterNewsletter();
+    
     const bookingsMenuItem = document.querySelector('.menu li[data-menu="bookings"]');
     if (bookingsMenuItem) {
         sidebarMenuItems.forEach(li => li.classList.remove('active'));
         bookingsMenuItem.classList.add('active');
     }
+    
+    console.log('Tracking page fully loaded and initialized');
 });
+
+// ========== EXPORT FUNCTIONS FOR GLOBAL USE ==========
+window.showNotification = showNotification;
+window.closeSidebar = closeSidebar;
+window.openSidebar = openSidebar;

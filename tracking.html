@@ -1,83 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>CSMS | Smart Booking Dashboard</title>
-
-<!-- External Dependencies -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-
-<!-- External CSS -->
-<link rel="stylesheet" href="css/tracking.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>My Tracking - CSMS | Professional Cleaning Services</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/tracking.css">
 </head>
 <body>
 
 <div class="dashboard-wrapper">
-    <!-- Mobile Overlay -->
-    <div class="overlay-blur" id="mobileOverlay"></div>
-
-    <!-- LEFT SIDEBAR - Matching Index Style -->
+    <!-- Sidebar -->
     <aside class="sidebar" id="mainSidebar">
         <div class="sidebar-header">
             <button class="sidebar-close-btn" id="sidebarCloseBtn">
-                <i class="fas fa-times"></i>
+                <i class="bi bi-x-lg"></i>
             </button>
         </div>
-        <div class="profile text-center">
-            <div class="avatar">A</div>
-            <h4>ALY HASSAN</h4>
-            <p><i class="fas fa-map-marker-alt"></i> Unguja, Zanzibar</p>
+        <div class="profile">
+            <div class="avatar">JD</div>
+            <h4>John Doe</h4>
+            <p><i class="bi bi-envelope"></i> john.doe@example.com</p>
         </div>
-
-        <ul class="menu" id="sidebarMenu">
-            <li data-menu="bookings" class="active"><i class="fas fa-calendar-check"></i> My Bookings</li>
-            <li data-menu="quotes"><i class="fas fa-file-alt"></i> My Quotes</li>
-            <li data-menu="payments"><i class="fas fa-credit-card"></i> Outstanding Payments</li>
-            <li data-menu="locations"><i class="fas fa-map-marker-alt"></i> Saved Locations</li>
-            <li data-menu="methods"><i class="fas fa-wallet"></i> Payment Methods</li>
-            <li data-menu="support"><i class="fas fa-headset"></i> Support</li>
-            <li data-menu="settings"><i class="fas fa-sliders-h"></i> Settings</li>
-            <li data-menu="feedback"><i class="fas fa-comment-dots"></i> Feedback</li>
-            <li data-menu="terms"><i class="fas fa-file-contract"></i> Terms & Conditions</li>
-            <li data-menu="delete"><i class="fas fa-trash-alt"></i> Delete Account</li>
-            <li data-menu="logout"><i class="fas fa-sign-out-alt"></i> Logout</li>
+        <ul class="menu">
+            <li data-menu="bookings" class="active">
+                <i class="bi bi-journal-bookmark-fill"></i> My Bookings
+            </li>
+            <li data-menu="quotes">
+                <i class="bi bi-file-text-fill"></i> My Quotes
+            </li>
+            <li data-menu="payments">
+                <i class="bi bi-credit-card-2-front"></i> Payments
+            </li>
+            <li data-menu="support">
+                <i class="bi bi-headset"></i> Support
+            </li>
+            <li data-menu="settings">
+                <i class="bi bi-sliders2"></i> Settings
+            </li>
+            <li data-menu="feedback">
+                <i class="bi bi-chat-dots"></i> Feedback
+            </li>
+            <li data-menu="terms">
+                <i class="bi bi-file-earmark-text"></i> Terms
+            </li>
+            <li data-menu="delete">
+                <i class="bi bi-trash3"></i> Delete Account
+            </li>
+            <li data-menu="logout">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </li>
         </ul>
-        
         <div class="sidebar-footer">
-            <small><i class="fas fa-shield-alt"></i> CSMS v2.0</small>
+            <p>CSMS v2.0 | © 2024</p>
         </div>
     </aside>
-
-    <!-- RIGHT CONTENT -->
+    
+    <!-- Overlay for mobile -->
+    <div class="overlay-blur" id="mobileOverlay"></div>
+    
+    <!-- Main Content -->
     <main class="content">
-        <!-- Top Bar with Hamburger Icon -->
+        <!-- Top Bar -->
         <div class="top-bar">
             <button class="hamburger-btn" id="hamburgerToggle">
-                <i class="fas fa-bars"></i>
+                <i class="bi bi-list"></i>
             </button>
             <div class="top-bar-logo">
                 <img src="image/logo.jpeg" alt="CSMS Logo" class="logo-small">
                 <span>CSMS Dashboard</span>
             </div>
             <div class="top-bar-actions">
-                <i class="fas fa-bell" id="notificationIcon"></i>
-                <i class="fas fa-envelope" id="messageIcon"></i>
-                <a href="index.html" class="home-link"><i class="fas fa-home"></i></a>
+                <i class="bi bi-bell" id="notificationIcon"></i>
+                <i class="bi bi-chat-dots" id="messageIcon"></i>
+                <a href="index.html" class="home-link"><i class="bi bi-house-door"></i></a>
             </div>
         </div>
-
-        <!-- Dynamic Content Panel -->
-        <div id="dynamicPanel">
-            <!-- Content will be loaded dynamically -->
-        </div>
+        
+        <!-- Dynamic Panel -->
+        <div id="dynamicPanel"></div>
     </main>
 </div>
 
-<!-- External JavaScript -->
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <h5>About CSMS</h5>
+                <p>CSMS is Zanzibar's premier cleaning service provider, offering professional and reliable cleaning solutions for homes and businesses since 2020.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <h5>Quick Links</h5>
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
+                    <li><a href="service.html"><i class="fas fa-chevron-right"></i> Our Services</a></li>
+                    <li><a href="aboutus.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                    <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
+                    <li><a href="login.html"><i class="fas fa-chevron-right"></i> Login</a></li>
+                    <li><a href="register.html"><i class="fas fa-chevron-right"></i> Register</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <h5>Contact Info</h5>
+                <ul class="contact-info">
+                    <li><i class="fas fa-map-marker-alt"></i> Stone Town, Zanzibar</li>
+                    <li><i class="fas fa-phone"></i> +255 777 123 456</li>
+                    <li><i class="fas fa-envelope"></i> info@csms.co.tz</li>
+                    <li><i class="fas fa-clock"></i> Mon-Sat: 8:00 AM - 8:00 PM</li>
+                </ul>
+                
+                <h5 class="mt-4">Newsletter</h5>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email" required>
+                    <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>&copy; 2024 CSMS - Cleaning Service Management System. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/main.js"></script>
+<script src="js/script.js"></script>
 <script src="js/tracking.js"></script>
 </body>
 </html>

@@ -23,6 +23,8 @@ body {
     background: #f4f7fc;
     overflow-x: hidden;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ========== DASHBOARD WRAPPER ========== */
@@ -30,9 +32,10 @@ body {
     display: flex;
     min-height: 100vh;
     position: relative;
+    flex: 1;
 }
 
-/* ========== SIDEBAR STYLES - MATCHING INDEX ========== */
+/* ========== SIDEBAR STYLES ========== */
 .sidebar {
     width: 280px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -138,7 +141,7 @@ body {
     font-size: 12px;
 }
 
-/* Menu List - Matching Index */
+/* Menu List */
 .menu {
     list-style: none;
     padding: 0 12px;
@@ -197,7 +200,7 @@ body {
     color: rgba(255,255,255,0.6);
 }
 
-/* ========== TOP BAR - MATCHING INDEX ========== */
+/* ========== TOP BAR ========== */
 .top-bar {
     background: white;
     border-radius: 15px;
@@ -572,4 +575,185 @@ hr {
 .quote-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--box-shadow);
+}
+
+/* ========== FOOTER STYLES ========== */
+.footer {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 50px 0 20px;
+    margin-top: 60px;
+}
+
+.footer h5 {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 20px;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.footer h5:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 2px;
+    background: white;
+}
+
+.footer p {
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+}
+
+.footer ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer ul li {
+    margin-bottom: 10px;
+}
+
+.footer ul li a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.footer ul li a:hover {
+    color: white;
+    padding-left: 5px;
+}
+
+.footer ul li i {
+    margin-right: 10px;
+    width: 20px;
+}
+
+.footer .social-links {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.footer .social-links a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: white;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.footer .social-links a:hover {
+    background: white;
+    color: var(--primary-color, #4361ee);
+    transform: translateY(-3px);
+}
+
+.footer .contact-info li {
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.footer .contact-info li i {
+    margin-right: 10px;
+    color: white;
+    width: 20px;
+}
+
+.footer .newsletter-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.footer .newsletter-form input {
+    flex: 1;
+    padding: 10px 15px;
+    border-radius: 25px;
+    border: none;
+    outline: none;
+    font-size: 14px;
+}
+
+.footer .newsletter-form input:focus {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.footer .newsletter-form button {
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: none;
+    background: var(--primary-color, #4361ee);
+    color: white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.footer .newsletter-form button:hover {
+    background: var(--secondary-color, #3f37c9);
+    transform: translateY(-2px);
+}
+
+.footer .copyright {
+    text-align: center;
+    padding-top: 30px;
+    margin-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+}
+
+/* Responsive Footer */
+@media (max-width: 768px) {
+    .footer {
+        padding: 40px 0 20px;
+        margin-top: 40px;
+    }
+    
+    .footer .col-md-4 {
+        margin-bottom: 30px;
+    }
+    
+    .footer h5:after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .footer h5 {
+        text-align: center;
+    }
+    
+    .footer p {
+        text-align: center;
+    }
+    
+    .footer .social-links {
+        justify-content: center;
+    }
+    
+    .footer ul li {
+        text-align: center;
+    }
+    
+    .footer .contact-info li {
+        justify-content: center;
+    }
+    
+    .footer .newsletter-form {
+        flex-direction: column;
+    }
+    
+    .footer .newsletter-form button {
+        width: 100%;
+    }
 }
