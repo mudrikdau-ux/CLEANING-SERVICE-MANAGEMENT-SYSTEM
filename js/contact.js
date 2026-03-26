@@ -1,4 +1,6 @@
-// ========== FORM HANDLING ==========
+// ========== CONTACT PAGE JAVASCRIPT ==========
+
+// Contact Form Handler Class
 class ContactFormHandler {
     constructor() {
         this.form = document.getElementById('contactForm');
@@ -168,8 +170,6 @@ class ContactFormHandler {
     
     showSuccessMessage() {
         this.showNotification('Message sent successfully! We\'ll get back to you within 24 hours.', 'success');
-        
-        // Log to console for demo
         console.log('Contact form submitted successfully');
     }
     
@@ -177,10 +177,10 @@ class ContactFormHandler {
         if (this.submitBtn) {
             if (isLoading) {
                 this.submitBtn.disabled = true;
-                this.submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+                this.submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             } else {
                 this.submitBtn.disabled = false;
-                this.submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Send Message';
+                this.submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
             }
         }
     }
@@ -201,24 +201,30 @@ class ContactFormHandler {
     }
     
     showNotification(message, type = 'info') {
+        // Remove existing notification
+        const existingNotification = document.querySelector('.notification-toast');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+        
         const notification = document.createElement('div');
         notification.className = 'notification-toast';
         
-        let icon = 'bi-info-circle-fill';
+        let icon = 'fa-info-circle';
         let borderColor = '#0d6efd';
         
         if (type === 'success') {
-            icon = 'bi-check-circle-fill';
+            icon = 'fa-check-circle';
             borderColor = '#198754';
         } else if (type === 'error') {
-            icon = 'bi-exclamation-triangle-fill';
+            icon = 'fa-exclamation-triangle';
             borderColor = '#dc3545';
         }
         
         notification.style.borderLeftColor = borderColor;
         notification.innerHTML = `
             <div class="notification-content">
-                <i class="bi ${icon}" style="color: ${borderColor}; font-size: 1.2rem;"></i>
+                <i class="fas ${icon}" style="color: ${borderColor}; font-size: 1.2rem;"></i>
                 <span>${this.escapeHtml(message)}</span>
                 <button class="notification-close" onclick="this.closest('.notification-toast').remove()">&times;</button>
             </div>
@@ -276,40 +282,48 @@ class ContactFormHandler {
 
 // ========== QUICK CONTACT FUNCTION ==========
 function showQuickContact() {
+    // Remove existing modal if any
+    const existingModal = document.getElementById('quickContactModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
     const modalHtml = `
         <div class="quick-contact-modal" id="quickContactModal">
-            <div class="modal-overlay"></div>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4><i class="bi bi-chat-dots-fill"></i> Quick Chat</h4>
+            <div class="modal-overlay" onclick="closeQuickContact()"></div>
+            <div class="modal-content-custom">
+                <div class="modal-header-custom">
+                    <h4><i class="fas fa-comment-dots"></i> Quick Chat</h4>
                     <button class="modal-close" onclick="closeQuickContact()">&times;</button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body-custom">
                     <p>Choose your preferred contact method:</p>
                     <div class="contact-options">
                         <button class="contact-option" onclick="window.location.href='tel:+255777123456'">
-                            <i class="bi bi-telephone-fill"></i>
+                            <i class="fas fa-phone-alt"></i>
                             <span>Call Us</span>
                         </button>
-                        <button class="contact-option" onclick="window.location.href='https://wa.me/255777123456'">
-                            <i class="bi bi-whatsapp"></i>
+                        <button class="contact-option" onclick="window.open('https://wa.me/255777123456', '_blank')">
+                            <i class="fab fa-whatsapp"></i>
                             <span>WhatsApp</span>
                         </button>
                         <button class="contact-option" onclick="window.location.href='mailto:info@csms.co.tz'">
-                            <i class="bi bi-envelope-fill"></i>
+                            <i class="fas fa-envelope"></i>
                             <span>Email</span>
                         </button>
                     </div>
                     <div class="quick-message mt-3">
                         <textarea id="quickMessage" rows="3" placeholder="Type your message here..." class="form-control"></textarea>
-                        <button class="btn btn-primary mt-2" onclick="sendQuickMessage()">Send Message</button>
+                        <button class="btn btn-primary mt-2 w-100" onclick="sendQuickMessage()">Send Message</button>
                     </div>
                 </div>
             </div>
         </div>
     `;
     
-    // Add modal styles if not exists
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Add styles for the modal if not exists
     if (!document.querySelector('#quickContactStyles')) {
         const style = document.createElement('style');
         style.id = 'quickContactStyles';
@@ -326,7 +340,6 @@ function showQuickContact() {
                 justify-content: center;
                 animation: fadeIn 0.3s;
             }
-            
             .modal-overlay {
                 position: absolute;
                 top: 0;
@@ -335,8 +348,7 @@ function showQuickContact() {
                 bottom: 0;
                 background: rgba(0,0,0,0.5);
             }
-            
-            .modal-content {
+            .modal-content-custom {
                 position: relative;
                 background: white;
                 border-radius: 24px;
@@ -345,20 +357,17 @@ function showQuickContact() {
                 z-index: 1;
                 animation: slideUp 0.3s;
             }
-            
-            .modal-header {
+            .modal-header-custom {
                 padding: 20px 25px;
                 border-bottom: 1px solid #e2e8f0;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
             }
-            
-            .modal-header h4 {
+            .modal-header-custom h4 {
                 margin: 0;
                 font-weight: 700;
             }
-            
             .modal-close {
                 background: none;
                 border: none;
@@ -366,18 +375,15 @@ function showQuickContact() {
                 cursor: pointer;
                 color: #999;
             }
-            
-            .modal-body {
+            .modal-body-custom {
                 padding: 25px;
             }
-            
             .contact-options {
                 display: flex;
                 gap: 15px;
                 justify-content: center;
                 margin: 20px 0;
             }
-            
             .contact-option {
                 flex: 1;
                 padding: 15px;
@@ -388,24 +394,20 @@ function showQuickContact() {
                 transition: all 0.3s;
                 text-align: center;
             }
-            
             .contact-option:hover {
-                border-color: var(--primary-color);
+                border-color: #4361ee;
                 transform: translateY(-2px);
             }
-            
             .contact-option i {
                 font-size: 24px;
                 display: block;
                 margin-bottom: 8px;
-                color: var(--primary-color);
+                color: #4361ee;
             }
-            
             @keyframes fadeIn {
                 from { opacity: 0; }
                 to { opacity: 1; }
             }
-            
             @keyframes slideUp {
                 from {
                     transform: translateY(50px);
@@ -416,46 +418,77 @@ function showQuickContact() {
                     opacity: 1;
                 }
             }
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+            @media (max-width: 576px) {
+                .contact-options {
+                    flex-direction: column;
+                }
+            }
         `;
         document.head.appendChild(style);
     }
-    
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
 function closeQuickContact() {
     const modal = document.getElementById('quickContactModal');
     if (modal) {
-        modal.remove();
+        modal.style.animation = 'fadeOut 0.3s';
+        setTimeout(() => modal.remove(), 300);
     }
 }
 
 function sendQuickMessage() {
     const message = document.getElementById('quickMessage')?.value;
-    if (message) {
-        window.location.href = `mailto:info@csms.co.tz?subject=Quick Message&body=${encodeURIComponent(message)}`;
+    if (message && message.trim()) {
+        window.location.href = `mailto:info@csms.co.tz?subject=Quick Message from CSMS Website&body=${encodeURIComponent(message.trim())}`;
         closeQuickContact();
         setTimeout(() => {
             const handler = new ContactFormHandler();
             handler.showNotification('Opening email client...', 'success');
         }, 100);
+    } else {
+        const handler = new ContactFormHandler();
+        handler.showNotification('Please enter a message first', 'error');
     }
 }
 
 // ========== NAVBAR SCROLL EFFECT ==========
 function initNavbarScroll() {
-    const navbar = document.querySelector('.navbar');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 100) {
-            navbar.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
-            navbar.style.background = 'rgba(255,255,255,0.98)';
-            navbar.style.backdropFilter = 'blur(10px)';
+    const navbar = document.querySelector('.top-bar');
+    if (navbar) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                navbar.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
+            } else {
+                navbar.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
+            }
+        });
+    }
+}
+
+// ========== UPDATE UI BASED ON LOGIN ==========
+function updateUIBasedOnLogin() {
+    const loginBtn = document.getElementById('headerLoginBtn');
+    if (loginBtn) {
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        if (isLoggedIn) {
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            loginBtn.innerHTML = '<i class="fas fa-user"></i> Account';
+            loginBtn.href = 'account.html';
         } else {
-            navbar.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
-            navbar.style.background = 'white';
-            navbar.style.backdropFilter = 'none';
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            loginBtn.href = 'login.html';
         }
-    });
+    }
 }
 
 // ========== INITIALIZE ==========
@@ -465,6 +498,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize navbar scroll effect
     initNavbarScroll();
+    
+    // Update UI based on login status
+    updateUIBasedOnLogin();
     
     // Load saved data if any
     const lastContact = sessionStorage.getItem('last_contact');

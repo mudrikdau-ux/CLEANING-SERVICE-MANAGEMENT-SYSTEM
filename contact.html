@@ -1,46 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Contact Us - CSMS | Professional Cleaning Services</title>
-
-<!-- SEO Meta Tags -->
-<meta name="description" content="Get in touch with CSMS for professional cleaning services in Zanzibar. Contact us for inquiries, bookings, or support.">
-<meta name="keywords" content="contact cleaning services, Zanzibar cleaners, cleaning support, book cleaning">
-
-<!-- External Dependencies -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-
-<!-- External CSS -->
-<link rel="stylesheet" href="css/contact.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - CSMS | Professional Cleaning Services in Zanzibar</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/contact.css">
 </head>
 <body>
 
-<!-- Navigation Bar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
-    <div class="container">
-        <a class="navbar-brand" href="index.html">
-            <i class="bi bi-brush-fill text-primary"></i>
-            <span class="fw-bold">CSMS</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="aboutus.html">About</a></li>
-                <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
-                <li class="nav-item"><a class="nav-link active" href="contact.html">Contact</a></li>
-                <li class="nav-item"><a class="nav-link" href="tracking.html">Track Order</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<!-- Right Sidebar -->
+<div id="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeSidebar()"><i class="fas fa-times"></i></a>
+    <a href="index.html"><i class="fas fa-home"></i> Home</a>
+    <a href="service.html"><i class="fas fa-broom"></i> Services</a>
+    <a href="aboutus.html"><i class="fas fa-info-circle"></i> About Us</a>
+    <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+    <a href="staff.html"><i class="fas fa-user-tie"></i> Staff Panel</a>
+    <a href="register.html"><i class="fas fa-user-plus"></i> Register</a>
+    <a href="account.html"><i class="fas fa-user"></i> My Account</a>
+    <a href="admin.html"><i class="fas fa-cog"></i> Admin Panel</a>
+    <a href="tracking.html"><i class="fas fa-tasks"></i> My Tracking</a>
+</div>
+
+<!-- Top Bar -->
+<div class="top-bar">
+    <a href="index.html"><img src="image/logo.jpeg" alt="CSMS Logo" class="logo"></a>
+
+    <a href="login.html" class="btn btn-primary" id="headerLoginBtn"><i class="fas fa-sign-in-alt"></i> Login</a>
+    <span class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></span>
+</div>
 
 <!-- Hero Section -->
 <section class="contact-hero">
@@ -72,7 +68,7 @@
                     <div class="info-items">
                         <div class="info-item animate-on-scroll">
                             <div class="info-icon">
-                                <i class="bi bi-telephone-fill"></i>
+                                <i class="fas fa-phone-alt"></i>
                             </div>
                             <div class="info-content">
                                 <h5>Phone Number</h5>
@@ -83,7 +79,7 @@
                         
                         <div class="info-item animate-on-scroll">
                             <div class="info-icon">
-                                <i class="bi bi-envelope-fill"></i>
+                                <i class="fas fa-envelope"></i>
                             </div>
                             <div class="info-content">
                                 <h5>Email Address</h5>
@@ -94,7 +90,7 @@
                         
                         <div class="info-item animate-on-scroll">
                             <div class="info-icon">
-                                <i class="bi bi-geo-alt-fill"></i>
+                                <i class="fas fa-map-marker-alt"></i>
                             </div>
                             <div class="info-content">
                                 <h5>Office Location</h5>
@@ -105,7 +101,7 @@
                         
                         <div class="info-item animate-on-scroll">
                             <div class="info-icon">
-                                <i class="bi bi-clock-fill"></i>
+                                <i class="fas fa-clock"></i>
                             </div>
                             <div class="info-content">
                                 <h5>Working Hours</h5>
@@ -119,11 +115,11 @@
                     <div class="social-links animate-on-scroll">
                         <h5>Follow Us</h5>
                         <div class="social-icons">
-                            <a href="#" class="social-icon"><i class="bi bi-facebook"></i></a>
-                            <a href="#" class="social-icon"><i class="bi bi-instagram"></i></a>
-                            <a href="#" class="social-icon"><i class="bi bi-twitter"></i></a>
-                            <a href="#" class="social-icon"><i class="bi bi-linkedin"></i></a>
-                            <a href="#" class="social-icon"><i class="bi bi-whatsapp"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
                         </div>
                     </div>
                 </div>
@@ -144,7 +140,7 @@
                                 <div class="form-group">
                                     <label class="form-label">Full Name <span class="text-danger">*</span></label>
                                     <div class="input-icon">
-                                        <i class="bi bi-person-fill"></i>
+                                        <i class="fas fa-user"></i>
                                         <input type="text" id="name" class="form-control" placeholder="Enter your full name" required>
                                     </div>
                                 </div>
@@ -154,7 +150,7 @@
                                 <div class="form-group">
                                     <label class="form-label">Email Address <span class="text-danger">*</span></label>
                                     <div class="input-icon">
-                                        <i class="bi bi-envelope-fill"></i>
+                                        <i class="fas fa-envelope"></i>
                                         <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
                                     </div>
                                 </div>
@@ -164,7 +160,7 @@
                                 <div class="form-group">
                                     <label class="form-label">Phone Number</label>
                                     <div class="input-icon">
-                                        <i class="bi bi-telephone-fill"></i>
+                                        <i class="fas fa-phone"></i>
                                         <input type="tel" id="phone" class="form-control" placeholder="+255 XXX XXX XXX">
                                     </div>
                                 </div>
@@ -174,13 +170,14 @@
                                 <div class="form-group">
                                     <label class="form-label">Service Type</label>
                                     <div class="input-icon">
-                                        <i class="bi bi-brush-fill"></i>
+                                        <i class="fas fa-broom"></i>
                                         <select id="serviceType" class="form-select">
                                             <option value="">Select a service</option>
                                             <option value="home-cleaning">Home Cleaning</option>
                                             <option value="office-cleaning">Office Cleaning</option>
                                             <option value="deep-cleaning">Deep Cleaning</option>
                                             <option value="carpet-cleaning">Carpet Cleaning</option>
+                                            <option value="window-cleaning">Window Cleaning</option>
                                             <option value="other">Other</option>
                                         </select>
                                     </div>
@@ -191,7 +188,7 @@
                                 <div class="form-group">
                                     <label class="form-label">Subject <span class="text-danger">*</span></label>
                                     <div class="input-icon">
-                                        <i class="bi bi-chat-text-fill"></i>
+                                        <i class="fas fa-tag"></i>
                                         <input type="text" id="subject" class="form-control" placeholder="What is this about?" required>
                                     </div>
                                 </div>
@@ -200,7 +197,10 @@
                             <div class="col-12 animate-on-scroll">
                                 <div class="form-group">
                                     <label class="form-label">Your Message <span class="text-danger">*</span></label>
-                                    <textarea id="message" rows="5" class="form-control" placeholder="Tell us how we can help you..." required></textarea>
+                                    <div class="input-icon">
+                                        <i class="fas fa-comment"></i>
+                                        <textarea id="message" rows="5" class="form-control" placeholder="Tell us how we can help you..." required></textarea>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -215,7 +215,7 @@
                             
                             <div class="col-12 animate-on-scroll">
                                 <button type="submit" class="btn btn-primary btn-submit" id="submitBtn">
-                                    <i class="bi bi-send-fill"></i> Send Message
+                                    <i class="fas fa-paper-plane"></i> Send Message
                                 </button>
                             </div>
                         </div>
@@ -231,7 +231,7 @@
     <div class="container">
         <div class="map-container animate-on-scroll">
             <div class="map-header">
-                <h3><i class="bi bi-geo-alt-fill text-primary"></i> Our Location</h3>
+                <h3><i class="fas fa-map-marker-alt text-primary"></i> Our Location</h3>
                 <p>Visit our office in Stone Town, Zanzibar</p>
             </div>
             <div class="map-wrapper">
@@ -262,7 +262,7 @@
             <div class="col-md-6 animate-on-scroll">
                 <div class="faq-item">
                     <div class="faq-question">
-                        <i class="bi bi-question-circle-fill"></i>
+                        <i class="fas fa-question-circle"></i>
                         <h5>How quickly can I get a response?</h5>
                     </div>
                     <p>We typically respond to all inquiries within 24 hours during business days. For urgent matters, please call our support line.</p>
@@ -272,7 +272,7 @@
             <div class="col-md-6 animate-on-scroll">
                 <div class="faq-item">
                     <div class="faq-question">
-                        <i class="bi bi-question-circle-fill"></i>
+                        <i class="fas fa-question-circle"></i>
                         <h5>Do you offer emergency cleaning services?</h5>
                     </div>
                     <p>Yes, we offer emergency cleaning services. Please call our hotline for immediate assistance.</p>
@@ -282,7 +282,7 @@
             <div class="col-md-6 animate-on-scroll">
                 <div class="faq-item">
                     <div class="faq-question">
-                        <i class="bi bi-question-circle-fill"></i>
+                        <i class="fas fa-question-circle"></i>
                         <h5>What areas do you serve?</h5>
                     </div>
                     <p>We serve all areas across Zanzibar, including Stone Town, Ngambo, Mbweni, and surrounding regions.</p>
@@ -292,7 +292,7 @@
             <div class="col-md-6 animate-on-scroll">
                 <div class="faq-item">
                     <div class="faq-question">
-                        <i class="bi bi-question-circle-fill"></i>
+                        <i class="fas fa-question-circle"></i>
                         <h5>Are your cleaning products eco-friendly?</h5>
                     </div>
                     <p>Absolutely! We use environmentally safe, non-toxic cleaning products that are safe for your family and pets.</p>
@@ -310,10 +310,10 @@
             <p>Book our professional cleaning services today and experience the CSMS difference.</p>
             <div class="cta-buttons">
                 <button class="btn btn-light btn-lg" onclick="location.href='service.html'">
-                    <i class="bi bi-calendar-check"></i> Book Now
+                    <i class="fas fa-calendar-check"></i> Book Now
                 </button>
                 <button class="btn btn-outline-light btn-lg" onclick="showQuickContact()">
-                    <i class="bi bi-chat-dots"></i> Quick Chat
+                    <i class="fas fa-comment-dots"></i> Quick Chat
                 </button>
             </div>
         </div>
@@ -321,59 +321,61 @@
 </section>
 
 <!-- Footer -->
-<footer class="footer-section">
+<footer class="footer">
     <div class="container">
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="footer-brand">
-                    <i class="bi bi-brush-fill"></i>
-                    <span>CSMS</span>
-                </div>
-                <p>Providing professional cleaning services across Zanzibar with commitment to excellence and customer satisfaction.</p>
-                <div class="footer-social">
-                    <a href="#"><i class="bi bi-facebook"></i></a>
-                    <a href="#"><i class="bi bi-instagram"></i></a>
-                    <a href="#"><i class="bi bi-twitter"></i></a>
-                    <a href="#"><i class="bi bi-linkedin"></i></a>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <h5>About CSMS</h5>
+                <p>CSMS is Zanzibar's premier cleaning service provider, offering professional and reliable cleaning solutions for homes and businesses since 2020.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-whatsapp"></i></a>
                 </div>
             </div>
-            <div class="col-md-2">
+            
+            <div class="col-md-4 mb-4">
                 <h5>Quick Links</h5>
                 <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="aboutus.html">About Us</a></li>
-                    <li><a href="services.html">Services</a></li>
-                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
+                    <li><a href="service.html"><i class="fas fa-chevron-right"></i> Our Services</a></li>
+                    <li><a href="aboutus.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                    <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
+                    <li><a href="login.html"><i class="fas fa-chevron-right"></i> Login</a></li>
+                    <li><a href="register.html"><i class="fas fa-chevron-right"></i> Register</a></li>
                 </ul>
             </div>
-            <div class="col-md-3">
-                <h5>Our Services</h5>
-                <ul>
-                    <li><a href="#">Home Cleaning</a></li>
-                    <li><a href="#">Office Cleaning</a></li>
-                    <li><a href="#">Deep Cleaning</a></li>
-                    <li><a href="#">Carpet Cleaning</a></li>
-                </ul>
-            </div>
-            <div class="col-md-3">
+            
+            <div class="col-md-4 mb-4">
                 <h5>Contact Info</h5>
                 <ul class="contact-info">
-                    <li><i class="bi bi-geo-alt"></i> Stone Town, Zanzibar</li>
-                    <li><i class="bi bi-telephone"></i> +255 777 123 456</li>
-                    <li><i class="bi bi-envelope"></i> info@csms.co.tz</li>
-                    <li><i class="bi bi-clock"></i> Mon-Sat: 8am - 6pm</li>
+                    <li><i class="fas fa-map-marker-alt"></i> Stone Town, Zanzibar</li>
+                    <li><i class="fas fa-phone"></i> +255 777 123 456</li>
+                    <li><i class="fas fa-envelope"></i> info@csms.co.tz</li>
+                    <li><i class="fas fa-clock"></i> Mon-Sat: 8:00 AM - 8:00 PM</li>
                 </ul>
+                
+                <h5 class="mt-4">Newsletter</h5>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email" required>
+                    <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                </form>
             </div>
         </div>
-        <div class="footer-bottom">
-            <p>&copy; 2026 CSMS - Cleaning Service Management System. All rights reserved.</p>
+        
+        <div class="copyright">
+            <p>&copy; 2024 CSMS - Cleaning Service Management System. All rights reserved.</p>
         </div>
     </div>
 </footer>
 
-<!-- External JavaScript -->
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<!-- Custom JS -->
+<script src="js/main.js"></script>
+<script src="js/script.js"></script>
 <script src="js/contact.js"></script>
 </body>
 </html>
