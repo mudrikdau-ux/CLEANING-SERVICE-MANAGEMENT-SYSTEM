@@ -12,8 +12,7 @@ let currentUser = {
     firstName: 'Aly',
     lastName: 'Hassan',
     email: 'aly@csms.co.tz',
-    phone: '+255 777 123 456',
-    bio: 'Professional cleaning service enthusiast'
+    phone: '+255 777 123 456'
 };
 
 // ========== DOM ELEMENTS ==========
@@ -32,7 +31,164 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     setupMenuClickHandlers();
     setupPasswordStrength();
+    setupSidebarFunctions();
+    
+    // Initialize profile picture
+    initProfilePicture();
 });
+
+// ========== SIDEBAR FUNCTIONS ==========
+function openSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar) {
+        sidebar.style.width = "280px";
+        document.body.style.overflow = "hidden";
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar) {
+        sidebar.style.width = "0";
+        document.body.style.overflow = "auto";
+    }
+}
+
+function setupSidebarFunctions() {
+    // Make functions globally available
+    window.openSidebar = openSidebar;
+    window.closeSidebar = closeSidebar;
+    
+    // Close sidebar when clicking outside
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('sidebar');
+        const hamburger = document.querySelector('.hamburger');
+        
+        if (sidebar && hamburger) {
+            if (!sidebar.contains(event.target) && !hamburger.contains(event.target) && sidebar.style.width === '280px') {
+                closeSidebar();
+            }
+        }
+    });
+}
+
+// ========== PROFILE PICTURE FUNCTIONS ==========
+function initProfilePicture() {
+    const uploadInput = document.getElementById('profilePictureUpload');
+    const profilePicture = document.getElementById('profilePicture');
+    const profileImage = document.getElementById('profileImage');
+    const removeBtn = document.getElementById('removeProfilePicture');
+    
+    if (!profilePicture) return;
+    
+    const profileIcon = profilePicture.querySelector('i');
+    
+    // Load saved profile picture
+    const savedImage = localStorage.getItem('csms_profile_picture');
+    if (savedImage && profileImage && profileIcon) {
+        profileImage.src = savedImage;
+        profileImage.style.display = 'block';
+        profileIcon.style.display = 'none';
+        if (removeBtn) removeBtn.style.display = 'inline-block';
+        updateSidebarAvatar(savedImage);
+    }
+    
+    // Handle file upload
+    if (uploadInput) {
+        uploadInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.match('image.*')) {
+                    showNotification('Please select an image file (JPG, PNG)', 'error');
+                    return;
+                }
+                
+                // Validate file size (max 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    showNotification('Image size should be less than 2MB', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const imageData = event.target.result;
+                    if (profileImage) {
+                        profileImage.src = imageData;
+                        profileImage.style.display = 'block';
+                    }
+                    if (profileIcon) profileIcon.style.display = 'none';
+                    if (removeBtn) removeBtn.style.display = 'inline-block';
+                    
+                    // Save to localStorage
+                    localStorage.setItem('csms_profile_picture', imageData);
+                    
+                    // Update sidebar avatar
+                    updateSidebarAvatar(imageData);
+                    
+                    showNotification('Profile picture updated successfully!', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Handle remove picture
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function() {
+            if (profileImage) {
+                profileImage.src = '';
+                profileImage.style.display = 'none';
+            }
+            if (profileIcon) profileIcon.style.display = 'flex';
+            removeBtn.style.display = 'none';
+            
+            // Remove from localStorage
+            localStorage.removeItem('csms_profile_picture');
+            
+            // Reset sidebar avatar
+            resetSidebarAvatar();
+            
+            showNotification('Profile picture removed successfully!', 'success');
+        });
+    }
+    
+    // Click on profile picture to trigger upload
+    if (profilePicture) {
+        profilePicture.addEventListener('click', function() {
+            if (uploadInput) {
+                uploadInput.click();
+            }
+        });
+    }
+}
+
+function updateSidebarAvatar(imageData) {
+    const sidebarAvatar = document.querySelector('.user-avatar');
+    if (sidebarAvatar) {
+        sidebarAvatar.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = imageData;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '50%';
+        sidebarAvatar.appendChild(img);
+    }
+}
+
+function resetSidebarAvatar() {
+    const sidebarAvatar = document.querySelector('.user-avatar');
+    if (sidebarAvatar) {
+        const profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE));
+        const initial = profile?.firstName ? profile.firstName.charAt(0).toUpperCase() : 'U';
+        sidebarAvatar.innerHTML = '';
+        const initialSpan = document.createElement('span');
+        initialSpan.className = 'initial';
+        initialSpan.textContent = initial;
+        sidebarAvatar.appendChild(initialSpan);
+    }
+}
 
 // ========== INITIALIZE DATA ==========
 function initializeData() {
@@ -44,8 +200,8 @@ function initializeData() {
     // Initialize locations if not exists
     if (!localStorage.getItem(STORAGE_KEYS.LOCATIONS)) {
         const defaultLocations = [
-            { id: 1, name: 'Home - Stone Town, Unguja', icon: 'bi-house-door-fill' },
-            { id: 2, name: 'Office - Vikokotoni Business Hub', icon: 'bi-briefcase-fill' }
+            { id: 1, name: 'Home - Stone Town, Unguja', icon: 'fa-home' },
+            { id: 2, name: 'Office - Vikokotoni Business Hub', icon: 'fa-briefcase' }
         ];
         localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(defaultLocations));
     }
@@ -53,8 +209,8 @@ function initializeData() {
     // Initialize payment methods if not exists
     if (!localStorage.getItem(STORAGE_KEYS.PAYMENT_METHODS)) {
         const defaultPayments = [
-            { id: 1, type: 'Mobile Money', details: 'Airtel Money - +255 777 123 456', icon: 'bi-phone' },
-            { id: 2, type: 'Visa Card', details: '**** **** **** 1234', icon: 'bi-credit-card' }
+            { id: 1, type: 'Mobile Money', details: 'Airtel Money - +255 777 123 456', icon: 'fa-phone' },
+            { id: 2, type: 'Visa Card', details: '**** **** **** 1234', icon: 'fa-credit-card' }
         ];
         localStorage.setItem(STORAGE_KEYS.PAYMENT_METHODS, JSON.stringify(defaultPayments));
     }
@@ -88,24 +244,25 @@ function loadProfileData() {
         document.getElementById('lastName').value = profile.lastName || '';
         document.getElementById('email').value = profile.email || '';
         document.getElementById('phone').value = profile.phone || '';
-        document.getElementById('bio').value = profile.bio || '';
         
         // Update sidebar display
         const fullName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
         document.getElementById('userDisplayName').textContent = fullName || 'User';
         document.getElementById('userDisplayEmail').textContent = profile.email || 'user@example.com';
         
-        // Update avatar initial
-        const initial = profile.firstName ? profile.firstName.charAt(0).toUpperCase() : 'U';
-        document.querySelector('.user-avatar i').style.display = 'none';
-        if (!document.querySelector('.user-avatar .initial')) {
-            const initialSpan = document.createElement('span');
-            initialSpan.className = 'initial';
-            initialSpan.style.fontSize = '2rem';
-            initialSpan.style.fontWeight = 'bold';
-            document.querySelector('.user-avatar').appendChild(initialSpan);
+        // Update avatar initial if no profile picture
+        const savedImage = localStorage.getItem('csms_profile_picture');
+        if (!savedImage) {
+            const initial = profile.firstName ? profile.firstName.charAt(0).toUpperCase() : 'U';
+            const avatarDiv = document.querySelector('.user-avatar');
+            if (avatarDiv) {
+                avatarDiv.innerHTML = '';
+                const initialSpan = document.createElement('span');
+                initialSpan.className = 'initial';
+                initialSpan.textContent = initial;
+                avatarDiv.appendChild(initialSpan);
+            }
         }
-        document.querySelector('.user-avatar .initial').textContent = initial;
     }
 }
 
@@ -117,12 +274,18 @@ function saveProfile(event) {
         lastName: document.getElementById('lastName').value,
         email: document.getElementById('email').value,
         phone: document.getElementById('phone').value,
-        bio: document.getElementById('bio').value,
         updatedAt: new Date().toISOString()
     };
     
     localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
-    loadProfileData(); // Refresh display
+    loadProfileData();
+    
+    // If no profile picture, update avatar with initial
+    const savedImage = localStorage.getItem('csms_profile_picture');
+    if (!savedImage) {
+        resetSidebarAvatar();
+    }
+    
     showNotification('Profile updated successfully!', 'success');
 }
 
@@ -139,7 +302,7 @@ function checkPasswordStrength() {
     const strengthDiv = document.getElementById('passwordStrength');
     
     if (!password) {
-        strengthDiv.innerHTML = '';
+        if (strengthDiv) strengthDiv.innerHTML = '';
         return;
     }
     
@@ -171,8 +334,10 @@ function checkPasswordStrength() {
             break;
     }
     
-    strengthDiv.innerHTML = `<i class="bi bi-shield-lock"></i> ${message}`;
-    strengthDiv.className = `password-strength ${className}`;
+    if (strengthDiv) {
+        strengthDiv.innerHTML = `<i class="fas fa-shield-alt"></i> ${message}`;
+        strengthDiv.className = `password-strength ${className}`;
+    }
 }
 
 function changePassword(event) {
@@ -197,20 +362,21 @@ function changePassword(event) {
         return;
     }
     
-    // In a real app, you would verify current password with backend
     showNotification('Password changed successfully!', 'success');
     
-    // Clear form
     document.getElementById('currentPassword').value = '';
     document.getElementById('newPassword').value = '';
     document.getElementById('confirmPassword').value = '';
-    document.getElementById('passwordStrength').innerHTML = '';
+    const strengthDiv = document.getElementById('passwordStrength');
+    if (strengthDiv) strengthDiv.innerHTML = '';
 }
 
 // ========== LOCATION FUNCTIONS ==========
 function loadLocations() {
     const locations = JSON.parse(localStorage.getItem(STORAGE_KEYS.LOCATIONS)) || [];
     const locationsContainer = document.getElementById('locationsList');
+    
+    if (!locationsContainer) return;
     
     if (locations.length === 0) {
         locationsContainer.innerHTML = '<div class="text-center text-muted py-4">No saved locations yet. Add your first location above!</div>';
@@ -222,12 +388,12 @@ function loadLocations() {
         html += `
             <div class="location-item" data-id="${location.id}">
                 <div class="location-info">
-                    <i class="bi ${location.icon || 'bi-geo-alt-fill'}"></i>
+                    <i class="fas ${location.icon || 'fa-map-marker-alt'}"></i>
                     <span>${escapeHtml(location.name)}</span>
                 </div>
                 <div class="location-actions">
                     <button onclick="deleteLocation(${location.id})" class="btn btn-sm btn-outline-danger">
-                        <i class="bi bi-trash"></i> Delete
+                        <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
             </div>
@@ -250,7 +416,7 @@ function addLocation() {
     const newLocation = {
         id: Date.now(),
         name: locationName,
-        icon: 'bi-geo-alt-fill'
+        icon: 'fa-map-marker-alt'
     };
     
     locations.push(newLocation);
@@ -274,6 +440,8 @@ function loadPaymentMethods() {
     const payments = JSON.parse(localStorage.getItem(STORAGE_KEYS.PAYMENT_METHODS)) || [];
     const paymentsContainer = document.getElementById('paymentMethodsList');
     
+    if (!paymentsContainer) return;
+    
     if (payments.length === 0) {
         paymentsContainer.innerHTML = '<div class="text-center text-muted py-4">No payment methods added yet.</div>';
         return;
@@ -285,7 +453,7 @@ function loadPaymentMethods() {
             <div class="payment-item" data-id="${payment.id}">
                 <div class="payment-info">
                     <div class="payment-icon">
-                        <i class="bi ${payment.icon}"></i>
+                        <i class="fas ${payment.icon || 'fa-wallet'}"></i>
                     </div>
                     <div class="payment-details">
                         <h6>${escapeHtml(payment.type)}</h6>
@@ -294,7 +462,7 @@ function loadPaymentMethods() {
                 </div>
                 <div class="payment-actions">
                     <button onclick="deletePaymentMethod(${payment.id})" class="btn btn-sm btn-outline-danger">
-                        <i class="bi bi-trash"></i> Remove
+                        <i class="fas fa-trash"></i> Remove
                     </button>
                 </div>
             </div>
@@ -335,19 +503,23 @@ function deletePaymentMethod(id) {
 
 function getPaymentIcon(type) {
     type = type.toLowerCase();
-    if (type.includes('mobile') || type.includes('m-pesa') || type.includes('airtel')) return 'bi-phone';
-    if (type.includes('visa') || type.includes('mastercard')) return 'bi-credit-card';
-    if (type.includes('bank')) return 'bi-bank2';
-    return 'bi-wallet2';
+    if (type.includes('mobile') || type.includes('m-pesa') || type.includes('airtel')) return 'fa-phone';
+    if (type.includes('visa') || type.includes('mastercard')) return 'fa-credit-card';
+    if (type.includes('bank')) return 'fa-university';
+    return 'fa-wallet';
 }
 
 // ========== NOTIFICATION FUNCTIONS ==========
 function loadNotifications() {
     const notifications = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS));
     if (notifications) {
-        document.getElementById('emailNotifications').checked = notifications.email || false;
-        document.getElementById('smsNotifications').checked = notifications.sms || false;
-        document.getElementById('promoNotifications').checked = notifications.promotions || false;
+        const emailCheckbox = document.getElementById('emailNotifications');
+        const smsCheckbox = document.getElementById('smsNotifications');
+        const promoCheckbox = document.getElementById('promoNotifications');
+        
+        if (emailCheckbox) emailCheckbox.checked = notifications.email || false;
+        if (smsCheckbox) smsCheckbox.checked = notifications.sms || false;
+        if (promoCheckbox) promoCheckbox.checked = notifications.promotions || false;
     }
 }
 
@@ -366,9 +538,13 @@ function saveNotifications() {
 function loadPreferences() {
     const preferences = JSON.parse(localStorage.getItem(STORAGE_KEYS.PREFERENCES));
     if (preferences) {
-        document.getElementById('languageSelect').value = preferences.language || 'en';
-        document.getElementById('timezoneSelect').value = preferences.timezone || 'UTC+3';
-        document.getElementById('autoBookConfirm').checked = preferences.autoConfirm || false;
+        const languageSelect = document.getElementById('languageSelect');
+        const timezoneSelect = document.getElementById('timezoneSelect');
+        const autoBookConfirm = document.getElementById('autoBookConfirm');
+        
+        if (languageSelect) languageSelect.value = preferences.language || 'en';
+        if (timezoneSelect) timezoneSelect.value = preferences.timezone || 'UTC+3';
+        if (autoBookConfirm) autoBookConfirm.checked = preferences.autoConfirm || false;
     }
 }
 
@@ -386,7 +562,8 @@ function savePreferences() {
 // ========== UI FUNCTIONS ==========
 function showSection(sectionId) {
     // Hide all sections
-    document.querySelectorAll('.account-section').forEach(section => {
+    const sections = document.querySelectorAll('.account-section');
+    sections.forEach(section => {
         section.classList.remove('active');
     });
     
@@ -396,35 +573,39 @@ function showSection(sectionId) {
         selectedSection.classList.add('active');
     }
     
-    // Update active menu item
-    document.querySelectorAll('.account-menu li').forEach(menuItem => {
-        menuItem.classList.remove('active');
-        if (menuItem.getAttribute('data-section') === sectionId) {
-            menuItem.classList.add('active');
+    // Update menu active state
+    const menuItems = document.querySelectorAll('.account-menu li');
+    menuItems.forEach(item => {
+        item.classList.remove('active');
+        const itemSection = item.getAttribute('data-section');
+        if (itemSection === sectionId) {
+            item.classList.add('active');
         }
     });
 }
 
 function showNotification(message, type = 'info') {
     const toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) return;
+    
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
     
-    let icon = 'bi-info-circle-fill';
-    let borderColor = '#0d6efd';
+    let icon = 'fa-info-circle';
+    let borderColor = '#4361ee';
     
     if (type === 'success') {
-        icon = 'bi-check-circle-fill';
+        icon = 'fa-check-circle';
         borderColor = '#198754';
     } else if (type === 'error') {
-        icon = 'bi-exclamation-triangle-fill';
+        icon = 'fa-exclamation-triangle';
         borderColor = '#dc3545';
     }
     
     toast.style.borderLeftColor = borderColor;
     toast.innerHTML = `
         <div class="d-flex align-items-center gap-2">
-            <i class="bi ${icon}" style="color: ${borderColor}"></i>
+            <i class="fas ${icon}" style="color: ${borderColor}"></i>
             <span class="flex-grow-1">${escapeHtml(message)}</span>
             <button class="btn-close btn-sm" onclick="this.closest('.toast-notification').remove()"></button>
         </div>
@@ -458,43 +639,36 @@ function escapeHtml(str) {
 
 // ========== EVENT LISTENERS ==========
 function setupEventListeners() {
-    // Profile form
     const profileForm = document.getElementById('profileForm');
     if (profileForm) {
         profileForm.addEventListener('submit', saveProfile);
     }
     
-    // Password form
     const passwordForm = document.getElementById('passwordForm');
     if (passwordForm) {
         passwordForm.addEventListener('submit', changePassword);
     }
     
-    // Add location button
     const addLocationBtn = document.getElementById('addLocationBtn');
     if (addLocationBtn) {
         addLocationBtn.addEventListener('click', addLocation);
     }
     
-    // Add payment button
     const addPaymentBtn = document.getElementById('addPaymentBtn');
     if (addPaymentBtn) {
         addPaymentBtn.addEventListener('click', addPaymentMethod);
     }
     
-    // Save notifications button
     const saveNotificationsBtn = document.getElementById('saveNotificationsBtn');
     if (saveNotificationsBtn) {
         saveNotificationsBtn.addEventListener('click', saveNotifications);
     }
     
-    // Save preferences button
     const savePreferencesBtn = document.getElementById('savePreferencesBtn');
     if (savePreferencesBtn) {
         savePreferencesBtn.addEventListener('click', savePreferences);
     }
     
-    // Enter key for location input
     const locationInput = document.getElementById('newLocation');
     if (locationInput) {
         locationInput.addEventListener('keypress', (e) => {
@@ -508,13 +682,22 @@ function setupEventListeners() {
 function setupMenuClickHandlers() {
     const menuItems = document.querySelectorAll('.account-menu li');
     menuItems.forEach(item => {
-        item.addEventListener('click', function() {
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
             const section = this.getAttribute('data-section');
             if (section === 'logout') {
                 logout();
-            } else {
+            } else if (section) {
                 showSection(section);
             }
         });
     });
 }
+
+// Make functions globally available
+window.deleteLocation = deleteLocation;
+window.deletePaymentMethod = deletePaymentMethod;
+window.showNotification = showNotification;
+window.openSidebar = openSidebar;
+window.closeSidebar = closeSidebar;
+window.showSection = showSection;

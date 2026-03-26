@@ -8,6 +8,7 @@
 <!-- External Dependencies -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
 
 <!-- External CSS -->
@@ -19,53 +20,53 @@
     <!-- Mobile Overlay -->
     <div class="overlay-blur" id="mobileOverlay"></div>
 
-    <!-- LEFT SIDEBAR - HAMBURGER COLLAPSIBLE -->
+    <!-- LEFT SIDEBAR - Matching Index Style -->
     <aside class="sidebar" id="mainSidebar">
         <div class="sidebar-header">
             <button class="sidebar-close-btn" id="sidebarCloseBtn">
-                <i class="bi bi-x-lg"></i>
+                <i class="fas fa-times"></i>
             </button>
         </div>
         <div class="profile text-center">
             <div class="avatar">A</div>
             <h4>ALY HASSAN</h4>
-            <p><i class="bi bi-geo-alt-fill"></i> Unguja, Zanzibar</p>
+            <p><i class="fas fa-map-marker-alt"></i> Unguja, Zanzibar</p>
         </div>
 
         <ul class="menu" id="sidebarMenu">
-            <li data-menu="bookings" class="active"><i class="bi bi-calendar-check-fill"></i> My Bookings</li>
-            <li data-menu="quotes"><i class="bi bi-file-text-fill"></i> My Quotes</li>
-            <li data-menu="profile"><i class="bi bi-person-circle"></i> My Profile</li>
-            <li data-menu="payments"><i class="bi bi-credit-card-2-front"></i> Outstanding Payments</li>
-            <li data-menu="locations"><i class="bi bi-geo-alt"></i> Saved Locations</li>
-            <li data-menu="methods"><i class="bi bi-wallet2"></i> Payment Methods</li>
-            <li data-menu="support"><i class="bi bi-headset"></i> Support</li>
-            <li data-menu="settings"><i class="bi bi-sliders2"></i> Settings</li>
-            <li data-menu="feedback"><i class="bi bi-chat-dots"></i> Feedback</li>
-            <li data-menu="terms"><i class="bi bi-file-earmark-text"></i> Terms & Conditions</li>
-            <li data-menu="delete"><i class="bi bi-trash3"></i> Delete Account</li>
-            <li data-menu="logout"><i class="bi bi-box-arrow-right"></i> Logout</li>
+            <li data-menu="bookings" class="active"><i class="fas fa-calendar-check"></i> My Bookings</li>
+            <li data-menu="quotes"><i class="fas fa-file-alt"></i> My Quotes</li>
+            <li data-menu="payments"><i class="fas fa-credit-card"></i> Outstanding Payments</li>
+            <li data-menu="locations"><i class="fas fa-map-marker-alt"></i> Saved Locations</li>
+            <li data-menu="methods"><i class="fas fa-wallet"></i> Payment Methods</li>
+            <li data-menu="support"><i class="fas fa-headset"></i> Support</li>
+            <li data-menu="settings"><i class="fas fa-sliders-h"></i> Settings</li>
+            <li data-menu="feedback"><i class="fas fa-comment-dots"></i> Feedback</li>
+            <li data-menu="terms"><i class="fas fa-file-contract"></i> Terms & Conditions</li>
+            <li data-menu="delete"><i class="fas fa-trash-alt"></i> Delete Account</li>
+            <li data-menu="logout"><i class="fas fa-sign-out-alt"></i> Logout</li>
         </ul>
         
         <div class="sidebar-footer">
-            <small><i class="bi bi-shield-check"></i> CSMS v2.0</small>
+            <small><i class="fas fa-shield-alt"></i> CSMS v2.0</small>
         </div>
     </aside>
 
     <!-- RIGHT CONTENT -->
     <main class="content">
-        <!-- Top Bar with Hamburger Icon (Always Visible) -->
+        <!-- Top Bar with Hamburger Icon -->
         <div class="top-bar">
             <button class="hamburger-btn" id="hamburgerToggle">
-                <i class="bi bi-list"></i>
+                <i class="fas fa-bars"></i>
             </button>
             <div class="top-bar-logo">
-                <i class="bi bi-briefcase-fill text-primary"></i>
+                <img src="image/logo.jpeg" alt="CSMS Logo" class="logo-small">
                 <span>CSMS Dashboard</span>
             </div>
             <div class="top-bar-actions">
-                <i class="bi bi-bell" id="notificationIcon"></i>
-                <i class="bi bi-envelope" id="messageIcon"></i>
+                <i class="fas fa-bell" id="notificationIcon"></i>
+                <i class="fas fa-envelope" id="messageIcon"></i>
+                <a href="index.html" class="home-link"><i class="fas fa-home"></i></a>
             </div>
         </div>
 

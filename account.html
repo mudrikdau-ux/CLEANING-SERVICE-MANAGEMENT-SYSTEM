@@ -8,12 +8,40 @@
 <!-- External Dependencies -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
 
 <!-- External CSS -->
 <link rel="stylesheet" href="css/account.css">
 </head>
 <body>
+
+<!-- Top Bar - Matching Index (No Search Bar) -->
+<div class="top-bar">
+    <a href="index.html"><img src="image/logo.jpeg" alt="CSMS Logo" class="logo"></a>
+    <div class="top-bar-center">
+        <a href="index.html" class="home-icon-link">
+            <i class="fas fa-home"></i> Home
+        </a>
+    </div>
+    <div class="hamburger" onclick="openSidebar()">
+        <i class="fas fa-bars"></i>
+    </div>
+</div>
+
+<!-- Right Sidebar - Matching Index -->
+<div id="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeSidebar()"><i class="fas fa-times"></i></a>
+    <a href="index.html"><i class="fas fa-home"></i> Home</a>
+    <a href="service.html"><i class="fas fa-broom"></i> Services</a>
+    <a href="aboutus.html"><i class="fas fa-info-circle"></i> About Us</a>
+    <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+    <a href="staff.html"><i class="fas fa-sign-in-alt"></i> Staff Panel</a>
+    <a href="register.html"><i class="fas fa-user-plus"></i> Register</a>
+    <a href="account.html"><i class="fas fa-user"></i> My Account</a>
+    <a href="admin.html"><i class="fas fa-cog"></i> Admin Panel</a>
+    <a href="tracking.html"><i class="fas fa-info-circle"></i> My Tracking</a>
+</div>
 
 <div class="account-wrapper">
     <div class="container-fluid">
@@ -24,7 +52,7 @@
                 <div class="sidebar-card">
                     <div class="user-header">
                         <div class="user-avatar" id="userAvatar">
-                            <i class="bi bi-person-fill"></i>
+                            <span class="initial">A</span>
                         </div>
                         <h5 id="userDisplayName">Aly Hassan</h5>
                         <p id="userDisplayEmail">aly@csms.co.tz</p>
@@ -32,39 +60,39 @@
                     
                     <ul class="account-menu" id="accountMenu">
                         <li data-section="profile" class="active">
-                            <i class="bi bi-person-circle"></i>
+                            <i class="fas fa-user-circle"></i>
                             <span>Profile Information</span>
-                            <i class="bi bi-chevron-right ms-auto"></i>
+                            <i class="fas fa-chevron-right ms-auto"></i>
                         </li>
                         <li data-section="password">
-                            <i class="bi bi-shield-lock"></i>
+                            <i class="fas fa-shield-alt"></i>
                             <span>Change Password</span>
-                            <i class="bi bi-chevron-right ms-auto"></i>
+                            <i class="fas fa-chevron-right ms-auto"></i>
                         </li>
                         <li data-section="location">
-                            <i class="bi bi-geo-alt"></i>
+                            <i class="fas fa-map-marker-alt"></i>
                             <span>Saved Locations</span>
-                            <i class="bi bi-chevron-right ms-auto"></i>
+                            <i class="fas fa-chevron-right ms-auto"></i>
                         </li>
                         <li data-section="payment">
-                            <i class="bi bi-credit-card"></i>
+                            <i class="fas fa-credit-card"></i>
                             <span>Payment Methods</span>
-                            <i class="bi bi-chevron-right ms-auto"></i>
+                            <i class="fas fa-chevron-right ms-auto"></i>
                         </li>
                         <li data-section="notifications">
-                            <i class="bi bi-bell"></i>
+                            <i class="fas fa-bell"></i>
                             <span>Notifications</span>
-                            <i class="bi bi-chevron-right ms-auto"></i>
+                            <i class="fas fa-chevron-right ms-auto"></i>
                         </li>
                         <li data-section="preferences">
-                            <i class="bi bi-sliders2"></i>
+                            <i class="fas fa-sliders-h"></i>
                             <span>Preferences</span>
-                            <i class="bi bi-chevron-right ms-auto"></i>
+                            <i class="fas fa-chevron-right ms-auto"></i>
                         </li>
                         <li class="logout-item" data-section="logout">
-                            <i class="bi bi-box-arrow-right"></i>
+                            <i class="fas fa-sign-out-alt"></i>
                             <span>Logout</span>
-                            <i class="bi bi-chevron-right ms-auto"></i>
+                            <i class="fas fa-chevron-right ms-auto"></i>
                         </li>
                     </ul>
                 </div>
@@ -77,8 +105,28 @@
                     <!-- PROFILE SECTION -->
                     <div id="profileSection" class="account-section active">
                         <div class="section-header">
-                            <h3><i class="bi bi-person-circle text-primary"></i> Profile Information</h3>
+                            <h3><i class="fas fa-user-circle text-primary"></i> Profile Information</h3>
                             <p>Manage your personal details and contact information</p>
+                        </div>
+                        
+                        <!-- Profile Picture Section -->
+                        <div class="profile-picture-section">
+                            <div class="profile-picture-container">
+                                <div class="profile-picture" id="profilePicture">
+                                    <i class="fas fa-user-circle"></i>
+                                    <img id="profileImage" src="" alt="Profile Picture" style="display: none;">
+                                </div>
+                                <div class="profile-picture-actions">
+                                    <label for="profilePictureUpload" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-camera"></i> Change Photo
+                                    </label>
+                                    <input type="file" id="profilePictureUpload" accept="image/*" style="display: none;">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" id="removeProfilePicture" style="display: none;">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                </div>
+                                <small class="text-muted">Upload a profile picture (JPG, PNG, max 2MB)</small>
+                            </div>
                         </div>
                         
                         <form id="profileForm">
@@ -102,14 +150,9 @@
                                 <label class="form-label">Phone Number</label>
                                 <input type="tel" id="phone" class="form-control form-control-lg" placeholder="+255 XXX XXX XXX">
                             </div>
-                            
-                            <div class="mb-4">
-                                <label class="form-label">Bio</label>
-                                <textarea id="bio" class="form-control" rows="3" placeholder="Tell us a little about yourself..."></textarea>
-                            </div>
-                            
+                                                       
                             <button type="submit" class="btn btn-primary btn-lg px-5">
-                                <i class="bi bi-check-circle"></i> Save Changes
+                                <i class="fas fa-check-circle"></i> Save Changes
                             </button>
                         </form>
                     </div>
@@ -117,7 +160,7 @@
                     <!-- CHANGE PASSWORD SECTION -->
                     <div id="passwordSection" class="account-section">
                         <div class="section-header">
-                            <h3><i class="bi bi-shield-lock text-primary"></i> Change Password</h3>
+                            <h3><i class="fas fa-shield-alt text-primary"></i> Change Password</h3>
                             <p>Ensure your account security by updating your password</p>
                         </div>
                         
@@ -139,7 +182,7 @@
                             </div>
                             
                             <button type="submit" class="btn btn-primary btn-lg px-5">
-                                <i class="bi bi-key"></i> Update Password
+                                <i class="fas fa-key"></i> Update Password
                             </button>
                         </form>
                     </div>
@@ -147,7 +190,7 @@
                     <!-- SAVED LOCATIONS SECTION -->
                     <div id="locationSection" class="account-section">
                         <div class="section-header">
-                            <h3><i class="bi bi-geo-alt text-primary"></i> Saved Locations</h3>
+                            <h3><i class="fas fa-map-marker-alt text-primary"></i> Saved Locations</h3>
                             <p>Manage your frequently used addresses for quick booking</p>
                         </div>
                         
@@ -155,36 +198,32 @@
                             <div class="input-group mb-3">
                                 <input type="text" id="newLocation" class="form-control form-control-lg" placeholder="Enter a new location (e.g., Home, Office, etc.)">
                                 <button class="btn btn-primary btn-lg" id="addLocationBtn">
-                                    <i class="bi bi-plus-circle"></i> Add Location
+                                    <i class="fas fa-plus-circle"></i> Add Location
                                 </button>
                             </div>
                         </div>
                         
-                        <div id="locationsList" class="locations-container">
-                            <!-- Locations will be dynamically inserted here -->
-                        </div>
+                        <div id="locationsList" class="locations-container"></div>
                     </div>
 
                     <!-- PAYMENT METHODS SECTION -->
                     <div id="paymentSection" class="account-section">
                         <div class="section-header">
-                            <h3><i class="bi bi-credit-card text-primary"></i> Payment Methods</h3>
+                            <h3><i class="fas fa-credit-card text-primary"></i> Payment Methods</h3>
                             <p>Add and manage your preferred payment options</p>
                         </div>
                         
-                        <div id="paymentMethodsList" class="payment-methods-container">
-                            <!-- Payment methods will be dynamically inserted -->
-                        </div>
+                        <div id="paymentMethodsList" class="payment-methods-container"></div>
                         
                         <button class="btn btn-outline-primary btn-lg mt-3" id="addPaymentBtn">
-                            <i class="bi bi-plus-circle"></i> Add New Payment Method
+                            <i class="fas fa-plus-circle"></i> Add New Payment Method
                         </button>
                     </div>
 
                     <!-- NOTIFICATIONS SECTION -->
                     <div id="notificationsSection" class="account-section">
                         <div class="section-header">
-                            <h3><i class="bi bi-bell text-primary"></i> Notification Settings</h3>
+                            <h3><i class="fas fa-bell text-primary"></i> Notification Settings</h3>
                             <p>Choose how you want to receive updates</p>
                         </div>
                         
@@ -192,7 +231,7 @@
                             <div class="notification-item">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <i class="bi bi-envelope-fill text-primary"></i>
+                                        <i class="fas fa-envelope text-primary"></i>
                                         <strong>Email Notifications</strong>
                                         <p class="text-muted small">Receive booking confirmations and updates via email</p>
                                     </div>
@@ -205,7 +244,7 @@
                             <div class="notification-item">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <i class="bi bi-chat-dots-fill text-primary"></i>
+                                        <i class="fas fa-sms text-primary"></i>
                                         <strong>SMS Notifications</strong>
                                         <p class="text-muted small">Get text message alerts for booking status</p>
                                     </div>
@@ -218,7 +257,7 @@
                             <div class="notification-item">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <i class="bi bi-megaphone-fill text-primary"></i>
+                                        <i class="fas fa-tags text-primary"></i>
                                         <strong>Promotional Offers</strong>
                                         <p class="text-muted small">Receive exclusive deals and discounts</p>
                                     </div>
@@ -230,14 +269,14 @@
                         </div>
                         
                         <button class="btn btn-primary btn-lg px-5 mt-3" id="saveNotificationsBtn">
-                            <i class="bi bi-save"></i> Save Preferences
+                            <i class="fas fa-save"></i> Save Preferences
                         </button>
                     </div>
 
                     <!-- PREFERENCES SECTION -->
                     <div id="preferencesSection" class="account-section">
                         <div class="section-header">
-                            <h3><i class="bi bi-sliders2 text-primary"></i> Preferences</h3>
+                            <h3><i class="fas fa-sliders-h text-primary"></i> Preferences</h3>
                             <p>Customize your account settings</p>
                         </div>
                         
@@ -271,20 +310,71 @@
                         </div>
                         
                         <button class="btn btn-primary btn-lg px-5 mt-3" id="savePreferencesBtn">
-                            <i class="bi bi-save"></i> Save Preferences
+                            <i class="fas fa-save"></i> Save Preferences
                         </button>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Footer - Matching Index -->
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <h5>About CSMS</h5>
+                <p>CSMS is Zanzibar's premier cleaning service provider, offering professional and reliable cleaning solutions for homes and businesses since 2020.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <h5>Quick Links</h5>
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
+                    <li><a href="service.html"><i class="fas fa-chevron-right"></i> Our Services</a></li>
+                    <li><a href="aboutus.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                    <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
+                    <li><a href="login.html"><i class="fas fa-chevron-right"></i> Login</a></li>
+                    <li><a href="register.html"><i class="fas fa-chevron-right"></i> Register</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <h5>Contact Info</h5>
+                <ul class="contact-info">
+                    <li><i class="fas fa-map-marker-alt"></i> Stone Town, Zanzibar</li>
+                    <li><i class="fas fa-phone"></i> +255 777 123 456</li>
+                    <li><i class="fas fa-envelope"></i> info@csms.co.tz</li>
+                    <li><i class="fas fa-clock"></i> Mon-Sat: 8:00 AM - 8:00 PM</li>
+                </ul>
+                
+                <h5 class="mt-4">Newsletter</h5>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email" required>
+                    <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>&copy; 2024 CSMS - Cleaning Service Management System. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
 <!-- Toast Notification Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
 <!-- External JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/account.js"></script>
 </body>
 </html>

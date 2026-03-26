@@ -4,10 +4,25 @@
     box-sizing: border-box;
 }
 
+:root {
+    --primary-color: #4361ee;
+    --secondary-color: #3f37c9;
+    --success-color: #4cc9f0;
+    --danger-color: #f72585;
+    --warning-color: #f8961e;
+    --dark-color: #1e1e2f;
+    --light-color: #f8f9fa;
+    --gray-color: #6c757d;
+    --border-radius: 10px;
+    --box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    --transition: all 0.3s ease;
+}
+
 body {
     font-family: 'Inter', sans-serif;
-    background: #f5f7fc;
+    background: #f4f7fc;
     overflow-x: hidden;
+    min-height: 100vh;
 }
 
 /* ========== DASHBOARD WRAPPER ========== */
@@ -17,12 +32,11 @@ body {
     position: relative;
 }
 
-/* ========== SIDEBAR STYLES ========== */
+/* ========== SIDEBAR STYLES - MATCHING INDEX ========== */
 .sidebar {
     width: 280px;
-    background: linear-gradient(180deg, #ffffff 0%, #fefefe 100%);
-    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.08);
-    border-right: 1px solid rgba(0, 0, 0, 0.06);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -36,12 +50,11 @@ body {
     transform: translateX(0);
 }
 
-/* Sidebar Header with Close Button */
 .sidebar-header {
     display: none;
     justify-content: flex-end;
     padding: 15px 20px;
-    border-bottom: 1px solid #eef2f6;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .sidebar-close-btn {
@@ -49,28 +62,27 @@ body {
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #64748b;
+    color: white;
     padding: 5px;
     border-radius: 8px;
     transition: all 0.2s;
 }
 
 .sidebar-close-btn:hover {
-    background: #f1f5f9;
-    color: #0d6efd;
+    background: rgba(255,255,255,0.2);
+    transform: rotate(90deg);
 }
 
-/* Scrollbar styling */
 .sidebar::-webkit-scrollbar {
     width: 4px;
 }
 
 .sidebar::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: rgba(255,255,255,0.1);
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: rgba(255,255,255,0.3);
     border-radius: 4px;
 }
 
@@ -78,14 +90,15 @@ body {
 .profile {
     padding: 32px 20px 24px;
     text-align: center;
-    border-bottom: 1px solid #eef2f6;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
     margin-bottom: 8px;
 }
 
 .profile .avatar {
     width: 88px;
     height: 88px;
-    background: linear-gradient(135deg, #1e2a3e, #0f172a);
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
     color: white;
     border-radius: 28px;
     display: flex;
@@ -94,8 +107,9 @@ body {
     font-size: 36px;
     font-weight: 600;
     margin: 0 auto 16px;
-    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.2);
     transition: transform 0.2s;
+    border: 2px solid rgba(255,255,255,0.3);
 }
 
 .profile .avatar:hover {
@@ -106,13 +120,13 @@ body {
     font-weight: 700;
     font-size: 1.35rem;
     margin-bottom: 6px;
-    color: #0a2540;
+    color: white;
     letter-spacing: -0.2px;
 }
 
 .profile p {
     font-size: 0.8rem;
-    color: #5b6e8c;
+    color: rgba(255,255,255,0.8);
     margin-bottom: 0;
     display: flex;
     align-items: center;
@@ -124,7 +138,7 @@ body {
     font-size: 12px;
 }
 
-/* Menu List */
+/* Menu List - Matching Index */
 .menu {
     list-style: none;
     padding: 0 12px;
@@ -141,7 +155,7 @@ body {
     border-radius: 14px;
     font-weight: 500;
     font-size: 0.92rem;
-    color: #334155;
+    color: rgba(255,255,255,0.8);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -149,50 +163,50 @@ body {
 .menu li i {
     font-size: 1.25rem;
     width: 28px;
-    color: #64748b;
+    color: rgba(255,255,255,0.7);
     transition: color 0.2s;
 }
 
 .menu li:hover {
-    background: #f1f5f9;
-    color: #0d6efd;
-    transform: translateX(2px);
+    background: rgba(255,255,255,0.2);
+    color: white;
+    transform: translateX(5px);
 }
 
 .menu li:hover i {
-    color: #0d6efd;
+    color: white;
 }
 
 .menu li.active {
-    background: linear-gradient(135deg, #eef2ff, #e8edff);
-    color: #0d6efd;
+    background: rgba(255,255,255,0.25);
+    color: white;
     font-weight: 600;
-    border-left: 3px solid #0d6efd;
+    border-left: 3px solid white;
 }
 
 .menu li.active i {
-    color: #0d6efd;
+    color: white;
 }
 
 /* Sidebar Footer */
 .sidebar-footer {
     padding: 20px 24px;
     text-align: center;
-    border-top: 1px solid #eef2f6;
+    border-top: 1px solid rgba(255,255,255,0.1);
     font-size: 0.7rem;
-    color: #94a3b8;
+    color: rgba(255,255,255,0.6);
 }
 
-/* ========== TOP BAR WITH HAMBURGER (ALWAYS VISIBLE) ========== */
+/* ========== TOP BAR - MATCHING INDEX ========== */
 .top-bar {
     background: white;
-    border-radius: 20px;
+    border-radius: 15px;
     padding: 12px 24px;
     margin-bottom: 28px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--box-shadow);
     border: 1px solid #eef2f8;
 }
 
@@ -201,18 +215,18 @@ body {
     border: 1px solid #e2e8f0;
     font-size: 24px;
     padding: 8px 14px;
-    border-radius: 14px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #1e2a3e;
+    color: var(--dark-color);
 }
 
 .hamburger-btn:hover {
-    background: #0d6efd;
-    border-color: #0d6efd;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
     color: white;
     transform: scale(0.98);
 }
@@ -220,37 +234,51 @@ body {
 .top-bar-logo {
     font-weight: 700;
     font-size: 1.2rem;
-    color: #0a2540;
+    color: var(--dark-color);
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.top-bar-logo i {
-    font-size: 1.4rem;
+.top-bar-logo .logo-small {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 8px;
 }
 
 .top-bar-actions {
     display: flex;
     gap: 20px;
+    align-items: center;
 }
 
 .top-bar-actions i {
     font-size: 1.3rem;
-    color: #64748b;
+    color: var(--gray-color);
     cursor: pointer;
-    transition: color 0.2s;
+    transition: var(--transition);
 }
 
 .top-bar-actions i:hover {
-    color: #0d6efd;
+    color: var(--primary-color);
+    transform: translateY(-2px);
 }
 
-/* ========== MOBILE RESPONSIVE SIDEBAR ========== */
+.top-bar-actions .home-link {
+    color: var(--gray-color);
+    text-decoration: none;
+}
+
+.top-bar-actions .home-link:hover {
+    color: var(--primary-color);
+}
+
+/* ========== MOBILE RESPONSIVE ========== */
 @media (max-width: 992px) {
     .sidebar {
         transform: translateX(-100%);
-        box-shadow: 2px 0 30px rgba(0, 0, 0, 0.15);
+        box-shadow: 2px 0 30px rgba(0, 0, 0, 0.3);
         z-index: 1060;
     }
     
@@ -300,7 +328,7 @@ body {
 .content {
     flex: 1;
     padding: 24px 32px;
-    background: #f5f7fc;
+    background: #f4f7fc;
     transition: all 0.2s;
     margin-left: 280px;
 }
@@ -316,7 +344,7 @@ body {
 .page-title {
     font-weight: 700;
     font-size: 1.9rem;
-    color: #0a2540;
+    color: var(--dark-color);
     letter-spacing: -0.3px;
     margin-bottom: 8px;
 }
@@ -341,9 +369,9 @@ body {
     padding: 8px 24px;
     font-weight: 600;
     font-size: 0.9rem;
-    border-radius: 40px;
-    color: #5b6e8c;
-    transition: all 0.25s;
+    border-radius: 25px;
+    color: var(--gray-color);
+    transition: var(--transition);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -356,14 +384,14 @@ body {
 
 .tab:hover {
     background: #e9ecef;
-    color: #0d6efd;
+    color: var(--primary-color);
     transform: translateY(-1px);
 }
 
 .tab.active {
-    background: #0d6efd;
+    background: var(--primary-color);
     color: white;
-    box-shadow: 0 6px 14px rgba(13, 110, 253, 0.25);
+    box-shadow: 0 6px 14px rgba(67, 97, 238, 0.25);
 }
 
 /* ========== BOOKING BOX & CARDS ========== */
@@ -379,24 +407,24 @@ body {
 
 .booking-card {
     background: white;
-    border-radius: 24px;
+    border-radius: 15px;
     padding: 22px 26px;
-    transition: all 0.25s ease;
+    transition: var(--transition);
     border: 1px solid #eef2f8;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    box-shadow: var(--box-shadow);
 }
 
 .booking-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 20px 30px -15px rgba(0, 0, 0, 0.1);
-    border-color: #dce5f0;
+    box-shadow: 0 20px 30px -15px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
 }
 
 /* Badges */
 .booking-badge {
     display: inline-block;
     padding: 5px 14px;
-    border-radius: 40px;
+    border-radius: 25px;
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -405,7 +433,7 @@ body {
 
 .badge-upcoming {
     background: #e8f0fe;
-    color: #0d6efd;
+    color: var(--primary-color);
 }
 
 .badge-delivered {
@@ -428,18 +456,18 @@ body {
     width: 48px;
     height: 48px;
     background: #f8fafc;
-    border-radius: 18px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
-    color: #0d6efd;
+    color: var(--primary-color);
 }
 
 /* Empty State */
 .empty-state {
     background: white;
-    border-radius: 32px;
+    border-radius: 15px;
     padding: 70px 24px;
     text-align: center;
     border: 1px dashed #cbdde9;
@@ -454,11 +482,11 @@ body {
 .empty-state h5 {
     font-weight: 600;
     margin-bottom: 10px;
-    color: #2c3e50;
+    color: var(--dark-color);
 }
 
 .empty-state p {
-    color: #6c7e97;
+    color: var(--gray-color);
 }
 
 /* Pay Now Button */
@@ -467,8 +495,8 @@ body {
     border: none;
     padding: 6px 16px;
     font-size: 0.8rem;
-    border-radius: 40px;
-    transition: all 0.2s;
+    border-radius: 25px;
+    transition: var(--transition);
 }
 
 .pay-now-btn:hover {
@@ -478,7 +506,7 @@ body {
 
 /* Utility */
 .text-muted-custom {
-    color: #7c8ba0;
+    color: var(--gray-color);
 }
 
 hr {
@@ -501,14 +529,14 @@ hr {
 /* Profile Content Styles */
 .profile-content {
     background: white;
-    border-radius: 24px;
+    border-radius: 15px;
     padding: 32px;
 }
 
 .profile-avatar-large {
     width: 120px;
     height: 120px;
-    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     border-radius: 60px;
     display: flex;
     align-items: center;
@@ -521,27 +549,27 @@ hr {
 /* Settings Card */
 .settings-card {
     background: white;
-    border-radius: 24px;
+    border-radius: 15px;
     padding: 28px;
 }
 
 /* Payment Card */
 .payment-card {
     background: white;
-    border-radius: 24px;
+    border-radius: 15px;
     padding: 24px;
 }
 
 /* Quote Card */
 .quote-card {
     background: white;
-    border-radius: 24px;
+    border-radius: 15px;
     padding: 24px;
-    transition: all 0.25s ease;
+    transition: var(--transition);
     border: 1px solid #eef2f8;
 }
 
 .quote-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 20px -12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--box-shadow);
 }

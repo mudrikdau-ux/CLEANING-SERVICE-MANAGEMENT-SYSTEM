@@ -262,62 +262,7 @@ function renderPanel(menuType) {
                 });
             }, 100);
             break;
-            
-        case "profile":
-            title = "My Profile";
-            content = `
-                <div class="section-header">
-                    <h1 class="page-title"><i class="bi bi-person-circle text-primary me-2"></i>My Profile</h1>
-                </div>
-                <div class="profile-content">
-                    <div class="d-flex gap-4 align-items-center flex-wrap">
-                        <div class="profile-avatar-large">A</div>
-                        <div>
-                            <h3 class="fw-bold">Aly Hassan</h3>
-                            <p class="mb-1"><i class="bi bi-envelope me-2"></i> aly.hassan@csms.co.tz</p>
-                            <p class="mb-1"><i class="bi bi-phone me-2"></i> +255 777 123 456</p>
-                            <p class="mb-3"><i class="bi bi-calendar me-2"></i> Member since January 2026</p>
-                            <button class="btn btn-primary rounded-pill px-4 edit-profile-btn"><i class="bi bi-pencil"></i> Edit Profile</button>
-                        </div>
-                    </div>
-                    <hr class="my-4">
-                    <div>
-                        <h5 class="fw-semibold">Account Statistics</h5>
-                        <div class="row mt-3">
-                            <div class="col-md-4 mb-3">
-                                <div class="bg-light rounded-3 p-3 text-center">
-                                    <i class="bi bi-calendar-check fs-2 text-primary"></i>
-                                    <h6 class="mt-2 mb-0">Total Bookings</h6>
-                                    <span class="fs-4 fw-bold">7</span>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <div class="bg-light rounded-3 p-3 text-center">
-                                    <i class="bi bi-star-fill fs-2 text-warning"></i>
-                                    <h6 class="mt-2 mb-0">Loyalty Points</h6>
-                                    <span class="fs-4 fw-bold">1,250</span>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <div class="bg-light rounded-3 p-3 text-center">
-                                    <i class="bi bi-gift fs-2 text-success"></i>
-                                    <h6 class="mt-2 mb-0">Active Promos</h6>
-                                    <span class="fs-4 fw-bold">3</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            dynamicPanel.innerHTML = content;
-            setTimeout(() => {
-                const editBtn = document.querySelector('.edit-profile-btn');
-                if (editBtn) {
-                    editBtn.addEventListener('click', () => showNotification('Profile editor would open here', 'info'));
-                }
-            }, 100);
-            break;
-            
+                        
         case "payments":
             title = "Outstanding Payments";
             content = `
