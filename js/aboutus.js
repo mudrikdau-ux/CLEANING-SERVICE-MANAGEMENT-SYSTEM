@@ -1,3 +1,26 @@
+// ========== SIDEBAR FUNCTIONS ==========
+function openSidebar() {
+    document.getElementById("sidebar").style.width = "280px";
+    document.body.style.overflow = "hidden";
+}
+
+function closeSidebar() {
+    document.getElementById("sidebar").style.width = "0";
+    document.body.style.overflow = "auto";
+}
+
+// Close sidebar when clicking outside
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.querySelector('.hamburger');
+    
+    if (sidebar && hamburger) {
+        if (!sidebar.contains(event.target) && !hamburger.contains(event.target) && sidebar.style.width === '280px') {
+            closeSidebar();
+        }
+    }
+});
+
 // ========== ANIMATION ON SCROLL ==========
 function initScrollAnimation() {
     const elements = document.querySelectorAll('.animate-on-scroll');
@@ -69,27 +92,29 @@ function initSmoothScroll() {
 
 // ========== NAVBAR SCROLL EFFECT ==========
 function initNavbarScroll() {
-    const navbar = document.querySelector('.navbar');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 100) {
-            navbar.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
-            navbar.style.background = 'rgba(255,255,255,0.98)';
-            navbar.style.backdropFilter = 'blur(10px)';
-        } else {
-            navbar.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
-            navbar.style.background = 'white';
-            navbar.style.backdropFilter = 'none';
-        }
-    });
+    const navbar = document.querySelector('.top-bar');
+    if (navbar) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                navbar.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
+                navbar.style.background = 'rgba(255,255,255,0.98)';
+                navbar.style.backdropFilter = 'blur(10px)';
+            } else {
+                navbar.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
+                navbar.style.background = 'white';
+                navbar.style.backdropFilter = 'none';
+            }
+        });
+    }
 }
 
 // ========== PARALLAX EFFECT ==========
 function initParallax() {
-    const heroSection = document.querySelector('.hero-section');
+    const heroSection = document.querySelector('.about-hero-section');
     if (heroSection) {
         window.addEventListener('scroll', () => {
             const scrolled = window.pageYOffset;
-            heroSection.style.backgroundPositionY = scrolled * 0.5 + 'px';
+            heroSection.style.backgroundPositionY = scrolled * 0.3 + 'px';
         });
     }
 }
@@ -120,10 +145,8 @@ function initFeatureCards() {
     });
 }
 
-// ========== TESTIMONIAL RANDOM ROTATION ==========
-function initTestimonialRotation() {
-    // Optional: Add testimonial carousel effect if desired
-    // For now, just adding a subtle animation on load
+// ========== TESTIMONIAL ANIMATION ==========
+function initTestimonialAnimation() {
     const testimonials = document.querySelectorAll('.testimonial-card');
     testimonials.forEach((testimonial, index) => {
         setTimeout(() => {
@@ -133,12 +156,11 @@ function initTestimonialRotation() {
     });
 }
 
-// ========== FORM VALIDATION FOR CTA ==========
+// ========== CTA BUTTON RIPPLE EFFECT ==========
 function initCTAButton() {
     const ctaButtons = document.querySelectorAll('.cta-buttons .btn');
     ctaButtons.forEach(button => {
         button.addEventListener('click', (e) => {
-            // Add ripple effect
             const ripple = document.createElement('span');
             ripple.classList.add('ripple');
             button.appendChild(ripple);
@@ -180,7 +202,7 @@ function addRippleStyles() {
             }
         }
         
-        .btn-light .ripple {
+        .btn-outline-light .ripple {
             background: rgba(0, 0, 0, 0.1);
         }
     `;
@@ -189,44 +211,53 @@ function addRippleStyles() {
 
 // ========== TOOLTIP INITIALIZATION ==========
 function initTooltips() {
-    // Add tooltips for social icons
-    const socialIcons = document.querySelectorAll('.team-social a, .footer-social a');
+    const socialIcons = document.querySelectorAll('.team-social a, .social-links a');
     socialIcons.forEach(icon => {
-        icon.setAttribute('title', `Follow us on ${icon.querySelector('i').className.split(' ')[1].replace('bi-', '')}`);
+        const platform = icon.querySelector('i').className.split(' ')[1].replace('fa-', '').replace('-', ' ');
+        icon.setAttribute('title', `Follow us on ${platform}`);
     });
 }
 
-// ========== WELCOME MESSAGE ==========
-function showWelcomeMessage() {
-    // Check if it's the user's first visit
-    const hasVisited = localStorage.getItem('hasVisitedAbout');
-    if (!hasVisited) {
-        setTimeout(() => {
-            showNotification('Welcome to CSMS! Discover why we are Zanzibar\'s trusted cleaning service.', 'info');
-            localStorage.setItem('hasVisitedAbout', 'true');
-        }, 1500);
+// ========== NEWSLETTER FORM HANDLING ==========
+function initNewsletterForm() {
+    const newsletterForm = document.querySelector('.newsletter-form');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const emailInput = this.querySelector('input[type="email"]');
+            if (emailInput && emailInput.value) {
+                if (validateEmail(emailInput.value)) {
+                    showNotification('Thank you for subscribing to our newsletter!', 'success');
+                    emailInput.value = '';
+                } else {
+                    showNotification('Please enter a valid email address', 'danger');
+                }
+            }
+        });
     }
+}
+
+// ========== EMAIL VALIDATION ==========
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
 }
 
 // ========== NOTIFICATION SYSTEM ==========
 function showNotification(message, type = 'info') {
+    const existingNotification = document.querySelector('.notification-toast');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
     const notification = document.createElement('div');
     notification.className = 'notification-toast';
     notification.innerHTML = `
         <div class="notification-content">
-            <i class="bi bi-${type === 'success' ? 'check-circle-fill' : type === 'error' ? 'exclamation-triangle-fill' : 'info-circle-fill'}"></i>
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'}"></i>
             <span>${message}</span>
             <button class="notification-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
         </div>
-    `;
-    
-    // Add styles for notification
-    notification.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999;
-        animation: slideInRight 0.3s ease-out;
     `;
     
     document.body.appendChild(notification);
@@ -239,77 +270,149 @@ function showNotification(message, type = 'info') {
     }, 4000);
 }
 
-// Add notification styles
-const notificationStyles = document.createElement('style');
-notificationStyles.textContent = `
-    .notification-toast {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        min-width: 280px;
-        max-width: 350px;
-        border-left: 4px solid #0d6efd;
-    }
-    
-    .notification-content {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 15px 20px;
-    }
-    
-    .notification-content i {
-        font-size: 1.2rem;
-        color: #0d6efd;
-    }
-    
-    .notification-content span {
-        flex: 1;
-        font-size: 0.9rem;
-        color: #1a202c;
-    }
-    
-    .notification-close {
-        background: none;
-        border: none;
-        font-size: 1.2rem;
-        cursor: pointer;
-        color: #999;
-        padding: 0;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .notification-close:hover {
-        color: #333;
-    }
-    
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
+// ========== ADD NOTIFICATION STYLES ==========
+function addNotificationStyles() {
+    const notificationStyles = document.createElement('style');
+    notificationStyles.textContent = `
+        .notification-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            min-width: 280px;
+            max-width: 350px;
+            border-left: 4px solid #4bb543;
+            animation: slideInRight 0.3s ease-out;
         }
-        to {
-            transform: translateX(0);
-            opacity: 1;
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
         }
+        
+        .notification-content i {
+            font-size: 1.2rem;
+        }
+        
+        .notification-content i.fa-check-circle {
+            color: #4bb543;
+        }
+        
+        .notification-content i.fa-exclamation-triangle {
+            color: #dc3545;
+        }
+        
+        .notification-content i.fa-info-circle {
+            color: #667eea;
+        }
+        
+        .notification-content span {
+            flex: 1;
+            font-size: 0.9rem;
+            color: #1a202c;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .notification-close:hover {
+            color: #333;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(notificationStyles);
+}
+
+// ========== WELCOME MESSAGE ==========
+function showWelcomeMessage() {
+    const hasVisited = localStorage.getItem('hasVisitedAbout');
+    if (!hasVisited) {
+        setTimeout(() => {
+            showNotification('Welcome to CSMS! Discover why we are Zanzibar\'s trusted cleaning service.', 'info');
+            localStorage.setItem('hasVisitedAbout', 'true');
+        }, 1500);
     }
+}
+
+// ========== IMAGE LOADING ANIMATION ==========
+function initImageLoading() {
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        if (img.complete) {
+            img.style.opacity = '1';
+        } else {
+            img.style.opacity = '0';
+            img.style.transition = 'opacity 0.5s';
+            img.addEventListener('load', () => {
+                img.style.opacity = '1';
+            });
+        }
+    });
+}
+
+// ========== CHECK LOGIN STATUS AND UPDATE UI ==========
+function updateLoginUI() {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const loginBtn = document.querySelector('.top-bar .btn-primary');
     
-    @keyframes slideOutRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
+    if (loginBtn) {
+        if (isLoggedIn) {
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+            loginBtn.href = '#';
+            loginBtn.onclick = function(e) {
+                e.preventDefault();
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('currentUser');
+                showNotification('Logged out successfully', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            };
+        } else {
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            loginBtn.href = 'login.html';
+            loginBtn.onclick = null;
         }
     }
-`;
-document.head.appendChild(notificationStyles);
+}
 
 // ========== INITIALIZE ALL ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -321,26 +424,21 @@ document.addEventListener('DOMContentLoaded', () => {
     initParallax();
     initTeamCards();
     initFeatureCards();
-    initTestimonialRotation();
+    initTestimonialAnimation();
     initCTAButton();
     addRippleStyles();
+    addNotificationStyles();
     initTooltips();
+    initNewsletterForm();
+    initImageLoading();
     showWelcomeMessage();
+    updateLoginUI();
     
-    // Add loading animation for images
-    const images = document.querySelectorAll('img');
-    images.forEach(img => {
-        img.addEventListener('load', () => {
-            img.style.opacity = '1';
-        });
-        img.style.opacity = '0';
-        img.style.transition = 'opacity 0.5s';
-    });
-    
-    // Log initialization
     console.log('About Us page fully loaded and initialized');
 });
 
 // ========== EXPORT FUNCTIONS FOR GLOBAL USE ==========
 window.showNotification = showNotification;
+window.openSidebar = openSidebar;
+window.closeSidebar = closeSidebar;
 window.initStatisticsCounter = initStatisticsCounter;
