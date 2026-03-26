@@ -37,6 +37,47 @@
 
     <!-- RIGHT: MULTI‑PHASE FORM -->
     <div class="col-lg-8 col-md-7">
+      <!-- PHASE PROGRESS INDICATOR -->
+      <div class="phase-progress-wrapper">
+        <div class="phase-progress" id="phaseProgress">
+          <div class="progress-step" data-phase="phase1">
+            <div class="step-icon"><i class="fas fa-broom"></i></div>
+            <div class="step-number">1</div>
+            <div class="step-label">Service</div>
+          </div>
+          <div class="progress-step" data-phase="phase2">
+            <div class="step-icon"><i class="fas fa-home"></i></div>
+            <div class="step-number">2</div>
+            <div class="step-label">Property</div>
+          </div>
+          <div class="progress-step" data-phase="phase3">
+            <div class="step-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="step-number">3</div>
+            <div class="step-label">Location</div>
+          </div>
+          <div class="progress-step" data-phase="phase4">
+            <div class="step-icon"><i class="fas fa-calendar"></i></div>
+            <div class="step-number">4</div>
+            <div class="step-label">Schedule</div>
+          </div>
+          <div class="progress-step" data-phase="phase5">
+            <div class="step-icon"><i class="fas fa-user"></i></div>
+            <div class="step-number">5</div>
+            <div class="step-label">Contact</div>
+          </div>
+          <div class="progress-step" data-phase="phase6">
+            <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="step-number">6</div>
+            <div class="step-label">Review</div>
+          </div>
+          <div class="progress-step" data-phase="phase7">
+            <div class="step-icon"><i class="fas fa-credit-card"></i></div>
+            <div class="step-number">7</div>
+            <div class="step-label">Payment</div>
+          </div>
+        </div>
+      </div>
+
       <form id="bookingForm" class="phase-container">
         <!-- PHASE 1 – Service details -->
         <div class="phase active" id="phase1">
@@ -66,9 +107,9 @@
           <button type="button" class="btn btn-primary next" data-next="phase2">Next <i class="fas fa-arrow-right ms-1"></i></button>
         </div>
 
-        <!-- PHASE 2 – Address -->
+        <!-- PHASE 2 – Property Type -->
         <div class="phase" id="phase2">
-          <h4><i class="fas fa-map-pin"></i> Address</h4>
+          <h4><i class="fas fa-building"></i> Property type</h4>
           <select id="propertyType" class="form-select mb-3">
             <option value="">Select property type</option>
             <option>Apartment</option>
@@ -77,21 +118,22 @@
             <option>Other</option>
           </select>
 
+          <button type="button" class="btn btn-primary next" data-next="phase3">Next <i class="fas fa-arrow-right ms-1"></i></button>
+          <button type="button" class="btn btn-outline-secondary prev" data-prev="phase1" style="margin-left: 10px;"><i class="fas fa-arrow-left me-1"></i> Back</button>
+        </div>
+
+        <!-- PHASE 3 – Address / Location -->
+        <div class="phase" id="phase3">
+          <h4><i class="fas fa-map-marked-alt"></i> Address details</h4>
           <div id="addressFields">
             <input type="text" id="street" class="form-control mb-2" placeholder="Street address">
             <input type="text" id="city" class="form-control mb-2" placeholder="City">
-            <input type="text" id="postal" class="form-control mb-2" placeholder="Postal code (optional)">
+            <input type="text" id="postal" class="form-control mb-3" placeholder="Postal code (optional)">
           </div>
-
-          <button type="button" class="btn btn-primary next" data-next="phase3">Next <i class="fas fa-arrow-right ms-1"></i></button>
-        </div>
-
-        <!-- PHASE 3 – Location / map -->
-        <div class="phase" id="phase3">
-          <h4><i class="fas fa-map-marked-alt"></i> Location</h4>
           <input type="text" id="locationSearch" class="form-control mb-3" placeholder="Search location...">
           <div class="map-box"><i class="fas fa-map"></i> interactive map preview</div>
           <button type="button" class="btn btn-primary next mt-3" data-next="phase4">Next <i class="fas fa-arrow-right ms-1"></i></button>
+          <button type="button" class="btn btn-outline-secondary prev" data-prev="phase2" style="margin-left: 10px;"><i class="fas fa-arrow-left me-1"></i> Back</button>
         </div>
 
         <!-- PHASE 4 – Date & time -->
@@ -104,6 +146,7 @@
           <input type="time" id="time" class="form-control mb-4" value="10:00">
 
           <button type="button" class="btn btn-primary next" data-next="phase5">Next <i class="fas fa-arrow-right ms-1"></i></button>
+          <button type="button" class="btn btn-outline-secondary prev" data-prev="phase3" style="margin-left: 10px;"><i class="fas fa-arrow-left me-1"></i> Back</button>
         </div>
 
         <!-- PHASE 5 – Contact info -->
@@ -114,6 +157,7 @@
           <input type="email" id="email" class="form-control mb-4" placeholder="Email address" value="john.m@example.com">
 
           <button type="button" class="btn btn-primary next" data-next="phase6">Review <i class="fas fa-arrow-right ms-1"></i></button>
+          <button type="button" class="btn btn-outline-secondary prev" data-prev="phase4" style="margin-left: 10px;"><i class="fas fa-arrow-left me-1"></i> Back</button>
         </div>
 
         <!-- PHASE 6 – Review & confirm -->
@@ -122,6 +166,7 @@
           <div id="review"></div>
           <p class="text-success"><i class="fas fa-tag me-2"></i> 5% discount may apply for long bookings!</p>
           <button type="button" class="btn btn-success next" data-next="phase7">Continue to payment</button>
+          <button type="button" class="btn btn-outline-secondary prev" data-prev="phase5" style="margin-left: 10px;"><i class="fas fa-arrow-left me-1"></i> Back</button>
         </div>
 
         <!-- PHASE 7 – Payment -->
@@ -135,6 +180,7 @@
           </select>
 
           <button type="submit" class="btn btn-success"><i class="fas fa-lock me-2"></i>Confirm & proceed</button>
+          <button type="button" class="btn btn-outline-secondary prev" data-prev="phase6" style="margin-left: 10px;"><i class="fas fa-arrow-left me-1"></i> Back</button>
         </div>
       </form>
     </div>
@@ -142,7 +188,5 @@
 </div>
 
 <script src="js/booking.js"></script>
-  
-</style>
 </body>
 </html>

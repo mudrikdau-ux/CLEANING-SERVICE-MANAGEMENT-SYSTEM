@@ -23,7 +23,9 @@
     // DOM Elements
     const phases = document.querySelectorAll('.phase');
     const nextBtns = document.querySelectorAll('.next');
+    const prevBtns = document.querySelectorAll('.prev');
     const bookingForm = document.getElementById('bookingForm');
+    const progressSteps = document.querySelectorAll('.progress-step');
     
     // Summary Elements
     const sumCleaners = document.getElementById('sumCleaners');
@@ -51,6 +53,40 @@
     const emailInp = document.getElementById('email');
     const instructionsInp = document.getElementById('instructions');
     const paymentSelect = document.getElementById('payment');
+    
+    // Update progress indicator
+    function updateProgress(currentPhaseId) {
+        // Get phase number from id (phase1 -> 1)
+        const currentPhaseNumber = parseInt(currentPhaseId.replace('phase', ''));
+        
+        progressSteps.forEach((step, index) => {
+            const stepPhase = step.getAttribute('data-phase');
+            const stepNumber = parseInt(stepPhase.replace('phase', ''));
+            
+            // Remove existing classes
+            step.classList.remove('active', 'completed');
+            
+            // Add appropriate class
+            if (stepNumber === currentPhaseNumber) {
+                step.classList.add('active');
+            } else if (stepNumber < currentPhaseNumber) {
+                step.classList.add('completed');
+            }
+        });
+        
+        // Add click handlers for progress steps (allow navigation to completed phases)
+        progressSteps.forEach(step => {
+            const stepPhase = step.getAttribute('data-phase');
+            const stepNumber = parseInt(stepPhase.replace('phase', ''));
+            
+            step.onclick = () => {
+                // Only allow navigation to completed phases or current phase
+                if (stepNumber <= parseInt(currentPhaseId.replace('phase', ''))) {
+                    showPhase(stepPhase);
+                }
+            };
+        });
+    }
     
     // Calculate total price
     function calculateTotal() {
@@ -168,6 +204,7 @@
         if (targetPhase) {
             targetPhase.classList.add('active');
             refreshSummary();
+            updateProgress(phaseId);
             
             // Scroll to top of form on mobile
             if (window.innerWidth <= 768) {
@@ -284,6 +321,16 @@
         });
     });
     
+    // Add event listeners to Previous buttons
+    prevBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const prevId = this.getAttribute('data-prev');
+            if (prevId) {
+                showPhase(prevId);
+            }
+        });
+    });
+    
     // Add live updates to all inputs
     const liveInputs = [
         cleanersInp, hoursInp, freqSelect, materialsSelect, 
@@ -364,7 +411,9 @@
             instructionsInp.value = '';
             streetInp.value = '';
             cityInp.value = '';
-            postal.value = '';
+            if (document.getElementById('postal')) {
+                document.getElementById('postal').value = '';
+            }
         } else {
             // Redirect to dashboard or home
             window.location.href = 'index.html';
@@ -384,6 +433,9 @@
         const today = new Date().toISOString().split('T')[0];
         dateInp.min = today;
     }
+    
+    // Initialize progress indicator
+    updateProgress('phase1');
     
     // Clear pending booking flag
     localStorage.removeItem('pendingBooking');
