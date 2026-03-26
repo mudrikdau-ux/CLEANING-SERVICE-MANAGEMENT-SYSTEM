@@ -64,30 +64,14 @@
                 <span>CSMS Dashboard</span>
             </div>
             <div class="top-bar-actions">
-                <i class="bi bi-bell"></i>
-                <i class="bi bi-envelope"></i>
+                <i class="bi bi-bell" id="notificationIcon"></i>
+                <i class="bi bi-envelope" id="messageIcon"></i>
             </div>
         </div>
 
         <!-- Dynamic Content Panel -->
         <div id="dynamicPanel">
-            <!-- Bookings Section (Default) -->
-            <div class="section-header">
-                <h1 class="page-title"><i class="bi bi-journal-bookmark-fill text-primary me-2"></i>My Bookings</h1>
-            </div>
-
-            <!-- FILTER TABS -->
-            <div class="tabs" id="filterTabs">
-                <button class="tab active" data-type="upcoming"><i class="bi bi-calendar-week"></i> Upcoming</button>
-                <button class="tab" data-type="delivered"><i class="bi bi-truck"></i> Delivered</button>
-                <button class="tab" data-type="cancelled"><i class="bi bi-x-circle"></i> Cancelled</button>
-                <button class="tab" data-type="unpaid"><i class="bi bi-exclamation-triangle"></i> Unpaid</button>
-            </div>
-
-            <!-- BOOKINGS DISPLAY -->
-            <div id="bookingList" class="booking-box">
-                <!-- JS will insert content -->
-            </div>
+            <!-- Content will be loaded dynamically -->
         </div>
     </main>
 </div>

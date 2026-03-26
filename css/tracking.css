@@ -1,4 +1,3 @@
-/* ========== GLOBAL STYLES ========== */
 * {
     margin: 0;
     padding: 0;
@@ -499,6 +498,50 @@ hr {
     }
 }
 
-.toast-notification {
-    animation: slideIn 0.3s ease-out;
+/* Profile Content Styles */
+.profile-content {
+    background: white;
+    border-radius: 24px;
+    padding: 32px;
+}
+
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    border-radius: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    color: white;
+}
+
+/* Settings Card */
+.settings-card {
+    background: white;
+    border-radius: 24px;
+    padding: 28px;
+}
+
+/* Payment Card */
+.payment-card {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+}
+
+/* Quote Card */
+.quote-card {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    transition: all 0.25s ease;
+    border: 1px solid #eef2f8;
+}
+
+.quote-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px -12px rgba(0, 0, 0, 0.1);
 }
