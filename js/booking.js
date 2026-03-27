@@ -1,20 +1,15 @@
-// ========== BOOKING FORM FUNCTIONALITY ==========
+// ========== ENHANCED BOOKING WITH FULL PAYMENT PROCESSING ==========
 
 (function() {
     'use strict';
     
-    // Check if user is logged in
+    // Check login
     function isLoggedIn() {
         return localStorage.getItem('isLoggedIn') === 'true';
     }
     
-    // Redirect to login if not logged in
     if (!isLoggedIn()) {
-        const bookingData = {
-            attempted: true,
-            timestamp: new Date().toISOString()
-        };
-        localStorage.setItem('pendingBooking', JSON.stringify(bookingData));
+        localStorage.setItem('pendingBooking', JSON.stringify({ attempted: true, timestamp: new Date().toISOString() }));
         alert('Please login to continue with booking');
         window.location.href = 'login.html';
         return;
@@ -52,332 +47,210 @@
     const lnameInp = document.getElementById('lname');
     const emailInp = document.getElementById('email');
     const instructionsInp = document.getElementById('instructions');
-    const paymentSelect = document.getElementById('payment');
     
-    // Update progress indicator
-    function updateProgress(currentPhaseId) {
-        // Get phase number from id (phase1 -> 1)
-        const currentPhaseNumber = parseInt(currentPhaseId.replace('phase', ''));
-        
-        progressSteps.forEach((step, index) => {
-            const stepPhase = step.getAttribute('data-phase');
-            const stepNumber = parseInt(stepPhase.replace('phase', ''));
-            
-            // Remove existing classes
-            step.classList.remove('active', 'completed');
-            
-            // Add appropriate class
-            if (stepNumber === currentPhaseNumber) {
-                step.classList.add('active');
-            } else if (stepNumber < currentPhaseNumber) {
-                step.classList.add('completed');
-            }
-        });
-        
-        // Add click handlers for progress steps (allow navigation to completed phases)
-        progressSteps.forEach(step => {
-            const stepPhase = step.getAttribute('data-phase');
-            const stepNumber = parseInt(stepPhase.replace('phase', ''));
-            
-            step.onclick = () => {
-                // Only allow navigation to completed phases or current phase
-                if (stepNumber <= parseInt(currentPhaseId.replace('phase', ''))) {
-                    showPhase(stepPhase);
-                }
-            };
-        });
-    }
+    // Payment related
+    let selectedPaymentMethod = null;
+    let selectedProvider = null;
+    let currentBookingData = null;
+    let receiptModal = null;
+    
+    // Mobile Money Providers
+    const mobileProviders = ['M-PESA', 'AIRTEL Money', 'Tigo Pesa', 'HaloPesa', 'Azam Pesa', 'YAS'];
+    // Bank Providers
+    const bankProviders = ['CRDB Bank', 'NMB Bank', 'NBC Bank', 'Stanbic', 'Absa', 'Exim Bank'];
     
     // Calculate total price
     function calculateTotal() {
         let cleaners = parseInt(cleanersInp.value) || 1;
         let hours = parseInt(hoursInp.value) || 0;
         let basePrice = cleaners * hours * 20000;
-        
-        if (materialsSelect.value === 'Yes') {
-            basePrice += 10000;
-        }
-        
-        // Apply 5% discount for weekly or multiple bookings
-        if (freqSelect.value === 'Weekly' || freqSelect.value === 'Multiple') {
-            basePrice = basePrice * 0.95;
-        }
-        
-        // Add cash payment fee if selected
-        if (paymentSelect && paymentSelect.value === 'Cash (+TZS 5,000)') {
-            basePrice += 5000;
-        }
-        
+        if (materialsSelect.value === 'Yes') basePrice += 10000;
+        if (freqSelect.value === 'Weekly' || freqSelect.value === 'Multiple') basePrice = basePrice * 0.95;
+        if (selectedPaymentMethod === 'cash') basePrice += 5000;
         return Math.round(basePrice);
     }
     
-    // Refresh summary display
     function refreshSummary() {
-        // Basic fields
         sumCleaners.innerText = cleanersInp.value || '1';
         sumHours.innerText = hoursInp.value || '0';
         sumFreq.innerText = freqSelect.value;
         sumMaterials.innerText = materialsSelect.value;
-        
-        // Property
         let propVal = propertySelect.value;
-        if (!propVal && streetInp?.value) {
-            propVal = streetInp.value.split(' ')[0] + '...';
-        }
+        if (!propVal && streetInp?.value) propVal = streetInp.value.split(' ')[0] + '...';
         sumProperty.innerText = propVal || '—';
-        
-        // Date & Time
         sumDate.innerText = dateInp.value || '—';
         sumTime.innerText = timeInp.value || '—';
-        
-        // Name
-        let first = fnameInp.value.trim() || '';
-        let last = lnameInp.value.trim() || '';
+        let first = fnameInp.value.trim() || '', last = lnameInp.value.trim() || '';
         sumName.innerText = (first || last) ? `${first} ${last}`.trim() : '—';
-        
-        // Total
         const total = calculateTotal();
         sumTotal.innerText = 'TZS ' + total.toLocaleString('en-US');
-        
-        // Update review panel if active
         updateReviewPanel();
     }
     
-    // Update review panel content
     function updateReviewPanel() {
         const reviewDiv = document.getElementById('review');
         if (!reviewDiv) return;
-        
         let cleaners = parseInt(cleanersInp.value) || 1;
         let hours = parseInt(hoursInp.value) || 0;
-        let addr = `${streetInp?.value || ''}, ${cityInp?.value || ''}`.trim();
-        addr = addr.replace(/^,|,$/g, '') || '—';
-        let propVal = propertySelect.value || 'Not selected';
+        let addr = `${streetInp?.value || ''}, ${cityInp?.value || ''}`.trim().replace(/^,|,$/g, '') || '—';
         let total = calculateTotal();
-        let instructions = instructionsInp?.value || 'None';
-        
         reviewDiv.innerHTML = `
-            <div class="review-row">
-                <span><i class="fas fa-broom"></i> Service:</span>
-                <strong>${cleaners} cleaner(s) × ${hours} hours (${freqSelect.value})</strong>
-            </div>
-            <div class="review-row">
-                <span><i class="fas fa-box"></i> Materials:</span>
-                <strong>${materialsSelect.value}</strong>
-            </div>
-            <div class="review-row">
-                <span><i class="fas fa-home"></i> Address:</span>
-                <strong>${addr} (${propVal})</strong>
-            </div>
-            <div class="review-row">
-                <span><i class="fas fa-calendar"></i> Schedule:</span>
-                <strong>${dateInp.value || '—'} at ${timeInp.value || '—'}</strong>
-            </div>
-            <div class="review-row">
-                <span><i class="fas fa-user"></i> Contact:</span>
-                <strong>${fnameInp.value || ''} ${lnameInp.value || ''}</strong>
-            </div>
-            <div class="review-row">
-                <span><i class="fas fa-envelope"></i> Email:</span>
-                <strong>${emailInp?.value || 'Not provided'}</strong>
-            </div>
-            <div class="review-row">
-                <span><i class="fas fa-comment"></i> Instructions:</span>
-                <strong>${instructions}</strong>
-            </div>
-            <div class="review-row fw-bold mt-3 pt-2" style="border-top: 2px solid #cbd5e0;">
-                <span><i class="fas fa-credit-card"></i> Total Amount:</span>
-                <strong style="color: #0d6efd; font-size: 1.1rem;">TZS ${total.toLocaleString('en-US')}</strong>
-            </div>
+            <div class="review-row"><span><i class="fas fa-broom"></i> Service:</span><strong>${cleaners} cleaner(s) × ${hours} hours (${freqSelect.value})</strong></div>
+            <div class="review-row"><span><i class="fas fa-box"></i> Materials:</span><strong>${materialsSelect.value}</strong></div>
+            <div class="review-row"><span><i class="fas fa-home"></i> Address:</span><strong>${addr} (${propertySelect.value || 'Not selected'})</strong></div>
+            <div class="review-row"><span><i class="fas fa-calendar"></i> Schedule:</span><strong>${dateInp.value || '—'} at ${timeInp.value || '—'}</strong></div>
+            <div class="review-row"><span><i class="fas fa-user"></i> Contact:</span><strong>${fnameInp.value || ''} ${lnameInp.value || ''}</strong></div>
+            <div class="review-row"><span><i class="fas fa-envelope"></i> Email:</span><strong>${emailInp?.value || 'Not provided'}</strong></div>
+            <div class="review-row fw-bold mt-3 pt-2" style="border-top: 2px solid #cbd5e0;"><span>Total Amount:</span><strong style="color: #0d6efd;">TZS ${total.toLocaleString('en-US')}</strong></div>
         `;
     }
     
-    // Show specific phase with validation
-    function showPhase(phaseId) {
-        // Hide all phases
-        phases.forEach(phase => {
-            phase.classList.remove('active');
+    function updateProgress(currentPhaseId) {
+        const currentPhaseNumber = parseInt(currentPhaseId.replace('phase', ''));
+        progressSteps.forEach((step) => {
+            const stepPhase = step.getAttribute('data-phase');
+            const stepNumber = parseInt(stepPhase.replace('phase', ''));
+            step.classList.remove('active', 'completed');
+            if (stepNumber === currentPhaseNumber) step.classList.add('active');
+            else if (stepNumber < currentPhaseNumber) step.classList.add('completed');
         });
-        
-        // Show target phase
+        progressSteps.forEach(step => {
+            const stepPhase = step.getAttribute('data-phase');
+            const stepNumber = parseInt(stepPhase.replace('phase', ''));
+            step.onclick = () => { if (stepNumber <= parseInt(currentPhaseId.replace('phase', ''))) showPhase(stepPhase); };
+        });
+    }
+    
+    function showPhase(phaseId) {
+        phases.forEach(phase => phase.classList.remove('active'));
         const targetPhase = document.getElementById(phaseId);
         if (targetPhase) {
             targetPhase.classList.add('active');
             refreshSummary();
             updateProgress(phaseId);
-            
-            // Scroll to top of form on mobile
-            if (window.innerWidth <= 768) {
-                document.querySelector('.phase-container').scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'start' 
-                });
-            }
+            if (window.innerWidth <= 768) document.querySelector('.phase-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
     
-    // Validate current phase before proceeding
-    function validatePhase(currentPhaseId, nextPhaseId) {
+    function validatePhase(currentPhaseId) {
         switch(currentPhaseId) {
             case 'phase1':
-                if (!cleanersInp.value || cleanersInp.value < 1) {
-                    alert('Please enter number of cleaners (minimum 1)');
-                    cleanersInp.focus();
-                    return false;
-                }
-                if (!hoursInp.value || hoursInp.value < 1) {
-                    alert('Please enter number of hours (minimum 1)');
-                    hoursInp.focus();
-                    return false;
-                }
+                if (!cleanersInp.value || cleanersInp.value < 1) { alert('Please enter number of cleaners'); cleanersInp.focus(); return false; }
+                if (!hoursInp.value || hoursInp.value < 1) { alert('Please enter number of hours'); hoursInp.focus(); return false; }
                 break;
-                
             case 'phase2':
-                if (!propertySelect.value) {
-                    alert('Please select a property type');
-                    propertySelect.focus();
-                    return false;
-                }
+                if (!propertySelect.value) { alert('Please select a property type'); propertySelect.focus(); return false; }
                 break;
-                
             case 'phase3':
-                if (!streetInp.value || !cityInp.value) {
-                    alert('Please enter your full address (street and city)');
-                    streetInp.focus();
-                    return false;
-                }
+                if (!streetInp.value || !cityInp.value) { alert('Please enter your full address'); streetInp.focus(); return false; }
                 break;
-                
             case 'phase4':
-                if (!dateInp.value) {
-                    alert('Please select a preferred date');
-                    dateInp.focus();
-                    return false;
-                }
-                if (!timeInp.value) {
-                    alert('Please select a preferred time');
-                    timeInp.focus();
-                    return false;
-                }
-                // Validate date is not in the past
+                if (!dateInp.value) { alert('Please select a date'); dateInp.focus(); return false; }
+                if (!timeInp.value) { alert('Please select a time'); timeInp.focus(); return false; }
                 const selectedDate = new Date(dateInp.value);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                if (selectedDate < today) {
-                    alert('Please select a future date');
-                    dateInp.focus();
-                    return false;
-                }
+                const today = new Date(); today.setHours(0,0,0,0);
+                if (selectedDate < today) { alert('Please select a future date'); dateInp.focus(); return false; }
                 break;
-                
             case 'phase5':
-                if (!fnameInp.value.trim()) {
-                    alert('Please enter your first name');
-                    fnameInp.focus();
-                    return false;
-                }
-                if (!lnameInp.value.trim()) {
-                    alert('Please enter your last name');
-                    lnameInp.focus();
-                    return false;
-                }
-                if (!emailInp.value.trim()) {
-                    alert('Please enter your email address');
-                    emailInp.focus();
-                    return false;
-                }
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(emailInp.value)) {
-                    alert('Please enter a valid email address');
-                    emailInp.focus();
-                    return false;
-                }
+                if (!fnameInp.value.trim()) { alert('Please enter first name'); fnameInp.focus(); return false; }
+                if (!lnameInp.value.trim()) { alert('Please enter last name'); lnameInp.focus(); return false; }
+                if (!emailInp.value.trim()) { alert('Please enter email'); emailInp.focus(); return false; }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInp.value)) { alert('Please enter valid email'); emailInp.focus(); return false; }
                 break;
         }
         return true;
     }
     
-    // Add event listeners to Next buttons
-    nextBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const nextId = this.getAttribute('data-next');
-            if (!nextId) return;
-            
-            // Get current active phase
-            let currentPhaseId = null;
-            phases.forEach(phase => {
-                if (phase.classList.contains('active')) {
-                    currentPhaseId = phase.id;
-                }
+    // Payment UI: Render provider selection based on method
+    function renderPaymentDetails(method) {
+        const container = document.getElementById('paymentDetailsContainer');
+        if (!container) return;
+        
+        let providers = [];
+        let title = '';
+        let placeholder = '';
+        
+        if (method === 'mobile_money') {
+            providers = mobileProviders;
+            title = 'Select Mobile Money Provider';
+            placeholder = 'Enter Mobile Money number (e.g., 0712345678)';
+        } else if (method === 'bank_transfer') {
+            providers = bankProviders;
+            title = 'Select Bank';
+            placeholder = 'Enter Account Number';
+        } else if (method === 'card') {
+            title = 'Card Details';
+            placeholder = 'Enter Card Number (16 digits)';
+        }
+        
+        let html = `<h6 class="mb-3">${title}</h6>`;
+        
+        if (providers.length > 0) {
+            html += `<div class="provider-grid" id="providerGrid">`;
+            providers.forEach(prov => {
+                html += `<div class="provider-btn" data-provider="${prov}"><strong>${prov}</strong></div>`;
             });
-            
-            // Validate current phase
-            if (currentPhaseId && !validatePhase(currentPhaseId, nextId)) {
-                return;
-            }
-            
-            // Show next phase
-            showPhase(nextId);
-        });
-    });
-    
-    // Add event listeners to Previous buttons
-    prevBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const prevId = this.getAttribute('data-prev');
-            if (prevId) {
-                showPhase(prevId);
-            }
-        });
-    });
-    
-    // Add live updates to all inputs
-    const liveInputs = [
-        cleanersInp, hoursInp, freqSelect, materialsSelect, 
-        propertySelect, streetInp, cityInp, dateInp, timeInp, 
-        fnameInp, lnameInp, emailInp, instructionsInp, paymentSelect
-    ];
-    
-    liveInputs.forEach(inp => {
-        if (inp) {
-            inp.addEventListener('input', refreshSummary);
-            inp.addEventListener('change', refreshSummary);
-        }
-    });
-    
-    // Handle form submission
-    bookingForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Final validation for all fields
-        const finalValidation = [
-            { field: cleanersInp, msg: 'Cleaners count required' },
-            { field: hoursInp, msg: 'Hours required' },
-            { field: propertySelect, msg: 'Property type required' },
-            { field: streetInp, msg: 'Street address required' },
-            { field: cityInp, msg: 'City required' },
-            { field: dateInp, msg: 'Date required' },
-            { field: timeInp, msg: 'Time required' },
-            { field: fnameInp, msg: 'First name required' },
-            { field: lnameInp, msg: 'Last name required' },
-            { field: emailInp, msg: 'Email required' }
-        ];
-        
-        for (let item of finalValidation) {
-            if (!item.field || !item.field.value) {
-                alert(item.msg);
-                item.field?.focus();
-                return;
-            }
+            html += `</div>`;
         }
         
-        const paymentMethod = paymentSelect ? paymentSelect.value : 'Mobile Money';
-        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        const userEmail = user.email || emailInp.value;
+        html += `<div class="mb-3">
+            <label class="form-label">${method === 'card' ? 'Card Number' : (method === 'mobile_money' ? 'Mobile Number' : 'Account Number')}</label>
+            <input type="text" id="paymentAccount" class="form-control" placeholder="${placeholder}">
+        </div>`;
+        
+        html += `<div class="mb-3">
+            <label class="form-label">Security PIN / Password</label>
+            <input type="password" id="paymentPin" class="form-control secret-pass-input" placeholder="Enter your secure PIN">
+        </div>`;
+        
+        html += `<button type="button" id="processPaymentBtn" class="btn btn-success w-100 mt-2">Confirm Payment</button>`;
+        
+        container.innerHTML = html;
+        
+        // Add provider click handlers
+        if (providers.length > 0) {
+            document.querySelectorAll('.provider-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedProvider = this.getAttribute('data-provider');
+                });
+            });
+        }
+        
+        document.getElementById('processPaymentBtn').addEventListener('click', () => processPayment(method));
+    }
+    
+    function processPayment(method) {
+        const accountInput = document.getElementById('paymentAccount');
+        const pinInput = document.getElementById('paymentPin');
+        
+        if (!accountInput?.value.trim()) {
+            alert(`Please enter your ${method === 'card' ? 'card number' : (method === 'mobile_money' ? 'mobile number' : 'account number')}`);
+            return;
+        }
+        if (!pinInput?.value.trim()) {
+            alert('Please enter your security PIN/password');
+            return;
+        }
+        
+        if (method === 'mobile_money' && !selectedProvider) {
+            alert('Please select a mobile money provider');
+            return;
+        }
+        if (method === 'bank_transfer' && !selectedProvider) {
+            alert('Please select a bank');
+            return;
+        }
+        
+        // For demo, any PIN works. In real system, validate with backend.
         const totalAmount = calculateTotal();
+        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
         
-        // Create booking object
-        const bookingDetails = {
+        const paymentStatus = 'completed';
+        const transactionId = 'TXN-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
+        
+        const bookingData = {
             bookingId: 'BK-' + Date.now(),
             date: new Date().toISOString(),
             cleaners: cleanersInp.value,
@@ -389,62 +262,191 @@
             scheduleDate: dateInp.value,
             scheduleTime: timeInp.value,
             customerName: `${fnameInp.value} ${lnameInp.value}`,
-            email: userEmail,
+            email: emailInp.value,
             instructions: instructionsInp?.value || '',
-            paymentMethod: paymentMethod,
-            totalAmount: totalAmount
+            paymentMethod: method === 'mobile_money' ? `Mobile Money (${selectedProvider})` : (method === 'bank_transfer' ? `Bank Transfer (${selectedProvider})` : (method === 'card' ? 'Visa/Mastercard' : 'Cash')),
+            totalAmount: totalAmount,
+            paymentStatus: paymentStatus,
+            transactionId: transactionId,
+            paymentAccount: accountInput.value.slice(-4),
+            paidAt: new Date().toISOString()
         };
         
-        // Save booking to localStorage
+        // Save booking
         const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-        bookings.push(bookingDetails);
+        bookings.push(bookingData);
         localStorage.setItem('bookings', JSON.stringify(bookings));
         
-        // Show success message
-        alert(`✅ Booking Confirmed!\n\nBooking ID: ${bookingDetails.bookingId}\nService: ${cleanersInp.value} Cleaner(s) × ${hoursInp.value} Hours\nTotal: TZS ${totalAmount.toLocaleString()}\nPayment: ${paymentMethod}\n\nConfirmation sent to ${userEmail}`);
-        
-        // Clear form or redirect
-        if (confirm('Would you like to start a new booking?')) {
-            // Reset form to phase 1
-            showPhase('phase1');
-            // Clear sensitive data but keep defaults
-            instructionsInp.value = '';
-            streetInp.value = '';
-            cityInp.value = '';
-            if (document.getElementById('postal')) {
-                document.getElementById('postal').value = '';
-            }
-        } else {
-            // Redirect to dashboard or home
-            window.location.href = 'index.html';
-        }
-    });
-    
-    // Initialize summary and set default values
-    refreshSummary();
-    
-    // Set default property if not set
-    if (propertySelect && !propertySelect.value) {
-        propertySelect.value = 'Apartment';
+        currentBookingData = bookingData;
+        showReceipt(bookingData);
     }
     
-    // Set min date to today
+    function processCashPayment() {
+        const totalAmount = calculateTotal();
+        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        
+        const bookingData = {
+            bookingId: 'BK-' + Date.now(),
+            date: new Date().toISOString(),
+            cleaners: cleanersInp.value,
+            hours: hoursInp.value,
+            frequency: freqSelect.value,
+            materials: materialsSelect.value,
+            propertyType: propertySelect.value,
+            address: `${streetInp.value}, ${cityInp.value}`,
+            scheduleDate: dateInp.value,
+            scheduleTime: timeInp.value,
+            customerName: `${fnameInp.value} ${lnameInp.value}`,
+            email: emailInp.value,
+            instructions: instructionsInp?.value || '',
+            paymentMethod: 'Cash (+TZS 5,000)',
+            totalAmount: totalAmount,
+            paymentStatus: 'pending',
+            transactionId: null,
+            paidAt: null,
+            cashPending: true
+        };
+        
+        const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+        bookings.push(bookingData);
+        localStorage.setItem('bookings', JSON.stringify(bookings));
+        
+        // Also store in pending cash payments for staff
+        const pendingCash = JSON.parse(localStorage.getItem('pendingCashPayments') || '[]');
+        pendingCash.push({ bookingId: bookingData.bookingId, customerName: bookingData.customerName, amount: totalAmount, address: bookingData.address });
+        localStorage.setItem('pendingCashPayments', JSON.stringify(pendingCash));
+        
+        currentBookingData = bookingData;
+        showReceipt(bookingData);
+    }
+    
+    function showReceipt(booking) {
+        const receiptContent = document.getElementById('receiptContent');
+        const isPending = booking.paymentStatus === 'pending';
+        
+        let paymentStatusHtml = isPending ? 
+            `<div class="text-center my-3"><span class="payment-pending-badge"><i class="fas fa-clock me-1"></i> PENDING PAYMENT</span><p class="text-muted small mt-2">Payment will be collected by staff upon service delivery. Staff will validate and you'll receive confirmation.</p></div>` :
+            `<div class="text-center my-2 text-success"><i class="fas fa-check-circle fa-2x"></i><p class="mt-1">Payment Confirmed</p></div>`;
+        
+        receiptContent.innerHTML = `
+            <div class="text-center mb-3">
+                <strong>CSMS Cleaning Services</strong>
+                <p class="text-muted small">Official Payment Receipt</p>
+            </div>
+            <div class="border-top border-bottom py-2 mb-2">
+                <div class="d-flex justify-content-between"><span>Booking ID:</span><strong>${booking.bookingId}</strong></div>
+                <div class="d-flex justify-content-between"><span>Date:</span><span>${new Date(booking.scheduleDate).toLocaleDateString()}</span></div>
+                <div class="d-flex justify-content-between"><span>Time:</span><span>${booking.scheduleTime}</span></div>
+            </div>
+            <div class="mb-2">
+                <div class="d-flex justify-content-between"><span>Customer:</span><strong>${booking.customerName}</strong></div>
+                <div class="d-flex justify-content-between"><span>Service:</span><span>${booking.cleaners} cleaner(s) × ${booking.hours} hrs</span></div>
+                <div class="d-flex justify-content-between"><span>Frequency:</span><span>${booking.frequency}</span></div>
+                <div class="d-flex justify-content-between"><span>Address:</span><span>${booking.address}</span></div>
+            </div>
+            <div class="border-top border-bottom py-2 my-2">
+                <div class="d-flex justify-content-between"><span>Payment Method:</span><strong>${booking.paymentMethod}</strong></div>
+                ${booking.transactionId ? `<div class="d-flex justify-content-between"><span>Transaction ID:</span><span>${booking.transactionId}</span></div>` : ''}
+                ${booking.paymentAccount ? `<div class="d-flex justify-content-between"><span>Account ending:</span><span>****${booking.paymentAccount}</span></div>` : ''}
+                <div class="d-flex justify-content-between fw-bold mt-2"><span>Total Amount:</span><span style="color:#0d6efd;">TZS ${booking.totalAmount.toLocaleString()}</span></div>
+            </div>
+            ${paymentStatusHtml}
+            <div class="text-center text-muted small mt-3">
+                <i class="fas fa-envelope"></i> Receipt sent to: ${booking.email}
+            </div>
+        `;
+        
+        receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+        receiptModal.show();
+    }
+    
+    // Payment method selection handlers
+    function initPaymentSelection() {
+        const paymentCards = document.querySelectorAll('.payment-option-card');
+        paymentCards.forEach(card => {
+            card.addEventListener('click', function() {
+                paymentCards.forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedPaymentMethod = this.getAttribute('data-method');
+                
+                if (selectedPaymentMethod === 'cash') {
+                    const container = document.getElementById('paymentDetailsContainer');
+                    container.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i> Cash payment (+TZS 5,000) will be collected by our staff on arrival.
+                            Payment will remain pending until staff validates.
+                        </div>
+                        <button type="button" id="confirmCashBtn" class="btn btn-success w-100">Confirm Cash Booking</button>
+                    `;
+                    document.getElementById('confirmCashBtn').addEventListener('click', () => processCashPayment());
+                } else {
+                    renderPaymentDetails(selectedPaymentMethod);
+                }
+            });
+        });
+    }
+    
+    nextBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const nextId = this.getAttribute('data-next');
+            let currentPhaseId = null;
+            phases.forEach(phase => { if (phase.classList.contains('active')) currentPhaseId = phase.id; });
+            if (currentPhaseId && !validatePhase(currentPhaseId)) return;
+            if (nextId) showPhase(nextId);
+        });
+    });
+    
+    prevBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const prevId = this.getAttribute('data-prev');
+            if (prevId) showPhase(prevId);
+        });
+    });
+    
+    const liveInputs = [cleanersInp, hoursInp, freqSelect, materialsSelect, propertySelect, streetInp, cityInp, dateInp, timeInp, fnameInp, lnameInp, emailInp, instructionsInp];
+    liveInputs.forEach(inp => { if (inp) { inp.addEventListener('input', refreshSummary); inp.addEventListener('change', refreshSummary); } });
+    
+    bookingForm.addEventListener('submit', (e) => e.preventDefault());
+    
+    // Set min date and defaults
     if (dateInp) {
         const today = new Date().toISOString().split('T')[0];
         dateInp.min = today;
+        dateInp.value = today;
     }
+    if (timeInp) timeInp.value = '09:00';
+    if (fnameInp) fnameInp.value = '';
+    if (lnameInp) lnameInp.value = '';
+    if (emailInp && !emailInp.value) {
+        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        if (user.email) emailInp.value = user.email;
+    }
+    if (propertySelect && !propertySelect.value) propertySelect.value = 'Apartment';
     
-    // Initialize progress indicator
+    refreshSummary();
     updateProgress('phase1');
+    initPaymentSelection();
     
-    // Clear pending booking flag
+    // Receipt modal buttons
+    document.getElementById('closeReceiptBtn')?.addEventListener('click', () => {
+        receiptModal?.hide();
+        window.location.href = 'index.html';
+    });
+    document.getElementById('moreBookingBtn')?.addEventListener('click', () => {
+        receiptModal?.hide();
+        window.location.href = 'service.html';
+        // Reset form to phase 1
+        instructionsInp.value = '';
+        streetInp.value = '';
+        cityInp.value = '';
+        selectedPaymentMethod = null;
+        selectedProvider = null;
+        document.getElementById('paymentDetailsContainer').innerHTML = '';
+        document.querySelectorAll('.payment-option-card').forEach(c => c.classList.remove('selected'));
+        showPhase('phase1');
+        refreshSummary();
+    });
+    
     localStorage.removeItem('pendingBooking');
-    
-    // Log welcome message
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    if (user.email) {
-        console.log('✓ Welcome back, ' + user.email);
-    }
-    
-    console.log('✓ Booking system initialized successfully');
+    console.log('✓ Enhanced booking system ready');
 })();

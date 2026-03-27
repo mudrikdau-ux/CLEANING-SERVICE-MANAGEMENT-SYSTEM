@@ -1,4 +1,5 @@
 // ========== CONTACT PAGE JAVASCRIPT ==========
+// All JavaScript for contact page functionality
 
 // Contact Form Handler Class
 class ContactFormHandler {
@@ -28,12 +29,12 @@ class ContactFormHandler {
         
         // Get form data
         const formData = {
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
+            name: document.getElementById('name').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            phone: document.getElementById('phone').value.trim(),
             serviceType: document.getElementById('serviceType').value,
-            subject: document.getElementById('subject').value,
-            message: document.getElementById('message').value,
+            subject: document.getElementById('subject').value.trim(),
+            message: document.getElementById('message').value.trim(),
             newsletter: document.getElementById('newsletter').checked,
             timestamp: new Date().toISOString()
         };
@@ -91,6 +92,11 @@ class ContactFormHandler {
         
         if (!message) {
             this.showFieldError('message', 'Please enter your message');
+            return false;
+        }
+        
+        if (message.length < 10) {
+            this.showFieldError('message', 'Please enter at least 10 characters');
             return false;
         }
         
@@ -196,8 +202,8 @@ class ContactFormHandler {
         
         // Store submission count
         let submissionCount = localStorage.getItem('form_submissions') || 0;
-        submissionCount++;
-        localStorage.setItem('form_submissions', submissionCount);
+        submissionCount = parseInt(submissionCount) + 1;
+        localStorage.setItem('form_submissions', submissionCount.toString());
     }
     
     showNotification(message, type = 'info') {
@@ -322,120 +328,6 @@ function showQuickContact() {
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    // Add styles for the modal if not exists
-    if (!document.querySelector('#quickContactStyles')) {
-        const style = document.createElement('style');
-        style.id = 'quickContactStyles';
-        style.textContent = `
-            .quick-contact-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 10000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                animation: fadeIn 0.3s;
-            }
-            .modal-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0,0,0,0.5);
-            }
-            .modal-content-custom {
-                position: relative;
-                background: white;
-                border-radius: 24px;
-                max-width: 450px;
-                width: 90%;
-                z-index: 1;
-                animation: slideUp 0.3s;
-            }
-            .modal-header-custom {
-                padding: 20px 25px;
-                border-bottom: 1px solid #e2e8f0;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .modal-header-custom h4 {
-                margin: 0;
-                font-weight: 700;
-            }
-            .modal-close {
-                background: none;
-                border: none;
-                font-size: 24px;
-                cursor: pointer;
-                color: #999;
-            }
-            .modal-body-custom {
-                padding: 25px;
-            }
-            .contact-options {
-                display: flex;
-                gap: 15px;
-                justify-content: center;
-                margin: 20px 0;
-            }
-            .contact-option {
-                flex: 1;
-                padding: 15px;
-                background: #f7fafc;
-                border: 2px solid #e2e8f0;
-                border-radius: 12px;
-                cursor: pointer;
-                transition: all 0.3s;
-                text-align: center;
-            }
-            .contact-option:hover {
-                border-color: #4361ee;
-                transform: translateY(-2px);
-            }
-            .contact-option i {
-                font-size: 24px;
-                display: block;
-                margin-bottom: 8px;
-                color: #4361ee;
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-            @keyframes slideUp {
-                from {
-                    transform: translateY(50px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateY(0);
-                    opacity: 1;
-                }
-            }
-            @keyframes slideOutRight {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-            }
-            @media (max-width: 576px) {
-                .contact-options {
-                    flex-direction: column;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
 }
 
 function closeQuickContact() {
@@ -458,6 +350,21 @@ function sendQuickMessage() {
     } else {
         const handler = new ContactFormHandler();
         handler.showNotification('Please enter a message first', 'error');
+    }
+}
+
+// ========== SIDEBAR FUNCTIONS ==========
+function openSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.style.width = '280px';
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.style.width = '0';
     }
 }
 
@@ -530,3 +437,5 @@ document.addEventListener('DOMContentLoaded', () => {
 window.showQuickContact = showQuickContact;
 window.closeQuickContact = closeQuickContact;
 window.sendQuickMessage = sendQuickMessage;
+window.openSidebar = openSidebar;
+window.closeSidebar = closeSidebar;

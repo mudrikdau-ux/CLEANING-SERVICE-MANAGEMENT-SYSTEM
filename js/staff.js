@@ -21,7 +21,7 @@ let jobs = [
         scheduledDate: "2026-04-05",
         timeSlot: "09:00 - 12:00",
         duration: "3 hours",
-        price: "$89"
+        price: 230000  // TZS
     },
     { 
         id: 102, 
@@ -32,7 +32,7 @@ let jobs = [
         scheduledDate: "2026-04-06",
         timeSlot: "14:00 - 17:00",
         duration: "3 hours",
-        price: "$210"
+        price: 525000  // TZS
     },
     { 
         id: 103, 
@@ -43,7 +43,7 @@ let jobs = [
         scheduledDate: "2026-03-25",
         timeSlot: "10:00 - 12:00",
         duration: "2 hours",
-        price: "$75"
+        price: 187500  // TZS
     },
     { 
         id: 104, 
@@ -54,7 +54,7 @@ let jobs = [
         scheduledDate: "2026-03-20",
         timeSlot: "13:00 - 15:00",
         duration: "2 hours",
-        price: "$120",
+        price: 300000,  // TZS
         completedDate: "2026-03-20"
     },
     { 
@@ -66,7 +66,7 @@ let jobs = [
         scheduledDate: "2026-03-18",
         timeSlot: "08:00 - 12:00",
         duration: "4 hours",
-        price: "$340",
+        price: 850000,  // TZS
         completedDate: "2026-03-18"
     }
 ];
@@ -75,11 +75,30 @@ let jobs = [
 let currentStaff = null;
 let completedJobsCount = 0;
 
+// ========== CASH PAYMENT MODULE VARIABLES ==========
+let paymentValidations = [];
+
 // ========== DOM ELEMENTS ==========
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize event listeners
     setupNavButtons();
     setupEnterKeyLogin();
+    
+    // Check if already logged in
+    if (sessionStorage.getItem('staffLoggedIn') === 'true') {
+        const savedName = sessionStorage.getItem('staffName');
+        if (savedName) {
+            currentStaff = staffAccount;
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            loadStaffData();
+            loadJobs();
+            loadJobHistory();
+            loadStats();
+            loadProfile();
+            initPaymentModule();
+        }
+    }
 });
 
 // ========== LOGIN FUNCTIONS ==========
@@ -105,6 +124,9 @@ function loginStaff() {
         loadJobHistory();
         loadStats();
         loadProfile();
+        
+        // Initialize payment module
+        initPaymentModule();
         
         showNotification(`Welcome back, ${currentStaff.name}!`, 'success');
         
@@ -204,7 +226,7 @@ function loadJobs() {
                     </div>
                     <div class="job-detail-item">
                         <i class="bi bi-cash-stack"></i>
-                        <span>${job.price}</span>
+                        <span>TZS ${formatNumber(job.price)}</span>
                     </div>
                 </div>
                 <div class="job-actions">
@@ -264,7 +286,7 @@ function loadJobHistory() {
                     </div>
                     <div class="job-detail-item">
                         <i class="bi bi-cash-stack"></i>
-                        <span>${job.price}</span>
+                        <span>TZS ${formatNumber(job.price)}</span>
                     </div>
                 </div>
                 <button onclick="viewJobDetails(${job.id})" class="btn-action btn-view" style="width: 100%;">
@@ -284,10 +306,7 @@ function loadStats() {
     
     const totalJobs = jobs.length;
     const totalCompleted = completedJobs.length;
-    const totalEarnings = completedJobs.reduce((sum, job) => {
-        const price = parseFloat(job.price.replace('$', ''));
-        return sum + price;
-    }, 0);
+    const totalEarnings = completedJobs.reduce((sum, job) => sum + job.price, 0);
     
     const completionRate = totalJobs > 0 ? ((totalCompleted / totalJobs) * 100).toFixed(0) : 0;
     
@@ -325,7 +344,7 @@ function loadStats() {
             <div class="stat-icon">
                 <i class="bi bi-cash-stack"></i>
             </div>
-            <div class="stat-value">$${totalEarnings}</div>
+            <div class="stat-value">TZS ${formatNumber(totalEarnings)}</div>
             <div class="stat-label">Total Earnings</div>
         </div>
         <div class="stat-card">
@@ -378,7 +397,7 @@ function updateJobStatus(jobId, newStatus) {
         
         if (newStatus === 'completed') {
             jobs[jobIndex].completedDate = new Date().toISOString().split('T')[0];
-            showNotification(`Job completed successfully!`, 'success');
+            showNotification(`Job completed successfully! You can now process payment.`, 'success');
         } else if (newStatus === 'in-progress') {
             showNotification(`Job started! Good luck!`, 'success');
         }
@@ -387,6 +406,9 @@ function updateJobStatus(jobId, newStatus) {
         loadJobs();
         loadJobHistory();
         loadStats();
+        
+        // Refresh payment module
+        loadCompletedJobsForPayment();
     }
 }
 
@@ -400,7 +422,7 @@ function viewJobDetails(jobId) {
             Date: ${job.scheduledDate}
             Time: ${job.timeSlot}
             Duration: ${job.duration}
-            Price: ${job.price}
+            Price: TZS ${formatNumber(job.price)}
             Status: ${job.status.toUpperCase()}
             ${job.completedDate ? `Completed: ${job.completedDate}` : ''}
         `;
@@ -416,7 +438,7 @@ function editProfile() {
 // ========== NAVIGATION ==========
 function setupNavButtons() {
     const navButtons = document.querySelectorAll('.nav-btn');
-    const views = ['jobs', 'history', 'stats', 'profile'];
+    const views = ['jobs', 'history', 'stats', 'profile', 'payment'];
     
     navButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -437,9 +459,402 @@ function setupNavButtons() {
             const activeView = document.getElementById(`${view}View`);
             if (activeView) {
                 activeView.classList.add('active');
+                
+                // Refresh payment module data if payment view is opened
+                if (view === 'payment') {
+                    loadCompletedJobsForPayment();
+                    loadRecentPayments();
+                }
             }
         });
     });
+}
+
+// ========== CASH PAYMENT MODULE FUNCTIONS ==========
+
+// Load payment validations from localStorage
+function loadPaymentValidations() {
+    const stored = localStorage.getItem('csms_payments');
+    if (stored) {
+        paymentValidations = JSON.parse(stored);
+    } else {
+        // Initialize with sample data (prices in TZS)
+        paymentValidations = [
+            {
+                id: 1,
+                jobId: 104,
+                jobService: "AC Maintenance & Filter",
+                customerName: "Omar Juma",
+                amount: 300000,
+                cashReceived: 300000,
+                change: 0,
+                paymentDate: "2026-03-20",
+                paymentTime: "15:30",
+                status: "completed",
+                receiptNumber: "RCP-20260320-001"
+            },
+            {
+                id: 2,
+                jobId: 105,
+                jobService: "Full Villa Cleaning",
+                customerName: "Salma Khamis",
+                amount: 850000,
+                cashReceived: 850000,
+                change: 0,
+                paymentDate: "2026-03-18",
+                paymentTime: "12:15",
+                status: "completed",
+                receiptNumber: "RCP-20260318-002"
+            }
+        ];
+        savePaymentValidations();
+    }
+    updatePaymentStats();
+    loadRecentPayments();
+}
+
+// Save payment validations to localStorage
+function savePaymentValidations() {
+    localStorage.setItem('csms_payments', JSON.stringify(paymentValidations));
+}
+
+// Update payment stats
+function updatePaymentStats() {
+    const totalPayments = paymentValidations.length;
+    const totalAmount = paymentValidations.reduce((sum, p) => sum + p.amount, 0);
+    const today = new Date().toISOString().split('T')[0];
+    const todayPayments = paymentValidations.filter(p => p.paymentDate === today).length;
+    const todayAmount = paymentValidations
+        .filter(p => p.paymentDate === today)
+        .reduce((sum, p) => sum + p.amount, 0);
+    
+    const statsHTML = `
+        <div class="payment-stat-card">
+            <div class="payment-stat-icon">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <div class="payment-stat-value">${totalPayments}</div>
+            <div class="payment-stat-label">Total Validated Payments</div>
+        </div>
+        <div class="payment-stat-card">
+            <div class="payment-stat-icon">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="payment-stat-value">TZS ${formatNumber(totalAmount)}</div>
+            <div class="payment-stat-label">Total Revenue</div>
+        </div>
+        <div class="payment-stat-card">
+            <div class="payment-stat-icon">
+                <i class="bi bi-calendar-today"></i>
+            </div>
+            <div class="payment-stat-value">${todayPayments}</div>
+            <div class="payment-stat-label">Today's Payments</div>
+        </div>
+        <div class="payment-stat-card">
+            <div class="payment-stat-icon">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <div class="payment-stat-value">TZS ${formatNumber(todayAmount)}</div>
+            <div class="payment-stat-label">Today's Revenue</div>
+        </div>
+    `;
+    
+    const statsContainer = document.getElementById('paymentStatsGrid');
+    if (statsContainer) {
+        statsContainer.innerHTML = statsHTML;
+    }
+}
+
+// Load completed jobs into dropdown
+function loadCompletedJobsForPayment() {
+    const completedJobs = jobs.filter(job => job.status === 'completed');
+    const jobSelect = document.getElementById('jobSelect');
+    
+    if (!jobSelect) return;
+    
+    // Filter out jobs that already have payment validation
+    const pendingJobs = completedJobs.filter(job => {
+        return !paymentValidations.some(p => p.jobId === job.id);
+    });
+    
+    if (pendingJobs.length === 0) {
+        jobSelect.innerHTML = '<option value="">-- No pending payments --</option>';
+        return;
+    }
+    
+    let options = '<option value="">-- Select a completed job --</option>';
+    pendingJobs.forEach(job => {
+        options += `<option value="${job.id}" data-service="${escapeHtml(job.service)}" data-client="${escapeHtml(job.client)}" data-price="${job.price}">
+            ${job.service} - ${job.client} (TZS ${formatNumber(job.price)})
+        </option>`;
+    });
+    
+    jobSelect.innerHTML = options;
+    
+    // Add event listener for job selection
+    jobSelect.onchange = function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (this.value) {
+            const clientName = selectedOption.getAttribute('data-client');
+            const price = selectedOption.getAttribute('data-price');
+            
+            document.getElementById('customerName').value = clientName;
+            document.getElementById('serviceAmount').value = `TZS ${formatNumber(parseInt(price))}`;
+            document.getElementById('cashReceived').value = '';
+            document.getElementById('paymentNote').value = '';
+            
+            // Store selected job data
+            window.selectedJobForPayment = {
+                id: parseInt(this.value),
+                service: selectedOption.getAttribute('data-service'),
+                client: clientName,
+                price: parseInt(price)
+            };
+        } else {
+            document.getElementById('customerName').value = '';
+            document.getElementById('serviceAmount').value = '';
+            window.selectedJobForPayment = null;
+        }
+    };
+}
+
+// Validate cash payment
+function validateCashPayment() {
+    const jobSelect = document.getElementById('jobSelect');
+    const cashReceived = parseFloat(document.getElementById('cashReceived').value);
+    const paymentNote = document.getElementById('paymentNote').value;
+    
+    if (!jobSelect.value) {
+        showNotification('Please select a job first', 'error');
+        return;
+    }
+    
+    if (!window.selectedJobForPayment) {
+        showNotification('Invalid job selection', 'error');
+        return;
+    }
+    
+    if (isNaN(cashReceived) || cashReceived <= 0) {
+        showNotification('Please enter a valid cash amount', 'error');
+        return;
+    }
+    
+    const serviceAmount = window.selectedJobForPayment.price;
+    
+    if (cashReceived < serviceAmount) {
+        showNotification(`Insufficient payment! Service amount is TZS ${formatNumber(serviceAmount)}, received TZS ${formatNumber(cashReceived)}. Please collect the remaining TZS ${formatNumber(serviceAmount - cashReceived)}`, 'error');
+        return;
+    }
+    
+    const change = cashReceived - serviceAmount;
+    
+    // Create payment record
+    const paymentRecord = {
+        id: paymentValidations.length + 1,
+        jobId: window.selectedJobForPayment.id,
+        jobService: window.selectedJobForPayment.service,
+        customerName: window.selectedJobForPayment.client,
+        amount: serviceAmount,
+        cashReceived: cashReceived,
+        change: change,
+        paymentDate: new Date().toISOString().split('T')[0],
+        paymentTime: new Date().toLocaleTimeString(),
+        status: "completed",
+        receiptNumber: generateReceiptNumber(),
+        note: paymentNote
+    };
+    
+    paymentValidations.push(paymentRecord);
+    savePaymentValidations();
+    
+    // Generate and show receipt
+    generateReceipt(paymentRecord);
+    
+    // Refresh payment stats and recent payments
+    updatePaymentStats();
+    loadRecentPayments();
+    loadCompletedJobsForPayment();
+    
+    // Clear form
+    document.getElementById('cashReceived').value = '';
+    document.getElementById('paymentNote').value = '';
+    document.getElementById('jobSelect').value = '';
+    document.getElementById('customerName').value = '';
+    document.getElementById('serviceAmount').value = '';
+    window.selectedJobForPayment = null;
+    
+    showNotification(`Payment validated successfully! Receipt #${paymentRecord.receiptNumber}`, 'success');
+}
+
+// Generate receipt number
+function generateReceiptNumber() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `RCP-${year}${month}${day}-${random}`;
+}
+
+// Generate receipt
+function generateReceipt(payment) {
+    const receiptContent = `
+        <div style="text-align: center;">
+            <h4 style="margin-bottom: 10px;">PAYMENT RECEIPT</h4>
+            <p style="color: #718096; margin-bottom: 20px;">Thank you for choosing CSMS Cleaning Services</p>
+        </div>
+        
+        <div class="receipt-details">
+            <div class="receipt-row">
+                <span class="receipt-label">Receipt Number:</span>
+                <span class="receipt-value">${payment.receiptNumber}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Date & Time:</span>
+                <span class="receipt-value">${payment.paymentDate} | ${payment.paymentTime}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Customer Name:</span>
+                <span class="receipt-value">${escapeHtml(payment.customerName)}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Service:</span>
+                <span class="receipt-value">${escapeHtml(payment.jobService)}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Service Amount:</span>
+                <span class="receipt-value">TZS ${formatNumber(payment.amount)}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Cash Received:</span>
+                <span class="receipt-value">TZS ${formatNumber(payment.cashReceived)}</span>
+            </div>
+            ${payment.change > 0 ? `
+            <div class="receipt-row">
+                <span class="receipt-label">Change:</span>
+                <span class="receipt-value">TZS ${formatNumber(payment.change)}</span>
+            </div>
+            ` : ''}
+            <div class="receipt-total">
+                <strong>PAID IN FULL</strong>
+            </div>
+            ${payment.note ? `
+            <div class="receipt-row" style="margin-top: 15px;">
+                <span class="receipt-label">Note:</span>
+                <span class="receipt-value">${escapeHtml(payment.note)}</span>
+            </div>
+            ` : ''}
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px dashed #e2e8f0;">
+            <p style="font-size: 12px; color: #a0aec0; margin: 0;">
+                This is a computer-generated receipt and does not require a signature.<br>
+                For any inquiries, please contact CSMS Customer Support.
+            </p>
+        </div>
+    `;
+    
+    document.getElementById('receiptContent').innerHTML = receiptContent;
+    document.getElementById('receiptModal').style.display = 'flex';
+    
+    // Store current receipt for printing
+    window.currentReceipt = payment;
+}
+
+// Load recent payments
+function loadRecentPayments() {
+    const container = document.getElementById('recentPaymentsContainer');
+    if (!container) return;
+    
+    const recentPayments = [...paymentValidations].reverse().slice(0, 10);
+    
+    if (recentPayments.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state" style="padding: 40px;">
+                <i class="bi bi-receipt"></i>
+                <h4>No Payments Yet</h4>
+                <p>Validated payments will appear here</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    recentPayments.forEach(payment => {
+        html += `
+            <div class="payment-item">
+                <div class="payment-info">
+                    <div class="payment-job">${escapeHtml(payment.jobService)}</div>
+                    <div class="payment-details">
+                        <span><i class="bi bi-person"></i> ${escapeHtml(payment.customerName)}</span>
+                        <span><i class="bi bi-receipt"></i> ${payment.receiptNumber}</span>
+                    </div>
+                    <span class="payment-status">Validated</span>
+                </div>
+                <div class="payment-amount">
+                    <div class="amount-value">TZS ${formatNumber(payment.amount)}</div>
+                    <div class="payment-date">${payment.paymentDate}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Close receipt modal
+function closeReceiptModal() {
+    document.getElementById('receiptModal').style.display = 'none';
+}
+
+// Print receipt
+function printReceipt() {
+    const receiptContent = document.getElementById('receiptContent').innerHTML;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>CSMS Payment Receipt</title>
+            <style>
+                body {
+                    font-family: 'Inter', sans-serif;
+                    padding: 40px;
+                    max-width: 600px;
+                    margin: 0 auto;
+                }
+                .receipt-content {
+                    border: 1px solid #e2e8f0;
+                    padding: 30px;
+                    border-radius: 12px;
+                }
+                @media print {
+                    body {
+                        padding: 0;
+                    }
+                    .no-print {
+                        display: none;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="receipt-content">
+                ${receiptContent}
+            </div>
+            <div class="no-print" style="text-align: center; margin-top: 20px;">
+                <button onclick="window.print()" style="padding: 10px 20px; margin: 0 10px;">Print</button>
+                <button onclick="window.close()" style="padding: 10px 20px;">Close</button>
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+// Initialize payment module
+function initPaymentModule() {
+    loadPaymentValidations();
+    loadCompletedJobsForPayment();
 }
 
 // ========== HELPER FUNCTIONS ==========
@@ -488,6 +903,11 @@ function escapeHtml(str) {
     });
 }
 
+function formatNumber(num) {
+    if (num === undefined || num === null) return '0';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 // Add shake animation CSS
 const style = document.createElement('style');
 style.textContent = `
@@ -498,3 +918,16 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Export functions for global access
+window.loginStaff = loginStaff;
+window.logoutStaff = logoutStaff;
+window.updateJobStatus = updateJobStatus;
+window.viewJobDetails = viewJobDetails;
+window.editProfile = editProfile;
+window.showForgotPassword = showForgotPassword;
+window.showDemoCredentials = showDemoCredentials;
+window.validateCashPayment = validateCashPayment;
+window.closeReceiptModal = closeReceiptModal;
+window.printReceipt = printReceipt;
+window.initPaymentModule = initPaymentModule;

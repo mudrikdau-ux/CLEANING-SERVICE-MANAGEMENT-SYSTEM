@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
 
-<!-- External CSS -->
+<!-- Combined CSS -->
 <link rel="stylesheet" href="css/staff.css">
 </head>
 <body>
@@ -71,6 +71,9 @@
             <button class="nav-btn" data-view="profile">
                 <i class="bi bi-person-circle"></i> Profile
             </button>
+            <button class="nav-btn" data-view="payment">
+                <i class="bi bi-cash-stack"></i> Cash Payment
+            </button>
         </div>
         <div class="nav-user">
             <div class="user-info">
@@ -128,13 +131,96 @@
                 <!-- Profile will be dynamically loaded here -->
             </div>
         </div>
+
+        <!-- CASH PAYMENT VALIDATION VIEW -->
+        <div id="paymentView" class="content-view">
+            <div class="view-header">
+                <h2><i class="bi bi-cash-stack"></i> Cash Payment Validation</h2>
+                <p>Validate customer cash payments and generate receipts</p>
+            </div>
+            
+            <!-- Payment Stats Summary -->
+            <div class="payment-stats-grid" id="paymentStatsGrid">
+                <!-- Dynamic payment stats will be loaded here -->
+            </div>
+            
+            <!-- Payment Validation Form -->
+            <div class="payment-validation-card">
+                <h3><i class="bi bi-receipt"></i> Validate Payment</h3>
+                <form id="paymentValidationForm" onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="jobSelect"><i class="bi bi-briefcase"></i> Select Job</label>
+                        <select id="jobSelect" class="form-control" required>
+                            <option value="">-- Select a completed job --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customerName"><i class="bi bi-person"></i> Customer Name</label>
+                        <input type="text" id="customerName" class="form-control" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="serviceAmount"><i class="bi bi-cash"></i> Service Amount</label>
+                        <input type="text" id="serviceAmount" class="form-control" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cashReceived"><i class="bi bi-cash-stack"></i> Cash Received (TZS)</label>
+                        <input type="number" id="cashReceived" class="form-control" step="1000" placeholder="Enter amount received">
+                        <small class="text-muted">Enter the exact amount received from customer in Tanzanian Shillings (TZS)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="paymentNote"><i class="bi bi-pencil"></i> Payment Note (Optional)</label>
+                        <textarea id="paymentNote" class="form-control" rows="3" placeholder="Any additional notes about the payment..."></textarea>
+                    </div>
+                    
+                    <button type="button" onclick="validateCashPayment()" class="btn-validate-payment">
+                        <i class="bi bi-check-circle"></i> Validate Payment & Generate Receipt
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Recent Payment Validations -->
+            <div class="recent-payments-card">
+                <h3><i class="bi bi-clock-history"></i> Recent Payment Validations</h3>
+                <div id="recentPaymentsContainer" class="recent-payments-list">
+                    <!-- Recent payments will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Receipt Modal -->
+<div id="receiptModal" class="receipt-modal" style="display:none;">
+    <div class="receipt-modal-content">
+        <div class="receipt-header">
+            <div class="receipt-logo">
+                <i class="bi bi-brush-fill"></i>
+                <h3>CSMS Cleaning Services</h3>
+            </div>
+            <button class="close-modal" onclick="closeReceiptModal()">&times;</button>
+        </div>
+        <div id="receiptContent" class="receipt-content">
+            <!-- Receipt will be dynamically generated here -->
+        </div>
+        <div class="receipt-footer">
+            <button onclick="printReceipt()" class="btn-print">
+                <i class="bi bi-printer"></i> Print Receipt
+            </button>
+            <button onclick="closeReceiptModal()" class="btn-close-receipt">
+                <i class="bi bi-x-circle"></i> Close
+            </button>
+        </div>
     </div>
 </div>
 
 <!-- Toast Notification Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-<!-- External JavaScript -->
+<!-- Combined JavaScript -->
 <script src="js/staff.js"></script>
 </body>
 </html>

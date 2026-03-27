@@ -1,3 +1,6 @@
+// ===== COMBINED LOGIN & AUTHENTICATION SCRIPT =====
+// Includes all functionality from main.js and script.js
+
 // ===== SIDEBAR FUNCTIONS =====
 function openSidebar() {
     document.getElementById("sidebar").style.width = "280px";
@@ -44,16 +47,18 @@ function savePendingBooking(serviceData) {
 // Get and clear pending booking data
 function getPendingBooking() {
     const data = localStorage.getItem('pendingBooking');
-    localStorage.removeItem('pendingBooking'); // Clear after retrieving
+    localStorage.removeItem('pendingBooking');
     return data ? JSON.parse(data) : null;
 }
 
 // Handle login success
-function handleLoginSuccess(email) {
+function handleLoginSuccess(email, userData = {}) {
     localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('currentUser', JSON.stringify({ email: email }));
+    localStorage.setItem('currentUser', JSON.stringify({ 
+        email: email,
+        ...userData
+    }));
     
-    // Check if there's a pending booking
     const pendingBooking = getPendingBooking();
     if (pendingBooking) {
         showNotification('Login successful! Redirecting to booking...', 'success');
@@ -109,13 +114,11 @@ function handleBookClick(serviceId, serviceName, servicePrice) {
     };
     
     if (isLoggedIn()) {
-        // User is logged in, go directly to booking
         showNotification('Redirecting to booking...', 'info');
         setTimeout(() => {
             window.location.href = 'booking.html';
         }, 500);
     } else {
-        // User is not logged in, save booking data and redirect to login
         savePendingBooking(serviceData);
         showNotification('Please login to continue with booking', 'info');
         setTimeout(() => {
@@ -471,6 +474,89 @@ function showServiceModal(service) {
     });
 }
 
+// ===== UTILITY FUNCTIONS =====
+
+// Format currency
+function formatCurrency(amount) {
+    return 'TZS ' + amount.toLocaleString();
+}
+
+// Validate email
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// Show loading spinner
+function showLoading(show = true) {
+    let spinner = document.getElementById('loading-spinner');
+    if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.id = 'loading-spinner';
+        spinner.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+        spinner.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;';
+        document.body.appendChild(spinner);
+    }
+    spinner.style.display = show ? 'block' : 'none';
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const existingNotification = document.querySelector('.alert');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.role = 'alert';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification && notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Save to localStorage
+function saveToStorage(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+// Get from localStorage
+function getFromStorage(key) {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+}
+
+// ===== GOOGLE LOGIN HANDLER =====
+function handleGoogleLogin() {
+    showNotification('Google login successful!', 'success');
+    
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('currentUser', JSON.stringify({ 
+        email: 'user@gmail.com',
+        provider: 'google'
+    }));
+    
+    const pendingBooking = localStorage.getItem('pendingBooking');
+    if (pendingBooking) {
+        setTimeout(() => {
+            window.location.href = 'booking.html';
+        }, 1500);
+    } else {
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1500);
+    }
+}
+
 // ===== DOM CONTENT LOADED EVENT =====
 document.addEventListener('DOMContentLoaded', function() {
     // Update UI based on login status
@@ -535,11 +621,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Handle service cards click (except on buttons)
+    // Handle service cards click
     const serviceCards = document.querySelectorAll('.service-card');
     serviceCards.forEach(card => {
         card.addEventListener('click', function(e) {
-            // Don't trigger if clicking on buttons
             if (e.target.closest('.btn')) {
                 return;
             }
@@ -551,7 +636,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Login form handling
+    // ===== LOGIN FORM HANDLING =====
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         const emailInput = document.getElementById('emailLogin');
@@ -565,18 +650,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!isOtpSent) {
                 const email = emailInput.value;
-                if (email) {
+                if (email && validateEmail(email)) {
                     otpSection.style.display = 'block';
                     loginBtn.innerHTML = '<i class="fas fa-check"></i> Verify OTP';
                     isOtpSent = true;
                     showNotification('OTP sent to ' + email, 'success');
-                } else {
+                } else if (!email) {
                     showNotification('Please enter email', 'danger');
+                } else if (!validateEmail(email)) {
+                    showNotification('Please enter a valid email address', 'danger');
                 }
             } else {
                 const otp = document.getElementById('otpInput').value;
                 if (otp && otp.length === 6) {
-                    // Login successful
                     const email = emailInput.value;
                     handleLoginSuccess(email);
                 } else {
@@ -624,7 +710,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Auto login after registration
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('currentUser', JSON.stringify({ 
                 email: email,
@@ -634,7 +719,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             showNotification('Registration successful!', 'success');
             
-            // Check for pending booking
             const pendingBooking = localStorage.getItem('pendingBooking');
             if (pendingBooking) {
                 setTimeout(() => {
@@ -667,18 +751,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // ===== ADD MORE SERVICES BUTTONS =====
-    const addMoreButtons = document.querySelectorAll('.btn-primary');
-    addMoreButtons.forEach(button => {
-        if (button.textContent.includes('Add More') || button.innerHTML.includes('fa-plus')) {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                showNotification('Select additional services from our catalog', 'info');
-                window.location.href = 'service.html';
-            });
-        }
-    });
     
     // ===== LOCATION SELECTOR =====
     const locationSelect = document.querySelector('.search-container select');
@@ -721,81 +793,3 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
-
-// ===== GOOGLE LOGIN =====
-function handleGoogleLogin() {
-    e.preventDefault();
-    showNotification('Google login successful!', 'success');
-    
-    // Simulate Google login success
-    localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('currentUser', JSON.stringify({ 
-        email: 'user@gmail.com',
-        provider: 'google'
-    }));
-    
-    const pendingBooking = localStorage.getItem('pendingBooking');
-    if (pendingBooking) {
-        setTimeout(() => {
-            window.location.href = 'booking.html';
-        }, 1500);
-    } else {
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1500);
-    }
-}
-
-// ===== UTILITY FUNCTIONS =====
-function formatCurrency(amount) {
-    return 'TZS ' + amount.toLocaleString();
-}
-
-function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
-
-function showLoading(show = true) {
-    let spinner = document.getElementById('loading-spinner');
-    if (!spinner) {
-        spinner = document.createElement('div');
-        spinner.id = 'loading-spinner';
-        spinner.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
-        spinner.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;';
-        document.body.appendChild(spinner);
-    }
-    spinner.style.display = show ? 'block' : 'none';
-}
-
-function showNotification(message, type = 'info') {
-    const existingNotification = document.querySelector('.alert');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-    
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show`;
-    notification.role = 'alert';
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification && notification.parentNode) {
-            notification.remove();
-        }
-    }, 5000);
-}
-
-function saveToStorage(key, data) {
-    localStorage.setItem(key, JSON.stringify(data));
-}
-
-function getFromStorage(key) {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : null;
-}
