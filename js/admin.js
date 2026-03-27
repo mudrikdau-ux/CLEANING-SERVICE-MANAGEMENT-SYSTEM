@@ -40,6 +40,11 @@ function verifyCredentials() {
             document.querySelector('.step-1').classList.remove('active');
             document.querySelector('.step-2').classList.add('active');
             showNotification('OTP sent to your email', 'success');
+            
+            // Auto-focus first OTP input on mobile
+            setTimeout(() => {
+                document.getElementById('otp1').focus();
+            }, 100);
         }
     } else {
         showNotification('Invalid email or password!', 'error');
@@ -141,6 +146,32 @@ function initDashboard() {
     loadRecentBookings();
     loadSettings();
     setupMenuClickHandlers();
+    
+    // Check if mobile and adjust UI
+    if (window.innerWidth <= 768) {
+        adjustMobileUI();
+    }
+    
+    // Add resize listener
+    window.addEventListener('resize', handleResize);
+}
+
+function handleResize() {
+    if (window.innerWidth <= 768) {
+        adjustMobileUI();
+    }
+}
+
+function adjustMobileUI() {
+    // Adjust table containers for mobile
+    document.querySelectorAll('.table-container').forEach(container => {
+        if (container.querySelector('table')) {
+            const table = container.querySelector('table');
+            if (table.offsetWidth > container.offsetWidth) {
+                container.style.overflowX = 'auto';
+            }
+        }
+    });
 }
 
 function loadDashboardStats() {
@@ -182,9 +213,9 @@ function loadRecentBookings() {
     let html = '';
     recent.forEach(booking => {
         html += `
-            <div class="recent-booking-item" style="padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
-                <strong>${booking.service || 'Service'}</strong>
-                <p class="mb-0 text-muted small">${booking.date || 'Date TBD'} - ${booking.customer || 'Customer'}</p>
+            <div class="recent-booking-item">
+                <strong>${escapeHtml(booking.service || 'Service')}</strong>
+                <p class="mb-0 text-muted small">${booking.date || 'Date TBD'} - ${escapeHtml(booking.customer || 'Customer')}</p>
             </div>
         `;
     });
@@ -229,7 +260,7 @@ function loadServices() {
             <tr>
                 <td>${escapeHtml(service.name)}</td>
                 <td>${service.price}</td>
-                <td>${service.duration}</td>
+                <td>${escapeHtml(service.duration)}</td>
                 <td>
                     <button onclick="deleteService(${index})" class="btn btn-sm btn-danger">
                         <i class="bi bi-trash"></i>
@@ -243,12 +274,14 @@ function loadServices() {
 }
 
 function deleteService(index) {
-    let services = JSON.parse(localStorage.getItem('adminServices')) || [];
-    services.splice(index, 1);
-    localStorage.setItem('adminServices', JSON.stringify(services));
-    loadServices();
-    loadDashboardStats();
-    showNotification('Service deleted successfully!', 'success');
+    if (confirm('Are you sure you want to delete this service?')) {
+        let services = JSON.parse(localStorage.getItem('adminServices')) || [];
+        services.splice(index, 1);
+        localStorage.setItem('adminServices', JSON.stringify(services));
+        loadServices();
+        loadDashboardStats();
+        showNotification('Service deleted successfully!', 'success');
+    }
 }
 
 // ========== BOOKINGS MANAGEMENT ==========
@@ -335,12 +368,14 @@ function loadStaff() {
 }
 
 function deleteStaff(index) {
-    let staff = JSON.parse(localStorage.getItem('staffAccounts')) || [];
-    staff.splice(index, 1);
-    localStorage.setItem('staffAccounts', JSON.stringify(staff));
-    loadStaff();
-    loadDashboardStats();
-    showNotification('Staff member removed successfully!', 'success');
+    if (confirm('Are you sure you want to remove this staff member?')) {
+        let staff = JSON.parse(localStorage.getItem('staffAccounts')) || [];
+        staff.splice(index, 1);
+        localStorage.setItem('staffAccounts', JSON.stringify(staff));
+        loadStaff();
+        loadDashboardStats();
+        showNotification('Staff member removed successfully!', 'success');
+    }
 }
 
 // ========== MESSAGES MANAGEMENT ==========
@@ -381,6 +416,9 @@ function initCharts() {
     const ctx2 = document.getElementById('revenueChart')?.getContext('2d');
     
     if (ctx1) {
+        // Destroy existing chart if it exists
+        if (bookingChart) bookingChart.destroy();
+        
         bookingChart = new Chart(ctx1, {
             type: 'line',
             data: {
@@ -393,11 +431,21 @@ function initCharts() {
                     tension: 0.4
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: true }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: window.innerWidth <= 768 ? 'bottom' : 'top'
+                    }
+                }
+            }
         });
     }
     
     if (ctx2) {
+        if (revenueChart) revenueChart.destroy();
+        
         revenueChart = new Chart(ctx2, {
             type: 'bar',
             data: {
@@ -408,7 +456,15 @@ function initCharts() {
                     backgroundColor: '#764ba2'
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: true }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: window.innerWidth <= 768 ? 'bottom' : 'top'
+                    }
+                }
+            }
         });
     }
 }
@@ -443,7 +499,10 @@ function showSection(sectionId) {
         section.classList.remove('active');
     });
     
-    document.getElementById(`${sectionId}Section`).classList.add('active');
+    const targetSection = document.getElementById(`${sectionId}Section`);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
     
     document.querySelectorAll('.sidebar-menu li').forEach(item => {
         item.classList.remove('active');
@@ -451,6 +510,11 @@ function showSection(sectionId) {
             item.classList.add('active');
         }
     });
+    
+    // Scroll to top on mobile
+    if (window.innerWidth <= 768) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 }
 
 function setupMenuClickHandlers() {
@@ -499,6 +563,8 @@ function exportData() {
 
 function showNotification(message, type = 'info') {
     const toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) return;
+    
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
     
@@ -516,9 +582,9 @@ function showNotification(message, type = 'info') {
     toast.style.borderLeftColor = borderColor;
     toast.innerHTML = `
         <div class="d-flex align-items-center gap-2">
-            <i class="bi ${icon}" style="color: ${borderColor}; font-size: 18px;"></i>
-            <span class="flex-grow-1">${escapeHtml(message)}</span>
-            <button class="btn-close btn-sm" onclick="this.closest('.toast-notification').remove()"></button>
+            <i class="bi ${icon}" style="color: ${borderColor}; font-size: 16px;"></i>
+            <span class="flex-grow-1" style="font-size: 13px;">${escapeHtml(message)}</span>
+            <button class="btn-close btn-sm" onclick="this.closest('.toast-notification').remove()" style="font-size: 10px;"></button>
         </div>
     `;
     
@@ -539,13 +605,25 @@ function escapeHtml(str) {
     });
 }
 
-// Add shake animation
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-5px); }
-        75% { transform: translateX(5px); }
+// Add shake animation style if not already present
+if (!document.querySelector('#shakeStyle')) {
+    const style = document.createElement('style');
+    style.id = 'shakeStyle';
+    style.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Check session on page load
+document.addEventListener('DOMContentLoaded', function() {
+    if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        initDashboard();
     }
-`;
-document.head.appendChild(style);
+});

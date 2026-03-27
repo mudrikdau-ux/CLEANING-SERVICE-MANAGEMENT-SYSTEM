@@ -36,48 +36,51 @@ body {
     justify-content: center;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     z-index: 1000;
+    padding: 16px;
+    overflow-y: auto;
 }
 
 .login-card {
     background: white;
-    border-radius: 32px;
-    padding: 48px 40px;
+    border-radius: 24px;
+    padding: 32px 24px;
     width: 100%;
-    max-width: 480px;
+    max-width: 450px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    margin: auto;
 }
 
 .login-header {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
 }
 
 .logo-icon {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
     background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 20px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 20px;
+    margin: 0 auto 16px;
 }
 
 .logo-icon i {
-    font-size: 35px;
+    font-size: 30px;
     color: white;
 }
 
 .login-header h3 {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     color: #1a202c;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .login-header p {
     color: #718096;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .step {
@@ -91,23 +94,23 @@ body {
 
 .input-group-custom {
     position: relative;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 
 .input-group-custom i {
     position: absolute;
-    left: 16px;
+    left: 14px;
     top: 50%;
     transform: translateY(-50%);
     color: #a0aec0;
-    font-size: 18px;
+    font-size: 16px;
     z-index: 1;
 }
 
 .input-group-custom input {
-    padding: 14px 16px 14px 48px;
+    padding: 12px 14px 12px 44px;
     border: 2px solid #e2e8f0;
-    border-radius: 14px;
+    border-radius: 12px;
     font-size: 15px;
     transition: all 0.2s;
     width: 100%;
@@ -121,16 +124,16 @@ body {
 
 .btn-login {
     width: 100%;
-    padding: 14px;
+    padding: 12px;
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
     border: none;
-    border-radius: 14px;
-    font-size: 16px;
+    border-radius: 12px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .btn-login:hover {
@@ -141,41 +144,42 @@ body {
 /* OTP Input Styles */
 .otp-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
 }
 
 .otp-header i {
-    font-size: 48px;
+    font-size: 40px;
     color: #667eea;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .otp-header h4 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .otp-header p {
-    font-size: 14px;
+    font-size: 13px;
     color: #718096;
 }
 
 .otp-input-group {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-bottom: 25px;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .otp-input {
-    width: 55px;
-    height: 55px;
+    width: 45px;
+    height: 50px;
     text-align: center;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 600;
     border: 2px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 10px;
     background: white;
     transition: all 0.2s;
 }
@@ -188,14 +192,15 @@ body {
 
 .btn-resend, .btn-back {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     background: transparent;
     border: none;
     color: #667eea;
     font-weight: 500;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 8px;
     transition: all 0.2s;
+    font-size: 14px;
 }
 
 .btn-resend:hover, .btn-back:hover {
@@ -204,13 +209,14 @@ body {
 
 .login-footer {
     text-align: center;
-    margin-top: 24px;
+    margin-top: 20px;
 }
 
 .login-footer a {
     color: #667eea;
     text-decoration: none;
     cursor: pointer;
+    font-size: 13px;
 }
 
 .login-footer a:hover {
@@ -221,29 +227,32 @@ body {
 .dashboard-container {
     min-height: 100vh;
     background: #f5f7fc;
+    display: flex;
+    flex-direction: column;
 }
 
 .dashboard-nav {
     background: white;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    padding: 0 32px;
+    padding: 0 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 70px;
+    height: 60px;
     position: sticky;
     top: 0;
     z-index: 100;
+    flex-wrap: wrap;
 }
 
 .nav-brand {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
 .nav-brand i {
-    font-size: 28px;
+    font-size: 22px;
     background: linear-gradient(135deg, #667eea, #764ba2);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -251,7 +260,7 @@ body {
 }
 
 .nav-brand span {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 700;
     color: #1a202c;
 }
@@ -259,21 +268,26 @@ body {
 .nav-user {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 12px;
 }
 
 .user-info {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 16px;
+    gap: 6px;
+    padding: 4px 12px;
     background: #f7fafc;
-    border-radius: 40px;
+    border-radius: 30px;
 }
 
 .user-info i {
-    font-size: 20px;
+    font-size: 16px;
     color: #667eea;
+}
+
+.user-info span {
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .logout-btn {
@@ -281,10 +295,14 @@ body {
     border: none;
     color: #dc3545;
     font-weight: 500;
-    padding: 8px 16px;
-    border-radius: 40px;
+    padding: 6px 12px;
+    border-radius: 30px;
     cursor: pointer;
     transition: all 0.2s;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .logout-btn:hover {
@@ -294,38 +312,41 @@ body {
 /* Dashboard Wrapper */
 .dashboard-wrapper {
     display: flex;
+    flex: 1;
 }
 
 /* Sidebar */
 .admin-sidebar {
-    width: 280px;
+    width: 250px;
     background: var(--sidebar-bg);
-    min-height: calc(100vh - 70px);
+    min-height: calc(100vh - 60px);
     position: sticky;
-    top: 70px;
+    top: 60px;
+    flex-shrink: 0;
 }
 
 .sidebar-menu {
     list-style: none;
-    padding: 20px 0;
+    padding: 16px 0;
 }
 
 .sidebar-menu li {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 24px;
-    margin: 4px 12px;
-    border-radius: 12px;
+    gap: 10px;
+    padding: 10px 16px;
+    margin: 2px 12px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
     color: #a0aec0;
     font-weight: 500;
+    font-size: 14px;
 }
 
 .sidebar-menu li i {
-    font-size: 20px;
-    width: 24px;
+    font-size: 18px;
+    width: 22px;
 }
 
 .sidebar-menu li:hover {
@@ -339,7 +360,7 @@ body {
 }
 
 .sidebar-menu .logout-item {
-    margin-top: 40px;
+    margin-top: 30px;
     color: #f56565;
 }
 
@@ -351,8 +372,9 @@ body {
 /* Main Content */
 .admin-content {
     flex: 1;
-    padding: 32px;
+    padding: 20px;
     overflow-x: auto;
+    min-width: 0;
 }
 
 .admin-section {
@@ -365,140 +387,153 @@ body {
 }
 
 .section-header {
-    margin-bottom: 30px;
+    margin-bottom: 24px;
 }
 
 .section-header h2 {
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 700;
     color: #1a202c;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .section-header h2 i {
     color: #667eea;
-    margin-right: 12px;
+    font-size: 22px;
 }
 
 .section-header p {
     color: #718096;
+    font-size: 14px;
 }
 
 /* Stats Grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 24px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
 .stat-card {
     background: white;
-    border-radius: 20px;
-    padding: 24px;
+    border-radius: 16px;
+    padding: 18px;
     box-shadow: var(--card-shadow);
     transition: transform 0.2s;
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
 }
 
 .stat-icon {
-    width: 50px;
-    height: 50px;
+    width: 45px;
+    height: 45px;
     background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
-    border-radius: 15px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .stat-icon i {
-    font-size: 24px;
+    font-size: 20px;
     color: #667eea;
 }
 
 .stat-value {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 800;
     color: #1a202c;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .stat-label {
     color: #718096;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 /* Form Card */
 .form-card {
     background: white;
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 30px;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
     box-shadow: var(--card-shadow);
 }
 
 .form-card h5 {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     font-weight: 600;
+    font-size: 16px;
 }
 
 /* Table Container */
 .table-container {
     background: white;
-    border-radius: 20px;
-    padding: 20px;
+    border-radius: 16px;
+    padding: 16px;
     box-shadow: var(--card-shadow);
     overflow-x: auto;
 }
 
 .table {
     margin-bottom: 0;
+    min-width: 600px;
 }
 
 .table th {
     border-top: none;
     font-weight: 600;
     color: #4a5568;
+    font-size: 13px;
+    padding: 12px 8px;
 }
 
 .table td {
     vertical-align: middle;
+    padding: 10px 8px;
+    font-size: 13px;
 }
 
 /* Chart Card */
 .chart-card {
     background: white;
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 24px;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
     box-shadow: var(--card-shadow);
 }
 
 .chart-card h5 {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     font-weight: 600;
+    font-size: 16px;
 }
 
 /* Quick Actions */
 .quick-actions {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .quick-action-btn {
-    padding: 12px 20px;
+    padding: 10px 16px;
     background: #f7fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 10px;
     text-align: left;
     font-weight: 500;
     transition: all 0.2s;
     cursor: pointer;
+    font-size: 13px;
 }
 
 .quick-action-btn:hover {
@@ -510,8 +545,8 @@ body {
 /* Settings Card */
 .settings-card {
     background: white;
-    border-radius: 20px;
-    padding: 24px;
+    border-radius: 16px;
+    padding: 20px;
     box-shadow: var(--card-shadow);
 }
 
@@ -519,8 +554,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 0;
+    padding: 16px 0;
     border-bottom: 1px solid #e2e8f0;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .setting-item:last-child {
@@ -529,29 +566,51 @@ body {
 
 .setting-info h6 {
     font-weight: 600;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
+    font-size: 14px;
 }
 
 .setting-info p {
     color: #718096;
-    font-size: 13px;
+    font-size: 12px;
     margin-bottom: 0;
 }
 
 .form-switch .form-check-input {
-    width: 50px;
-    height: 24px;
+    width: 44px;
+    height: 22px;
 }
 
 /* Notifications */
+.toast-container {
+    z-index: 1050;
+}
+
 .toast-notification {
     background: white;
-    border-radius: 12px;
-    padding: 12px 20px;
-    margin-bottom: 12px;
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 10px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    border-left: 4px solid;
+    border-left: 3px solid;
     animation: slideInRight 0.3s ease-out;
+    font-size: 13px;
+    min-width: 200px;
+    max-width: 300px;
+}
+
+/* Recent Bookings */
+.recent-booking-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.recent-booking-item strong {
+    font-size: 14px;
+}
+
+.recent-booking-item p {
+    font-size: 12px;
 }
 
 @keyframes slideInRight {
@@ -576,8 +635,61 @@ body {
     }
 }
 
-/* Responsive */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+@media (max-width: 992px) {
+    .admin-sidebar {
+        width: 220px;
+    }
+    
+    .sidebar-menu li {
+        padding: 8px 12px;
+        margin: 2px 8px;
+        font-size: 13px;
+    }
+    
+    .sidebar-menu li i {
+        font-size: 16px;
+        width: 20px;
+    }
+}
+
 @media (max-width: 768px) {
+    /* Login responsive */
+    .login-card {
+        padding: 24px 20px;
+        max-width: 100%;
+    }
+    
+    .logo-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .logo-icon i {
+        font-size: 24px;
+    }
+    
+    .login-header h3 {
+        font-size: 20px;
+    }
+    
+    .otp-input {
+        width: 40px;
+        height: 45px;
+        font-size: 18px;
+    }
+    
+    .otp-input-group {
+        gap: 6px;
+    }
+    
+    /* Dashboard responsive */
     .dashboard-wrapper {
         flex-direction: column;
     }
@@ -586,23 +698,195 @@ body {
         width: 100%;
         position: relative;
         top: 0;
+        min-height: auto;
+        overflow-x: auto;
+    }
+    
+    .sidebar-menu {
+        display: flex;
+        padding: 8px 12px;
+        overflow-x: auto;
+        white-space: nowrap;
+        gap: 4px;
+    }
+    
+    .sidebar-menu li {
+        display: inline-flex;
+        margin: 0;
+        padding: 8px 12px;
+        flex-shrink: 0;
+    }
+    
+    .sidebar-menu .logout-item {
+        margin-top: 0;
     }
     
     .admin-content {
-        padding: 20px;
+        padding: 16px;
+    }
+    
+    .dashboard-nav {
+        height: auto;
+        padding: 12px 16px;
+        gap: 10px;
+    }
+    
+    .nav-user {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    
+    .user-info span {
+        display: none;
+    }
+    
+    .user-info {
+        padding: 6px 10px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .stat-card {
+        padding: 14px;
+    }
+    
+    .stat-value {
+        font-size: 24px;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+    }
+    
+    .section-header h2 {
+        font-size: 18px;
+    }
+    
+    .section-header p {
+        font-size: 13px;
+    }
+    
+    .form-card {
+        padding: 16px;
+    }
+    
+    .table-container {
+        padding: 12px;
+    }
+    
+    .chart-card {
+        padding: 16px;
+    }
+    
+    .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 576px) {
+    .login-card {
+        padding: 20px 16px;
     }
     
     .stats-grid {
         grid-template-columns: 1fr;
     }
     
-    .otp-input-group {
-        gap: 8px;
+    .otp-input {
+        width: 38px;
+        height: 42px;
+        font-size: 16px;
     }
     
+    .otp-input-group {
+        gap: 4px;
+    }
+    
+    .btn-login, .btn-resend, .btn-back {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .nav-brand span {
+        font-size: 14px;
+    }
+    
+    .logout-btn span {
+        display: none;
+    }
+    
+    .logout-btn {
+        padding: 6px 8px;
+    }
+    
+    .admin-content {
+        padding: 12px;
+    }
+    
+    .form-card .row.g-3 {
+        flex-direction: column;
+    }
+    
+    .form-card .row.g-3 > div {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+    
+    .section-header h2 {
+        font-size: 16px;
+    }
+    
+    .section-header h2 i {
+        font-size: 18px;
+    }
+    
+    .stat-card {
+        padding: 12px;
+    }
+    
+    .stat-icon {
+        width: 38px;
+        height: 38px;
+    }
+    
+    .stat-icon i {
+        font-size: 18px;
+    }
+    
+    .stat-value {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 400px) {
     .otp-input {
-        width: 45px;
-        height: 45px;
-        font-size: 20px;
+        width: 35px;
+        height: 40px;
+        font-size: 14px;
+    }
+    
+    .otp-header i {
+        font-size: 32px;
+    }
+    
+    .otp-header h4 {
+        font-size: 16px;
+    }
+    
+    .sidebar-menu li span {
+        font-size: 12px;
+    }
+    
+    .sidebar-menu li i {
+        font-size: 14px;
+    }
+    
+    .sidebar-menu li {
+        padding: 6px 10px;
     }
 }
