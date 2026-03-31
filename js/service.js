@@ -68,109 +68,109 @@ const SERVICE_DETAILS = {
         title: 'Home Cleaning', price: 'TZS 50,000',
         description: 'Complete home cleaning service for your residence. Our professional cleaners ensure every corner of your home is spotless.',
         features: ['Kitchen deep cleaning', 'Bathroom sanitization', 'Living area dusting', 'Bedroom cleaning', 'Floor mopping & vacuuming', 'Eco-friendly products used'],
-        duration: '2–3 hours', image: 'images/service1.jpg'
+        duration: '2–3 hours', image: 'image/home.jpg'
     },
     office: {
         title: 'Office Cleaning', price: 'TZS 75,000',
         description: 'Professional office cleaning to maintain a hygienic and productive work environment.',
         features: ['Workstation cleaning', 'Conference room sanitization', 'Kitchen/break room cleaning', 'Waste removal', 'Floor maintenance', 'After-hours service available'],
-        duration: '3–4 hours', image: 'images/service2.jpg'
+        duration: '3–4 hours', image: 'image/office.jpg'
     },
     carpet: {
         title: 'Carpet Cleaning', price: 'TZS 60,000',
         description: 'Deep carpet cleaning with eco-friendly solutions. Remove tough stains and allergens effectively.',
         features: ['Deep steam cleaning', 'Stain removal treatment', 'Deodorizing', 'Quick-dry technology', 'Pet stain specialist', 'Eco-friendly solutions'],
-        duration: '1–2 hours per room', image: 'images/service3.jpg'
+        duration: '1–2 hours per room', image: 'image/capet.avif'
     },
     window: {
         title: 'Window Cleaning', price: 'TZS 40,000',
         description: 'Professional window cleaning for streak-free shine on all types of windows.',
         features: ['Interior window cleaning', 'Exterior window cleaning', 'Frame and sill wiping', 'Streak-free guarantee', 'Safety equipment used', 'Screens cleaned'],
-        duration: '1–2 hours', image: 'images/service4.jpg'
+        duration: '1–2 hours', image: 'image/window.jpg'
     },
     vehicle: {
         title: 'Vehicle Cleaning', price: 'TZS 45,000',
         description: 'Complete interior and exterior vehicle cleaning for a showroom-ready finish.',
         features: ['Exterior wash and wax', 'Interior vacuuming', 'Dashboard cleaning', 'Window cleaning', 'Tire shine', 'Air freshener included'],
-        duration: '1–2 hours', image: 'images/service5.jpg'
+        duration: '1–2 hours', image: 'image/vehicle.jpg'
     },
     pool: {
         title: 'Pool Cleaning', price: 'TZS 80,000',
         description: 'Professional pool cleaning and maintenance to keep your pool crystal clear.',
         features: ['Surface skimming', 'Wall and floor brushing', 'Filter cleaning', 'Chemical balancing', 'Water testing', 'Equipment check'],
-        duration: '2–3 hours', image: 'images/service6.jpg'
+        duration: '2–3 hours', image: 'image/pool.jpeg'
     },
     mattress: {
         title: 'Mattress Cleaning', price: 'TZS 55,000',
         description: 'Deep mattress cleaning to remove dust mites, allergens, and stains for better sleep.',
         features: ['Deep vacuuming', 'Stain treatment', 'UV sanitization', 'Deodorizing', 'Allergen removal', 'Quick drying'],
-        duration: '1 hour per mattress', image: 'images/service7.jpg'
+        duration: '1 hour per mattress', image: 'image/matres.jpg'
     },
     upholstery: {
         title: 'Upholstery Cleaning', price: 'TZS 65,000',
         description: 'Professional cleaning for sofas, chairs, and all types of furniture.',
         features: ['Deep fabric cleaning', 'Stain removal', 'Deodorizing', 'Fabric protection', 'Quick drying', 'Eco-friendly solutions'],
-        duration: '2–3 hours', image: 'images/service8.jpg'
+        duration: '2–3 hours', image: 'image/upholstrey (2).jpg'
     },
     construction: {
         title: 'Post-Construction Cleaning', price: 'TZS 90,000',
         description: 'Complete cleaning after construction or renovation work — from dust to final polish.',
         features: ['Dust removal', 'Debris cleanup', 'Surface wiping', 'Floor cleaning', 'Window cleaning', 'Final touch-up'],
-        duration: '4–6 hours', image: 'images/service9.jpg'
+        duration: '4–6 hours', image: 'image/post.jpeg'
     },
     hotel: {
         title: 'Hotel & Airbnb Cleaning', price: 'TZS 100,000',
         description: 'Fast and professional cleaning services for hotels and short-stay apartments to maintain high guest standards.',
         features: ['Room turnover cleaning', 'Linen change', 'Bathroom deep clean', 'Kitchen cleaning', 'Restocking amenities', 'Same-day service available'],
-        duration: '2–4 hours', image: 'images/service9.jpg'
+        duration: '2–4 hours', image: 'image/hotel.jpg'
     },
     laundry: {
         title: 'Laundry & Ironing', price: 'TZS 54,000',
         description: 'Professional laundry washing, drying, and ironing to save you time and effort.',
         features: ['Wash and dry', 'Ironing service', 'Fold and pack', 'Stain treatment', 'Delicate fabric care', 'Free pickup & delivery'],
-        duration: '24-hour turnaround', image: 'images/laundry.jpg'
+        duration: '24-hour turnaround', image: 'image/iron.jpg'
     },
     pest: {
         title: 'Pest Control & Fumigation', price: 'TZS 54,000',
         description: 'Effective elimination of pests and prevention of infestations for a clean, healthy environment.',
         features: ['Comprehensive inspection', 'Safe treatment application', 'Preventive measures', 'Child & pet safe', 'Follow-up visit included', '6-month guarantee'],
-        duration: '1–2 hours', image: 'images/pest-control.jpg'
+        duration: '1–2 hours', image: 'image/pest.jpg'
     },
     event: {
         title: 'Event Setup & Cleanup', price: 'TZS 90,000',
         description: 'Full event support — arrangement of chairs, tables, and decorations, plus complete cleanup after.',
         features: ['Furniture arrangement', 'Decoration setup', 'Post-event cleanup', 'Waste disposal', 'Floor cleaning', 'Fast turnaround'],
-        duration: '3–6 hours', image: 'images/service9.jpg'
+        duration: '3–6 hours', image: 'image/event.jpg'
     },
     ac: {
         title: 'Refrigerator & AC Cleaning', price: 'TZS 45,000',
         description: 'Thorough cleaning and maintenance of refrigerators and air conditioning units for optimal performance.',
         features: ['AC filter cleaning', 'Coil cleaning', 'Drain line check', 'Fridge interior clean', 'Performance check', 'Energy efficiency optimization'],
-        duration: '1–2 hours', image: 'images/ac-cleaning.jpg'
+        duration: '1–2 hours', image: 'image/ac.avif'
     },
     industrial: {
         title: 'Industrial Cleaning', price: 'TZS 100,000',
         description: 'Heavy-duty cleaning for factories, warehouses, and large commercial spaces including machinery areas.',
         features: ['Floor degreasing', 'Machinery area cleaning', 'High-pressure washing', 'Waste disposal', 'Safety-compliant methods', 'Large space specialists'],
-        duration: '4–8 hours', image: 'images/service9.jpg'
+        duration: '4–8 hours', image: 'image/industry.avif'
     },
     watertank: {
         title: 'Water Tank Cleaning', price: 'TZS 70,000',
         description: 'Professional water tank cleaning and sanitization to ensure a safe and clean water supply.',
         features: ['Complete draining', 'Sludge removal', 'Pressure washing', 'Disinfection', 'Full inspection', 'Water quality testing'],
-        duration: '2–3 hours', image: 'images/water-tank.jpg'
+        duration: '2–3 hours', image: 'image/tank.jpeg'
     },
     curtain: {
         title: 'Curtain Cleaning', price: 'TZS 40,000',
         description: 'Professional curtain cleaning, washing, and ironing service for all curtain types.',
         features: ['Gentle machine washing', 'Stain removal', 'Steam ironing', 'Rehanging service', 'Fabric protection', 'All curtain types accepted'],
-        duration: '2–3 hours', image: 'images/curtain.jpg'
+        duration: '2–3 hours', image: 'image/curtel.jpeg'
     },
     garden: {
         title: 'Garden Cleaning', price: 'TZS 55,000',
         description: 'Professional garden cleaning and maintenance — from mowing to full garden tidying.',
         features: ['Lawn mowing', 'Weed removal', 'Leaf blowing', 'Hedge trimming', 'Waste disposal', 'Garden furniture cleaning'],
-        duration: '2–4 hours', image: 'images/garden.jpg'
+        duration: '2–4 hours', image: 'image/gaden.jpg'
     }
 };
 
