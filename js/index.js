@@ -68,19 +68,19 @@ const SERVICE_DETAILS = {
         title: 'Home Cleaning', price: 'TZS 50,000',
         description: 'Complete home cleaning service for your residence. Our professional cleaners ensure every corner of your home is spotless.',
         features: ['Kitchen deep cleaning', 'Bathroom sanitization', 'Living area dusting', 'Bedroom cleaning', 'Floor mopping & vacuuming', 'Eco-friendly products used'],
-        duration: '2–3 hours', image: 'images/service1.jpg'
+        duration: '2–3 hours', image: 'image/home.jpg'
     },
     office: {
         title: 'Office Cleaning', price: 'TZS 75,000',
         description: 'Professional office cleaning to maintain a hygienic and productive work environment.',
         features: ['Workstation cleaning', 'Conference room sanitization', 'Kitchen/break room cleaning', 'Waste removal', 'Floor maintenance', 'After-hours service available'],
-        duration: '3–4 hours', image: 'images/service2.jpg'
+        duration: '3–4 hours', image: 'image/office.jpg'
     },
     carpet: {
         title: 'Carpet Cleaning', price: 'TZS 60,000',
         description: 'Deep carpet cleaning with eco-friendly solutions. Remove tough stains and allergens effectively.',
         features: ['Deep steam cleaning', 'Stain removal treatment', 'Deodorizing', 'Quick-dry technology', 'Pet stain specialist', 'Eco-friendly solutions'],
-        duration: '1–2 hours per room', image: 'images/service3.jpg'
+        duration: '1–2 hours per room', image: 'image/capet.avif'
     }
 };
 
