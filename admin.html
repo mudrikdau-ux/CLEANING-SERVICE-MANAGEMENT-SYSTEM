@@ -106,6 +106,10 @@
                     <i class="bi bi-grid-3x3-gap-fill"></i>
                     <span>Manage Services</span>
                 </li>
+                <li data-section="assignment">
+                    <i class="bi bi-diagram-3-fill"></i>
+                    <span>Services Assignment</span>
+                </li>
                 <li data-section="bookings">
                     <i class="bi bi-calendar-check-fill"></i>
                     <span>All Bookings</span>
@@ -160,6 +164,9 @@
                                 <button class="quick-action-btn" onclick="showSection('staff')">
                                     <i class="bi bi-person-plus"></i> Add Staff Member
                                 </button>
+                                <button class="quick-action-btn" onclick="showSection('assignment')">
+                                    <i class="bi bi-diagram-3-fill"></i> Services Assignment
+                                </button>
                                 <button class="quick-action-btn" onclick="exportData()">
                                     <i class="bi bi-download"></i> Export Data
                                 </button>
@@ -208,13 +215,15 @@
                             <label class="form-label field-label">Description</label>
                             <textarea id="serviceDescription" class="form-control" rows="2" placeholder="Briefly describe this service..."></textarea>
                         </div>
-                        <!-- Row 3 - What's Included -->
+                        <!-- Row 3 - What's Included (manual entry) -->
                         <div class="col-12">
-                            <label class="form-label field-label">What's Included <span class="text-muted" style="font-size:11px;font-weight:400;">(Select up to 6)</span></label>
-                            <div class="included-checklist" id="includedChecklist">
+                            <label class="form-label field-label">What's Included <span class="text-muted" style="font-size:11px;font-weight:400;">(Enter up to 6 items manually)</span></label>
+                            <div class="included-manual-entry" id="includedManualEntry">
                                 <!-- populated by JS -->
                             </div>
-                            <div id="includedCountBadge" class="mt-1" style="font-size:12px;color:var(--text-muted);">0 / 6 selected</div>
+                            <button type="button" class="btn-add-included" id="addIncludedItemBtn" onclick="addIncludedField('includedManualEntry', 'addIncludedItemBtn')">
+                                <i class="bi bi-plus-circle me-1"></i> Add Item
+                            </button>
                         </div>
                         <!-- Row 4 - Image & Submit -->
                         <div class="col-md-4 col-sm-6">
@@ -260,6 +269,173 @@
                             </thead>
                             <tbody id="serviceList"></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SERVICES ASSIGNMENT SECTION ===== -->
+            <div id="assignmentSection" class="admin-section">
+                <div class="section-header">
+                    <h2><i class="bi bi-diagram-3-fill"></i> Services Assignment</h2>
+                    <p>Assign cleaning services to staff members and track progress</p>
+                </div>
+
+                <!-- Assignment Sub-tabs -->
+                <div class="assignment-tabs">
+                    <button class="assign-tab-btn active" data-tab="allStaff" onclick="switchAssignTab('allStaff', this)">
+                        <i class="bi bi-people-fill"></i> All Staffs
+                    </button>
+                    <button class="assign-tab-btn" data-tab="assignedStaff" onclick="switchAssignTab('assignedStaff', this)">
+                        <i class="bi bi-person-check-fill"></i> Assigned Staffs
+                    </button>
+                    <button class="assign-tab-btn" data-tab="unassignedStaff" onclick="switchAssignTab('unassignedStaff', this)">
+                        <i class="bi bi-person-x-fill"></i> Unassigned Staffs
+                    </button>
+                    <button class="assign-tab-btn" data-tab="assignedServices" onclick="switchAssignTab('assignedServices', this)">
+                        <i class="bi bi-check2-square"></i> Assigned Services
+                    </button>
+                    <button class="assign-tab-btn" data-tab="unassignedServices" onclick="switchAssignTab('unassignedServices', this)">
+                        <i class="bi bi-square"></i> Unassigned Services
+                    </button>
+                </div>
+
+                <!-- Legend -->
+                <div class="assign-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot legend-green"></span>
+                        <span>Complete</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot legend-red"></span>
+                        <span>Not Started</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot legend-yellow"></span>
+                        <span>Just Started</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot legend-blue"></span>
+                        <span>In Progress / Nearly Finished</span>
+                    </div>
+                </div>
+
+                <!-- Tab Content: All Staffs -->
+                <div id="tab-allStaff" class="assign-tab-content active">
+                    <div class="table-container">
+                        <div class="table-header-bar">
+                            <span class="table-title">All Staff Members</span>
+                            <span class="badge-currency">Assignment Status</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width:50px">Photo</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Progress</th>
+                                        <th style="text-align:center;">Services Assigned</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allStaffAssignList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Assigned Staffs -->
+                <div id="tab-assignedStaff" class="assign-tab-content">
+                    <div class="table-container">
+                        <div class="table-header-bar">
+                            <span class="table-title">Staff with Assigned Services</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width:50px">Photo</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Progress Indicator</th>
+                                        <th style="text-align:center;">Total Assigned</th>
+                                        <th style="text-align:center;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assignedStaffList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Unassigned Staffs -->
+                <div id="tab-unassignedStaff" class="assign-tab-content">
+                    <div class="table-container">
+                        <div class="table-header-bar">
+                            <span class="table-title">Staff Without Assignments</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width:50px">Photo</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th style="text-align:center;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="unassignedStaffList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Assigned Services -->
+                <div id="tab-assignedServices" class="assign-tab-content">
+                    <div class="table-container">
+                        <div class="table-header-bar">
+                            <span class="table-title">Services with Assigned Staff</span>
+                            <span class="badge-currency">Prices in TZS</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width:60px">Image</th>
+                                        <th>Service Name</th>
+                                        <th>Price (TZS)</th>
+                                        <th>Assigned To</th>
+                                        <th style="text-align:center;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assignedServicesList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Unassigned Services -->
+                <div id="tab-unassignedServices" class="assign-tab-content">
+                    <div class="table-container">
+                        <div class="table-header-bar">
+                            <span class="table-title">Services Without Assigned Staff</span>
+                            <span class="badge-currency">Prices in TZS</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width:60px">Image</th>
+                                        <th>Service Name</th>
+                                        <th>Price (TZS)</th>
+                                        <th>Location</th>
+                                        <th style="text-align:center;">Assign Staff</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="unassignedServicesList"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -546,10 +722,13 @@
                         <label class="form-label field-label">Description</label>
                         <textarea id="editServiceDescription" class="form-control" rows="2" placeholder="Service description..."></textarea>
                     </div>
+                    <!-- Edit What's Included: manual entry -->
                     <div class="col-12">
-                        <label class="form-label field-label">What's Included <span class="text-muted" style="font-size:11px;font-weight:400;">(Select up to 6)</span></label>
-                        <div class="included-checklist" id="editIncludedChecklist"></div>
-                        <div id="editIncludedCountBadge" class="mt-1" style="font-size:12px;color:var(--text-muted);">0 / 6 selected</div>
+                        <label class="form-label field-label">What's Included <span class="text-muted" style="font-size:11px;font-weight:400;">(Enter up to 6 items manually)</span></label>
+                        <div class="included-manual-entry" id="editIncludedManualEntry"></div>
+                        <button type="button" class="btn-add-included" id="editAddIncludedItemBtn" onclick="addIncludedField('editIncludedManualEntry', 'editAddIncludedItemBtn')">
+                            <i class="bi bi-plus-circle me-1"></i> Add Item
+                        </button>
                     </div>
                 </div>
             </div>
@@ -574,7 +753,6 @@
             <div class="modal-body">
                 <input type="hidden" id="editStaffIndex">
                 <div class="row g-3">
-                    <!-- Staff photo area -->
                     <div class="col-12 d-flex justify-content-center mb-2">
                         <div style="position:relative; display:inline-block;">
                             <div id="editStaffAvatarWrapper" class="staff-avatar-lg">
@@ -628,6 +806,49 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="viewMessageBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ASSIGN SERVICE TO STAFF MODAL ===== -->
+<div class="modal fade" id="assignServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-plus-fill me-2"></i>Assign Service to Staff</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignServiceId">
+                <div id="assignServiceInfo" class="assign-service-info mb-3"></div>
+                <label class="form-label field-label">Select Staff Member</label>
+                <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+                    <i class="bi bi-info-circle me-1"></i>Ordered from unassigned staff to most assigned staff
+                </p>
+                <div id="assignStaffPickerList" class="assign-staff-picker"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="confirmAssignService()" id="confirmAssignBtn" disabled>
+                    <i class="bi bi-check-circle me-1"></i>Confirm Assignment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== VIEW STAFF ASSIGNED SERVICES MODAL ===== -->
+<div class="modal fade" id="viewStaffServicesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-list-check me-2"></i>Assigned Services</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewStaffServicesBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
             </div>
