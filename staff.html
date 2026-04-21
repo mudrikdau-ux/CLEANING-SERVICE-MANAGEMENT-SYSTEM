@@ -1,226 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Staff Panel - CSMS | Professional Cleaning Management</title>
-
-<!-- External Dependencies -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-
-<!-- Combined CSS -->
-<link rel="stylesheet" href="css/staff.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Staff Panel · CSMS | Change Password</title>
+  
+  <!-- External Dependencies -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/staff.css">
 </head>
 <body>
 
 <!-- LOGIN SECTION -->
 <div id="loginSection" class="login-container">
-    <div class="login-card">
-        <div class="login-header">
-            <div class="logo-icon">
-                <i class="bi bi-brush-fill"></i>
-            </div>
-            <h3>Staff Portal</h3>
-            <p>CSMS Cleaning Service Management</p>
-        </div>
-        
-        <form id="loginForm" onsubmit="return false;">
-            <div class="input-group-custom">
-                <i class="bi bi-envelope-fill"></i>
-                <input type="email" id="email" placeholder="Email Address" class="form-control" autocomplete="off">
-            </div>
-            
-            <div class="input-group-custom">
-                <i class="bi bi-lock-fill"></i>
-                <input type="password" id="password" placeholder="Password" class="form-control">
-            </div>
-            
-            <button type="submit" onclick="loginStaff()" class="btn-login">
-                <i class="bi bi-box-arrow-in-right"></i> Sign In
-            </button>
-            
-            <div class="login-footer">
-                <a href="#" onclick="showForgotPassword()">Forgot Password?</a>
-                <span>|</span>
-                <a href="#" onclick="showDemoCredentials()">Demo Credentials</a>
-            </div>
-        </form>
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo-icon">
+        <i class="bi bi-brush-fill"></i>
+      </div>
+      <h3>Staff Portal</h3>
+      <p>CSMS Cleaning Service Management</p>
     </div>
+    
+    <form id="loginForm">
+      <div class="input-group-custom">
+        <i class="bi bi-envelope-fill"></i>
+        <input type="email" id="email" placeholder="Email Address" class="form-control" autocomplete="off">
+      </div>
+      
+      <div class="input-group-custom">
+        <i class="bi bi-lock-fill"></i>
+        <input type="password" id="password" placeholder="Password" class="form-control">
+      </div>
+      
+      <button type="submit" id="loginBtn" class="btn-login">
+        <i class="bi bi-box-arrow-in-right"></i> Sign In
+      </button>
+      
+      <div class="login-footer">
+        <a href="#" id="forgotPasswordLink">Forgot Password?</a>
+        <span>|</span>
+        <a href="#" id="demoCredentialsLink">Demo Credentials</a>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- DASHBOARD SECTION -->
 <div id="dashboard" class="dashboard-container" style="display:none;">
-    <!-- Top Navigation Bar -->
-    <nav class="dashboard-nav">
-        <div class="nav-brand">
-            <i class="bi bi-brush-fill"></i>
-            <span>CSMS Staff Portal</span>
-        </div>
-        <div class="nav-menu">
-            <button class="nav-btn active" data-view="jobs">
-                <i class="bi bi-briefcase-fill"></i> Assigned Jobs
-            </button>
-            <button class="nav-btn" data-view="history">
-                <i class="bi bi-clock-history"></i> Job History
-            </button>
-            <button class="nav-btn" data-view="stats">
-                <i class="bi bi-graph-up"></i> My Stats
-            </button>
-            <button class="nav-btn" data-view="profile">
-                <i class="bi bi-person-circle"></i> Profile
-            </button>
-            <button class="nav-btn" data-view="payment">
-                <i class="bi bi-cash-stack"></i> Cash Payment
-            </button>
-        </div>
-        <div class="nav-user">
-            <div class="user-info">
-                <span id="staffName">Staff Member</span>
-                <i class="bi bi-chevron-down"></i>
-            </div>
-            <button class="logout-btn" onclick="logoutStaff()">
-                <i class="bi bi-box-arrow-right"></i>
-            </button>
-        </div>
-    </nav>
-
-    <!-- Main Content Area -->
-    <div class="dashboard-content">
-        <!-- ASSIGNED JOBS VIEW -->
-        <div id="jobsView" class="content-view active">
-            <div class="view-header">
-                <h2><i class="bi bi-briefcase-fill"></i> Assigned Jobs</h2>
-                <p>View and manage your current cleaning assignments</p>
-            </div>
-            <div id="jobsContainer" class="jobs-grid">
-                <!-- Jobs will be dynamically loaded here -->
-            </div>
-        </div>
-
-        <!-- JOB HISTORY VIEW -->
-        <div id="historyView" class="content-view">
-            <div class="view-header">
-                <h2><i class="bi bi-clock-history"></i> Job History</h2>
-                <p>View your completed and past assignments</p>
-            </div>
-            <div id="historyContainer" class="jobs-grid">
-                <!-- History will be dynamically loaded here -->
-            </div>
-        </div>
-
-        <!-- STATS VIEW -->
-        <div id="statsView" class="content-view">
-            <div class="view-header">
-                <h2><i class="bi bi-graph-up"></i> My Performance Stats</h2>
-                <p>Track your work performance and achievements</p>
-            </div>
-            <div class="stats-grid" id="statsContainer">
-                <!-- Stats will be dynamically loaded here -->
-            </div>
-        </div>
-
-        <!-- PROFILE VIEW -->
-        <div id="profileView" class="content-view">
-            <div class="view-header">
-                <h2><i class="bi bi-person-circle"></i> Staff Profile</h2>
-                <p>Manage your personal information</p>
-            </div>
-            <div class="profile-card" id="profileContainer">
-                <!-- Profile will be dynamically loaded here -->
-            </div>
-        </div>
-
-        <!-- CASH PAYMENT VALIDATION VIEW -->
-        <div id="paymentView" class="content-view">
-            <div class="view-header">
-                <h2><i class="bi bi-cash-stack"></i> Cash Payment Validation</h2>
-                <p>Validate customer cash payments and generate receipts</p>
-            </div>
-            
-            <!-- Payment Stats Summary -->
-            <div class="payment-stats-grid" id="paymentStatsGrid">
-                <!-- Dynamic payment stats will be loaded here -->
-            </div>
-            
-            <!-- Payment Validation Form -->
-            <div class="payment-validation-card">
-                <h3><i class="bi bi-receipt"></i> Validate Payment</h3>
-                <form id="paymentValidationForm" onsubmit="return false;">
-                    <div class="form-group">
-                        <label for="jobSelect"><i class="bi bi-briefcase"></i> Select Job</label>
-                        <select id="jobSelect" class="form-control" required>
-                            <option value="">-- Select a completed job --</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="customerName"><i class="bi bi-person"></i> Customer Name</label>
-                        <input type="text" id="customerName" class="form-control" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="serviceAmount"><i class="bi bi-cash"></i> Service Amount</label>
-                        <input type="text" id="serviceAmount" class="form-control" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="cashReceived"><i class="bi bi-cash-stack"></i> Cash Received (TZS)</label>
-                        <input type="number" id="cashReceived" class="form-control" step="1000" placeholder="Enter amount received">
-                        <small class="text-muted">Enter the exact amount received from customer in Tanzanian Shillings (TZS)</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="paymentNote"><i class="bi bi-pencil"></i> Payment Note (Optional)</label>
-                        <textarea id="paymentNote" class="form-control" rows="3" placeholder="Any additional notes about the payment..."></textarea>
-                    </div>
-                    
-                    <button type="button" onclick="validateCashPayment()" class="btn-validate-payment">
-                        <i class="bi bi-check-circle"></i> Validate Payment & Generate Receipt
-                    </button>
-                </form>
-            </div>
-            
-            <!-- Recent Payment Validations -->
-            <div class="recent-payments-card">
-                <h3><i class="bi bi-clock-history"></i> Recent Payment Validations</h3>
-                <div id="recentPaymentsContainer" class="recent-payments-list">
-                    <!-- Recent payments will be loaded here -->
-                </div>
-            </div>
-        </div>
+  <!-- Top Navigation Bar -->
+  <nav class="dashboard-nav">
+    <div class="nav-brand">
+      <i class="bi bi-brush-fill"></i>
+      <span>CSMS Staff Portal</span>
     </div>
+    <div class="nav-menu">
+      <button class="nav-btn active" data-view="jobs">
+        <i class="bi bi-briefcase-fill"></i> Assigned Jobs
+      </button>
+      <button class="nav-btn" data-view="history">
+        <i class="bi bi-clock-history"></i> Job History
+      </button>
+      <button class="nav-btn" data-view="stats">
+        <i class="bi bi-graph-up"></i> My Stats
+      </button>
+      <button class="nav-btn" data-view="profile">
+        <i class="bi bi-person-circle"></i> Profile
+      </button>
+      <button class="nav-btn" data-view="payment">
+        <i class="bi bi-cash-stack"></i> Cash Payment
+      </button>
+    </div>
+    <div class="nav-user">
+      <div class="user-info">
+        <span id="staffName">Staff Member</span>
+        <i class="bi bi-chevron-down"></i>
+      </div>
+      <button id="logoutBtn" class="logout-btn">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <div class="dashboard-content">
+    <!-- ASSIGNED JOBS VIEW -->
+    <div id="jobsView" class="content-view active">
+      <div class="view-header">
+        <h2><i class="bi bi-briefcase-fill"></i> Assigned Jobs</h2>
+        <p>View and manage your current cleaning assignments</p>
+      </div>
+      <div id="jobsContainer" class="jobs-grid">
+        <!-- Jobs will be dynamically loaded here -->
+      </div>
+    </div>
+
+    <!-- JOB HISTORY VIEW -->
+    <div id="historyView" class="content-view">
+      <div class="view-header">
+        <h2><i class="bi bi-clock-history"></i> Job History</h2>
+        <p>View your completed and past assignments</p>
+      </div>
+      <div id="historyContainer" class="jobs-grid">
+        <!-- History will be dynamically loaded here -->
+      </div>
+    </div>
+
+    <!-- STATS VIEW -->
+    <div id="statsView" class="content-view">
+      <div class="view-header">
+        <h2><i class="bi bi-graph-up"></i> My Performance Stats</h2>
+        <p>Track your work performance and achievements</p>
+      </div>
+      <div class="stats-grid" id="statsContainer">
+        <!-- Stats will be dynamically loaded here -->
+      </div>
+    </div>
+
+    <!-- PROFILE VIEW -->
+    <div id="profileView" class="content-view">
+      <div class="view-header">
+        <h2><i class="bi bi-person-circle"></i> Staff Profile</h2>
+        <p>Manage your personal information and security settings</p>
+      </div>
+      <div class="profile-card" id="profileContainer">
+        <!-- Profile will be dynamically loaded here -->
+      </div>
+    </div>
+
+    <!-- CASH PAYMENT VALIDATION VIEW -->
+    <div id="paymentView" class="content-view">
+      <div class="view-header">
+        <h2><i class="bi bi-cash-stack"></i> Cash Payment Validation</h2>
+        <p>Validate customer cash payments and generate receipts</p>
+      </div>
+      
+      <!-- Payment Stats Summary -->
+      <div class="payment-stats-grid" id="paymentStatsGrid">
+        <!-- Dynamic payment stats will be loaded here -->
+      </div>
+      
+      <!-- Payment Validation Form -->
+      <div class="payment-validation-card">
+        <h3><i class="bi bi-receipt"></i> Validate Payment</h3>
+        <form id="paymentValidationForm">
+          <div class="form-group">
+            <label for="jobSelect"><i class="bi bi-briefcase"></i> Select Job</label>
+            <select id="jobSelect" class="form-control" required>
+              <option value="">-- Select a completed job --</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="customerName"><i class="bi bi-person"></i> Customer Name</label>
+            <input type="text" id="customerName" class="form-control" readonly>
+          </div>
+          
+          <div class="form-group">
+            <label for="serviceAmount"><i class="bi bi-cash"></i> Service Amount</label>
+            <input type="text" id="serviceAmount" class="form-control" readonly>
+          </div>
+          
+          <div class="form-group">
+            <label for="cashReceived"><i class="bi bi-cash-stack"></i> Cash Received (TZS)</label>
+            <input type="number" id="cashReceived" class="form-control" step="1000" placeholder="Enter amount received">
+            <small class="text-muted">Enter the exact amount received from customer in Tanzanian Shillings (TZS)</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="paymentNote"><i class="bi bi-pencil"></i> Payment Note (Optional)</label>
+            <textarea id="paymentNote" class="form-control" rows="3" placeholder="Any additional notes about the payment..."></textarea>
+          </div>
+          
+          <button type="button" id="validatePaymentBtn" class="btn-validate-payment">
+            <i class="bi bi-check-circle"></i> Validate Payment & Generate Receipt
+          </button>
+        </form>
+      </div>
+      
+      <!-- Recent Payment Validations -->
+      <div class="recent-payments-card">
+        <h3><i class="bi bi-clock-history"></i> Recent Payment Validations</h3>
+        <div id="recentPaymentsContainer" class="recent-payments-list">
+          <!-- Recent payments will be loaded here -->
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Receipt Modal -->
 <div id="receiptModal" class="receipt-modal" style="display:none;">
-    <div class="receipt-modal-content">
-        <div class="receipt-header">
-            <div class="receipt-logo">
-                <i class="bi bi-brush-fill"></i>
-                <h3>CSMS Cleaning Services</h3>
-            </div>
-            <button class="close-modal" onclick="closeReceiptModal()">&times;</button>
-        </div>
-        <div id="receiptContent" class="receipt-content">
-            <!-- Receipt will be dynamically generated here -->
-        </div>
-        <div class="receipt-footer">
-            <button onclick="printReceipt()" class="btn-print">
-                <i class="bi bi-printer"></i> Print Receipt
-            </button>
-            <button onclick="closeReceiptModal()" class="btn-close-receipt">
-                <i class="bi bi-x-circle"></i> Close
-            </button>
-        </div>
+  <div class="receipt-modal-content">
+    <div class="receipt-header">
+      <div class="receipt-logo">
+        <i class="bi bi-brush-fill"></i>
+        <h3>CSMS Cleaning Services</h3>
+      </div>
+      <button id="closeReceiptModalBtn" class="close-modal">&times;</button>
     </div>
+    <div id="receiptContent" class="receipt-content">
+      <!-- Receipt will be dynamically generated here -->
+    </div>
+    <div class="receipt-footer">
+      <button id="printReceiptBtn" class="btn-print">
+        <i class="bi bi-printer"></i> Print Receipt
+      </button>
+      <button id="closeReceiptBtn" class="btn-close-receipt">
+        <i class="bi bi-x-circle"></i> Close
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- Toast Notification Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-<!-- Combined JavaScript -->
+<!-- Custom JavaScript -->
 <script src="js/staff.js"></script>
 </body>
 </html>

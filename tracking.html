@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, shrink-to-fit=no">
     <title>My Tracking - CSMS | Professional Cleaning Services</title>
     
     <!-- Bootstrap CSS -->
@@ -23,7 +23,7 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="mainSidebar">
         <div class="sidebar-header">
-            <button class="sidebar-close-btn" id="sidebarCloseBtn">
+            <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close menu">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
@@ -62,7 +62,7 @@
             </li>
         </ul>
         <div class="sidebar-footer">
-            <p>CSMS v2.0 | © 2024</p>
+            <p>CSMS v2.0 | &copy; 2026</p>
         </div>
     </aside>
     
@@ -73,7 +73,7 @@
     <main class="content">
         <!-- Top Bar -->
         <div class="top-bar">
-            <button class="hamburger-btn" id="hamburgerToggle">
+            <button class="hamburger-btn" id="hamburgerToggle" aria-label="Menu">
                 <i class="bi bi-list"></i>
             </button>
             <div class="top-bar-logo">
@@ -81,8 +81,8 @@
                 <span>CSMS Dashboard</span>
             </div>
             <div class="top-bar-actions">
-                <i class="bi bi-bell" id="notificationIcon"></i>
-                <i class="bi bi-chat-dots" id="messageIcon"></i>
+                <i class="bi bi-bell" id="notificationIcon" role="button" tabindex="0" aria-label="Notifications"></i>
+                <i class="bi bi-chat-dots" id="messageIcon" role="button" tabindex="0" aria-label="Messages"></i>
                 <a href="index.html" class="home-link"><i class="bi bi-house-door"></i></a>
             </div>
         </div>
@@ -90,6 +90,40 @@
         <!-- Dynamic Panel -->
         <div id="dynamicPanel"></div>
     </main>
+</div>
+
+<!-- ========== STAFF DETAILS MODAL ========== -->
+<div class="modal fade" id="staffModal" tabindex="-1" aria-labelledby="staffModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content staff-modal-content">
+            <div class="modal-header staff-modal-header">
+                <h5 class="modal-title fw-bold" id="staffModalLabel">
+                    <i class="bi bi-person-badge me-2"></i>Service Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" id="staffModalBody">
+                <!-- Dynamically injected -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== RATING MODAL ========== -->
+<div class="modal fade" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rating-modal-content">
+            <div class="modal-header rating-modal-header">
+                <h5 class="modal-title fw-bold" id="ratingModalLabel">
+                    <i class="bi bi-star-half me-2"></i>Rate Your Service
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="ratingModalBody">
+                <!-- Dynamically injected -->
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Footer -->
@@ -100,11 +134,11 @@
                 <h5>About CSMS</h5>
                 <p>CSMS is Zanzibar's premier cleaning service provider, offering professional and reliable cleaning solutions for homes and businesses since 2020.</p>
                 <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                 </div>
             </div>
             
@@ -138,7 +172,7 @@
         </div>
         
         <div class="copyright">
-            <p>&copy; 2024 CSMS - Cleaning Service Management System. All rights reserved.</p>
+            <p>&copy; 2026 CSMS - Cleaning Service Management System. All rights reserved.</p>
         </div>
     </div>
 </footer>

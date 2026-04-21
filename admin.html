@@ -3,26 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Admin Panel - CSMS | Cleaning Service Management</title>
-
-<!-- SEO Meta Tags -->
+<title>Admin Panel - CSMS | Cleaning Service Management (TZS)</title>
 <meta name="description" content="Administrative dashboard for CSMS - Manage services, bookings, staff, and customer messages.">
 <meta name="robots" content="noindex, nofollow">
 
-<!-- External Dependencies -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
-
-<!-- External CSS -->
 <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
 
 <!-- LOGIN SECTION -->
 <div id="loginSection" class="login-container">
+    <div class="login-bg-pattern"></div>
     <div class="login-card animate__animated animate__fadeInUp">
         <div class="login-header">
             <div class="logo-icon">
@@ -31,31 +26,28 @@
             <h3>Admin Portal</h3>
             <p>CSMS Cleaning Service Management System</p>
         </div>
-        
+
         <form id="loginForm" onsubmit="return false;">
             <div class="step step-1 active">
                 <div class="input-group-custom">
                     <i class="bi bi-envelope-fill"></i>
                     <input type="email" id="adminEmail" placeholder="Admin Email Address" class="form-control" autocomplete="off">
                 </div>
-                
                 <div class="input-group-custom">
                     <i class="bi bi-lock-fill"></i>
                     <input type="password" id="adminPassword" placeholder="Password" class="form-control">
                 </div>
-                
                 <button type="button" onclick="verifyCredentials()" class="btn-login">
-                    <i class="bi bi-box-arrow-in-right"></i> Verify & Send OTP
+                    <i class="bi bi-box-arrow-in-right"></i> Verify &amp; Send OTP
                 </button>
             </div>
-            
+
             <div class="step step-2">
                 <div class="otp-header">
                     <i class="bi bi-envelope-paper-fill"></i>
                     <h4>Enter OTP Code</h4>
                     <p>We've sent a 6-digit code to your email</p>
                 </div>
-                
                 <div class="otp-input-group">
                     <input type="text" maxlength="1" class="otp-input" id="otp1" onkeyup="moveToNext(this, 'otp2')">
                     <input type="text" maxlength="1" class="otp-input" id="otp2" onkeyup="moveToNext(this, 'otp3')">
@@ -64,21 +56,18 @@
                     <input type="text" maxlength="1" class="otp-input" id="otp5" onkeyup="moveToNext(this, 'otp6')">
                     <input type="text" maxlength="1" class="otp-input" id="otp6" onkeyup="validateOTP()">
                 </div>
-                
                 <button type="button" onclick="verifyOTP()" class="btn-login mt-3">
                     <i class="bi bi-check-circle-fill"></i> Verify OTP
                 </button>
-                
                 <button type="button" onclick="resendOTP()" class="btn-resend">
                     <i class="bi bi-arrow-repeat"></i> Resend OTP
                 </button>
-                
                 <button type="button" onclick="backToLogin()" class="btn-back">
                     <i class="bi bi-arrow-left"></i> Back to Login
                 </button>
             </div>
         </form>
-        
+
         <div class="login-footer">
             <a href="#" onclick="showDemoCredentials()">Demo Credentials</a>
         </div>
@@ -91,7 +80,7 @@
     <nav class="dashboard-nav">
         <div class="nav-brand">
             <i class="bi bi-brush-fill"></i>
-            <span>CSMS Admin Panel</span>
+            <span>CSMS Admin</span>
         </div>
         <div class="nav-user">
             <div class="user-info">
@@ -99,7 +88,8 @@
                 <span id="adminName">Administrator</span>
             </div>
             <button class="logout-btn" onclick="logoutAdmin()">
-                <i class="bi bi-box-arrow-right"></i> Logout
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
             </button>
         </div>
     </nav>
@@ -126,7 +116,7 @@
                 </li>
                 <li data-section="messages">
                     <i class="bi bi-envelope-fill"></i>
-                    <span>Customer Messages</span>
+                    <span>Messages</span>
                 </li>
                 <li data-section="reports">
                     <i class="bi bi-graph-up"></i>
@@ -145,27 +135,24 @@
 
         <!-- Main Content -->
         <main class="admin-content">
+
             <!-- DASHBOARD SECTION -->
             <div id="dashboardSection" class="admin-section active">
                 <div class="section-header">
                     <h2><i class="bi bi-speedometer2"></i> Dashboard Overview</h2>
                     <p>Welcome back, Administrator! Here's your system overview</p>
                 </div>
-                
-                <div class="stats-grid" id="dashboardStats">
-                    <!-- Stats will be loaded dynamically -->
-                </div>
-                
+                <div class="stats-grid" id="dashboardStats"></div>
                 <div class="row mt-4">
                     <div class="col-md-6">
                         <div class="chart-card">
-                            <h5>Recent Bookings</h5>
+                            <h5><i class="bi bi-clock-history me-2"></i>Recent Bookings</h5>
                             <div id="recentBookingsList"></div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="chart-card">
-                            <h5>Quick Actions</h5>
+                            <h5><i class="bi bi-lightning-charge-fill me-2"></i>Quick Actions</h5>
                             <div class="quick-actions">
                                 <button class="quick-action-btn" onclick="showSection('services')">
                                     <i class="bi bi-plus-circle"></i> Add New Service
@@ -186,36 +173,94 @@
             <div id="servicesSection" class="admin-section">
                 <div class="section-header">
                     <h2><i class="bi bi-grid-3x3-gap-fill"></i> Manage Services</h2>
-                    <p>Add, edit, or remove cleaning services offered</p>
+                    <p>Add, edit, or remove cleaning services (All prices in TZS)</p>
                 </div>
-                
+
                 <div class="form-card">
-                    <h5>Add New Service</h5>
+                    <h5><i class="bi bi-plus-circle me-2"></i>Add New Service</h5>
                     <div class="row g-3">
-                        <div class="col-md-5">
-                            <input type="text" id="serviceName" class="form-control" placeholder="Service Name">
+                        <!-- Row 1 -->
+                        <div class="col-md-4 col-sm-6">
+                            <label class="form-label field-label">Service Name <span class="text-danger">*</span></label>
+                            <input type="text" id="serviceName" class="form-control" placeholder="e.g. Deep House Cleaning">
                         </div>
-                        <div class="col-md-3">
-                            <input type="number" id="servicePrice" class="form-control" placeholder="Price ($)">
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label field-label">Price (TZS) <span class="text-danger">*</span></label>
+                            <div class="input-tzs">
+                                <span class="tzs-prefix">TZS</span>
+                                <input type="number" id="servicePrice" class="form-control" placeholder="50,000">
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <input type="text" id="serviceDuration" class="form-control" placeholder="Duration (e.g., 2 hours)">
+                        <div class="col-md-2 col-sm-6">
+                            <label class="form-label field-label">Duration</label>
+                            <input type="text" id="serviceDuration" class="form-control" placeholder="e.g. 2 hours">
                         </div>
-                        <div class="col-md-1">
-                            <button onclick="addService()" class="btn btn-primary w-100">
-                                <i class="bi bi-plus-lg"></i>
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label field-label">Location</label>
+                            <select id="serviceLocation" class="form-select">
+                                <option value="Unguja">🏝 Unguja Island</option>
+                                <option value="Pemba">🌿 Pemba Island</option>
+                                <option value="Both">🗺 Both Islands</option>
+                            </select>
+                        </div>
+                        <!-- Row 2 -->
+                        <div class="col-12">
+                            <label class="form-label field-label">Description</label>
+                            <textarea id="serviceDescription" class="form-control" rows="2" placeholder="Briefly describe this service..."></textarea>
+                        </div>
+                        <!-- Row 3 - What's Included -->
+                        <div class="col-12">
+                            <label class="form-label field-label">What's Included <span class="text-muted" style="font-size:11px;font-weight:400;">(Select up to 6)</span></label>
+                            <div class="included-checklist" id="includedChecklist">
+                                <!-- populated by JS -->
+                            </div>
+                            <div id="includedCountBadge" class="mt-1" style="font-size:12px;color:var(--text-muted);">0 / 6 selected</div>
+                        </div>
+                        <!-- Row 4 - Image & Submit -->
+                        <div class="col-md-4 col-sm-6">
+                            <label class="form-label field-label">Service Image</label>
+                            <button type="button" onclick="openImageUploadModal('service')" class="btn btn-outline-secondary w-100 image-upload-trigger" id="serviceImageTrigger">
+                                <i class="bi bi-image me-1"></i>
+                                <span id="imageUploadLabel">Upload Image</span>
+                            </button>
+                            <input type="hidden" id="serviceImageData">
+                        </div>
+                        <div class="col-md-5 col-sm-6 d-flex align-items-end">
+                            <div id="imagePreviewContainer" style="display:none; align-items:center; gap:8px;">
+                                <img id="imagePreview" src="" alt="Service Preview" class="service-img-preview">
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearServiceImage()">
+                                    <i class="bi bi-x-circle"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-12 d-flex align-items-end">
+                            <button onclick="addService()" class="btn btn-primary w-100 add-btn">
+                                <i class="bi bi-plus-lg me-1"></i> Add Service
                             </button>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="table-container">
-                    <table class="table table-hover" id="servicesTable">
-                        <thead>
-                            <tr><th>Service Name</th><th>Price</th><th>Duration</th><th>Actions</th></tr>
-                        </thead>
-                        <tbody id="serviceList"></tbody>
-                    </table>
+                    <div class="table-header-bar">
+                        <span class="table-title">All Services</span>
+                        <span class="badge-currency">Prices in TZS</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="servicesTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:60px">Image</th>
+                                    <th>Service Name</th>
+                                    <th>Price (TZS)</th>
+                                    <th>Duration</th>
+                                    <th>Location</th>
+                                    <th style="width:120px; text-align:center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="serviceList"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -225,14 +270,27 @@
                     <h2><i class="bi bi-calendar-check-fill"></i> All Bookings</h2>
                     <p>View and manage customer bookings</p>
                 </div>
-                
                 <div class="table-container">
-                    <table class="table table-hover" id="bookingsTable">
-                        <thead>
-                            <tr><th>ID</th><th>Customer</th><th>Service</th><th>Date</th><th>Status</th><th>Actions</th></tr>
-                        </thead>
-                        <tbody id="bookingList"></tbody>
-                    </table>
+                    <div class="table-header-bar">
+                        <span class="table-title">Booking Records</span>
+                        <span class="badge-currency">Prices in TZS</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="bookingsTable">
+                            <thead>
+                                <tr>
+                                    <th>Booking ID</th>
+                                    <th>Customer</th>
+                                    <th>Service</th>
+                                    <th>Location</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th style="width:100px; text-align:center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookingList"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -242,34 +300,71 @@
                     <h2><i class="bi bi-people-fill"></i> Staff Management</h2>
                     <p>Manage staff accounts and assignments</p>
                 </div>
-                
+
                 <div class="form-card">
-                    <h5>Add New Staff Member</h5>
+                    <h5><i class="bi bi-person-plus me-2"></i>Add New Staff Member</h5>
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <input type="text" id="staffName" class="form-control" placeholder="Full Name">
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label field-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" id="staffName" class="form-control" placeholder="e.g. Fatma Ali">
                         </div>
-                        <div class="col-md-4">
-                            <input type="email" id="staffEmail" class="form-control" placeholder="Email Address">
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label field-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" id="staffEmail" class="form-control" placeholder="staff@csms.co.tz">
                         </div>
-                        <div class="col-md-3">
-                            <input type="password" id="staffPass" class="form-control" placeholder="Password">
+                        <div class="col-md-2 col-sm-6">
+                            <label class="form-label field-label">Phone Number <span class="text-danger">*</span></label>
+                            <input type="tel" id="staffPhone" class="form-control" placeholder="+255 7xx xxx xxx">
                         </div>
-                        <div class="col-md-1">
-                            <button onclick="addStaff()" class="btn btn-primary w-100">
-                                <i class="bi bi-plus-lg"></i>
+                        <div class="col-md-2 col-sm-6">
+                            <label class="form-label field-label">Password <span class="text-danger">*</span></label>
+                            <div class="password-field">
+                                <input type="password" id="staffPass" class="form-control" placeholder="Set password">
+                                <button type="button" class="pw-toggle" onclick="togglePassword('staffPass', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6">
+                            <label class="form-label field-label">Staff Photo</label>
+                            <button type="button" onclick="openImageUploadModal('staff')" class="btn btn-outline-secondary w-100 image-upload-trigger" id="staffImageTrigger">
+                                <i class="bi bi-person-badge me-1"></i>
+                                <span id="staffImageLabel">Upload Photo</span>
+                            </button>
+                        </div>
+                        <div class="col-12 d-flex align-items-center gap-3">
+                            <div id="staffImagePreviewContainer" style="display:none; align-items:center; gap:8px;">
+                                <img id="staffImagePreview" src="" alt="Staff Preview" class="staff-img-preview">
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearStaffImage()">
+                                    <i class="bi bi-x-circle"></i> Remove
+                                </button>
+                            </div>
+                            <button onclick="addStaff()" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-1"></i> Add Staff Member
                             </button>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="table-container">
-                    <table class="table table-hover" id="staffTable">
-                        <thead>
-                            <tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr>
-                        </thead>
-                        <tbody id="staffList"></tbody>
-                    </table>
+                    <div class="table-header-bar">
+                        <span class="table-title">Staff Directory</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="staffTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:50px">Photo</th>
+                                    <th>Full Name</th>
+                                    <th>Email Address</th>
+                                    <th>Phone</th>
+                                    <th>Status</th>
+                                    <th style="width:120px; text-align:center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="staffList"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -279,24 +374,33 @@
                     <h2><i class="bi bi-envelope-fill"></i> Customer Messages</h2>
                     <p>View and respond to customer inquiries</p>
                 </div>
-                
                 <div class="table-container">
-                    <table class="table table-hover" id="messagesTable">
-                        <thead>
-                            <tr><th>From</th><th>Subject</th><th>Message</th><th>Date</th><th>Actions</th></tr>
-                        </thead>
-                        <tbody id="messageList"></tbody>
-                    </table>
+                    <div class="table-header-bar">
+                        <span class="table-title">Inbox</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="messagesTable">
+                            <thead>
+                                <tr>
+                                    <th>From</th>
+                                    <th>Subject</th>
+                                    <th>Preview</th>
+                                    <th>Date</th>
+                                    <th style="width:80px; text-align:center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="messageList"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- REPORTS SECTION -->
             <div id="reportsSection" class="admin-section">
                 <div class="section-header">
-                    <h2><i class="bi bi-graph-up"></i> Reports & Analytics</h2>
-                    <p>View system statistics and performance metrics</p>
+                    <h2><i class="bi bi-graph-up"></i> Reports &amp; Analytics</h2>
+                    <p>View system statistics and performance metrics (Revenue in TZS)</p>
                 </div>
-                
                 <div class="row">
                     <div class="col-md-6">
                         <div class="chart-card">
@@ -306,7 +410,7 @@
                     </div>
                     <div class="col-md-6">
                         <div class="chart-card">
-                            <h5>Revenue Overview</h5>
+                            <h5>Revenue Overview (TZS)</h5>
                             <canvas id="revenueChart" style="max-height: 300px;"></canvas>
                         </div>
                     </div>
@@ -319,7 +423,6 @@
                     <h2><i class="bi bi-gear-fill"></i> System Settings</h2>
                     <p>Configure system preferences and notifications</p>
                 </div>
-                
                 <div class="settings-card">
                     <div class="setting-item">
                         <div class="setting-info">
@@ -330,7 +433,6 @@
                             <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
                         </div>
                     </div>
-                    
                     <div class="setting-item">
                         <div class="setting-info">
                             <h6>Auto-Assign Staff</h6>
@@ -340,7 +442,6 @@
                             <input class="form-check-input" type="checkbox" id="autoAssignStaff">
                         </div>
                     </div>
-                    
                     <div class="setting-item">
                         <div class="setting-info">
                             <h6>Booking Reminders</h6>
@@ -350,24 +451,196 @@
                             <input class="form-check-input" type="checkbox" id="bookingReminders" checked>
                         </div>
                     </div>
-                    
                     <button class="btn btn-primary mt-3" onclick="saveSettings()">
                         <i class="bi bi-save"></i> Save Settings
                     </button>
                 </div>
             </div>
+
         </main>
     </div>
 </div>
 
-<!-- Toast Notification Container -->
+<!-- ===== IMAGE UPLOAD MODAL ===== -->
+<div class="modal fade" id="imageUploadModal" tabindex="-1" aria-labelledby="imageUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageUploadModalLabel">
+                    <i class="bi bi-image me-2"></i><span id="imageModalTitle">Upload Image</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('modalImageInput').click()" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+                    <div class="upload-zone-content" id="uploadZoneContent">
+                        <i class="bi bi-cloud-arrow-up-fill upload-icon"></i>
+                        <p class="upload-title">Click to upload or drag &amp; drop</p>
+                        <p class="upload-subtitle">PNG, JPG, WEBP — Max 2MB</p>
+                    </div>
+                    <img id="modalImagePreview" src="" alt="" class="modal-img-preview" style="display:none;">
+                </div>
+                <input type="file" id="modalImageInput" accept="image/*" style="display:none;" onchange="handleModalImageSelect(event)">
+                <div id="uploadError" class="upload-error" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="confirmImageUpload()" id="confirmUploadBtn" disabled>
+                    <i class="bi bi-check-circle me-1"></i>Use This Image
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== EDIT SERVICE MODAL ===== -->
+<div class="modal fade" id="editServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-fill me-2"></i>Edit Service</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editServiceIndex">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label field-label">Service Name <span class="text-danger">*</span></label>
+                        <input type="text" id="editServiceName" class="form-control" placeholder="Service name">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label field-label">Price (TZS) <span class="text-danger">*</span></label>
+                        <div class="input-tzs">
+                            <span class="tzs-prefix">TZS</span>
+                            <input type="number" id="editServicePrice" class="form-control" placeholder="Price">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label field-label">Duration</label>
+                        <input type="text" id="editServiceDuration" class="form-control" placeholder="e.g. 2 hours">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label field-label">Location</label>
+                        <select id="editServiceLocation" class="form-select">
+                            <option value="Unguja">🏝 Unguja Island</option>
+                            <option value="Pemba">🌿 Pemba Island</option>
+                            <option value="Both">🗺 Both Islands</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label field-label">Service Image</label>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <button type="button" onclick="openImageUploadModal('editService')" class="btn btn-outline-secondary image-upload-trigger" id="editServiceImageTrigger">
+                                <i class="bi bi-image me-1"></i>
+                                <span id="editImageUploadLabel">Change Image</span>
+                            </button>
+                            <div id="editImagePreviewContainer" style="display:none; align-items:center; gap:8px;">
+                                <img id="editImagePreview" src="" alt="" class="service-img-preview">
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearEditServiceImage()">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label field-label">Description</label>
+                        <textarea id="editServiceDescription" class="form-control" rows="2" placeholder="Service description..."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label field-label">What's Included <span class="text-muted" style="font-size:11px;font-weight:400;">(Select up to 6)</span></label>
+                        <div class="included-checklist" id="editIncludedChecklist"></div>
+                        <div id="editIncludedCountBadge" class="mt-1" style="font-size:12px;color:var(--text-muted);">0 / 6 selected</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveEditedService()">
+                    <i class="bi bi-save me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== EDIT STAFF MODAL ===== -->
+<div class="modal fade" id="editStaffModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-gear me-2"></i>Edit Staff Member</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editStaffIndex">
+                <div class="row g-3">
+                    <!-- Staff photo area -->
+                    <div class="col-12 d-flex justify-content-center mb-2">
+                        <div style="position:relative; display:inline-block;">
+                            <div id="editStaffAvatarWrapper" class="staff-avatar-lg">
+                                <span id="editStaffInitials" class="staff-initials-lg"></span>
+                                <img id="editStaffPhotoPreview" src="" alt="" class="staff-photo-lg" style="display:none;">
+                            </div>
+                            <button type="button" onclick="openImageUploadModal('editStaff')" class="staff-photo-change-btn" title="Change Photo">
+                                <i class="bi bi-camera-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label field-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" id="editStaffName" class="form-control" placeholder="Full name">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label field-label">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" id="editStaffEmail" class="form-control" placeholder="email@csms.co.tz">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label field-label">Phone Number</label>
+                        <input type="tel" id="editStaffPhone" class="form-control" placeholder="+255 7xx xxx xxx">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label field-label">New Password <span class="text-muted" style="font-size:11px;font-weight:400;">(leave blank to keep)</span></label>
+                        <div class="password-field">
+                            <input type="password" id="editStaffPassword" class="form-control" placeholder="New password (optional)">
+                            <button type="button" class="pw-toggle" onclick="togglePassword('editStaffPassword', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveEditedStaff()">
+                    <i class="bi bi-save me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== VIEW MESSAGE MODAL ===== -->
+<div class="modal fade" id="viewMessageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-envelope-open me-2"></i>Message Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewMessageBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-<!-- External Scripts -->
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="js/admin.js"></script>
 </body>
 </html>
