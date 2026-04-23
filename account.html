@@ -16,7 +16,7 @@
 </head>
 <body>
 
-<!-- Top Bar - Matching Index (No Search Bar) -->
+<!-- Top Bar -->
 <div class="top-bar">
     <a href="index.html"><img src="image/logo.jpeg" alt="CSMS Logo" class="logo"></a>
     <div class="top-bar-center">
@@ -29,7 +29,7 @@
     </div>
 </div>
 
-<!-- Right Sidebar - Matching Index -->
+<!-- Right Sidebar -->
 <div id="sidebar">
     <a href="javascript:void(0)" class="closebtn" onclick="closeSidebar()"><i class="fas fa-times"></i></a>
     <a href="index.html"><i class="fas fa-home"></i> Home</a>
@@ -44,8 +44,8 @@
 </div>
 
 <div class="account-wrapper">
-    <div class="container-fluid">
-        <div class="row g-4">
+    <div class="container-fluid px-2 px-md-4">
+        <div class="row g-3 g-md-4">
             
             <!-- LEFT SIDEBAR MENU -->
             <div class="col-lg-3 col-md-4">
@@ -125,23 +125,23 @@
                                         <i class="fas fa-trash"></i> Remove
                                     </button>
                                 </div>
-                                <small class="text-muted">Upload a profile picture (JPG, PNG, max 2MB)</small>
+                                <small class="text-muted d-block mt-2">Upload a profile picture (JPG, PNG, max 2MB)</small>
                             </div>
                         </div>
                         
                         <form id="profileForm">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
+                            <div class="row g-3">
+                                <div class="col-md-6">
                                     <label class="form-label">First Name</label>
                                     <input type="text" id="firstName" class="form-control form-control-lg" placeholder="Enter first name">
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">Last Name</label>
                                     <input type="text" id="lastName" class="form-control form-control-lg" placeholder="Enter last name">
                                 </div>
                             </div>
                             
-                            <div class="mb-3">
+                            <div class="mb-3 mt-3">
                                 <label class="form-label">Email Address</label>
                                 <input type="email" id="email" class="form-control form-control-lg" placeholder="Enter email address">
                             </div>
@@ -151,7 +151,7 @@
                                 <input type="tel" id="phone" class="form-control form-control-lg" placeholder="+255 XXX XXX XXX">
                             </div>
                                                        
-                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="fas fa-check-circle"></i> Save Changes
                             </button>
                         </form>
@@ -181,7 +181,7 @@
                                 <input type="password" id="confirmPassword" class="form-control form-control-lg" placeholder="Confirm new password">
                             </div>
                             
-                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="fas fa-key"></i> Update Password
                             </button>
                         </form>
@@ -195,10 +195,10 @@
                         </div>
                         
                         <div class="add-location-box">
-                            <div class="input-group mb-3">
-                                <input type="text" id="newLocation" class="form-control form-control-lg" placeholder="Enter a new location (e.g., Home, Office, etc.)">
-                                <button class="btn btn-primary btn-lg" id="addLocationBtn">
-                                    <i class="fas fa-plus-circle"></i> Add Location
+                            <div class="location-input-wrapper">
+                                <input type="text" id="newLocation" class="form-control form-control-lg location-input" placeholder="Enter a new location (e.g., Home, Office, etc.)">
+                                <button class="btn btn-primary btn-lg add-location-btn" id="addLocationBtn">
+                                    <i class="fas fa-plus-circle"></i> <span class="btn-text">Add Location</span>
                                 </button>
                             </div>
                         </div>
@@ -215,7 +215,7 @@
                         
                         <div id="paymentMethodsList" class="payment-methods-container"></div>
                         
-                        <button class="btn btn-outline-primary btn-lg mt-3" id="addPaymentBtn">
+                        <button class="btn btn-outline-primary btn-lg mt-3 w-100 w-md-auto" id="addPaymentBtn">
                             <i class="fas fa-plus-circle"></i> Add New Payment Method
                         </button>
                     </div>
@@ -229,11 +229,13 @@
                         
                         <div class="notification-settings">
                             <div class="notification-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
+                                <div class="notification-row">
+                                    <div class="notification-info">
                                         <i class="fas fa-envelope text-primary"></i>
-                                        <strong>Email Notifications</strong>
-                                        <p class="text-muted small">Receive booking confirmations and updates via email</p>
+                                        <div>
+                                            <strong>Email Notifications</strong>
+                                            <p class="text-muted small mb-0">Receive booking confirmations and updates via email</p>
+                                        </div>
                                     </div>
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
@@ -242,11 +244,13 @@
                             </div>
                             
                             <div class="notification-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
+                                <div class="notification-row">
+                                    <div class="notification-info">
                                         <i class="fas fa-sms text-primary"></i>
-                                        <strong>SMS Notifications</strong>
-                                        <p class="text-muted small">Get text message alerts for booking status</p>
+                                        <div>
+                                            <strong>SMS Notifications</strong>
+                                            <p class="text-muted small mb-0">Get text message alerts for booking status</p>
+                                        </div>
                                     </div>
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" id="smsNotifications">
@@ -255,11 +259,13 @@
                             </div>
                             
                             <div class="notification-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
+                                <div class="notification-row">
+                                    <div class="notification-info">
                                         <i class="fas fa-tags text-primary"></i>
-                                        <strong>Promotional Offers</strong>
-                                        <p class="text-muted small">Receive exclusive deals and discounts</p>
+                                        <div>
+                                            <strong>Promotional Offers</strong>
+                                            <p class="text-muted small mb-0">Receive exclusive deals and discounts</p>
+                                        </div>
                                     </div>
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" id="promoNotifications" checked>
@@ -268,7 +274,7 @@
                             </div>
                         </div>
                         
-                        <button class="btn btn-primary btn-lg px-5 mt-3" id="saveNotificationsBtn">
+                        <button class="btn btn-primary btn-lg mt-3 w-100 w-md-auto" id="saveNotificationsBtn">
                             <i class="fas fa-save"></i> Save Preferences
                         </button>
                     </div>
@@ -309,7 +315,7 @@
                             </div>
                         </div>
                         
-                        <button class="btn btn-primary btn-lg px-5 mt-3" id="savePreferencesBtn">
+                        <button class="btn btn-primary btn-lg mt-3 w-100 w-md-auto" id="savePreferencesBtn">
                             <i class="fas fa-save"></i> Save Preferences
                         </button>
                     </div>
@@ -319,7 +325,7 @@
     </div>
 </div>
 
-<!-- Footer - Matching Index -->
+<!-- Footer -->
 <footer class="footer">
     <div class="container">
         <div class="row">

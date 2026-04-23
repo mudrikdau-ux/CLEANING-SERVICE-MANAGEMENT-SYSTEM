@@ -65,7 +65,20 @@ function setupSidebarFunctions() {
         const hamburger = document.querySelector('.hamburger');
         
         if (sidebar && hamburger) {
-            if (!sidebar.contains(event.target) && !hamburger.contains(event.target) && sidebar.style.width === '280px') {
+            const isClickInside = sidebar.contains(event.target);
+            const isClickOnHamburger = hamburger.contains(event.target);
+            
+            if (!isClickInside && !isClickOnHamburger && sidebar.style.width === '280px') {
+                closeSidebar();
+            }
+        }
+    });
+    
+    // Close sidebar on window resize if open
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 992) {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.style.width === '280px') {
                 closeSidebar();
             }
         }
@@ -135,7 +148,8 @@ function initProfilePicture() {
     
     // Handle remove picture
     if (removeBtn) {
-        removeBtn.addEventListener('click', function() {
+        removeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
             if (profileImage) {
                 profileImage.src = '';
                 profileImage.style.display = 'none';
@@ -209,7 +223,7 @@ function initializeData() {
     // Initialize payment methods if not exists
     if (!localStorage.getItem(STORAGE_KEYS.PAYMENT_METHODS)) {
         const defaultPayments = [
-            { id: 1, type: 'Mobile Money', details: 'Airtel Money - +255 777 123 456', icon: 'fa-phone' },
+            { id: 1, type: 'Mobile Money', details: 'M-Pesa - +255 777 123 456', icon: 'fa-mobile-alt' },
             { id: 2, type: 'Visa Card', details: '**** **** **** 1234', icon: 'fa-credit-card' }
         ];
         localStorage.setItem(STORAGE_KEYS.PAYMENT_METHODS, JSON.stringify(defaultPayments));
@@ -240,15 +254,23 @@ function initializeData() {
 function loadProfileData() {
     const profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE));
     if (profile) {
-        document.getElementById('firstName').value = profile.firstName || '';
-        document.getElementById('lastName').value = profile.lastName || '';
-        document.getElementById('email').value = profile.email || '';
-        document.getElementById('phone').value = profile.phone || '';
+        const firstNameInput = document.getElementById('firstName');
+        const lastNameInput = document.getElementById('lastName');
+        const emailInput = document.getElementById('email');
+        const phoneInput = document.getElementById('phone');
+        
+        if (firstNameInput) firstNameInput.value = profile.firstName || '';
+        if (lastNameInput) lastNameInput.value = profile.lastName || '';
+        if (emailInput) emailInput.value = profile.email || '';
+        if (phoneInput) phoneInput.value = profile.phone || '';
         
         // Update sidebar display
         const fullName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
-        document.getElementById('userDisplayName').textContent = fullName || 'User';
-        document.getElementById('userDisplayEmail').textContent = profile.email || 'user@example.com';
+        const displayName = document.getElementById('userDisplayName');
+        const displayEmail = document.getElementById('userDisplayEmail');
+        
+        if (displayName) displayName.textContent = fullName || 'User';
+        if (displayEmail) displayEmail.textContent = profile.email || 'user@example.com';
         
         // Update avatar initial if no profile picture
         const savedImage = localStorage.getItem('csms_profile_picture');
@@ -270,12 +292,23 @@ function saveProfile(event) {
     event.preventDefault();
     
     const profile = {
-        firstName: document.getElementById('firstName').value,
-        lastName: document.getElementById('lastName').value,
-        email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
         updatedAt: new Date().toISOString()
     };
+    
+    // Basic validation
+    if (!profile.firstName || !profile.lastName) {
+        showNotification('Please fill in your first and last name', 'error');
+        return;
+    }
+    
+    if (!profile.email) {
+        showNotification('Please enter your email address', 'error');
+        return;
+    }
     
     localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
     loadProfileData();
@@ -405,7 +438,7 @@ function loadLocations() {
 
 function addLocation() {
     const locationInput = document.getElementById('newLocation');
-    const locationName = locationInput.value.trim();
+    const locationName = locationInput ? locationInput.value.trim() : '';
     
     if (!locationName) {
         showNotification('Please enter a location name', 'error');
@@ -422,7 +455,7 @@ function addLocation() {
     locations.push(newLocation);
     localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(locations));
     
-    locationInput.value = '';
+    if (locationInput) locationInput.value = '';
     loadLocations();
     showNotification('Location added successfully!', 'success');
 }
@@ -474,16 +507,16 @@ function loadPaymentMethods() {
 
 function addPaymentMethod() {
     const paymentType = prompt('Enter payment method type (e.g., Visa, Mobile Money, Bank Transfer):');
-    if (!paymentType) return;
+    if (!paymentType || !paymentType.trim()) return;
     
     const paymentDetails = prompt('Enter payment details:');
-    if (!paymentDetails) return;
+    if (!paymentDetails || !paymentDetails.trim()) return;
     
     const payments = JSON.parse(localStorage.getItem(STORAGE_KEYS.PAYMENT_METHODS)) || [];
     const newPayment = {
         id: Date.now(),
-        type: paymentType,
-        details: paymentDetails,
+        type: paymentType.trim(),
+        details: paymentDetails.trim(),
         icon: getPaymentIcon(paymentType)
     };
     
@@ -503,9 +536,10 @@ function deletePaymentMethod(id) {
 
 function getPaymentIcon(type) {
     type = type.toLowerCase();
-    if (type.includes('mobile') || type.includes('m-pesa') || type.includes('airtel')) return 'fa-phone';
-    if (type.includes('visa') || type.includes('mastercard')) return 'fa-credit-card';
+    if (type.includes('mobile') || type.includes('m-pesa') || type.includes('airtel') || type.includes('phone')) return 'fa-mobile-alt';
+    if (type.includes('visa') || type.includes('mastercard') || type.includes('card')) return 'fa-credit-card';
     if (type.includes('bank')) return 'fa-university';
+    if (type.includes('paypal')) return 'fa-paypal';
     return 'fa-wallet';
 }
 
@@ -524,10 +558,14 @@ function loadNotifications() {
 }
 
 function saveNotifications() {
+    const emailCheckbox = document.getElementById('emailNotifications');
+    const smsCheckbox = document.getElementById('smsNotifications');
+    const promoCheckbox = document.getElementById('promoNotifications');
+    
     const notifications = {
-        email: document.getElementById('emailNotifications').checked,
-        sms: document.getElementById('smsNotifications').checked,
-        promotions: document.getElementById('promoNotifications').checked
+        email: emailCheckbox ? emailCheckbox.checked : false,
+        sms: smsCheckbox ? smsCheckbox.checked : false,
+        promotions: promoCheckbox ? promoCheckbox.checked : false
     };
     
     localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
@@ -549,10 +587,14 @@ function loadPreferences() {
 }
 
 function savePreferences() {
+    const languageSelect = document.getElementById('languageSelect');
+    const timezoneSelect = document.getElementById('timezoneSelect');
+    const autoBookConfirm = document.getElementById('autoBookConfirm');
+    
     const preferences = {
-        language: document.getElementById('languageSelect').value,
-        timezone: document.getElementById('timezoneSelect').value,
-        autoConfirm: document.getElementById('autoBookConfirm').checked
+        language: languageSelect ? languageSelect.value : 'en',
+        timezone: timezoneSelect ? timezoneSelect.value : 'UTC+3',
+        autoConfirm: autoBookConfirm ? autoBookConfirm.checked : false
     };
     
     localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(preferences));
@@ -582,6 +624,11 @@ function showSection(sectionId) {
             item.classList.add('active');
         }
     });
+    
+    // Close sidebar on mobile after selection
+    if (window.innerWidth <= 992) {
+        closeSidebar();
+    }
 }
 
 function showNotification(message, type = 'info') {
@@ -600,6 +647,9 @@ function showNotification(message, type = 'info') {
     } else if (type === 'error') {
         icon = 'fa-exclamation-triangle';
         borderColor = '#dc3545';
+    } else if (type === 'warning') {
+        icon = 'fa-exclamation-circle';
+        borderColor = '#ffc107';
     }
     
     toast.style.borderLeftColor = borderColor;
@@ -613,8 +663,11 @@ function showNotification(message, type = 'info') {
     
     toastContainer.appendChild(toast);
     
+    // Auto remove after 3 seconds
     setTimeout(() => {
-        if (toast && toast.remove) toast.remove();
+        if (toast && toast.parentNode) {
+            toast.remove();
+        }
     }, 3000);
 }
 
@@ -629,12 +682,9 @@ function logout() {
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
 }
 
 // ========== EVENT LISTENERS ==========
@@ -669,10 +719,12 @@ function setupEventListeners() {
         savePreferencesBtn.addEventListener('click', savePreferences);
     }
     
+    // Add location on Enter key
     const locationInput = document.getElementById('newLocation');
     if (locationInput) {
         locationInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 addLocation();
             }
         });
@@ -701,3 +753,4 @@ window.showNotification = showNotification;
 window.openSidebar = openSidebar;
 window.closeSidebar = closeSidebar;
 window.showSection = showSection;
+window.logout = logout;
