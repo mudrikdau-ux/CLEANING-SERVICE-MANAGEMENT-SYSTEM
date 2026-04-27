@@ -1,14 +1,25 @@
+// staff.js
+
 // ========== STAFF ACCOUNT DATA ==========
 const staffAccount = {
   id: 1,
   email: "mudrikdau@gmail.com",
-  password: "1234",  // default password (admin set)
+  password: "1234",
   name: "Mudrik Dau",
   role: "Senior Cleaning Specialist",
   phone: "+255 777 123 456",
   joinDate: "2024-01-15",
-  avatar: "MD"
+  avatar: "MD",
+  isSupervisor: true,
+  supervisorLocation: "Zanzibar University"
 };
+
+// Additional supervisor accounts for demo
+const supervisorAccounts = [
+  { id: 2, email: "zssf.supervisor@csms.com", password: "1234", name: "Ali Hassan", role: "Site Supervisor", phone: "+255 777 111 222", joinDate: "2024-02-01", isSupervisor: true, supervisorLocation: "ZSSF" },
+  { id: 3, email: "mall.supervisor@csms.com", password: "1234", name: "Fatma Omar", role: "Site Supervisor", phone: "+255 777 333 444", joinDate: "2024-02-15", isSupervisor: true, supervisorLocation: "Michenzani Mall" },
+  { id: 4, email: "uni.supervisor@csms.com", password: "1234", name: "Said Juma", role: "Site Supervisor", phone: "+255 777 555 666", joinDate: "2024-01-20", isSupervisor: true, supervisorLocation: "Zanzibar University" }
+];
 
 // ========== JOBS DATABASE ==========
 let jobs = [
@@ -21,7 +32,9 @@ let jobs = [
     scheduledDate: "2026-04-05",
     timeSlot: "09:00 - 12:00",
     duration: "3 hours",
-    price: 230000  // TZS
+    price: 230000,
+    description: "Complete deep cleaning of a 3-bedroom house including kitchen, bathrooms, and living areas.",
+    requirements: "Bring heavy-duty cleaning equipment and eco-friendly products"
   },
   { 
     id: 102, 
@@ -32,7 +45,9 @@ let jobs = [
     scheduledDate: "2026-04-06",
     timeSlot: "14:00 - 17:00",
     duration: "3 hours",
-    price: 525000  // TZS
+    price: 525000,
+    description: "Steam cleaning of 500 sqm office carpet area across 3 floors.",
+    requirements: "Professional steam cleaner machine required"
   },
   { 
     id: 103, 
@@ -43,7 +58,9 @@ let jobs = [
     scheduledDate: "2026-03-25",
     timeSlot: "10:00 - 12:00",
     duration: "2 hours",
-    price: 187500  // TZS
+    price: 187500,
+    description: "Complete kitchen sanitization including appliances, countertops, and storage areas.",
+    requirements: "Food-grade sanitizers only"
   },
   { 
     id: 104, 
@@ -54,8 +71,10 @@ let jobs = [
     scheduledDate: "2026-03-20",
     timeSlot: "13:00 - 15:00",
     duration: "2 hours",
-    price: 300000,  // TZS
-    completedDate: "2026-03-20"
+    price: 300000,
+    completedDate: "2026-03-20",
+    description: "Maintenance and filter replacement for 4 AC units.",
+    requirements: "Bring replacement filters and cleaning solution"
   },
   { 
     id: 105, 
@@ -66,40 +85,466 @@ let jobs = [
     scheduledDate: "2026-03-18",
     timeSlot: "08:00 - 12:00",
     duration: "4 hours",
-    price: 850000,  // TZS
-    completedDate: "2026-03-18"
+    price: 850000,
+    completedDate: "2026-03-18",
+    description: "Complete villa cleaning including 5 bedrooms, pool area, and garden maintenance.",
+    requirements: "Team of 4 cleaners recommended"
   }
 ];
+
+// ========== STAFF DATABASE FOR ATTENDANCE ==========
+const staffMembers = [
+  { id: 1, name: "Mudrik Dau", role: "Senior Cleaning Specialist", isSupervisor: true, location: "Zanzibar University", basePayPerDay: 10000 },
+  { id: 2, name: "Ali Hassan", role: "Site Supervisor", isSupervisor: true, location: "ZSSF", basePayPerDay: 10000 },
+  { id: 3, name: "Fatma Omar", role: "Site Supervisor", isSupervisor: true, location: "Michenzani Mall", basePayPerDay: 10000 },
+  { id: 4, name: "Said Juma", role: "Site Supervisor", isSupervisor: true, location: "Zanzibar University", basePayPerDay: 10000 },
+  { id: 5, name: "John Mwinyi", role: "Cleaning Technician", isSupervisor: false, location: "Zanzibar University", basePayPerDay: 10000 },
+  { id: 6, name: "Aisha Abdallah", role: "Cleaning Technician", isSupervisor: false, location: "Zanzibar University", basePayPerDay: 10000 },
+  { id: 7, name: "James Mrema", role: "Cleaning Technician", isSupervisor: false, location: "ZSSF", basePayPerDay: 10000 },
+  { id: 8, name: "Sophia Mohamed", role: "Cleaning Technician", isSupervisor: false, location: "Michenzani Mall", basePayPerDay: 10000 },
+  { id: 9, name: "Hamza Rashid", role: "Cleaning Assistant", isSupervisor: false, location: "Zanzibar University", basePayPerDay: 10000 },
+  { id: 10, name: "Zainabu Salim", role: "Cleaning Assistant", isSupervisor: false, location: "Michenzani Mall", basePayPerDay: 10000 }
+];
+
+// ========== SUPERVISOR DATA STORAGE ==========
+let attendanceRecords = [];
+let weeklyReports = [];
+let chatMessages = [];
+
+// Load supervisor data from localStorage
+function loadSupervisorData() {
+  const storedAttendance = localStorage.getItem('csms_attendance');
+  if (storedAttendance) {
+    attendanceRecords = JSON.parse(storedAttendance);
+  } else {
+    const today = new Date().toISOString().split('T')[0];
+    attendanceRecords = staffMembers.map(staff => ({
+      staffId: staff.id,
+      staffName: staff.name,
+      location: staff.location,
+      date: today,
+      present: true
+    }));
+    saveAttendanceRecords();
+  }
+  
+  const storedReports = localStorage.getItem('csms_reports');
+  if (storedReports) {
+    weeklyReports = JSON.parse(storedReports);
+  }
+  
+  const storedChat = localStorage.getItem('csms_chat');
+  if (storedChat) {
+    chatMessages = JSON.parse(storedChat);
+  } else {
+    chatMessages = [
+      { id: 1, sender: "Admin", message: "Welcome to the communication portal. Reports sent here will be reviewed.", timestamp: new Date().toISOString(), type: "received" }
+    ];
+    saveChatMessages();
+  }
+}
+
+function saveAttendanceRecords() {
+  localStorage.setItem('csms_attendance', JSON.stringify(attendanceRecords));
+}
+
+function saveReports() {
+  localStorage.setItem('csms_reports', JSON.stringify(weeklyReports));
+}
+
+function saveChatMessages() {
+  localStorage.setItem('csms_chat', JSON.stringify(chatMessages));
+}
+
+// ========== SUPERVISOR FUNCTIONS ==========
+function toggleSupervisorMenu() {
+  const supervisorNavBtn = document.getElementById('supervisorNavBtn');
+  if (currentStaff && currentStaff.isSupervisor) {
+    supervisorNavBtn.style.display = 'flex';
+  } else {
+    supervisorNavBtn.style.display = 'none';
+    const activeView = document.querySelector('.content-view.active');
+    if (activeView && activeView.id === 'supervisorView') {
+      document.querySelector('[data-view="jobs"]').click();
+    }
+  }
+}
+
+function loadStaffForLocation(location) {
+  const staffAtLocation = staffMembers.filter(staff => staff.location === location);
+  const selectedLocationDisplay = document.getElementById('selectedLocationDisplay');
+  const reportLocationField = document.getElementById('reportLocation');
+  
+  if (selectedLocationDisplay) selectedLocationDisplay.textContent = location;
+  if (reportLocationField) reportLocationField.value = location;
+  
+  const today = new Date().toISOString().split('T')[0];
+  
+  let html = `
+    <table class="attendance-table">
+      <thead>
+        <tr><th>Staff Name</th><th>Role</th><th>Present Today (10,000 TZS)</th></tr>
+      </thead>
+      <tbody>
+  `;
+  
+  staffAtLocation.forEach(staff => {
+    const attendance = attendanceRecords.find(rec => rec.staffId === staff.id && rec.date === today);
+    const isPresent = attendance ? attendance.present : true;
+    const supervisorMark = staff.isSupervisor ? '<span class="supervisor-badge ms-2">Supervisor</span>' : '';
+    
+    html += `
+      <tr>
+        <td>${escapeHtml(staff.name)}${supervisorMark}</td>
+        <td>${escapeHtml(staff.role)}</td>
+        <td>
+          <input type="checkbox" class="attendance-checkbox" data-staff-id="${staff.id}" ${isPresent ? 'checked' : ''}>
+        </td>
+      </tr>
+    `;
+  });
+  
+  html += `</tbody></table>`;
+  
+  const attendanceContainer = document.getElementById('attendanceTableContainer');
+  if (attendanceContainer) {
+    attendanceContainer.innerHTML = html;
+    
+    document.querySelectorAll('.attendance-checkbox').forEach(cb => {
+      cb.addEventListener('change', function() {
+        const staffId = parseInt(this.dataset.staffId);
+        updateAttendance(staffId, this.checked);
+      });
+    });
+  }
+  
+  const attendanceCard = document.getElementById('attendanceCard');
+  if (attendanceCard) attendanceCard.style.display = 'block';
+}
+
+function updateAttendance(staffId, isPresent) {
+  const today = new Date().toISOString().split('T')[0];
+  const existingIndex = attendanceRecords.findIndex(rec => rec.staffId === staffId && rec.date === today);
+  
+  if (existingIndex !== -1) {
+    attendanceRecords[existingIndex].present = isPresent;
+  } else {
+    const staff = staffMembers.find(s => s.id === staffId);
+    if (staff) {
+      attendanceRecords.push({
+        staffId: staffId,
+        staffName: staff.name,
+        location: staff.location,
+        date: today,
+        present: isPresent
+      });
+    }
+  }
+  
+  saveAttendanceRecords();
+  showNotification(`Attendance updated for ${staffMembers.find(s => s.id === staffId)?.name}`, 'success');
+}
+
+function saveAttendanceAndUpdatePayroll() {
+  const selectedLocation = document.getElementById('locationSelect').value;
+  if (!selectedLocation) {
+    showNotification('Please select a location first', 'error');
+    return;
+  }
+  
+  const today = new Date().toISOString().split('T')[0];
+  const staffAtLocation = staffMembers.filter(staff => staff.location === selectedLocation);
+  let totalPayroll = 0;
+  
+  staffAtLocation.forEach(staff => {
+    const attendance = attendanceRecords.find(rec => rec.staffId === staff.id && rec.date === today);
+    if (attendance && attendance.present) {
+      totalPayroll += staff.basePayPerDay;
+    }
+  });
+  
+  showNotification(`Attendance saved! Total payroll for ${selectedLocation} today: TZS ${formatNumber(totalPayroll)}`, 'success');
+  console.log(`Payroll for ${selectedLocation} on ${today}: TZS ${totalPayroll}`);
+}
+
+// Report Generation Functions
+let currentGeneratedReport = null;
+
+function generateWeeklyReport() {
+  const location = document.getElementById('reportLocation').value;
+  const weekEnding = document.getElementById('reportWeekEnding').value;
+  const progress = document.getElementById('reportProgress').value;
+  const performance = document.getElementById('reportPerformance').value;
+  const equipment = document.getElementById('reportEquipment').value;
+  const requests = document.getElementById('reportRequests').value;
+  
+  if (!location) {
+    showNotification('Please select a location first', 'error');
+    return;
+  }
+  
+  if (!weekEnding) {
+    showNotification('Please select the week ending date', 'error');
+    return;
+  }
+  
+  const report = {
+    id: Date.now(),
+    location: location,
+    weekEnding: weekEnding,
+    progress: progress || 'No progress report provided.',
+    performance: performance || 'No performance report provided.',
+    equipment: equipment || 'No equipment report provided.',
+    requests: requests || 'No additional requests.',
+    generatedBy: currentStaff.name,
+    generatedDate: new Date().toISOString(),
+    reportNumber: `WR-${new Date().getFullYear()}${(new Date().getMonth()+1).toString().padStart(2,'0')}${Math.floor(Math.random()*1000)}`
+  };
+  
+  currentGeneratedReport = report;
+  
+  const previewContent = `
+    <div style="text-align: center;">
+      <h4>WEEKLY SUPERVISOR REPORT</h4>
+      <p><strong>Report #:</strong> ${report.reportNumber}</p>
+      <p><strong>Location:</strong> ${escapeHtml(report.location)}</p>
+      <p><strong>Week Ending:</strong> ${report.weekEnding}</p>
+      <p><strong>Generated By:</strong> ${escapeHtml(report.generatedBy)}</p>
+      <p><strong>Date:</strong> ${new Date(report.generatedDate).toLocaleDateString()}</p>
+    </div>
+    <hr>
+    <div class="report-section">
+      <h5>Work Progress & Observations</h5>
+      <p>${escapeHtml(report.progress)}</p>
+    </div>
+    <div class="report-section">
+      <h5>Worker Performance</h5>
+      <p>${escapeHtml(report.performance)}</p>
+    </div>
+    <div class="report-section">
+      <h5>Equipment Status</h5>
+      <p>${escapeHtml(report.equipment)}</p>
+    </div>
+    <div class="report-section">
+      <h5>Additional Requests / Comments</h5>
+      <p>${escapeHtml(report.requests)}</p>
+    </div>
+    <hr>
+    <div style="text-align: center; font-size: 12px; color: #718096;">
+      This is an official CSMS supervisor report.
+    </div>
+  `;
+  
+  const previewContainer = document.getElementById('reportPreviewContent');
+  if (previewContainer) previewContainer.innerHTML = previewContent;
+  
+  const reportModal = document.getElementById('reportPreviewModal');
+  if (reportModal) reportModal.style.display = 'flex';
+  
+  document.getElementById('downloadReportBtn').disabled = false;
+  document.getElementById('sendReportToAdminBtn').disabled = false;
+  document.getElementById('attachReportToChatBtn').disabled = false;
+  
+  showNotification('Report generated successfully!', 'success');
+}
+
+function downloadReport() {
+  if (!currentGeneratedReport) {
+    showNotification('No report to download.', 'error');
+    return;
+  }
+  
+  const report = currentGeneratedReport;
+  const reportText = `
+CSMS WEEKLY SUPERVISOR REPORT
+================================
+Report #: ${report.reportNumber}
+Location: ${report.location}
+Week Ending: ${report.weekEnding}
+Generated By: ${report.generatedBy}
+Generated Date: ${new Date(report.generatedDate).toLocaleString()}
+
+WORK PROGRESS & OBSERVATIONS:
+${report.progress}
+
+WORKER PERFORMANCE:
+${report.performance}
+
+EQUIPMENT STATUS:
+${report.equipment}
+
+ADDITIONAL REQUESTS / COMMENTS:
+${report.requests}
+
+================================
+  `;
+  
+  const blob = new Blob([reportText], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Weekly_Report_${report.location}_${report.weekEnding}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  weeklyReports.push(report);
+  saveReports();
+  
+  showNotification('Report downloaded successfully!', 'success');
+  closeReportModal();
+}
+
+function sendReportToAdmin() {
+  if (!currentGeneratedReport) {
+    showNotification('No report to send.', 'error');
+    return;
+  }
+  
+  const report = currentGeneratedReport;
+  const messageContent = `📋 *WEEKLY REPORT SUBMITTED*\n\nLocation: ${report.location}\nWeek Ending: ${report.weekEnding}\nReport #: ${report.reportNumber}\nGenerated by: ${report.generatedBy}\n\nProgress Summary: ${report.progress.substring(0, 100)}${report.progress.length > 100 ? '...' : ''}\n\nRequests: ${report.requests.substring(0, 100)}${report.requests.length > 100 ? '...' : ''}`;
+  
+  sendMessageToChat(messageContent, true);
+  
+  report.sentToAdmin = true;
+  report.sentDate = new Date().toISOString();
+  weeklyReports.push(report);
+  saveReports();
+  
+  showNotification('Report sent to Admin successfully!', 'success');
+  closeReportModal();
+}
+
+function closeReportModal() {
+  const reportModal = document.getElementById('reportPreviewModal');
+  if (reportModal) reportModal.style.display = 'none';
+}
+
+// Chat Functions
+function sendMessageToChat(message, isReport = false) {
+  if (!message.trim() && !isReport) return;
+  
+  const newMessage = {
+    id: Date.now(),
+    sender: currentStaff.name,
+    message: message,
+    timestamp: new Date().toISOString(),
+    type: "sent",
+    isReport: isReport
+  };
+  
+  chatMessages.unshift(newMessage);
+  saveChatMessages();
+  displayChatMessages();
+  showNotification(isReport ? 'Report attached and sent!' : 'Message sent!', 'success');
+  
+  if (!isReport) {
+    const chatInput = document.getElementById('chatMessageInput');
+    if (chatInput) chatInput.value = '';
+  }
+  
+  if (isReport) {
+    setTimeout(() => {
+      const adminResponse = {
+        id: Date.now() + 1,
+        sender: "Admin",
+        message: `Thank you for submitting the weekly report. I will review it shortly.`,
+        timestamp: new Date().toISOString(),
+        type: "received"
+      };
+      chatMessages.unshift(adminResponse);
+      saveChatMessages();
+      displayChatMessages();
+      showNotification('New message from Admin', 'info');
+    }, 2000);
+  }
+}
+
+function attachLastReportToChat() {
+  if (!currentGeneratedReport) {
+    showNotification('No report generated yet.', 'error');
+    return;
+  }
+  
+  const report = currentGeneratedReport;
+  const messageWithReport = `📋 *WEEKLY REPORT - ${report.location}*\nReport #: ${report.reportNumber}\nWeek Ending: ${report.weekEnding}\n\nWork Progress: ${report.progress.substring(0, 80)}...\n\nRequests: ${report.requests}`;
+  
+  sendMessageToChat(messageWithReport, true);
+}
+
+function displayChatMessages() {
+  const container = document.getElementById('chatMessagesContainer');
+  if (!container) return;
+  
+  if (chatMessages.length === 0) {
+    container.innerHTML = '<div class="chat-placeholder">No messages yet. Send a message to the Admin.</div>';
+    return;
+  }
+  
+  let html = '';
+  chatMessages.slice().reverse().forEach(msg => {
+    const date = new Date(msg.timestamp);
+    const formattedTime = date.toLocaleString();
+    const messageClass = msg.type === 'sent' ? 'sent' : 'received';
+    const senderName = msg.type === 'sent' ? 'You' : msg.sender;
+    
+    html += `
+      <div class="chat-message ${messageClass}">
+        <div><strong>${escapeHtml(senderName)}</strong>${msg.isReport ? ' 📋' : ''}</div>
+        <div>${escapeHtml(msg.message)}</div>
+        <div class="message-meta">${formattedTime}</div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
+}
 
 // ========== GLOBAL VARIABLES ==========
 let currentStaff = null;
 let completedJobsCount = 0;
 let selectedJobForPayment = null;
-
-// ========== CASH PAYMENT MODULE VARIABLES ==========
 let paymentValidations = [];
 
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM loaded - initializing event listeners');
   
-  // Initialize event listeners
+  loadSupervisorData();
   setupEventListeners();
   setupNavButtons();
   
   // Check if already logged in
   if (sessionStorage.getItem('staffLoggedIn') === 'true') {
-    const savedName = sessionStorage.getItem('staffName');
-    if (savedName) {
-      currentStaff = staffAccount;
-      document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-      loadStaffData();
-      loadJobs();
-      loadJobHistory();
-      loadStats();
-      loadProfile();
-      initPaymentModule();
+    const savedEmail = sessionStorage.getItem('staffEmail');
+    if (savedEmail) {
+      if (savedEmail === staffAccount.email) {
+        currentStaff = staffAccount;
+      } else {
+        const found = supervisorAccounts.find(acc => acc.email === savedEmail);
+        if (found) currentStaff = found;
+      }
+      
+      if (currentStaff) {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        loadStaffData();
+        loadJobs();
+        loadJobHistory();
+        loadStats();
+        loadProfile();
+        initPaymentModule();
+        toggleSupervisorMenu();
+        
+        if (currentStaff.isSupervisor && currentStaff.supervisorLocation) {
+          const locationSelect = document.getElementById('locationSelect');
+          if (locationSelect) {
+            locationSelect.value = currentStaff.supervisorLocation;
+          }
+        }
+      }
     }
   }
 });
@@ -115,7 +560,6 @@ function setupEventListeners() {
     });
   }
   
-  // Login button
   const loginBtn = document.getElementById('loginBtn');
   if (loginBtn) {
     loginBtn.addEventListener('click', (e) => {
@@ -124,7 +568,6 @@ function setupEventListeners() {
     });
   }
   
-  // Forgot password link
   const forgotLink = document.getElementById('forgotPasswordLink');
   if (forgotLink) {
     forgotLink.addEventListener('click', (e) => {
@@ -133,7 +576,6 @@ function setupEventListeners() {
     });
   }
   
-  // Demo credentials link
   const demoLink = document.getElementById('demoCredentialsLink');
   if (demoLink) {
     demoLink.addEventListener('click', (e) => {
@@ -145,16 +587,71 @@ function setupEventListeners() {
   // Logout button
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', logoutStaff);
+    logoutBtn.addEventListener('click', showLogoutConfirmation);
   }
   
-  // Validate payment button
+  // Logout modal buttons
+  const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+  if (cancelLogoutBtn) {
+    cancelLogoutBtn.addEventListener('click', hideLogoutConfirmation);
+  }
+  
+  const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+  if (confirmLogoutBtn) {
+    confirmLogoutBtn.addEventListener('click', performLogout);
+  }
+  
+  // Job detail modal close buttons
+  const closeJobDetailModal = document.getElementById('closeJobDetailModal');
+  if (closeJobDetailModal) {
+    closeJobDetailModal.addEventListener('click', closeJobDetailModalFn);
+  }
+  
+  const closeJobDetailFooter = document.getElementById('closeJobDetailFooter');
+  if (closeJobDetailFooter) {
+    closeJobDetailFooter.addEventListener('click', closeJobDetailModalFn);
+  }
+  
+  // Stats detail modal close buttons
+  const closeStatsDetailModal = document.getElementById('closeStatsDetailModal');
+  if (closeStatsDetailModal) {
+    closeStatsDetailModal.addEventListener('click', closeStatsDetailModalFn);
+  }
+  
+  const closeStatsDetailFooter = document.getElementById('closeStatsDetailFooter');
+  if (closeStatsDetailFooter) {
+    closeStatsDetailFooter.addEventListener('click', closeStatsDetailModalFn);
+  }
+  
+  // Close modals on overlay click
+  const jobDetailModal = document.getElementById('jobDetailModal');
+  if (jobDetailModal) {
+    jobDetailModal.addEventListener('click', function(e) {
+      if (e.target === this) closeJobDetailModalFn();
+    });
+  }
+  
+  const statsDetailModal = document.getElementById('statsDetailModal');
+  if (statsDetailModal) {
+    statsDetailModal.addEventListener('click', function(e) {
+      if (e.target === this) closeStatsDetailModalFn();
+    });
+  }
+  
+  const logoutConfirmModal = document.getElementById('logoutConfirmModal');
+  if (logoutConfirmModal) {
+    logoutConfirmModal.addEventListener('click', function(e) {
+      if (e.target === this) hideLogoutConfirmation();
+    });
+  }
+  
+  // Payment validation
   const validateBtn = document.getElementById('validatePaymentBtn');
   if (validateBtn) {
     validateBtn.addEventListener('click', validateCashPayment);
   }
   
-  // Receipt modal buttons
+  // Receipt modal
   const closeModalBtn = document.getElementById('closeReceiptModalBtn');
   if (closeModalBtn) {
     closeModalBtn.addEventListener('click', closeReceiptModal);
@@ -170,7 +667,79 @@ function setupEventListeners() {
     printReceiptBtn.addEventListener('click', printReceipt);
   }
   
-  // Enter key on login inputs
+  // Supervisor event listeners
+  const loadLocationBtn = document.getElementById('loadLocationDataBtn');
+  if (loadLocationBtn) {
+    loadLocationBtn.addEventListener('click', () => {
+      const location = document.getElementById('locationSelect').value;
+      if (location) {
+        loadStaffForLocation(location);
+      } else {
+        showNotification('Please select a location first', 'error');
+      }
+    });
+  }
+  
+  const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
+  if (saveAttendanceBtn) {
+    saveAttendanceBtn.addEventListener('click', saveAttendanceAndUpdatePayroll);
+  }
+  
+  const generateReportBtn = document.getElementById('generateReportBtn');
+  if (generateReportBtn) {
+    generateReportBtn.addEventListener('click', generateWeeklyReport);
+  }
+  
+  const downloadReportBtn = document.getElementById('downloadReportBtn');
+  if (downloadReportBtn) {
+    downloadReportBtn.addEventListener('click', downloadReport);
+  }
+  
+  const sendReportToAdminBtn = document.getElementById('sendReportToAdminBtn');
+  if (sendReportToAdminBtn) {
+    sendReportToAdminBtn.addEventListener('click', sendReportToAdmin);
+  }
+  
+  const closeReportModalBtn = document.getElementById('closeReportModalBtn');
+  if (closeReportModalBtn) {
+    closeReportModalBtn.addEventListener('click', closeReportModal);
+  }
+  
+  const closeReportPreviewBtn = document.getElementById('closeReportPreviewBtn');
+  if (closeReportPreviewBtn) {
+    closeReportPreviewBtn.addEventListener('click', closeReportModal);
+  }
+  
+  const confirmDownloadBtn = document.getElementById('confirmDownloadReportBtn');
+  if (confirmDownloadBtn) {
+    confirmDownloadBtn.addEventListener('click', downloadReport);
+  }
+  
+  const sendChatMsgBtn = document.getElementById('sendChatMessageBtn');
+  if (sendChatMsgBtn) {
+    sendChatMsgBtn.addEventListener('click', () => {
+      const message = document.getElementById('chatMessageInput').value;
+      sendMessageToChat(message, false);
+    });
+  }
+  
+  const attachReportBtn = document.getElementById('attachReportToChatBtn');
+  if (attachReportBtn) {
+    attachReportBtn.addEventListener('click', attachLastReportToChat);
+  }
+  
+  // Chat enter key
+  const chatInput = document.getElementById('chatMessageInput');
+  if (chatInput) {
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessageToChat(chatInput.value, false);
+      }
+    });
+  }
+  
+  // Login enter key
   const inputs = document.querySelectorAll('#loginSection input');
   inputs.forEach(input => {
     input.addEventListener('keypress', (e) => {
@@ -180,6 +749,67 @@ function setupEventListeners() {
       }
     });
   });
+  
+  // Escape key to close modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeJobDetailModalFn();
+      closeStatsDetailModalFn();
+      closeReceiptModal();
+      closeReportModal();
+      hideLogoutConfirmation();
+    }
+  });
+}
+
+// ========== LOGOUT FUNCTIONS ==========
+function showLogoutConfirmation() {
+  const modal = document.getElementById('logoutConfirmModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function hideLogoutConfirmation() {
+  const modal = document.getElementById('logoutConfirmModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+function performLogout() {
+  // Hide confirmation modal
+  hideLogoutConfirmation();
+  
+  // Show loading overlay
+  const loadingOverlay = document.getElementById('logoutLoadingOverlay');
+  if (loadingOverlay) {
+    loadingOverlay.style.display = 'flex';
+  }
+  
+  // Simulate logout process
+  setTimeout(() => {
+    sessionStorage.clear();
+    
+    // Hide dashboard and loading
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+    document.getElementById('dashboard').style.display = 'none';
+    
+    // Reset form
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+    
+    // Show login with animation
+    const loginSection = document.getElementById('loginSection');
+    loginSection.style.display = 'flex';
+    loginSection.style.animation = 'none';
+    loginSection.offsetHeight; // Trigger reflow
+    loginSection.style.animation = 'fadeIn 0.5s ease-out';
+    
+    showNotification('Logged out successfully!', 'success');
+  }, 1500);
 }
 
 // ========== LOGIN FUNCTIONS ==========
@@ -196,39 +826,48 @@ function loginStaff() {
   const email = emailInput.value.trim();
   const password = passwordInput.value;
   
-  console.log('Email:', email);
-  console.log('Password:', password ? '***' : 'empty');
-  
   if (!email || !password) {
     showNotification('Please enter both email and password', 'error');
     return;
   }
   
+  // Check main admin staff account
   if (email === staffAccount.email && password === staffAccount.password) {
     currentStaff = staffAccount;
-    
-    // Hide login, show dashboard
+  } else {
+    // Check supervisor accounts
+    const foundSupervisor = supervisorAccounts.find(acc => acc.email === email && acc.password === password);
+    if (foundSupervisor) {
+      currentStaff = foundSupervisor;
+    }
+  }
+  
+  if (currentStaff) {
     document.getElementById('loginSection').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     
-    // Load all dashboard data
     loadStaffData();
     loadJobs();
     loadJobHistory();
     loadStats();
     loadProfile();
-    
-    // Initialize payment module
     initPaymentModule();
+    toggleSupervisorMenu();
+    
+    if (currentStaff.isSupervisor && currentStaff.supervisorLocation) {
+      const locationSelect = document.getElementById('locationSelect');
+      if (locationSelect) {
+        locationSelect.value = currentStaff.supervisorLocation;
+      }
+    }
     
     showNotification(`Welcome back, ${currentStaff.name}!`, 'success');
     
-    // Store login state
     sessionStorage.setItem('staffLoggedIn', 'true');
     sessionStorage.setItem('staffName', currentStaff.name);
+    sessionStorage.setItem('staffEmail', currentStaff.email);
   } else {
-    showNotification('Invalid email or password! Use: mudrikdau@gmail.com / 1234', 'error');
-    // Shake animation
+    showNotification('Invalid email or password!', 'error');
     const loginCard = document.querySelector('.login-card');
     if (loginCard) {
       loginCard.style.animation = 'shake 0.5s';
@@ -240,13 +879,8 @@ function loginStaff() {
 }
 
 function logoutStaff() {
-  if (confirm('Are you sure you want to logout?')) {
-    sessionStorage.clear();
-    showNotification('Logged out successfully!', 'success');
-    setTimeout(() => {
-      location.reload();
-    }, 1000);
-  }
+  // This is kept for backward compatibility but enhanced logout is now used
+  showLogoutConfirmation();
 }
 
 function showForgotPassword() {
@@ -254,13 +888,7 @@ function showForgotPassword() {
 }
 
 function showDemoCredentials() {
-  showNotification('Demo Credentials: Email: mudrikdau@gmail.com | Password: 1234', 'info');
-  
-  // Auto-fill the form
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  if (emailInput) emailInput.value = 'mudrikdau@gmail.com';
-  if (passwordInput) passwordInput.value = '1234';
+  showNotification('Demo Credentials:\nStaff: mudrikdau@gmail.com / 1234\nSupervisor (ZSSF): zssf.supervisor@csms.com / 1234\nSupervisor (Mall): mall.supervisor@csms.com / 1234\nSupervisor (Uni): uni.supervisor@csms.com / 1234', 'info');
 }
 
 // ========== CHANGE PASSWORD FEATURE ==========
@@ -274,7 +902,7 @@ function changeStaffPassword() {
     return;
   }
   
-  if (oldPass !== staffAccount.password) {
+  if (oldPass !== currentStaff.password) {
     showNotification('Current password is incorrect', 'error');
     return;
   }
@@ -289,13 +917,9 @@ function changeStaffPassword() {
     return;
   }
   
-  // Update the global staff password
-  staffAccount.password = newPass;
-  if (currentStaff) currentStaff.password = newPass;
-  
+  currentStaff.password = newPass;
   showNotification('Password changed successfully!', 'success');
   
-  // Clear fields
   document.getElementById('oldPassword').value = '';
   document.getElementById('newPassword').value = '';
   document.getElementById('confirmPassword').value = '';
@@ -332,7 +956,7 @@ function loadJobs() {
     const statusText = job.status === 'pending' ? 'Pending' : 'In Progress';
     
     html += `
-      <div class="job-card" data-id="${job.id}">
+      <div class="job-card clickable-indicator" data-id="${job.id}" onclick="showJobDetailModal(${job.id})">
         <div class="job-header">
           <div class="job-icon">
             <i class="bi bi-brush-fill"></i>
@@ -362,16 +986,16 @@ function loadJobs() {
             <span>TZS ${formatNumber(job.price)}</span>
           </div>
         </div>
-        <div class="job-actions">
+        <div class="job-actions" onclick="event.stopPropagation()">
           ${job.status === 'pending' ? 
-            `<button class="btn-action btn-start" data-job-id="${job.id}" data-action="start">
+            `<button class="btn-action btn-start" onclick="updateJobStatus(${job.id}, 'in-progress')">
               <i class="bi bi-play-fill"></i> Start Job
             </button>` : 
-            `<button class="btn-action btn-complete" data-job-id="${job.id}" data-action="complete">
+            `<button class="btn-action btn-complete" onclick="updateJobStatus(${job.id}, 'completed')">
               <i class="bi bi-check-circle-fill"></i> Mark Complete
             </button>`
           }
-          <button class="btn-action btn-view" data-job-id="${job.id}" data-action="view">
+          <button class="btn-action btn-view" onclick="showJobDetailModal(${job.id})">
             <i class="bi bi-eye"></i> Details
           </button>
         </div>
@@ -380,19 +1004,6 @@ function loadJobs() {
   });
   
   container.innerHTML = html;
-  
-  // Add event listeners to job buttons
-  container.querySelectorAll('[data-action="start"]').forEach(btn => {
-    btn.addEventListener('click', () => updateJobStatus(parseInt(btn.dataset.jobId), 'in-progress'));
-  });
-  
-  container.querySelectorAll('[data-action="complete"]').forEach(btn => {
-    btn.addEventListener('click', () => updateJobStatus(parseInt(btn.dataset.jobId), 'completed'));
-  });
-  
-  container.querySelectorAll('[data-action="view"]').forEach(btn => {
-    btn.addEventListener('click', () => viewJobDetails(parseInt(btn.dataset.jobId)));
-  });
 }
 
 function loadJobHistory() {
@@ -415,7 +1026,7 @@ function loadJobHistory() {
   let html = '';
   completedJobs.forEach(job => {
     html += `
-      <div class="job-card">
+      <div class="job-card clickable-indicator" data-id="${job.id}" onclick="showJobDetailModal(${job.id})">
         <div class="job-header">
           <div class="job-icon">
             <i class="bi bi-check-circle-fill" style="color: #1e7b48;"></i>
@@ -437,19 +1048,16 @@ function loadJobHistory() {
             <span>TZS ${formatNumber(job.price)}</span>
           </div>
         </div>
-        <button class="btn-action btn-view" data-job-id="${job.id}" style="width: 100%;">
-          <i class="bi bi-eye"></i> View Details
-        </button>
+        <div class="job-actions" onclick="event.stopPropagation()">
+          <button class="btn-action btn-view" style="width: 100%;" onclick="showJobDetailModal(${job.id})">
+            <i class="bi bi-eye"></i> View Full Details
+          </button>
+        </div>
       </div>
     `;
   });
   
   container.innerHTML = html;
-  
-  // Add event listeners
-  container.querySelectorAll('[data-job-id]').forEach(btn => {
-    btn.addEventListener('click', () => viewJobDetails(parseInt(btn.dataset.jobId)));
-  });
 }
 
 function loadStats() {
@@ -460,56 +1068,64 @@ function loadStats() {
   const totalJobs = jobs.length;
   const totalCompleted = completedJobs.length;
   const totalEarnings = completedJobs.reduce((sum, job) => sum + job.price, 0);
-  
   const completionRate = totalJobs > 0 ? ((totalCompleted / totalJobs) * 100).toFixed(0) : 0;
   
   const container = document.getElementById('statsContainer');
   if (!container) return;
   
-  container.innerHTML = `
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="bi bi-briefcase-fill"></i>
+  const statCardsData = [
+    {
+      icon: 'bi-briefcase-fill',
+      value: totalJobs,
+      label: 'Total Jobs Assigned',
+      id: 'totalJobs'
+    },
+    {
+      icon: 'bi-check-circle-fill',
+      value: totalCompleted,
+      label: 'Jobs Completed',
+      id: 'completedJobs'
+    },
+    {
+      icon: 'bi-play-fill',
+      value: inProgressJobs.length,
+      label: 'In Progress',
+      id: 'inProgressJobs'
+    },
+    {
+      icon: 'bi-hourglass-split',
+      value: pendingJobs.length,
+      label: 'Pending Jobs',
+      id: 'pendingJobs'
+    },
+    {
+      icon: 'bi-cash-stack',
+      value: `TZS ${formatNumber(totalEarnings)}`,
+      label: 'Total Earnings',
+      id: 'totalEarnings'
+    },
+    {
+      icon: 'bi-graph-up',
+      value: `${completionRate}%`,
+      label: 'Completion Rate',
+      id: 'completionRate'
+    }
+  ];
+  
+  let html = '';
+  statCardsData.forEach(stat => {
+    html += `
+      <div class="stat-card clickable-indicator" onclick="showStatsDetail('${stat.id}')">
+        <div class="stat-icon">
+          <i class="bi ${stat.icon}"></i>
+        </div>
+        <div class="stat-value">${stat.value}</div>
+        <div class="stat-label">${stat.label}</div>
       </div>
-      <div class="stat-value">${totalJobs}</div>
-      <div class="stat-label">Total Jobs Assigned</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="bi bi-check-circle-fill"></i>
-      </div>
-      <div class="stat-value">${totalCompleted}</div>
-      <div class="stat-label">Jobs Completed</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="bi bi-play-fill"></i>
-      </div>
-      <div class="stat-value">${inProgressJobs.length}</div>
-      <div class="stat-label">In Progress</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="bi bi-hourglass-split"></i>
-      </div>
-      <div class="stat-value">${pendingJobs.length}</div>
-      <div class="stat-label">Pending Jobs</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="bi bi-cash-stack"></i>
-      </div>
-      <div class="stat-value">TZS ${formatNumber(totalEarnings)}</div>
-      <div class="stat-label">Total Earnings</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="bi bi-graph-up"></i>
-      </div>
-      <div class="stat-value">${completionRate}%</div>
-      <div class="stat-label">Completion Rate</div>
-    </div>
-  `;
+    `;
+  });
+  
+  container.innerHTML = html;
 }
 
 function loadProfile() {
@@ -522,7 +1138,7 @@ function loadProfile() {
         <i class="bi bi-person-fill"></i>
       </div>
       <h3>${currentStaff.name}</h3>
-      <p>${currentStaff.role}</p>
+      <p>${currentStaff.role}${currentStaff.isSupervisor ? ' (Supervisor)' : ''}</p>
     </div>
     <div class="profile-info">
       <div class="info-row">
@@ -537,16 +1153,21 @@ function loadProfile() {
         <span class="info-label"><i class="bi bi-calendar-plus"></i> Joined</span>
         <span class="info-value">${currentStaff.joinDate}</span>
       </div>
+      ${currentStaff.isSupervisor ? `
+      <div class="info-row">
+        <span class="info-label"><i class="bi bi-building"></i> Assigned Location</span>
+        <span class="info-value">${currentStaff.supervisorLocation || 'Not assigned'}</span>
+      </div>
+      ` : ''}
       <div class="info-row">
         <span class="info-label"><i class="bi bi-trophy"></i> Rating</span>
         <span class="info-value">⭐ 4.8 (24 reviews)</span>
       </div>
     </div>
     
-    <!-- Change Password Section -->
     <div class="password-change-section">
       <h4><i class="bi bi-shield-lock-fill"></i> Change Password</h4>
-      <p class="password-hint">Default password set by admin is 1234. Update your password regularly for security.</p>
+      <p class="password-hint">Update your password regularly for security.</p>
       <div class="row g-3">
         <div class="col-md-12">
           <label class="form-label">Current Password</label>
@@ -578,10 +1199,332 @@ function loadProfile() {
     </div>
   `;
   
-  // Add event listener for change password button
   const changePwdBtn = document.getElementById('changePasswordBtn');
   if (changePwdBtn) {
     changePwdBtn.addEventListener('click', changeStaffPassword);
+  }
+}
+
+// ========== JOB DETAIL MODAL ==========
+function showJobDetailModal(jobId) {
+  const job = jobs.find(j => j.id === jobId);
+  if (!job) return;
+  
+  const modal = document.getElementById('jobDetailModal');
+  const icon = document.getElementById('jobDetailIcon');
+  const title = document.getElementById('jobDetailTitle');
+  const content = document.getElementById('jobDetailContent');
+  
+  if (!modal || !content) return;
+  
+  // Set icon based on status
+  if (icon) {
+    switch(job.status) {
+      case 'completed':
+        icon.className = 'bi bi-check-circle-fill';
+        break;
+      case 'in-progress':
+        icon.className = 'bi bi-play-circle-fill';
+        break;
+      default:
+        icon.className = 'bi bi-brush-fill';
+    }
+  }
+  
+  if (title) {
+    title.textContent = job.service;
+  }
+  
+  const statusClass = job.status === 'pending' ? 'pending' : 
+                      job.status === 'in-progress' ? 'in-progress' : 'completed';
+  const statusIcon = job.status === 'pending' ? 'bi-clock' : 
+                     job.status === 'in-progress' ? 'bi-play-circle' : 'bi-check-circle';
+  
+  content.innerHTML = `
+    <div class="detail-group">
+      <div class="detail-group-header">
+        <i class="bi bi-info-circle-fill"></i>
+        <h4>Job Overview</h4>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="bi bi-tag"></i> Job ID</span>
+        <span class="detail-value">#${job.id}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="bi bi-brush"></i> Service</span>
+        <span class="detail-value">${escapeHtml(job.service)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="${statusIcon}"></i> Status</span>
+        <span class="detail-value">
+          <span class="status-badge-large ${statusClass}">${job.status.toUpperCase()}</span>
+        </span>
+      </div>
+    </div>
+    
+    <div class="detail-group">
+      <div class="detail-group-header">
+        <i class="bi bi-person-fill"></i>
+        <h4>Client Information</h4>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="bi bi-person"></i> Name</span>
+        <span class="detail-value">${escapeHtml(job.client)}</span>
+      </div>
+    </div>
+    
+    <div class="detail-group">
+      <div class="detail-group-header">
+        <i class="bi bi-geo-alt-fill"></i>
+        <h4>Location & Schedule</h4>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="bi bi-geo-alt"></i> Location</span>
+        <span class="detail-value">${escapeHtml(job.location)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="bi bi-calendar3"></i> Scheduled Date</span>
+        <span class="detail-value">${job.scheduledDate}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="bi bi-clock"></i> Time Slot</span>
+        <span class="detail-value">${job.timeSlot}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="bi bi-hourglass"></i> Duration</span>
+        <span class="detail-value">${job.duration}</span>
+      </div>
+      ${job.completedDate ? `
+      <div class="detail-item">
+        <span class="detail-label"><i class="bi bi-calendar-check"></i> Completed Date</span>
+        <span class="detail-value">${job.completedDate}</span>
+      </div>
+      ` : ''}
+    </div>
+    
+    <div class="detail-group">
+      <div class="detail-group-header">
+        <i class="bi bi-cash-stack"></i>
+        <h4>Payment Information</h4>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="bi bi-cash"></i> Service Price</span>
+        <span class="detail-value" style="color: #28a745; font-size: 18px; font-weight: 700;">TZS ${formatNumber(job.price)}</span>
+      </div>
+    </div>
+    
+    ${job.description ? `
+    <div class="detail-group">
+      <div class="detail-group-header">
+        <i class="bi bi-file-text"></i>
+        <h4>Description</h4>
+      </div>
+      <p style="color: #4a5568; line-height: 1.6; padding: 12px; background: #f8fafc; border-radius: 12px;">
+        ${escapeHtml(job.description)}
+      </p>
+    </div>
+    ` : ''}
+    
+    ${job.requirements ? `
+    <div class="detail-group">
+      <div class="detail-group-header">
+        <i class="bi bi-list-check"></i>
+        <h4>Requirements</h4>
+      </div>
+      <p style="color: #4a5568; line-height: 1.6; padding: 12px; background: #fff8f0; border-radius: 12px;">
+        ${escapeHtml(job.requirements)}
+      </p>
+    </div>
+    ` : ''}
+  `;
+  
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeJobDetailModalFn() {
+  const modal = document.getElementById('jobDetailModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+// ========== STATS DETAIL MODAL ==========
+function showStatsDetail(statId) {
+  const modal = document.getElementById('statsDetailModal');
+  const icon = document.getElementById('statsDetailIcon');
+  const title = document.getElementById('statsDetailTitle');
+  const content = document.getElementById('statsDetailContent');
+  
+  if (!modal || !content) return;
+  
+  const completedJobs = jobs.filter(job => job.status === 'completed');
+  const pendingJobs = jobs.filter(job => job.status === 'pending');
+  const inProgressJobs = jobs.filter(job => job.status === 'in-progress');
+  const totalJobs = jobs.length;
+  const totalCompleted = completedJobs.length;
+  const totalEarnings = completedJobs.reduce((sum, job) => sum + job.price, 0);
+  const completionRate = totalJobs > 0 ? ((totalCompleted / totalJobs) * 100).toFixed(0) : 0;
+  
+  let contentHtml = '';
+  
+  switch(statId) {
+    case 'totalJobs':
+      if (icon) icon.className = 'bi bi-briefcase-fill';
+      if (title) title.textContent = 'Total Jobs Breakdown';
+      contentHtml = `
+        <div class="stats-detail-section">
+          <h4>Jobs Overview</h4>
+          <div class="stats-breakdown-item">
+            <div class="stats-breakdown-icon"><i class="bi bi-briefcase"></i></div>
+            <div class="stats-breakdown-info">
+              <div class="stats-breakdown-label">Total Jobs Assigned</div>
+              <div class="stats-breakdown-value">${totalJobs}</div>
+            </div>
+          </div>
+          <div class="stats-breakdown-item">
+            <div class="stats-breakdown-icon"><i class="bi bi-check-circle"></i></div>
+            <div class="stats-breakdown-info">
+              <div class="stats-breakdown-label">Completed Jobs</div>
+              <div class="stats-breakdown-value">${totalCompleted}</div>
+            </div>
+          </div>
+          <div class="stats-breakdown-item">
+            <div class="stats-breakdown-icon"><i class="bi bi-play-circle"></i></div>
+            <div class="stats-breakdown-info">
+              <div class="stats-breakdown-label">In Progress</div>
+              <div class="stats-breakdown-value">${inProgressJobs.length}</div>
+            </div>
+          </div>
+          <div class="stats-breakdown-item">
+            <div class="stats-breakdown-icon"><i class="bi bi-clock"></i></div>
+            <div class="stats-breakdown-info">
+              <div class="stats-breakdown-label">Pending</div>
+              <div class="stats-breakdown-value">${pendingJobs.length}</div>
+            </div>
+          </div>
+        </div>
+      `;
+      break;
+      
+    case 'completedJobs':
+      if (icon) icon.className = 'bi bi-check-circle-fill';
+      if (title) title.textContent = 'Completed Jobs Details';
+      contentHtml = `
+        <div class="stats-detail-section">
+          <h4>Completed Jobs (${totalCompleted})</h4>
+          ${completedJobs.map(job => `
+            <div class="stats-breakdown-item">
+              <div class="stats-breakdown-icon"><i class="bi bi-check-circle"></i></div>
+              <div class="stats-breakdown-info">
+                <div class="stats-breakdown-label">${escapeHtml(job.service)}</div>
+                <div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div>
+                <small style="color: #718096;">Completed: ${job.completedDate}</small>
+              </div>
+            </div>
+          `).join('') || '<p style="color: #718096; text-align: center;">No completed jobs yet.</p>'}
+        </div>
+      `;
+      break;
+      
+    case 'inProgressJobs':
+      if (icon) icon.className = 'bi bi-play-fill';
+      if (title) title.textContent = 'In Progress Jobs';
+      contentHtml = `
+        <div class="stats-detail-section">
+          <h4>Jobs In Progress (${inProgressJobs.length})</h4>
+          ${inProgressJobs.map(job => `
+            <div class="stats-breakdown-item">
+              <div class="stats-breakdown-icon"><i class="bi bi-play-circle"></i></div>
+              <div class="stats-breakdown-info">
+                <div class="stats-breakdown-label">${escapeHtml(job.service)}</div>
+                <div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div>
+                <small style="color: #718096;">Scheduled: ${job.scheduledDate}</small>
+              </div>
+            </div>
+          `).join('') || '<p style="color: #718096; text-align: center;">No jobs in progress.</p>'}
+        </div>
+      `;
+      break;
+      
+    case 'pendingJobs':
+      if (icon) icon.className = 'bi bi-hourglass-split';
+      if (title) title.textContent = 'Pending Jobs';
+      contentHtml = `
+        <div class="stats-detail-section">
+          <h4>Pending Jobs (${pendingJobs.length})</h4>
+          ${pendingJobs.map(job => `
+            <div class="stats-breakdown-item">
+              <div class="stats-breakdown-icon"><i class="bi bi-clock"></i></div>
+              <div class="stats-breakdown-info">
+                <div class="stats-breakdown-label">${escapeHtml(job.service)}</div>
+                <div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div>
+                <small style="color: #718096;">Scheduled: ${job.scheduledDate}</small>
+              </div>
+            </div>
+          `).join('') || '<p style="color: #718096; text-align: center;">No pending jobs.</p>'}
+        </div>
+      `;
+      break;
+      
+    case 'totalEarnings':
+      if (icon) icon.className = 'bi bi-cash-stack';
+      if (title) title.textContent = 'Earnings Breakdown';
+      contentHtml = `
+        <div class="stats-detail-section">
+          <h4>Total Earnings: TZS ${formatNumber(totalEarnings)}</h4>
+          ${completedJobs.map(job => `
+            <div class="stats-breakdown-item">
+              <div class="stats-breakdown-icon"><i class="bi bi-cash"></i></div>
+              <div class="stats-breakdown-info">
+                <div class="stats-breakdown-label">${escapeHtml(job.service)}</div>
+                <div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div>
+                <small style="color: #718096;">Completed: ${job.completedDate}</small>
+              </div>
+            </div>
+          `).join('') || '<p style="color: #718096; text-align: center;">No earnings yet.</p>'}
+        </div>
+      `;
+      break;
+      
+    case 'completionRate':
+      if (icon) icon.className = 'bi bi-graph-up';
+      if (title) title.textContent = 'Completion Rate';
+      contentHtml = `
+        <div class="stats-detail-section">
+          <h4>Performance Metrics</h4>
+          <div style="text-align: center; margin: 24px 0;">
+            <div style="font-size: 64px; font-weight: 800; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+              ${completionRate}%
+            </div>
+            <p style="color: #718096;">Completion Rate</p>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill ${completionRate >= 80 ? 'green' : completionRate >= 50 ? 'blue' : 'orange'}" style="width: ${completionRate}%;"></div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px;">
+            <span style="color: #718096;">0%</span>
+            <span style="color: #718096;">50%</span>
+            <span style="color: #718096;">100%</span>
+          </div>
+        </div>
+      `;
+      break;
+  }
+  
+  content.innerHTML = contentHtml;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeStatsDetailModalFn() {
+  const modal = document.getElementById('statsDetailModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
   }
 }
 
@@ -598,49 +1541,29 @@ function updateJobStatus(jobId, newStatus) {
       showNotification(`Job started! Good luck!`, 'success');
     }
     
-    // Refresh all views
     loadJobs();
     loadJobHistory();
     loadStats();
-    
-    // Refresh payment module
     loadCompletedJobsForPayment();
   }
 }
 
 function viewJobDetails(jobId) {
-  const job = jobs.find(j => j.id === jobId);
-  if (job) {
-    const details = `
-Job: ${job.service}
-Client: ${job.client}
-Location: ${job.location}
-Date: ${job.scheduledDate}
-Time: ${job.timeSlot}
-Duration: ${job.duration}
-Price: TZS ${formatNumber(job.price)}
-Status: ${job.status.toUpperCase()}
-${job.completedDate ? `Completed: ${job.completedDate}` : ''}
-    `;
-    alert(details);
-    showNotification(`Viewing details for ${job.service}`, 'info');
-  }
+  showJobDetailModal(jobId);
 }
 
 // ========== NAVIGATION ==========
 function setupNavButtons() {
   const navButtons = document.querySelectorAll('.nav-btn');
-  const views = ['jobs', 'history', 'stats', 'profile', 'payment'];
+  const views = ['jobs', 'history', 'stats', 'profile', 'payment', 'supervisor'];
   
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const view = btn.getAttribute('data-view');
       
-      // Update active button
       navButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
-      // Show corresponding view
       views.forEach(v => {
         const viewElement = document.getElementById(`${v}View`);
         if (viewElement) {
@@ -652,10 +1575,19 @@ function setupNavButtons() {
       if (activeView) {
         activeView.classList.add('active');
         
-        // Refresh payment module data if payment view is opened
         if (view === 'payment') {
           loadCompletedJobsForPayment();
           loadRecentPayments();
+        } else if (view === 'supervisor') {
+          displayChatMessages();
+          const today = new Date();
+          const daysUntilFriday = (5 - today.getDay() + 7) % 7;
+          const friday = new Date(today);
+          friday.setDate(today.getDate() + daysUntilFriday);
+          const weekEndingInput = document.getElementById('reportWeekEnding');
+          if (weekEndingInput) {
+            weekEndingInput.value = friday.toISOString().split('T')[0];
+          }
         }
       }
     });
@@ -663,14 +1595,11 @@ function setupNavButtons() {
 }
 
 // ========== CASH PAYMENT MODULE FUNCTIONS ==========
-
-// Load payment validations from localStorage
 function loadPaymentValidations() {
   const stored = localStorage.getItem('csms_payments');
   if (stored) {
     paymentValidations = JSON.parse(stored);
   } else {
-    // Initialize with sample data
     paymentValidations = [
       {
         id: 1,
@@ -705,69 +1634,50 @@ function loadPaymentValidations() {
   loadRecentPayments();
 }
 
-// Save payment validations to localStorage
 function savePaymentValidations() {
   localStorage.setItem('csms_payments', JSON.stringify(paymentValidations));
 }
 
-// Update payment stats
 function updatePaymentStats() {
   const totalPayments = paymentValidations.length;
   const totalAmount = paymentValidations.reduce((sum, p) => sum + p.amount, 0);
   const today = new Date().toISOString().split('T')[0];
   const todayPayments = paymentValidations.filter(p => p.paymentDate === today).length;
-  const todayAmount = paymentValidations
-    .filter(p => p.paymentDate === today)
-    .reduce((sum, p) => sum + p.amount, 0);
+  const todayAmount = paymentValidations.filter(p => p.paymentDate === today).reduce((sum, p) => sum + p.amount, 0);
   
   const statsHTML = `
     <div class="payment-stat-card">
-      <div class="payment-stat-icon">
-        <i class="bi bi-receipt"></i>
-      </div>
+      <div class="payment-stat-icon"><i class="bi bi-receipt"></i></div>
       <div class="payment-stat-value">${totalPayments}</div>
       <div class="payment-stat-label">Total Validated Payments</div>
     </div>
     <div class="payment-stat-card">
-      <div class="payment-stat-icon">
-        <i class="bi bi-cash-stack"></i>
-      </div>
+      <div class="payment-stat-icon"><i class="bi bi-cash-stack"></i></div>
       <div class="payment-stat-value">TZS ${formatNumber(totalAmount)}</div>
       <div class="payment-stat-label">Total Revenue</div>
     </div>
     <div class="payment-stat-card">
-      <div class="payment-stat-icon">
-        <i class="bi bi-calendar-today"></i>
-      </div>
+      <div class="payment-stat-icon"><i class="bi bi-calendar-today"></i></div>
       <div class="payment-stat-value">${todayPayments}</div>
       <div class="payment-stat-label">Today's Payments</div>
     </div>
     <div class="payment-stat-card">
-      <div class="payment-stat-icon">
-        <i class="bi bi-graph-up"></i>
-      </div>
+      <div class="payment-stat-icon"><i class="bi bi-graph-up"></i></div>
       <div class="payment-stat-value">TZS ${formatNumber(todayAmount)}</div>
       <div class="payment-stat-label">Today's Revenue</div>
     </div>
   `;
   
   const statsContainer = document.getElementById('paymentStatsGrid');
-  if (statsContainer) {
-    statsContainer.innerHTML = statsHTML;
-  }
+  if (statsContainer) statsContainer.innerHTML = statsHTML;
 }
 
-// Load completed jobs into dropdown
 function loadCompletedJobsForPayment() {
   const completedJobs = jobs.filter(job => job.status === 'completed');
   const jobSelect = document.getElementById('jobSelect');
-  
   if (!jobSelect) return;
   
-  // Filter out jobs that already have payment validation
-  const pendingJobs = completedJobs.filter(job => {
-    return !paymentValidations.some(p => p.jobId === job.id);
-  });
+  const pendingJobs = completedJobs.filter(job => !paymentValidations.some(p => p.jobId === job.id));
   
   if (pendingJobs.length === 0) {
     jobSelect.innerHTML = '<option value="">-- No pending payments --</option>';
@@ -783,7 +1693,6 @@ function loadCompletedJobsForPayment() {
   
   jobSelect.innerHTML = options;
   
-  // Add event listener for job selection
   jobSelect.onchange = function() {
     const selectedOption = this.options[this.selectedIndex];
     if (this.value) {
@@ -795,7 +1704,6 @@ function loadCompletedJobsForPayment() {
       document.getElementById('cashReceived').value = '';
       document.getElementById('paymentNote').value = '';
       
-      // Store selected job data
       selectedJobForPayment = {
         id: parseInt(this.value),
         service: selectedOption.getAttribute('data-service'),
@@ -810,7 +1718,6 @@ function loadCompletedJobsForPayment() {
   };
 }
 
-// Validate cash payment
 function validateCashPayment() {
   const jobSelect = document.getElementById('jobSelect');
   const cashReceivedInput = document.getElementById('cashReceived');
@@ -836,13 +1743,12 @@ function validateCashPayment() {
   const serviceAmount = selectedJobForPayment.price;
   
   if (cashReceived < serviceAmount) {
-    showNotification(`Insufficient payment! Service amount is TZS ${formatNumber(serviceAmount)}, received TZS ${formatNumber(cashReceived)}. Please collect the remaining TZS ${formatNumber(serviceAmount - cashReceived)}`, 'error');
+    showNotification(`Insufficient payment! Need TZS ${formatNumber(serviceAmount - cashReceived)} more.`, 'error');
     return;
   }
   
   const change = cashReceived - serviceAmount;
   
-  // Create payment record
   const paymentRecord = {
     id: paymentValidations.length + 1,
     jobId: selectedJobForPayment.id,
@@ -860,16 +1766,11 @@ function validateCashPayment() {
   
   paymentValidations.push(paymentRecord);
   savePaymentValidations();
-  
-  // Generate and show receipt
   generateReceipt(paymentRecord);
-  
-  // Refresh payment stats and recent payments
   updatePaymentStats();
   loadRecentPayments();
   loadCompletedJobsForPayment();
   
-  // Clear form
   cashReceivedInput.value = '';
   document.getElementById('paymentNote').value = '';
   jobSelect.value = '';
@@ -877,10 +1778,9 @@ function validateCashPayment() {
   document.getElementById('serviceAmount').value = '';
   selectedJobForPayment = null;
   
-  showNotification(`Payment validated successfully! Receipt #${paymentRecord.receiptNumber}`, 'success');
+  showNotification(`Payment validated! Receipt #${paymentRecord.receiptNumber}`, 'success');
 }
 
-// Generate receipt number
 function generateReceiptNumber() {
   const date = new Date();
   const year = date.getFullYear();
@@ -890,14 +1790,12 @@ function generateReceiptNumber() {
   return `RCP-${year}${month}${day}-${random}`;
 }
 
-// Generate receipt
 function generateReceipt(payment) {
   const receiptContent = `
     <div style="text-align: center;">
-      <h4 style="margin-bottom: 10px;">PAYMENT RECEIPT</h4>
-      <p style="color: #718096; margin-bottom: 20px;">Thank you for choosing CSMS Cleaning Services</p>
+      <h4>PAYMENT RECEIPT</h4>
+      <p style="color: #718096;">Thank you for choosing CSMS Cleaning Services</p>
     </div>
-    
     <div class="receipt-details">
       <div class="receipt-row">
         <span class="receipt-label">Receipt Number:</span>
@@ -908,7 +1806,7 @@ function generateReceipt(payment) {
         <span class="receipt-value">${payment.paymentDate} | ${payment.paymentTime}</span>
       </div>
       <div class="receipt-row">
-        <span class="receipt-label">Customer Name:</span>
+        <span class="receipt-label">Customer:</span>
         <span class="receipt-value">${escapeHtml(payment.customerName)}</span>
       </div>
       <div class="receipt-row">
@@ -916,7 +1814,7 @@ function generateReceipt(payment) {
         <span class="receipt-value">${escapeHtml(payment.jobService)}</span>
       </div>
       <div class="receipt-row">
-        <span class="receipt-label">Service Amount:</span>
+        <span class="receipt-label">Amount:</span>
         <span class="receipt-value">TZS ${formatNumber(payment.amount)}</span>
       </div>
       <div class="receipt-row">
@@ -932,37 +1830,14 @@ function generateReceipt(payment) {
       <div class="receipt-total">
         <strong>PAID IN FULL</strong>
       </div>
-      ${payment.note ? `
-      <div class="receipt-row" style="margin-top: 15px;">
-        <span class="receipt-label">Note:</span>
-        <span class="receipt-value">${escapeHtml(payment.note)}</span>
-      </div>
-      ` : ''}
-    </div>
-    
-    <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px dashed #e2e8f0;">
-      <p style="font-size: 12px; color: #a0aec0; margin: 0;">
-        This is a computer-generated receipt and does not require a signature.<br>
-        For any inquiries, please contact CSMS Customer Support.
-      </p>
     </div>
   `;
   
-  const receiptContentEl = document.getElementById('receiptContent');
-  if (receiptContentEl) {
-    receiptContentEl.innerHTML = receiptContent;
-  }
-  
-  const receiptModal = document.getElementById('receiptModal');
-  if (receiptModal) {
-    receiptModal.style.display = 'flex';
-  }
-  
-  // Store current receipt for printing
+  document.getElementById('receiptContent').innerHTML = receiptContent;
+  document.getElementById('receiptModal').style.display = 'flex';
   window.currentReceipt = payment;
 }
 
-// Load recent payments
 function loadRecentPayments() {
   const container = document.getElementById('recentPaymentsContainer');
   if (!container) return;
@@ -970,13 +1845,7 @@ function loadRecentPayments() {
   const recentPayments = [...paymentValidations].reverse().slice(0, 10);
   
   if (recentPayments.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state" style="padding: 40px;">
-        <i class="bi bi-receipt"></i>
-        <h4>No Payments Yet</h4>
-        <p>Validated payments will appear here</p>
-      </div>
-    `;
+    container.innerHTML = `<div class="empty-state" style="padding: 40px;"><i class="bi bi-receipt"></i><h4>No Payments Yet</h4><p>Validated payments will appear here</p></div>`;
     return;
   }
   
@@ -1003,15 +1872,11 @@ function loadRecentPayments() {
   container.innerHTML = html;
 }
 
-// Close receipt modal
 function closeReceiptModal() {
   const receiptModal = document.getElementById('receiptModal');
-  if (receiptModal) {
-    receiptModal.style.display = 'none';
-  }
+  if (receiptModal) receiptModal.style.display = 'none';
 }
 
-// Print receipt
 function printReceipt() {
   const receiptContent = document.getElementById('receiptContent')?.innerHTML;
   if (!receiptContent) return;
@@ -1024,20 +1889,17 @@ function printReceipt() {
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
       <style>
         body { font-family: 'Inter', sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
-        .receipt-content { border: 1px solid #e2e8f0; padding: 30px; border-radius: 12px; }
         .receipt-details { margin: 20px 0; }
         .receipt-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #e2e8f0; }
         .receipt-label { font-weight: 600; color: #4a5568; }
         .receipt-value { color: #1a202c; font-weight: 500; }
         .receipt-total { margin-top: 20px; padding-top: 12px; border-top: 2px solid #1a202c; font-size: 18px; font-weight: 800; color: #28a745; text-align: right; }
-        @media print { body { padding: 0; } .no-print { display: none; } }
+        @media print { body { padding: 0; } }
       </style>
     </head>
     <body>
-      <div class="receipt-content">
-        ${receiptContent}
-      </div>
-      <div class="no-print" style="text-align: center; margin-top: 20px;">
+      ${receiptContent}
+      <div style="text-align: center; margin-top: 20px;">
         <button onclick="window.print()" style="padding: 10px 20px; margin: 0 10px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">Print</button>
         <button onclick="window.close()" style="padding: 10px 20px; background: #e2e8f0; border: none; border-radius: 8px; cursor: pointer;">Close</button>
       </div>
@@ -1047,7 +1909,6 @@ function printReceipt() {
   printWindow.document.close();
 }
 
-// Initialize payment module
 function initPaymentModule() {
   loadPaymentValidations();
   loadCompletedJobsForPayment();
@@ -1085,10 +1946,7 @@ function showNotification(message, type = 'info') {
   `;
   
   toastContainer.appendChild(toast);
-  
-  setTimeout(() => {
-    if (toast && toast.remove) toast.remove();
-  }, 4000);
+  setTimeout(() => { if (toast && toast.remove) toast.remove(); }, 4000);
 }
 
 function escapeHtml(str) {

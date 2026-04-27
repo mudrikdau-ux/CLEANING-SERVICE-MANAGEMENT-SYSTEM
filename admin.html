@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>Admin Panel - CSMS | Cleaning Service Management (TZS)</title>
-<meta name="description" content="Administrative dashboard for CSMS - Manage services, bookings, staff, and customer messages.">
+<meta name="description" content="Administrative dashboard for CSMS - Manage services, bookings, staff, contractors, and invoices.">
 <meta name="robots" content="noindex, nofollow">
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -14,6 +14,41 @@
 <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
+
+<!-- LOGOUT OVERLAY -->
+<div id="logoutOverlay" class="logout-overlay" style="display:none;">
+    <div class="logout-dialog animate__animated animate__fadeInUp">
+        <div class="logout-icon-wrapper">
+            <i class="bi bi-box-arrow-right logout-icon-main"></i>
+        </div>
+        <h3>Confirm Logout</h3>
+        <p>Are you sure you want to log out of the admin panel?</p>
+        <p class="logout-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Any unsaved changes will be lost.</p>
+        <div class="logout-actions">
+            <button class="btn-logout-cancel" onclick="cancelLogout()">
+                <i class="bi bi-x-circle me-1"></i>Cancel
+            </button>
+            <button class="btn-logout-confirm" onclick="confirmLogout()" id="logoutConfirmBtn">
+                <i class="bi bi-box-arrow-right me-1"></i>Logout
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- LOGOUT LOADING OVERLAY -->
+<div id="logoutLoading" class="logout-loading-overlay" style="display:none;">
+    <div class="logout-loading-content animate__animated animate__fadeIn">
+        <div class="logout-spinner">
+            <div class="spinner-ring"></div>
+            <i class="bi bi-shield-lock-fill spinner-icon"></i>
+        </div>
+        <h4>Logging Out...</h4>
+        <p>Please wait while we securely end your session</p>
+        <div class="logout-progress">
+            <div class="logout-progress-bar" id="logoutProgressBar"></div>
+        </div>
+    </div>
+</div>
 
 <!-- LOGIN SECTION -->
 <div id="loginSection" class="login-container">
@@ -87,7 +122,7 @@
                 <i class="bi bi-person-circle"></i>
                 <span id="adminName">Administrator</span>
             </div>
-            <button class="logout-btn" onclick="logoutAdmin()">
+            <button class="logout-btn" onclick="initiateLogout()">
                 <i class="bi bi-box-arrow-right"></i>
                 <span>Logout</span>
             </button>
@@ -102,6 +137,10 @@
                     <i class="bi bi-speedometer2"></i>
                     <span>Dashboard</span>
                 </li>
+                <li data-section="contractors">
+                    <i class="bi bi-building"></i>
+                    <span>Contractors</span>
+                </li>
                 <li data-section="services">
                     <i class="bi bi-grid-3x3-gap-fill"></i>
                     <span>Manage Services</span>
@@ -109,6 +148,10 @@
                 <li data-section="assignment">
                     <i class="bi bi-diagram-3-fill"></i>
                     <span>Services Assignment</span>
+                </li>
+                <li data-section="invoice">
+                    <i class="bi bi-receipt"></i>
+                    <span>Invoice</span>
                 </li>
                 <li data-section="bookings">
                     <i class="bi bi-calendar-check-fill"></i>
@@ -167,11 +210,114 @@
                                 <button class="quick-action-btn" onclick="showSection('assignment')">
                                     <i class="bi bi-diagram-3-fill"></i> Services Assignment
                                 </button>
-                                <button class="quick-action-btn" onclick="exportData()">
-                                    <i class="bi bi-download"></i> Export Data
+                                <button class="quick-action-btn" onclick="openReportGenerator()">
+                                    <i class="bi bi-file-earmark-bar-graph"></i> Report Data
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTRACTORS SECTION -->
+            <div id="contractorsSection" class="admin-section">
+                <div class="section-header">
+                    <h2><i class="bi bi-building"></i> Contractors Management</h2>
+                    <p>View and manage contractor companies and their contracts</p>
+                </div>
+
+                <!-- Add Contractor Form -->
+                <div class="form-card">
+                    <h5><i class="bi bi-plus-circle me-2"></i>Add New Contractor</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4 col-sm-6">
+                            <label class="form-label field-label">Contractor Name <span class="text-danger">*</span></label>
+                            <input type="text" id="contractorName" class="form-control" placeholder="e.g. Zanzibar Beach Resort">
+                        </div>
+                        <div class="col-md-2 col-sm-6">
+                            <label class="form-label field-label">Type <span class="text-danger">*</span></label>
+                            <select id="contractorType" class="form-select">
+                                <option value="private">Private</option>
+                                <option value="government">Government</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label field-label">Location <span class="text-danger">*</span></label>
+                            <input type="text" id="contractorLocation" class="form-control" placeholder="e.g. Stone Town, Zanzibar">
+                        </div>
+                        <div class="col-md-2 col-sm-6">
+                            <label class="form-label field-label">Workers Assigned</label>
+                            <input type="number" id="contractorWorkers" class="form-control" placeholder="e.g. 10" min="0">
+                        </div>
+                        <div class="col-md-2 col-sm-6">
+                            <label class="form-label field-label">Contract Start</label>
+                            <input type="date" id="contractorStartDate" class="form-control">
+                        </div>
+                        <div class="col-md-2 col-sm-6">
+                            <label class="form-label field-label">Contract End</label>
+                            <input type="date" id="contractorEndDate" class="form-control">
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label field-label">Contract Value (TZS)</label>
+                            <input type="number" id="contractorValue" class="form-control" placeholder="e.g. 24000000" min="0">
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label field-label">Contact Person</label>
+                            <input type="text" id="contractorContactPerson" class="form-control" placeholder="e.g. Ahmed Hassan">
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label field-label">Email</label>
+                            <input type="email" id="contractorEmail" class="form-control" placeholder="email@company.com">
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label field-label">Phone</label>
+                            <input type="tel" id="contractorPhone" class="form-control" placeholder="+255 7xx xxx xxx">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label field-label">Services Provided <span class="text-muted" style="font-size:11px;font-weight:400;">(comma separated)</span></label>
+                            <input type="text" id="contractorServices" class="form-control" placeholder="e.g. Office Cleaning, Waste Management, Grounds Maintenance">
+                        </div>
+                        <div class="col-12">
+                            <button onclick="addContractor()" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-1"></i>Add Contractor
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Buttons -->
+                <div class="filter-bar">
+                    <button class="filter-btn active" onclick="filterContractors('all', this)">
+                        <i class="bi bi-list-ul"></i> All
+                    </button>
+                    <button class="filter-btn" onclick="filterContractors('private', this)">
+                        <i class="bi bi-briefcase"></i> Private
+                    </button>
+                    <button class="filter-btn" onclick="filterContractors('government', this)">
+                        <i class="bi bi-building-fill"></i> Government
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header-bar">
+                        <span class="table-title">Contractor Companies</span>
+                        <span class="badge-currency">All prices in TZS</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="contractorsTable">
+                            <thead>
+                                <tr>
+                                    <th>Company Name</th>
+                                    <th>Type</th>
+                                    <th>Location</th>
+                                    <th>Workers</th>
+                                    <th>Contract Period</th>
+                                    <th>Status</th>
+                                    <th style="text-align:center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contractorsList"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -186,7 +332,6 @@
                 <div class="form-card">
                     <h5><i class="bi bi-plus-circle me-2"></i>Add New Service</h5>
                     <div class="row g-3">
-                        <!-- Row 1 -->
                         <div class="col-md-4 col-sm-6">
                             <label class="form-label field-label">Service Name <span class="text-danger">*</span></label>
                             <input type="text" id="serviceName" class="form-control" placeholder="e.g. Deep House Cleaning">
@@ -210,29 +355,23 @@
                                 <option value="Both">🗺 Both Islands</option>
                             </select>
                         </div>
-                        <!-- Row 2 -->
                         <div class="col-12">
                             <label class="form-label field-label">Description</label>
                             <textarea id="serviceDescription" class="form-control" rows="2" placeholder="Briefly describe this service..."></textarea>
                         </div>
-                        <!-- Row 3 - What's Included (manual entry) -->
                         <div class="col-12">
-                            <label class="form-label field-label">What's Included <span class="text-muted" style="font-size:11px;font-weight:400;">(Enter up to 6 items manually)</span></label>
-                            <div class="included-manual-entry" id="includedManualEntry">
-                                <!-- populated by JS -->
-                            </div>
+                            <label class="form-label field-label">What's Included</label>
+                            <div class="included-manual-entry" id="includedManualEntry"></div>
                             <button type="button" class="btn-add-included" id="addIncludedItemBtn" onclick="addIncludedField('includedManualEntry', 'addIncludedItemBtn')">
                                 <i class="bi bi-plus-circle me-1"></i> Add Item
                             </button>
                         </div>
-                        <!-- Row 4 - Image & Submit -->
                         <div class="col-md-4 col-sm-6">
                             <label class="form-label field-label">Service Image</label>
                             <button type="button" onclick="openImageUploadModal('service')" class="btn btn-outline-secondary w-100 image-upload-trigger" id="serviceImageTrigger">
                                 <i class="bi bi-image me-1"></i>
                                 <span id="imageUploadLabel">Upload Image</span>
                             </button>
-                            <input type="hidden" id="serviceImageData">
                         </div>
                         <div class="col-md-5 col-sm-6 d-flex align-items-end">
                             <div id="imagePreviewContainer" style="display:none; align-items:center; gap:8px;">
@@ -273,14 +412,13 @@
                 </div>
             </div>
 
-            <!-- ===== SERVICES ASSIGNMENT SECTION ===== -->
+            <!-- SERVICES ASSIGNMENT SECTION -->
             <div id="assignmentSection" class="admin-section">
                 <div class="section-header">
                     <h2><i class="bi bi-diagram-3-fill"></i> Services Assignment</h2>
                     <p>Assign cleaning services to staff members and track progress</p>
                 </div>
 
-                <!-- Assignment Sub-tabs -->
                 <div class="assignment-tabs">
                     <button class="assign-tab-btn active" data-tab="allStaff" onclick="switchAssignTab('allStaff', this)">
                         <i class="bi bi-people-fill"></i> All Staffs
@@ -299,32 +437,19 @@
                     </button>
                 </div>
 
-                <!-- Legend -->
                 <div class="assign-legend">
-                    <div class="legend-item">
-                        <span class="legend-dot legend-green"></span>
-                        <span>Complete</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-dot legend-red"></span>
-                        <span>Not Started</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-dot legend-yellow"></span>
-                        <span>Just Started</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-dot legend-blue"></span>
-                        <span>In Progress / Nearly Finished</span>
-                    </div>
+                    <div class="legend-item"><span class="legend-dot legend-green"></span><span>Complete</span></div>
+                    <div class="legend-item"><span class="legend-dot legend-red"></span><span>Not Started</span></div>
+                    <div class="legend-item"><span class="legend-dot legend-yellow"></span><span>Just Started</span></div>
+                    <div class="legend-item"><span class="legend-dot legend-blue"></span><span>In Progress</span></div>
+                    <div class="legend-item"><span class="legend-dot legend-black"></span><span>Supervisor</span></div>
+                    <div class="legend-item"><span class="legend-dot legend-pink"></span><span>Contractor Worker</span></div>
                 </div>
 
-                <!-- Tab Content: All Staffs -->
                 <div id="tab-allStaff" class="assign-tab-content active">
                     <div class="table-container">
                         <div class="table-header-bar">
                             <span class="table-title">All Staff Members</span>
-                            <span class="badge-currency">Assignment Status</span>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover">
@@ -335,7 +460,7 @@
                                         <th>Email</th>
                                         <th>Status</th>
                                         <th>Progress</th>
-                                        <th style="text-align:center;">Services Assigned</th>
+                                        <th style="text-align:center;">Services</th>
                                     </tr>
                                 </thead>
                                 <tbody id="allStaffAssignList"></tbody>
@@ -344,7 +469,6 @@
                     </div>
                 </div>
 
-                <!-- Tab Content: Assigned Staffs -->
                 <div id="tab-assignedStaff" class="assign-tab-content">
                     <div class="table-container">
                         <div class="table-header-bar">
@@ -357,8 +481,8 @@
                                         <th style="width:50px">Photo</th>
                                         <th>Name</th>
                                         <th>Email</th>
-                                        <th>Progress Indicator</th>
-                                        <th style="text-align:center;">Total Assigned</th>
+                                        <th>Progress</th>
+                                        <th style="text-align:center;">Total</th>
                                         <th style="text-align:center;">Actions</th>
                                     </tr>
                                 </thead>
@@ -368,7 +492,6 @@
                     </div>
                 </div>
 
-                <!-- Tab Content: Unassigned Staffs -->
                 <div id="tab-unassignedStaff" class="assign-tab-content">
                     <div class="table-container">
                         <div class="table-header-bar">
@@ -391,12 +514,10 @@
                     </div>
                 </div>
 
-                <!-- Tab Content: Assigned Services -->
                 <div id="tab-assignedServices" class="assign-tab-content">
                     <div class="table-container">
                         <div class="table-header-bar">
                             <span class="table-title">Services with Assigned Staff</span>
-                            <span class="badge-currency">Prices in TZS</span>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover">
@@ -415,12 +536,10 @@
                     </div>
                 </div>
 
-                <!-- Tab Content: Unassigned Services -->
                 <div id="tab-unassignedServices" class="assign-tab-content">
                     <div class="table-container">
                         <div class="table-header-bar">
                             <span class="table-title">Services Without Assigned Staff</span>
-                            <span class="badge-currency">Prices in TZS</span>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover">
@@ -440,6 +559,80 @@
                 </div>
             </div>
 
+            <!-- INVOICE SECTION -->
+            <div id="invoiceSection" class="admin-section">
+                <div class="section-header">
+                    <h2><i class="bi bi-receipt"></i> Invoice Management</h2>
+                    <p>Create and manage invoices for contractor clients</p>
+                </div>
+
+                <div class="form-card">
+                    <h5><i class="bi bi-plus-circle me-2"></i>Create New Invoice</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label field-label">Select Contractor <span class="text-danger">*</span></label>
+                            <select id="invoiceContractor" class="form-select" onchange="updateInvoicePreview()">
+                                <option value="">Choose contractor...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label field-label">Invoice Date</label>
+                            <input type="date" id="invoiceDate" class="form-control" onchange="updateInvoicePreview()">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label field-label">Due Date</label>
+                            <input type="date" id="invoiceDueDate" class="form-control" onchange="updateInvoicePreview()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label field-label">Work Description</label>
+                            <input type="text" id="invoiceWorkDesc" class="form-control" placeholder="e.g. Monthly cleaning service">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label field-label">Work Cost (TZS)</label>
+                            <input type="number" id="invoiceWorkCost" class="form-control" placeholder="0" onchange="calculateInvoiceTotal()">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label field-label">Workers Cost (TZS)</label>
+                            <input type="number" id="invoiceWorkersCost" class="form-control" placeholder="0" onchange="calculateInvoiceTotal()">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label field-label">Equipment Cost (TZS)</label>
+                            <input type="number" id="invoiceEquipmentCost" class="form-control" placeholder="0" onchange="calculateInvoiceTotal()">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label field-label">Total (TZS)</label>
+                            <div class="form-control" style="background:#f7fafc; font-weight:700; color:var(--primary);" id="invoiceTotalDisplay">0</div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button onclick="generateInvoice()" class="btn btn-primary">
+                            <i class="bi bi-receipt me-1"></i>Generate Invoice
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header-bar">
+                        <span class="table-title">Invoice History</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Contractor</th>
+                                    <th>Date</th>
+                                    <th>Total (TZS)</th>
+                                    <th>Status</th>
+                                    <th style="text-align:center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoiceList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- BOOKINGS SECTION -->
             <div id="bookingsSection" class="admin-section">
                 <div class="section-header">
@@ -449,7 +642,6 @@
                 <div class="table-container">
                     <div class="table-header-bar">
                         <span class="table-title">Booking Records</span>
-                        <span class="badge-currency">Prices in TZS</span>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover" id="bookingsTable">
@@ -487,6 +679,14 @@
                         <div class="col-md-3 col-sm-6">
                             <label class="form-label field-label">Email Address <span class="text-danger">*</span></label>
                             <input type="email" id="staffEmail" class="form-control" placeholder="staff@csms.co.tz">
+                        </div>
+                        <div class="col-md-2 col-sm-6">
+                            <label class="form-label field-label">Staff Status <span class="text-danger">*</span></label>
+                            <select id="staffStatus" class="form-select">
+                                <option value="normal">Normal Worker</option>
+                                <option value="contractor">Contractor Worker</option>
+                                <option value="supervisor">Supervisor</option>
+                            </select>
                         </div>
                         <div class="col-md-2 col-sm-6">
                             <label class="form-label field-label">Phone Number <span class="text-danger">*</span></label>
@@ -533,8 +733,8 @@
                                     <th style="width:50px">Photo</th>
                                     <th>Full Name</th>
                                     <th>Email Address</th>
-                                    <th>Phone</th>
                                     <th>Status</th>
+                                    <th>Staff Type</th>
                                     <th style="width:120px; text-align:center;">Actions</th>
                                 </tr>
                             </thead>
@@ -548,8 +748,15 @@
             <div id="messagesSection" class="admin-section">
                 <div class="section-header">
                     <h2><i class="bi bi-envelope-fill"></i> Customer Messages</h2>
-                    <p>View and respond to customer inquiries</p>
+                    <p>View and respond to customer and supervisor inquiries</p>
                 </div>
+
+                <div class="filter-bar">
+                    <button class="filter-btn active" onclick="filterMessages('all', this)"><i class="bi bi-list-ul"></i> All</button>
+                    <button class="filter-btn" onclick="filterMessages('customer', this)"><i class="bi bi-person"></i> Customers</button>
+                    <button class="filter-btn" onclick="filterMessages('supervisor', this)"><i class="bi bi-person-badge"></i> Supervisors</button>
+                </div>
+
                 <div class="table-container">
                     <div class="table-header-bar">
                         <span class="table-title">Inbox</span>
@@ -559,10 +766,11 @@
                             <thead>
                                 <tr>
                                     <th>From</th>
+                                    <th>Type</th>
                                     <th>Subject</th>
                                     <th>Preview</th>
                                     <th>Date</th>
-                                    <th style="width:80px; text-align:center;">Actions</th>
+                                    <th style="width:120px; text-align:center;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="messageList"></tbody>
@@ -575,8 +783,50 @@
             <div id="reportsSection" class="admin-section">
                 <div class="section-header">
                     <h2><i class="bi bi-graph-up"></i> Reports &amp; Analytics</h2>
-                    <p>View system statistics and performance metrics (Revenue in TZS)</p>
+                    <p>View system statistics and generate professional reports (Revenue in TZS)</p>
                 </div>
+
+                <div class="form-card mb-4">
+                    <h5><i class="bi bi-file-earmark-bar-graph me-2"></i>Generate Report</h5>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label field-label">From Date</label>
+                            <input type="date" id="reportFromDate" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label field-label">To Date</label>
+                            <input type="date" id="reportToDate" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label field-label">Report Type</label>
+                            <select id="reportType" class="form-select">
+                                <option value="all">Comprehensive</option>
+                                <option value="bookings">Bookings</option>
+                                <option value="revenue">Revenue</option>
+                                <option value="staff">Staff Performance</option>
+                                <option value="contractors">Contractors</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label field-label">Format</label>
+                            <select id="reportFormat" class="form-select">
+                                <option value="detailed">Detailed Report</option>
+                                <option value="summary">Summary</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button onclick="generateProfessionalReport()" class="btn btn-primary w-100">
+                                <i class="bi bi-graph-up me-1"></i>Generate
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button onclick="generateReport()" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-download me-1"></i>Quick Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="chart-card">
@@ -637,14 +887,13 @@
     </div>
 </div>
 
-<!-- ===== IMAGE UPLOAD MODAL ===== -->
-<div class="modal fade" id="imageUploadModal" tabindex="-1" aria-labelledby="imageUploadModalLabel" aria-hidden="true">
+<!-- MODALS -->
+<!-- Image Upload Modal -->
+<div class="modal fade" id="imageUploadModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content modal-styled">
             <div class="modal-header">
-                <h5 class="modal-title" id="imageUploadModalLabel">
-                    <i class="bi bi-image me-2"></i><span id="imageModalTitle">Upload Image</span>
-                </h5>
+                <h5 class="modal-title"><i class="bi bi-image me-2"></i><span id="imageModalTitle">Upload Image</span></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -669,7 +918,7 @@
     </div>
 </div>
 
-<!-- ===== EDIT SERVICE MODAL ===== -->
+<!-- Edit Service Modal -->
 <div class="modal fade" id="editServiceModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content modal-styled">
@@ -681,19 +930,19 @@
                 <input type="hidden" id="editServiceIndex">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label field-label">Service Name <span class="text-danger">*</span></label>
-                        <input type="text" id="editServiceName" class="form-control" placeholder="Service name">
+                        <label class="form-label field-label">Service Name</label>
+                        <input type="text" id="editServiceName" class="form-control">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label field-label">Price (TZS) <span class="text-danger">*</span></label>
+                        <label class="form-label field-label">Price (TZS)</label>
                         <div class="input-tzs">
                             <span class="tzs-prefix">TZS</span>
-                            <input type="number" id="editServicePrice" class="form-control" placeholder="Price">
+                            <input type="number" id="editServicePrice" class="form-control">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label field-label">Duration</label>
-                        <input type="text" id="editServiceDuration" class="form-control" placeholder="e.g. 2 hours">
+                        <input type="text" id="editServiceDuration" class="form-control">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label field-label">Location</label>
@@ -707,42 +956,36 @@
                         <label class="form-label field-label">Service Image</label>
                         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                             <button type="button" onclick="openImageUploadModal('editService')" class="btn btn-outline-secondary image-upload-trigger" id="editServiceImageTrigger">
-                                <i class="bi bi-image me-1"></i>
-                                <span id="editImageUploadLabel">Change Image</span>
+                                <i class="bi bi-image me-1"></i><span id="editImageUploadLabel">Change Image</span>
                             </button>
                             <div id="editImagePreviewContainer" style="display:none; align-items:center; gap:8px;">
                                 <img id="editImagePreview" src="" alt="" class="service-img-preview">
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearEditServiceImage()">
-                                    <i class="bi bi-x-circle"></i>
-                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearEditServiceImage()"><i class="bi bi-x-circle"></i></button>
                             </div>
                         </div>
                     </div>
                     <div class="col-12">
                         <label class="form-label field-label">Description</label>
-                        <textarea id="editServiceDescription" class="form-control" rows="2" placeholder="Service description..."></textarea>
+                        <textarea id="editServiceDescription" class="form-control" rows="2"></textarea>
                     </div>
-                    <!-- Edit What's Included: manual entry -->
                     <div class="col-12">
-                        <label class="form-label field-label">What's Included <span class="text-muted" style="font-size:11px;font-weight:400;">(Enter up to 6 items manually)</span></label>
+                        <label class="form-label field-label">What's Included</label>
                         <div class="included-manual-entry" id="editIncludedManualEntry"></div>
                         <button type="button" class="btn-add-included" id="editAddIncludedItemBtn" onclick="addIncludedField('editIncludedManualEntry', 'editAddIncludedItemBtn')">
-                            <i class="bi bi-plus-circle me-1"></i> Add Item
+                            <i class="bi bi-plus-circle me-1"></i>Add Item
                         </button>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveEditedService()">
-                    <i class="bi bi-save me-1"></i>Save Changes
-                </button>
+                <button type="button" class="btn btn-primary" onclick="saveEditedService()"><i class="bi bi-save me-1"></i>Save Changes</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ===== EDIT STAFF MODAL ===== -->
+<!-- Edit Staff Modal -->
 <div class="modal fade" id="editStaffModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content modal-styled">
@@ -759,45 +1002,47 @@
                                 <span id="editStaffInitials" class="staff-initials-lg"></span>
                                 <img id="editStaffPhotoPreview" src="" alt="" class="staff-photo-lg" style="display:none;">
                             </div>
-                            <button type="button" onclick="openImageUploadModal('editStaff')" class="staff-photo-change-btn" title="Change Photo">
-                                <i class="bi bi-camera-fill"></i>
-                            </button>
+                            <button type="button" onclick="openImageUploadModal('editStaff')" class="staff-photo-change-btn" title="Change Photo"><i class="bi bi-camera-fill"></i></button>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label field-label">Full Name <span class="text-danger">*</span></label>
-                        <input type="text" id="editStaffName" class="form-control" placeholder="Full name">
+                        <label class="form-label field-label">Full Name</label>
+                        <input type="text" id="editStaffName" class="form-control">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label field-label">Email Address <span class="text-danger">*</span></label>
-                        <input type="email" id="editStaffEmail" class="form-control" placeholder="email@csms.co.tz">
+                        <label class="form-label field-label">Email</label>
+                        <input type="email" id="editStaffEmail" class="form-control">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label field-label">Phone Number</label>
-                        <input type="tel" id="editStaffPhone" class="form-control" placeholder="+255 7xx xxx xxx">
+                        <label class="form-label field-label">Staff Status</label>
+                        <select id="editStaffStatus" class="form-select">
+                            <option value="normal">Normal Worker</option>
+                            <option value="contractor">Contractor Worker</option>
+                            <option value="supervisor">Supervisor</option>
+                        </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label field-label">New Password <span class="text-muted" style="font-size:11px;font-weight:400;">(leave blank to keep)</span></label>
+                        <label class="form-label field-label">Phone</label>
+                        <input type="tel" id="editStaffPhone" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label field-label">New Password</label>
                         <div class="password-field">
-                            <input type="password" id="editStaffPassword" class="form-control" placeholder="New password (optional)">
-                            <button type="button" class="pw-toggle" onclick="togglePassword('editStaffPassword', this)">
-                                <i class="bi bi-eye"></i>
-                            </button>
+                            <input type="password" id="editStaffPassword" class="form-control" placeholder="Leave blank to keep">
+                            <button type="button" class="pw-toggle" onclick="togglePassword('editStaffPassword', this)"><i class="bi bi-eye"></i></button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveEditedStaff()">
-                    <i class="bi bi-save me-1"></i>Save Changes
-                </button>
+                <button type="button" class="btn btn-primary" onclick="saveEditedStaff()"><i class="bi bi-save me-1"></i>Save Changes</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ===== VIEW MESSAGE MODAL ===== -->
+<!-- View Message Modal -->
 <div class="modal fade" id="viewMessageModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content modal-styled">
@@ -808,39 +1053,35 @@
             <div class="modal-body" id="viewMessageBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="replyToMessage()"><i class="bi bi-reply-fill me-1"></i>Reply</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ===== ASSIGN SERVICE TO STAFF MODAL ===== -->
+<!-- Assign Service Modal -->
 <div class="modal fade" id="assignServiceModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content modal-styled">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-person-plus-fill me-2"></i>Assign Service to Staff</h5>
+                <h5 class="modal-title"><i class="bi bi-person-plus-fill me-2"></i>Assign Service</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="assignServiceId">
                 <div id="assignServiceInfo" class="assign-service-info mb-3"></div>
                 <label class="form-label field-label">Select Staff Member</label>
-                <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
-                    <i class="bi bi-info-circle me-1"></i>Ordered from unassigned staff to most assigned staff
-                </p>
                 <div id="assignStaffPickerList" class="assign-staff-picker"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="confirmAssignService()" id="confirmAssignBtn" disabled>
-                    <i class="bi bi-check-circle me-1"></i>Confirm Assignment
-                </button>
+                <button type="button" class="btn btn-primary" onclick="confirmAssignService()" id="confirmAssignBtn" disabled><i class="bi bi-check-circle me-1"></i>Confirm</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ===== VIEW STAFF ASSIGNED SERVICES MODAL ===== -->
+<!-- View Staff Services Modal -->
 <div class="modal fade" id="viewStaffServicesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content modal-styled">
@@ -851,6 +1092,97 @@
             <div class="modal-body" id="viewStaffServicesBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contractor Details Modal -->
+<div class="modal fade" id="contractorDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-building me-2"></i>Contractor Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contractorDetailsBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="generateContractorInvoice()"><i class="bi bi-receipt me-1"></i>Generate Invoice</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice Preview Modal -->
+<div class="modal fade" id="invoicePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-receipt me-2"></i>Invoice Preview</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="invoicePreviewBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="downloadInvoice()"><i class="bi bi-download me-1"></i>Download</button>
+                <button type="button" class="btn btn-primary" onclick="shareInvoice()"><i class="bi bi-share-fill me-1"></i>Share</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Detail Modal -->
+<div class="modal fade" id="dashboardDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dashboardDetailTitle"><i class="bi bi-info-circle me-2"></i>Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="dashboardDetailBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reply Message Modal -->
+<div class="modal fade" id="replyMessageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-reply-fill me-2"></i>Reply to Message</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="replyMessageIndex">
+                <div id="replyMessageOriginal" class="mb-3 p-3" style="background:#f7fafc; border-radius:var(--radius-sm); border:1px solid var(--border);"></div>
+                <label class="form-label field-label">Your Reply</label>
+                <textarea id="replyMessageText" class="form-control" rows="4" placeholder="Type your reply..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendReply()"><i class="bi bi-send-fill me-1"></i>Send Reply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Preview Modal -->
+<div class="modal fade" id="reportPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-file-earmark-bar-graph me-2"></i>Generated Report</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="reportPreviewBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="downloadGeneratedReport()"><i class="bi bi-download me-1"></i>Download Report</button>
+                <button type="button" class="btn btn-primary" onclick="shareGeneratedReport()"><i class="bi bi-share-fill me-1"></i>Share Report</button>
             </div>
         </div>
     </div>

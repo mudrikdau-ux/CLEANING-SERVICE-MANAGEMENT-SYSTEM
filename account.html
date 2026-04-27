@@ -16,6 +16,28 @@
 </head>
 <body>
 
+<!-- Access Control Overlay (shown when not logged in) -->
+<div id="accessControlOverlay" class="access-overlay" style="display:none;">
+    <div class="access-card">
+        <div class="access-icon">
+            <i class="fas fa-lock"></i>
+        </div>
+        <h2>Access Restricted</h2>
+        <p>You must be logged in to access your account settings.</p>
+        <div class="access-actions">
+            <a href="login.html" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt"></i> Login to Continue
+            </a>
+            <a href="register.html" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-user-plus"></i> Create Account
+            </a>
+        </div>
+        <div class="access-home">
+            <a href="index.html"><i class="fas fa-home"></i> Return to Home</a>
+        </div>
+    </div>
+</div>
+
 <!-- Top Bar -->
 <div class="top-bar">
     <a href="index.html"><img src="image/logo.jpeg" alt="CSMS Logo" class="logo"></a>
@@ -43,7 +65,7 @@
     <a href="admin.html"><i class="fas fa-cog"></i> Admin Panel</a>
 </div>
 
-<div class="account-wrapper">
+<div class="account-wrapper" id="mainContent">
     <div class="container-fluid px-2 px-md-4">
         <div class="row g-3 g-md-4">
             
@@ -79,6 +101,11 @@
                             <span>Payment Methods</span>
                             <i class="fas fa-chevron-right ms-auto"></i>
                         </li>
+                        <li data-section="history">
+                            <i class="fas fa-history"></i>
+                            <span>Service History</span>
+                            <i class="fas fa-chevron-right ms-auto"></i>
+                        </li>
                         <li data-section="notifications">
                             <i class="fas fa-bell"></i>
                             <span>Notifications</span>
@@ -92,6 +119,11 @@
                         <li class="logout-item" data-section="logout">
                             <i class="fas fa-sign-out-alt"></i>
                             <span>Logout</span>
+                            <i class="fas fa-chevron-right ms-auto"></i>
+                        </li>
+                        <li class="delete-account-item" data-section="deleteAccount">
+                            <i class="fas fa-user-times"></i>
+                            <span>Delete Account</span>
                             <i class="fas fa-chevron-right ms-auto"></i>
                         </li>
                     </ul>
@@ -215,9 +247,25 @@
                         
                         <div id="paymentMethodsList" class="payment-methods-container"></div>
                         
-                        <button class="btn btn-outline-primary btn-lg mt-3 w-100 w-md-auto" id="addPaymentBtn">
+                        <button class="btn btn-primary btn-lg mt-3 w-100 w-md-auto" id="addPaymentBtn">
                             <i class="fas fa-plus-circle"></i> Add New Payment Method
                         </button>
+                    </div>
+
+                    <!-- SERVICE HISTORY SECTION -->
+                    <div id="historySection" class="account-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-history text-primary"></i> Service History</h3>
+                            <p>View and manage your cleaning service history</p>
+                        </div>
+                        
+                        <div class="history-actions mb-4">
+                            <button class="btn btn-outline-danger" id="clearAllHistoryBtn">
+                                <i class="fas fa-trash-alt"></i> Clear All History
+                            </button>
+                        </div>
+                        
+                        <div id="historyList" class="history-container"></div>
                     </div>
 
                     <!-- NOTIFICATIONS SECTION -->
@@ -246,29 +294,14 @@
                             <div class="notification-item">
                                 <div class="notification-row">
                                     <div class="notification-info">
-                                        <i class="fas fa-sms text-primary"></i>
+                                        <i class="fas fa-globe text-primary"></i>
                                         <div>
-                                            <strong>SMS Notifications</strong>
-                                            <p class="text-muted small mb-0">Get text message alerts for booking status</p>
+                                            <strong>Website Notifications</strong>
+                                            <p class="text-muted small mb-0">Receive notifications through the website</p>
                                         </div>
                                     </div>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="smsNotifications">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="notification-item">
-                                <div class="notification-row">
-                                    <div class="notification-info">
-                                        <i class="fas fa-tags text-primary"></i>
-                                        <div>
-                                            <strong>Promotional Offers</strong>
-                                            <p class="text-muted small mb-0">Receive exclusive deals and discounts</p>
-                                        </div>
-                                    </div>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="promoNotifications" checked>
+                                        <input class="form-check-input" type="checkbox" id="webNotifications">
                                     </div>
                                 </div>
                             </div>
@@ -292,7 +325,6 @@
                                 <select id="languageSelect" class="form-select form-select-lg">
                                     <option value="en">English</option>
                                     <option value="sw">Swahili</option>
-                                    <option value="fr">French</option>
                                 </select>
                             </div>
                             
@@ -320,6 +352,193 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Method Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-credit-card text-primary"></i> Add Payment Method
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="mb-3">
+                        <label class="form-label">Payment Type</label>
+                        <select id="paymentType" class="form-select form-select-lg">
+                            <option value="">Select payment type</option>
+                            <option value="Mobile Money">Mobile Money (M-Pesa, Airtel Money)</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit Card">Debit Card</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="PayPal">PayPal</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Account Number / Phone Number</label>
+                        <input type="text" id="paymentAccountNumber" class="form-control form-control-lg" placeholder="Enter account or phone number">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Account Holder Name</label>
+                        <input type="text" id="paymentAccountHolder" class="form-control form-control-lg" placeholder="Enter account holder name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Additional Notes (Optional)</label>
+                        <textarea id="paymentNotes" class="form-control" rows="3" placeholder="Any additional information..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="savePaymentBtn">
+                    <i class="fas fa-save"></i> Save Payment Method
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div class="modal fade" id="logoutModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content logout-modal-content">
+            <div class="modal-body text-center">
+                <div class="logout-avatar">
+                    <div class="user-avatar-large" id="logoutAvatar">
+                        <span class="initial-large">A</span>
+                    </div>
+                    <h4 class="mt-3" id="logoutUserName">Aly Hassan</h4>
+                    <p class="text-muted" id="logoutUserEmail">aly@csms.co.tz</p>
+                </div>
+                <div class="logout-warning">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <h5>Ready to Leave?</h5>
+                    <p>Are you sure you want to logout from your account?</p>
+                </div>
+                <div class="logout-actions">
+                    <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger btn-lg" id="confirmLogoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Yes, Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content delete-account-modal-content">
+            <div class="modal-body p-0">
+
+                <!-- Step 1: Warning -->
+                <div id="deleteStep1" class="delete-step">
+                    <div class="delete-modal-header">
+                        <div class="delete-danger-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3>Delete Your Account</h3>
+                        <p>This action is permanent and cannot be undone</p>
+                    </div>
+
+                    <div class="delete-modal-body">
+                        <div class="delete-user-info">
+                            <div class="delete-user-avatar" id="deleteAvatar">
+                                <span class="initial-large">A</span>
+                            </div>
+                            <div>
+                                <h5 id="deleteUserName">Aly Hassan</h5>
+                                <span id="deleteUserEmail">aly@csms.co.tz</span>
+                            </div>
+                        </div>
+
+                        <div class="delete-consequences">
+                            <h6><i class="fas fa-info-circle"></i> What will be permanently deleted:</h6>
+                            <ul class="delete-list">
+                                <li><i class="fas fa-user-slash"></i> Your profile and personal information</li>
+                                <li><i class="fas fa-map-marked-alt"></i> All saved locations</li>
+                                <li><i class="fas fa-credit-card"></i> All payment methods</li>
+                                <li><i class="fas fa-history"></i> Your complete service history</li>
+                                <li><i class="fas fa-bell-slash"></i> All notification preferences</li>
+                                <li><i class="fas fa-ban"></i> Access to all CSMS services</li>
+                            </ul>
+                        </div>
+
+                        <div class="delete-note">
+                            <i class="fas fa-lock"></i>
+                            <p>This action <strong>cannot be reversed</strong>. Once deleted, your data cannot be recovered.</p>
+                        </div>
+                    </div>
+
+                    <div class="delete-modal-footer">
+                        <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">
+                            <i class="fas fa-arrow-left"></i> Keep My Account
+                        </button>
+                        <button type="button" class="btn btn-danger-outline btn-lg" id="proceedToStep2Btn">
+                            <i class="fas fa-arrow-right"></i> Continue
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Confirmation -->
+                <div id="deleteStep2" class="delete-step" style="display:none;">
+                    <div class="delete-modal-header danger-header">
+                        <div class="delete-danger-icon pulse-danger">
+                            <i class="fas fa-user-times"></i>
+                        </div>
+                        <h3>Final Confirmation</h3>
+                        <p>Please confirm you want to permanently delete your account</p>
+                    </div>
+
+                    <div class="delete-modal-body">
+                        <div class="confirm-input-section">
+                            <label class="confirm-label">
+                                Type <strong>DELETE</strong> to confirm account deletion:
+                            </label>
+                            <input type="text" id="deleteConfirmInput" class="form-control confirm-input" placeholder="Type DELETE here..." autocomplete="off">
+                            <div id="deleteInputFeedback" class="delete-input-feedback"></div>
+                        </div>
+
+                        <div class="delete-final-warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>By deleting your account, you agree that all your data will be permanently removed from CSMS systems.</p>
+                        </div>
+                    </div>
+
+                    <div class="delete-modal-footer">
+                        <button type="button" class="btn btn-secondary btn-lg" id="backToStep1Btn">
+                            <i class="fas fa-arrow-left"></i> Go Back
+                        </button>
+                        <button type="button" class="btn btn-delete btn-lg" id="confirmDeleteAccountBtn" disabled>
+                            <i class="fas fa-trash-alt"></i> Delete My Account
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Deleting (progress) -->
+                <div id="deleteStep3" class="delete-step" style="display:none;">
+                    <div class="delete-processing">
+                        <div class="delete-spinner">
+                            <div class="spinner-ring"></div>
+                        </div>
+                        <h4>Deleting Your Account...</h4>
+                        <p>Please wait while we securely remove your data.</p>
+                        <div class="delete-progress-bar">
+                            <div class="delete-progress-fill" id="deleteProgressFill"></div>
+                        </div>
+                        <span id="deleteProgressText" class="delete-progress-text">Removing profile data...</span>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>

@@ -1,4 +1,4 @@
-// ========== ENHANCED BOOKING WITH FULL PAYMENT PROCESSING ==========
+// ========== ENHANCED BOOKING WITH FULL PAYMENT PROCESSING & RECEIPT FEATURES ==========
 
 (function() {
     'use strict';
@@ -53,6 +53,7 @@
     let selectedProvider = null;
     let currentBookingData = null;
     let receiptModal = null;
+    let shareModal = null;
     
     // Mobile Money Providers
     const mobileProviders = ['M-PESA', 'AIRTEL Money', 'Tigo Pesa', 'HaloPesa', 'Azam Pesa', 'YAS'];
@@ -200,7 +201,7 @@
         
         html += `<div class="mb-3">
             <label class="form-label">Security PIN / Password</label>
-            <input type="password" id="paymentPin" class="form-control secret-pass-input" placeholder="Enter your secure PIN">
+            <input type="password" id="paymentPin" class="form-control" placeholder="Enter your secure PIN">
         </div>`;
         
         html += `<button type="button" id="processPaymentBtn" class="btn btn-success w-100 mt-2">Confirm Payment</button>`;
@@ -263,6 +264,7 @@
             scheduleTime: timeInp.value,
             customerName: `${fnameInp.value} ${lnameInp.value}`,
             email: emailInp.value,
+            phone: document.getElementById('phone')?.value || '',
             instructions: instructionsInp?.value || '',
             paymentMethod: method === 'mobile_money' ? `Mobile Money (${selectedProvider})` : (method === 'bank_transfer' ? `Bank Transfer (${selectedProvider})` : (method === 'card' ? 'Visa/Mastercard' : 'Cash')),
             totalAmount: totalAmount,
@@ -298,6 +300,7 @@
             scheduleTime: timeInp.value,
             customerName: `${fnameInp.value} ${lnameInp.value}`,
             email: emailInp.value,
+            phone: document.getElementById('phone')?.value || '',
             instructions: instructionsInp?.value || '',
             paymentMethod: 'Cash (+TZS 5,000)',
             totalAmount: totalAmount,
@@ -329,7 +332,7 @@
             `<div class="text-center my-2 text-success"><i class="fas fa-check-circle fa-2x"></i><p class="mt-1">Payment Confirmed</p></div>`;
         
         receiptContent.innerHTML = `
-            <div class="text-center mb-3">
+            <div class="text-center mb-3" id="receiptHeaderContent">
                 <strong>CSMS Cleaning Services</strong>
                 <p class="text-muted small">Official Payment Receipt</p>
             </div>
@@ -359,6 +362,179 @@
         receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
         receiptModal.show();
     }
+    
+    // ========== RECEIPT DOWNLOAD FUNCTIONALITY ==========
+    function downloadReceipt() {
+        const receiptContent = document.getElementById('receiptContent');
+        
+        // Create a clean clone for downloading
+        const clone = receiptContent.cloneNode(true);
+        clone.style.position = 'absolute';
+        clone.style.left = '-9999px';
+        clone.style.top = '0';
+        clone.style.width = '600px';
+        clone.style.padding = '30px';
+        clone.style.background = 'white';
+        clone.style.borderRadius = '16px';
+        clone.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
+        document.body.appendChild(clone);
+        
+        html2canvas(clone, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            logging: false
+        }).then(canvas => {
+            document.body.removeChild(clone);
+            
+            // Convert to image and download
+            const link = document.createElement('a');
+            link.download = `CSMS_Receipt_${currentBookingData?.bookingId || 'booking'}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            // Show success toast
+            showToast('Receipt downloaded successfully!', 'success');
+        }).catch(error => {
+            console.error('Download failed:', error);
+            // Fallback: print-friendly version
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>CSMS Receipt</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+                        .receipt { border: 2px solid #e2e8f0; border-radius: 16px; padding: 30px; }
+                        strong { color: #2d3748; }
+                        .text-center { text-align: center; }
+                        .border-top { border-top: 1px solid #e2e8f0; padding-top: 10px; }
+                        .border-bottom { border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+                        .d-flex { display: flex; justify-content: space-between; margin: 8px 0; }
+                        .text-success { color: #198754; }
+                        .text-muted { color: #6c757d; }
+                        .fw-bold { font-weight: bold; }
+                        .mt-2 { margin-top: 10px; }
+                        .mt-3 { margin-top: 15px; }
+                        .my-2 { margin: 10px 0; }
+                        .my-3 { margin: 15px 0; }
+                        .mb-2 { margin-bottom: 10px; }
+                        .small { font-size: 0.875rem; }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt">
+                        ${receiptContent.innerHTML}
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        });
+    }
+    
+    // ========== SHARE FUNCTIONALITY ==========
+    function shareReceiptModal() {
+        shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
+        shareModal.show();
+    }
+    
+    // Make shareVia available globally for onclick handlers
+    window.shareVia = function(platform) {
+        if (!currentBookingData) return;
+        
+        const booking = currentBookingData;
+        const shareText = `CSMS Cleaning Service Booking Confirmed!\n\nBooking ID: ${booking.bookingId}\nService: ${booking.cleaners} cleaner(s) × ${booking.hours} hrs\nDate: ${booking.scheduleDate} at ${booking.scheduleTime}\nAmount: TZS ${booking.totalAmount.toLocaleString()}\n\nThank you for choosing CSMS!`;
+        const shareUrl = `https://csms.co.tz/booking/${booking.bookingId}`;
+        
+        let url = '';
+        
+        switch(platform) {
+            case 'whatsapp':
+                url = `https://wa.me/?text=${encodeURIComponent(shareText + '\n\n' + shareUrl)}`;
+                window.open(url, '_blank');
+                break;
+            case 'email':
+                url = `mailto:?subject=CSMS Booking Confirmation - ${booking.bookingId}&body=${encodeURIComponent(shareText + '\n\nView details: ' + shareUrl)}`;
+                window.location.href = url;
+                break;
+            case 'sms':
+                url = `sms:?body=${encodeURIComponent(shareText)}`;
+                window.location.href = url;
+                break;
+            case 'copy':
+                navigator.clipboard.writeText(shareText + '\n\n' + shareUrl).then(() => {
+                    showToast('Receipt details copied to clipboard!', 'success');
+                }).catch(() => {
+                    showToast('Failed to copy. Please try again.', 'error');
+                });
+                break;
+            case 'facebook':
+                url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+                window.open(url, '_blank', 'width=600,height=400');
+                break;
+            case 'twitter':
+                url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText.substring(0, 200))}&url=${encodeURIComponent(shareUrl)}`;
+                window.open(url, '_blank', 'width=600,height=400');
+                break;
+        }
+        
+        // Close share modal if open
+        if (shareModal) {
+            shareModal.hide();
+        }
+    };
+    
+    // Toast notification
+    function showToast(message, type = 'success') {
+        // Remove existing toast
+        const existingToast = document.querySelector('.custom-toast');
+        if (existingToast) existingToast.remove();
+        
+        const toast = document.createElement('div');
+        toast.className = 'custom-toast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: ${type === 'success' ? '#198754' : '#dc3545'};
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 9999;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideInRight 0.3s ease;
+            max-width: 400px;
+        `;
+        toast.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            ${message}
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+    
+    // Add animation styles dynamically
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(styleSheet);
     
     // Payment method selection handlers
     function initPaymentSelection() {
@@ -447,6 +623,16 @@
         refreshSummary();
     });
     
+    // Download receipt button
+    document.getElementById('downloadReceiptBtn')?.addEventListener('click', () => {
+        downloadReceipt();
+    });
+    
+    // Share receipt button
+    document.getElementById('shareReceiptBtn')?.addEventListener('click', () => {
+        shareReceiptModal();
+    });
+    
     localStorage.removeItem('pendingBooking');
-    console.log('✓ Enhanced booking system ready');
+    console.log('✓ Enhanced booking system with receipt download & share features ready');
 })();

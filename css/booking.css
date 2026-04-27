@@ -139,7 +139,6 @@ body {
     margin-bottom: 8px;
     transition: all 0.3s ease;
     position: relative;
-    background: white;
 }
 
 .progress-step .step-icon i {
@@ -436,13 +435,24 @@ textarea.form-control {
 .receipt-modal .modal-content {
     border-radius: 24px;
     overflow: hidden;
+    border: none;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
 }
 
 .receipt-header {
     background: linear-gradient(135deg, #0d6efd, #0b5ed7);
     color: white;
-    padding: 20px;
+    padding: 30px 20px;
     text-align: center;
+}
+
+.receipt-header i {
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+}
+
+.receipt-header h4 {
+    font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
 .payment-pending-badge {
@@ -452,6 +462,84 @@ textarea.form-control {
     padding: 5px 12px;
     border-radius: 20px;
     display: inline-block;
+}
+
+/* Share Options */
+.share-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.share-option-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.85rem;
+    gap: 8px;
+}
+
+.share-option-btn i {
+    font-size: 1.8rem;
+    transition: all 0.3s ease;
+}
+
+.share-option-btn:hover {
+    border-color: var(--primary-color);
+    background: #eff6ff;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(13, 110, 253, 0.15);
+}
+
+.share-option-btn:hover i {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.share-option-btn:nth-child(1):hover { border-color: #25D366; background: #f0fff4; }
+.share-option-btn:nth-child(1):hover i { color: #25D366; }
+.share-option-btn:nth-child(2):hover { border-color: #EA4335; background: #fff5f5; }
+.share-option-btn:nth-child(2):hover i { color: #EA4335; }
+.share-option-btn:nth-child(3):hover { border-color: #34B7F1; background: #f0faff; }
+.share-option-btn:nth-child(3):hover i { color: #34B7F1; }
+.share-option-btn:nth-child(4):hover { border-color: #6c757d; background: #f8f9fa; }
+.share-option-btn:nth-child(4):hover i { color: #6c757d; }
+.share-option-btn:nth-child(5):hover { border-color: #1877F2; background: #f0f6ff; }
+.share-option-btn:nth-child(5):hover i { color: #1877F2; }
+.share-option-btn:nth-child(6):hover { border-color: #1DA1F2; background: #f0f9ff; }
+.share-option-btn:nth-child(6):hover i { color: #1DA1F2; }
+
+/* Receipt Content Styling */
+#receiptContent {
+    position: relative;
+}
+
+#receiptContent .text-center strong {
+    font-size: 1.3rem;
+    color: #2d3748;
+}
+
+#receiptContent .border-top.border-bottom {
+    border-color: #e2e8f0 !important;
+}
+
+#receiptContent .d-flex.justify-content-between {
+    padding: 6px 0;
+    font-size: 0.95rem;
+}
+
+#receiptContent .fw-bold span:last-child {
+    font-size: 1.2rem;
+    letter-spacing: -0.5px;
 }
 
 /* Responsive */
@@ -468,9 +556,13 @@ textarea.form-control {
     .progress-step .step-icon { width: 40px; height: 40px; margin-bottom: 0; }
     .progress-step .step-number { position: relative; top: auto; right: auto; margin-left: -15px; margin-top: -20px; }
     .progress-step .step-label { margin-top: 0; font-size: 0.9rem; }
+    .share-options { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 576px) {
     .summary-item { font-size: 0.85rem; }
     .summary-total { font-size: 1rem; }
+    .share-options { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .share-option-btn { padding: 15px 8px; font-size: 0.75rem; }
+    .share-option-btn i { font-size: 1.4rem; }
 }
