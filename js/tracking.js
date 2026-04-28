@@ -264,11 +264,6 @@ function showNotification(message, type = 'info') {
     }, 4000);
 }
 
-function formatCurrency(amount) {
-    const num = parseInt(amount.replace(/[^0-9]/g, ''));
-    return 'TZS ' + num.toLocaleString();
-}
-
 // ----------------------------- SIDEBAR CONTROLS -----------------------------
 
 function closeSidebar() {
@@ -359,6 +354,360 @@ function getStatusBadge(status) {
         className: badges[status] || '',
         text: status.charAt(0).toUpperCase() + status.slice(1)
     };
+}
+
+// ----------------------------- PAYMENT METHOD FORM -----------------------------
+
+function showAddPaymentMethodForm(totalAmount) {
+    const title = `<i class="bi bi-plus-circle me-2"></i>Add Payment Details`;
+    
+    const mobileMoneyHtml = availablePaymentMethods.mobileMoney.map(m => `
+        <div class="add-method-card" data-method-id="${m.id}" data-method-name="${m.name}" data-method-type="mobile">
+            <div class="add-method-card-icon" style="background: ${m.bgColor}; color: ${m.color};">
+                <i class="${m.icon}"></i>
+            </div>
+            <div class="add-method-card-info">
+                <h6>${m.name}</h6>
+                <p>Pay securely with ${m.name}</p>
+            </div>
+            <i class="bi bi-chevron-right ms-auto text-muted"></i>
+        </div>
+    `).join('');
+
+    const cardPaymentsHtml = availablePaymentMethods.cardPayments.map(m => `
+        <div class="add-method-card" data-method-id="${m.id}" data-method-name="${m.name}" data-method-type="card">
+            <div class="add-method-card-icon" style="background: ${m.bgColor}; color: ${m.color};">
+                <i class="${m.icon}"></i>
+            </div>
+            <div class="add-method-card-info">
+                <h6>${m.name}</h6>
+                <p>Add your ${m.name} for payments</p>
+            </div>
+            <i class="bi bi-chevron-right ms-auto text-muted"></i>
+        </div>
+    `).join('');
+
+    const bodyHtml = `
+        <div style="margin-bottom: 24px;">
+            <div style="font-size: 1.4rem; font-weight: 800; color: var(--dark-color);">${totalAmount}</div>
+            <div style="font-size: 0.85rem; color: var(--gray-color);">Select a payment method to add</div>
+        </div>
+        
+        <div class="add-method-section-title">
+            <i class="fas fa-mobile-alt text-primary"></i> Mobile Money
+        </div>
+        <div class="mb-4" id="mobileMoneyList">
+            ${mobileMoneyHtml}
+        </div>
+        
+        <div class="add-method-section-title">
+            <i class="fas fa-credit-card text-primary"></i> Card Payments
+        </div>
+        <div class="mb-3" id="cardPaymentsList">
+            ${cardPaymentsHtml}
+        </div>
+        
+        <div id="paymentDetailForm" style="display:none; margin-top: 20px;"></div>
+        
+        ${userPaymentMethods.length > 0 ? `
+        <div class="add-method-section-title mt-4">
+            <i class="bi bi-check-circle text-success"></i> Your Saved Methods
+        </div>
+        <div class="mb-3">
+            ${userPaymentMethods.map(m => `
+                <div class="add-method-card" style="border-color: #bbf7d0; background: #f0fdf4;">
+                    <div class="add-method-card-icon" style="background: ${m.bgColor || '#e8f5e9'}; color: ${m.color || '#4CAF50'};">
+                        <i class="${m.icon || 'fas fa-mobile-alt'}"></i>
+                    </div>
+                    <div class="add-method-card-info">
+                        <h6>${m.name}</h6>
+                        <p style="color: #15803d;">${m.detail || 'Ready to use'}</p>
+                    </div>
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                </div>
+            `).join('')}
+        </div>
+        ` : ''}
+    `;
+
+    const footerHtml = `
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+    `;
+
+    const modal = openGlobalModal(title, bodyHtml, footerHtml);
+    const modalEl = document.getElementById('globalActionModal');
+    let selectedMethod = null;
+
+    if (modalEl) {
+        modalEl.querySelectorAll('.add-method-card').forEach(card => {
+            // Avoid attaching to saved methods
+            if (card.style.borderColor === 'rgb(187, 247, 208)') return;
+            
+            card.addEventListener('click', function() {
+                const methodId = this.dataset.methodId;
+                const methodName = this.dataset.methodName;
+                const methodType = this.dataset.methodType;
+                
+                // Highlight selected
+                modalEl.querySelectorAll('.add-method-card').forEach(c => c.style.borderColor = '#e2e8f0');
+                this.style.borderColor = 'var(--primary-color)';
+                this.style.background = '#eff1fe';
+                
+                selectedMethod = { id: methodId, name: methodName, type: methodType };
+                renderPaymentForm(methodType, methodName, totalAmount);
+            });
+        });
+    }
+}
+
+function renderPaymentForm(type, methodName, totalAmount) {
+    const formDiv = document.getElementById('paymentDetailForm');
+    if (!formDiv) return;
+    
+    formDiv.style.display = 'block';
+    
+    if (type === 'mobile') {
+        formDiv.innerHTML = `
+            <hr>
+            <h6 class="fw-bold mb-3"><i class="fas fa-mobile-alt me-2"></i>${methodName} Details</h6>
+            <div class="payment-form-group">
+                <label><i class="bi bi-telephone"></i> Phone Number</label>
+                <input type="tel" id="mobilePhoneNumber" placeholder="+255 7XX XXX XXX" value="+255 " autocomplete="off">
+            </div>
+            <div class="payment-form-group">
+                <label><i class="bi bi-person"></i> Account Name</label>
+                <input type="text" id="mobileAccountName" placeholder="Full Name on Account" autocomplete="off">
+            </div>
+            <button class="btn btn-primary rounded-pill px-4 mt-2 w-100" id="saveMobileMethodBtn">
+                <i class="bi bi-check-circle me-2"></i> Add ${methodName}
+            </button>
+        `;
+        
+        document.getElementById('saveMobileMethodBtn')?.addEventListener('click', () => {
+            const phone = document.getElementById('mobilePhoneNumber')?.value.trim();
+            const name = document.getElementById('mobileAccountName')?.value.trim();
+            
+            if (!phone || phone.length < 10) {
+                showNotification('Please enter a valid phone number.', 'warning');
+                return;
+            }
+            if (!name) {
+                showNotification('Please enter the account name.', 'warning');
+                return;
+            }
+            
+            saveNewPaymentMethod({
+                id: methodName.toLowerCase().replace(/\s+/g, '-'),
+                name: methodName,
+                type: 'mobile',
+                icon: 'fas fa-mobile-alt',
+                detail: phone,
+                color: '#4CAF50',
+                bgColor: '#e8f5e9'
+            });
+            
+            bootstrap.Modal.getInstance(document.getElementById('globalActionModal')).hide();
+            showNotification(`${methodName} added successfully!`, 'success');
+            setTimeout(loadOutstandingPayments, 300);
+        });
+    } else {
+        formDiv.innerHTML = `
+            <hr>
+            <h6 class="fw-bold mb-3"><i class="fas fa-credit-card me-2"></i>${methodName} Details</h6>
+            <div class="payment-form-group">
+                <label><i class="bi bi-credit-card"></i> Card Number</label>
+                <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="off">
+            </div>
+            <div class="card-details-grid">
+                <div class="payment-form-group">
+                    <label><i class="bi bi-calendar"></i> Expiry Date</label>
+                    <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" autocomplete="off">
+                </div>
+                <div class="payment-form-group">
+                    <label><i class="bi bi-lock"></i> CVV</label>
+                    <input type="password" id="cardCvv" placeholder="123" maxlength="4" autocomplete="off">
+                </div>
+            </div>
+            <div class="payment-form-group">
+                <label><i class="bi bi-person"></i> Cardholder Name</label>
+                <input type="text" id="cardHolderName" placeholder="Name on Card" autocomplete="off">
+            </div>
+            <button class="btn btn-primary rounded-pill px-4 mt-2 w-100" id="saveCardMethodBtn">
+                <i class="bi bi-check-circle me-2"></i> Add ${methodName}
+            </button>
+        `;
+        
+        // Card number formatting
+        document.getElementById('cardNumber')?.addEventListener('input', function(e) {
+            let val = this.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+            let formatted = val.match(/.{1,4}/g)?.join(' ') || '';
+            this.value = formatted;
+        });
+        
+        // Expiry formatting
+        document.getElementById('cardExpiry')?.addEventListener('input', function(e) {
+            let val = this.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+            if (val.length >= 2) val = val.substring(0,2) + '/' + val.substring(2);
+            this.value = val.substring(0,5);
+        });
+        
+        document.getElementById('saveCardMethodBtn')?.addEventListener('click', () => {
+            const number = document.getElementById('cardNumber')?.value.trim();
+            const expiry = document.getElementById('cardExpiry')?.value.trim();
+            const cvv = document.getElementById('cardCvv')?.value.trim();
+            const name = document.getElementById('cardHolderName')?.value.trim();
+            
+            if (!number || number.replace(/\s/g, '').length < 15) {
+                showNotification('Please enter a valid card number.', 'warning');
+                return;
+            }
+            if (!expiry || !expiry.includes('/')) {
+                showNotification('Please enter a valid expiry date (MM/YY).', 'warning');
+                return;
+            }
+            if (!cvv || cvv.length < 3) {
+                showNotification('Please enter a valid CVV.', 'warning');
+                return;
+            }
+            if (!name) {
+                showNotification('Please enter the cardholder name.', 'warning');
+                return;
+            }
+            
+            saveNewPaymentMethod({
+                id: methodName.toLowerCase().replace(/\s+/g, '-'),
+                name: methodName,
+                type: 'card',
+                icon: 'fab fa-cc-' + (methodName.toLowerCase().includes('visa') ? 'visa' : 'mastercard'),
+                detail: '•••• ' + number.slice(-4),
+                color: '#1a1f71',
+                bgColor: '#e8eaf6'
+            });
+            
+            bootstrap.Modal.getInstance(document.getElementById('globalActionModal')).hide();
+            showNotification(`${methodName} added successfully!`, 'success');
+            setTimeout(loadOutstandingPayments, 300);
+        });
+    }
+}
+
+function saveNewPaymentMethod(methodData) {
+    userPaymentMethods.push({
+        id: methodData.id,
+        name: methodData.name,
+        type: methodData.type,
+        icon: methodData.icon,
+        detail: methodData.detail,
+        color: methodData.color,
+        bgColor: methodData.bgColor,
+        addedAt: new Date().toISOString()
+    });
+    sessionStorage.setItem('csms_payment_methods', JSON.stringify(userPaymentMethods));
+}
+
+// ----------------------------- SHOW PAYMENT METHODS -----------------------------
+
+function showPaymentMethods(totalAmount) {
+    const title = `<i class="bi bi-credit-card me-2"></i>Pay Outstanding Balance`;
+    
+    let methodsHtml = '';
+    
+    if (userPaymentMethods.length > 0) {
+        methodsHtml += `
+            <div class="add-method-section-title">
+                <i class="bi bi-star-fill text-warning"></i> Your Payment Methods
+            </div>
+        `;
+        userPaymentMethods.forEach(m => {
+            methodsHtml += `
+                <div class="payment-method-option" data-method="${m.id}" data-method-name="${m.name}">
+                    <div class="payment-method-icon" style="background: ${m.bgColor}; color: ${m.color};">
+                        <i class="${m.icon}"></i>
+                    </div>
+                    <div>
+                        <strong>${m.name}</strong><br>
+                        <span style="font-size:0.8rem;color:#6c757d;">${m.detail || 'Saved payment method'}</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    methodsHtml += `
+        <div class="add-method-section-title mt-3">
+            <i class="bi bi-credit-card text-primary"></i> Default Payment Methods
+        </div>
+        <div class="payment-method-option" data-method="visa" data-method-name="Visa Card">
+            <div class="payment-method-icon"><i class="fab fa-cc-visa"></i></div>
+            <div><strong>Visa</strong><br><span style="font-size:0.8rem;color:#6c757d;">•••• 4242</span></div>
+        </div>
+        <div class="payment-method-option" data-method="mastercard" data-method-name="Mastercard">
+            <div class="payment-method-icon"><i class="fab fa-cc-mastercard"></i></div>
+            <div><strong>Mastercard</strong><br><span style="font-size:0.8rem;color:#6c757d;">•••• 8888</span></div>
+        </div>
+        <div class="payment-method-option" data-method="mpesa" data-method-name="M-Pesa">
+            <div class="payment-method-icon"><i class="fas fa-mobile-alt"></i></div>
+            <div><strong>M-Pesa</strong><br><span style="font-size:0.8rem;color:#6c757d;">+255 7xx xxx xxx</span></div>
+        </div>
+    `;
+
+    const bodyHtml = `
+        <div style="margin-bottom: 20px;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--dark-color);">${totalAmount}</div>
+            <div style="font-size: 0.85rem; color: var(--gray-color);">Select a payment method below</div>
+        </div>
+        <div id="paymentMethodsList">
+            ${methodsHtml}
+        </div>
+        <p id="paymentMethodError" class="text-danger mt-2" style="font-size:0.85rem;display:none;">Please select a payment method.</p>
+    `;
+    
+    const footerHtml = `
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-outline-primary rounded-pill px-3" id="addPaymentMethodBtn">
+            <i class="bi bi-plus-circle me-1"></i> Add
+        </button>
+        <button type="button" class="btn btn-primary rounded-pill px-4" id="proceedPaymentBtn">Proceed</button>
+    `;
+
+    const modal = openGlobalModal(title, bodyHtml, footerHtml);
+    const modalEl = document.getElementById('globalActionModal');
+    let selectedMethod = null;
+    let selectedMethodName = null;
+
+    if (modalEl) {
+        modalEl.querySelectorAll('.payment-method-option').forEach(option => {
+            option.addEventListener('click', function() {
+                modalEl.querySelectorAll('.payment-method-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedMethod = this.dataset.method;
+                selectedMethodName = this.dataset.methodName || this.dataset.method;
+                const errorEl = document.getElementById('paymentMethodError');
+                if (errorEl) errorEl.style.display = 'none';
+            });
+        });
+
+        const proceedBtn = document.getElementById('proceedPaymentBtn');
+        if (proceedBtn) {
+            proceedBtn.addEventListener('click', () => {
+                if (!selectedMethod) {
+                    const errorEl = document.getElementById('paymentMethodError');
+                    if (errorEl) errorEl.style.display = 'block';
+                    return;
+                }
+                if (modal) modal.hide();
+                showPaymentCardUI(totalAmount, selectedMethodName || selectedMethod);
+            });
+        }
+
+        const addBtn = document.getElementById('addPaymentMethodBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                if (modal) modal.hide();
+                showAddPaymentMethodForm(totalAmount);
+            });
+        }
+    }
 }
 
 // ----------------------------- PAYMENT CARD UI -----------------------------
@@ -499,226 +848,6 @@ function showPaymentSuccess(amount, methodName) {
             loadOutstandingPayments();
         }
     }, 500);
-}
-
-// ----------------------------- ADD PAYMENT METHOD -----------------------------
-
-function showAddPaymentMethod(totalAmount) {
-    const title = `<i class="bi bi-plus-circle me-2"></i>Add Payment Method`;
-    
-    const mobileMoneyHtml = availablePaymentMethods.mobileMoney.map(m => `
-        <div class="add-method-card" data-method-id="${m.id}" data-method-name="${m.name}">
-            <div class="add-method-card-icon" style="background: ${m.bgColor}; color: ${m.color};">
-                <i class="${m.icon}"></i>
-            </div>
-            <div class="add-method-card-info">
-                <h6>${m.name}</h6>
-                <p>Pay securely with ${m.name}</p>
-            </div>
-            <i class="bi bi-chevron-right ms-auto text-muted"></i>
-        </div>
-    `).join('');
-
-    const cardPaymentsHtml = availablePaymentMethods.cardPayments.map(m => `
-        <div class="add-method-card" data-method-id="${m.id}" data-method-name="${m.name}">
-            <div class="add-method-card-icon" style="background: ${m.bgColor}; color: ${m.color};">
-                <i class="${m.icon}"></i>
-            </div>
-            <div class="add-method-card-info">
-                <h6>${m.name}</h6>
-                <p>Add your ${m.name} for payments</p>
-            </div>
-            <i class="bi bi-chevron-right ms-auto text-muted"></i>
-        </div>
-    `).join('');
-
-    const bodyHtml = `
-        <div style="margin-bottom: 24px;">
-            <div style="font-size: 1.4rem; font-weight: 800; color: var(--dark-color);">${totalAmount}</div>
-            <div style="font-size: 0.85rem; color: var(--gray-color);">Select a payment method to add</div>
-        </div>
-        
-        <div class="add-method-section-title">
-            <i class="fas fa-mobile-alt text-primary"></i> Mobile Money
-        </div>
-        <div class="mb-4" id="mobileMoneyList">
-            ${mobileMoneyHtml}
-        </div>
-        
-        <div class="add-method-section-title">
-            <i class="fas fa-credit-card text-primary"></i> Card Payments
-        </div>
-        <div class="mb-3" id="cardPaymentsList">
-            ${cardPaymentsHtml}
-        </div>
-        
-        ${userPaymentMethods.length > 0 ? `
-        <div class="add-method-section-title mt-4">
-            <i class="bi bi-check-circle text-success"></i> Your Saved Methods
-        </div>
-        <div class="mb-3">
-            ${userPaymentMethods.map(m => `
-                <div class="add-method-card" style="border-color: #bbf7d0; background: #f0fdf4;">
-                    <div class="add-method-card-icon" style="background: ${m.bgColor || '#e8f5e9'}; color: ${m.color || '#4CAF50'};">
-                        <i class="${m.icon || 'fas fa-mobile-alt'}"></i>
-                    </div>
-                    <div class="add-method-card-info">
-                        <h6>${m.name}</h6>
-                        <p style="color: #15803d;">Ready to use</p>
-                    </div>
-                    <i class="bi bi-check-circle-fill text-success"></i>
-                </div>
-            `).join('')}
-        </div>
-        ` : ''}
-    `;
-
-    const footerHtml = `
-        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-    `;
-
-    const modal = openGlobalModal(title, bodyHtml, footerHtml);
-    const modalEl = document.getElementById('globalActionModal');
-
-    if (modalEl) {
-        modalEl.querySelectorAll('.add-method-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const methodId = this.dataset.methodId;
-                const methodName = this.dataset.methodName;
-                
-                if (!methodId || userPaymentMethods.find(m => m.id === methodId)) return;
-                
-                const allMethods = [...availablePaymentMethods.mobileMoney, ...availablePaymentMethods.cardPayments];
-                const methodData = allMethods.find(m => m.id === methodId);
-                
-                if (methodData) {
-                    userPaymentMethods.push({
-                        id: methodData.id,
-                        name: methodData.name,
-                        icon: methodData.icon,
-                        color: methodData.color,
-                        bgColor: methodData.bgColor,
-                        addedAt: new Date().toISOString()
-                    });
-                    sessionStorage.setItem('csms_payment_methods', JSON.stringify(userPaymentMethods));
-                    
-                    if (modal) modal.hide();
-                    showNotification(`${methodName} added successfully! You can now use it for payments.`, 'success');
-                    
-                    setTimeout(() => {
-                        if (document.getElementById('outstandingList')) {
-                            loadOutstandingPayments();
-                        }
-                    }, 500);
-                }
-            });
-        });
-    }
-}
-
-// ----------------------------- SHOW PAYMENT METHODS -----------------------------
-
-function showPaymentMethods(totalAmount) {
-    const title = `<i class="bi bi-credit-card me-2"></i>Pay Outstanding Balance`;
-    
-    let methodsHtml = '';
-    
-    if (userPaymentMethods.length > 0) {
-        methodsHtml += `
-            <div class="add-method-section-title">
-                <i class="bi bi-star-fill text-warning"></i> Your Payment Methods
-            </div>
-        `;
-        userPaymentMethods.forEach(m => {
-            methodsHtml += `
-                <div class="payment-method-option" data-method="${m.id}" data-method-name="${m.name}">
-                    <div class="payment-method-icon" style="background: ${m.bgColor}; color: ${m.color};">
-                        <i class="${m.icon}"></i>
-                    </div>
-                    <div>
-                        <strong>${m.name}</strong><br>
-                        <span style="font-size:0.8rem;color:#6c757d;">Saved payment method</span>
-                    </div>
-                </div>
-            `;
-        });
-    }
-    
-    methodsHtml += `
-        <div class="add-method-section-title mt-3">
-            <i class="bi bi-credit-card text-primary"></i> Default Payment Methods
-        </div>
-        <div class="payment-method-option" data-method="visa" data-method-name="Visa Card">
-            <div class="payment-method-icon"><i class="fab fa-cc-visa"></i></div>
-            <div><strong>Visa</strong><br><span style="font-size:0.8rem;color:#6c757d;">•••• 4242</span></div>
-        </div>
-        <div class="payment-method-option" data-method="mastercard" data-method-name="Mastercard">
-            <div class="payment-method-icon"><i class="fab fa-cc-mastercard"></i></div>
-            <div><strong>Mastercard</strong><br><span style="font-size:0.8rem;color:#6c757d;">•••• 8888</span></div>
-        </div>
-        <div class="payment-method-option" data-method="mpesa" data-method-name="M-Pesa">
-            <div class="payment-method-icon"><i class="fas fa-mobile-alt"></i></div>
-            <div><strong>M-Pesa</strong><br><span style="font-size:0.8rem;color:#6c757d;">+255 7xx xxx xxx</span></div>
-        </div>
-    `;
-
-    const bodyHtml = `
-        <div style="margin-bottom: 20px;">
-            <div style="font-size: 1.8rem; font-weight: 800; color: var(--dark-color);">${totalAmount}</div>
-            <div style="font-size: 0.85rem; color: var(--gray-color);">Select a payment method below</div>
-        </div>
-        <div id="paymentMethodsList">
-            ${methodsHtml}
-        </div>
-        <p id="paymentMethodError" class="text-danger mt-2" style="font-size:0.85rem;display:none;">Please select a payment method.</p>
-    `;
-    
-    const footerHtml = `
-        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-outline-primary rounded-pill px-3" id="addPaymentMethodBtn">
-            <i class="bi bi-plus-circle me-1"></i> Add
-        </button>
-        <button type="button" class="btn btn-primary rounded-pill px-4" id="proceedPaymentBtn">Proceed</button>
-    `;
-
-    const modal = openGlobalModal(title, bodyHtml, footerHtml);
-    const modalEl = document.getElementById('globalActionModal');
-    let selectedMethod = null;
-    let selectedMethodName = null;
-
-    if (modalEl) {
-        modalEl.querySelectorAll('.payment-method-option').forEach(option => {
-            option.addEventListener('click', function() {
-                modalEl.querySelectorAll('.payment-method-option').forEach(o => o.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedMethod = this.dataset.method;
-                selectedMethodName = this.dataset.methodName || this.dataset.method;
-                const errorEl = document.getElementById('paymentMethodError');
-                if (errorEl) errorEl.style.display = 'none';
-            });
-        });
-
-        const proceedBtn = document.getElementById('proceedPaymentBtn');
-        if (proceedBtn) {
-            proceedBtn.addEventListener('click', () => {
-                if (!selectedMethod) {
-                    const errorEl = document.getElementById('paymentMethodError');
-                    if (errorEl) errorEl.style.display = 'block';
-                    return;
-                }
-                if (modal) modal.hide();
-                showPaymentCardUI(totalAmount, selectedMethodName || selectedMethod);
-            });
-        }
-
-        const addBtn = document.getElementById('addPaymentMethodBtn');
-        if (addBtn) {
-            addBtn.addEventListener('click', () => {
-                if (modal) modal.hide();
-                showAddPaymentMethod(totalAmount);
-            });
-        }
-    }
 }
 
 // ----------------------------- QUOTE PDF VIEWER -----------------------------
@@ -1194,7 +1323,7 @@ function loadOutstandingPayments() {
     });
 
     outstandingList.querySelector('.add-payment-method-btn')?.addEventListener('click', () => {
-        showAddPaymentMethod('TZS ' + total.toLocaleString());
+        showAddPaymentMethodForm('TZS ' + total.toLocaleString());
     });
 }
 
@@ -1401,11 +1530,11 @@ function renderPanel(menuType) {
                 const supportCards = document.getElementById('supportCards');
                 if (supportCards) {
                     supportCards.innerHTML = `
-                        <div class="support-card" onclick="showNotification('Chat bot is under development!', 'info')">
+                        <div class="support-card" onclick="window.openChatbot ? window.openChatbot() : (window.csmsChatbot && window.csmsChatbot.toggleChatbot())">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="service-icon"><i class="bi bi-chat-dots fs-4"></i></div>
-                                <div><h5 class="fw-bold mb-1">Live Chat Support</h5><p class="text-muted mb-0 small">Chat with us in real-time</p></div>
-                                <span class="ms-auto badge bg-primary">8AM - 6PM</span>
+                                <div><h5 class="fw-bold mb-1">Live Chat Support</h5><p class="text-muted mb-0 small">Chat with our AI assistant 24/7</p></div>
+                                <span class="ms-auto badge bg-primary">Online</span>
                             </div>
                         </div>
                         <div class="support-card" id="callUsCard">
