@@ -130,8 +130,8 @@ function openAssignServiceModal(serviceId) {
                 ? `<img src="${member.photo}" alt="${escapeHtml(member.name)}" class="assign-picker-avatar">`
                 : `<div class="assign-picker-initials">${escapeHtml(initials)}</div>`;
             const isCurrent = String(member.id) === String(currentAssignedStaffId);
-            const isSupervisor = member.staffStatus === 'supervisor';
-            const isContractor = member.staffStatus === 'contractor';
+            const isSupervisor = member.staffType === 'supervisor';
+            const isContractor = member.staffType === 'contractor';
 
             let typeTag = '';
             if (isSupervisor) typeTag = '<span class="staff-type-indicator staff-type-supervisor" style="position:static;margin-top:2px;">Supervisor</span>';
@@ -683,7 +683,7 @@ function showDashboardDetail(type) {
                             <td><strong>${escapeHtml(s.name)}</strong></td>
                             <td>${escapeHtml(s.email)}</td>
                             <td><span class="badge bg-success">Active</span></td>
-                            <td>${escapeHtml(s.staffStatus || 'normal')}</td>
+                            <td>${escapeHtml(s.staffType || 'normal')}</td>
                         </tr>`).join('')}</tbody>
                 </table></div>`;
             break;
@@ -1520,7 +1520,7 @@ function updateBookingStatus(id) {
 function addStaff() {
     const name = document.getElementById('staffName').value.trim();
     const email = document.getElementById('staffEmail').value.trim();
-    const status = document.getElementById('staffStatus').value;
+    const status = document.getElementById('staffType').value;
     const phone = document.getElementById('staffPhone').value.trim();
     const password = document.getElementById('staffPass').value;
     const photo = pendingStaffImage || null;
@@ -1541,11 +1541,11 @@ function addStaff() {
         showNotification('A staff member with this email already exists', 'error');
         return;
     }
-    staff.push({ id: Date.now(), name, email, staffStatus: status, phone, password, photo, status: 'active' });
+    staff.push({ id: Date.now(), name, email, staffType: status, phone, password, photo, status: 'active' });
     localStorage.setItem('staffAccounts', JSON.stringify(staff));
     document.getElementById('staffName').value = '';
     document.getElementById('staffEmail').value = '';
-    document.getElementById('staffStatus').value = 'normal';
+    document.getElementById('staffType').value = 'normal';
     document.getElementById('staffPhone').value = '';
     document.getElementById('staffPass').value = '';
     clearStaffImage();
@@ -1570,7 +1570,7 @@ function loadStaff() {
                 contractor: { class: 'staff-contractor', label: 'Contractor Worker' },
                 supervisor: { class: 'staff-supervisor', label: 'Supervisor' }
             };
-            const cfg = statusConfig[member.staffStatus] || statusConfig['normal'];
+            const cfg = statusConfig[member.staffType] || statusConfig['normal'];
             html += `
                 <tr>
                     <td>${avatarHtml}</td>
@@ -1612,7 +1612,7 @@ function openEditStaffModal(index) {
     document.getElementById('editStaffIndex').value = index;
     document.getElementById('editStaffName').value = member.name || '';
     document.getElementById('editStaffEmail').value = member.email || '';
-    document.getElementById('editStaffStatus').value = member.staffStatus || 'normal';
+    document.getElementById('editstaffType').value = member.staffType || 'normal';
     document.getElementById('editStaffPhone').value = member.phone || '';
     document.getElementById('editStaffPassword').value = '';
     const initials = member.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -1636,7 +1636,7 @@ function saveEditedStaff() {
     const index = parseInt(document.getElementById('editStaffIndex').value);
     const name = document.getElementById('editStaffName').value.trim();
     const email = document.getElementById('editStaffEmail').value.trim();
-    const status = document.getElementById('editStaffStatus').value;
+    const status = document.getElementById('editstaffType').value;
     const phone = document.getElementById('editStaffPhone').value.trim();
     const newPass = document.getElementById('editStaffPassword').value;
     if (!name || !email) { showNotification('Name and email are required', 'error'); return; }
@@ -1648,7 +1648,7 @@ function saveEditedStaff() {
     if (emailExists) { showNotification('This email is already used', 'error'); return; }
     staff[index].name = name;
     staff[index].email = email;
-    staff[index].staffStatus = status;
+    staff[index].staffType = status;
     staff[index].phone = phone;
     if (newPass) staff[index].password = newPass;
     staff[index].photo = pendingEditStaffImage !== null ? pendingEditStaffImage : staff[index].photo;
@@ -1743,13 +1743,13 @@ function renderAllStaffTab() {
     } else {
         staff.forEach(member => {
             const count = countAssignedServicesForStaff(member.id);
-            const isAssigned = count > 0 || member.staffStatus === 'supervisor' || member.staffStatus === 'contractor';
+            const isAssigned = count > 0 || member.staffType === 'supervisor' || member.staffType === 'contractor';
             const progress = getStaffProgress(member.id);
             const cfg = getProgressConfig(progress);
             const avatarHtml = getStaffAvatarHtml(member);
             let typeIndicator = '';
-            if (member.staffStatus === 'supervisor') typeIndicator = '<span class="staff-type-indicator staff-type-supervisor">Supervisor</span>';
-            else if (member.staffStatus === 'contractor') typeIndicator = '<span class="staff-type-indicator staff-type-contractor">Contractor</span>';
+            if (member.staffType === 'supervisor') typeIndicator = '<span class="staff-type-indicator staff-type-supervisor">Supervisor</span>';
+            else if (member.staffType === 'contractor') typeIndicator = '<span class="staff-type-indicator staff-type-contractor">Contractor</span>';
             html += `
                 <tr>
                     <td>${avatarHtml}</td>
@@ -1766,7 +1766,7 @@ function renderAllStaffTab() {
 
 function renderAssignedStaffTab() {
     const staff = JSON.parse(localStorage.getItem('staffAccounts')) || [];
-    const assignedStaff = staff.filter(m => countAssignedServicesForStaff(m.id) > 0 || m.staffStatus === 'supervisor' || m.staffStatus === 'contractor');
+    const assignedStaff = staff.filter(m => countAssignedServicesForStaff(m.id) > 0 || m.staffType === 'supervisor' || m.staffType === 'contractor');
     let html = '';
     if (assignedStaff.length === 0) {
         html = `<tr><td colspan="6" class="text-center text-muted py-4">No assigned staff</td></tr>`;
@@ -1777,9 +1777,9 @@ function renderAssignedStaffTab() {
             const cfg = getProgressConfig(progress);
             const avatarHtml = getStaffAvatarHtml(member);
             let typeIndicator = '';
-            if (member.staffStatus === 'supervisor') typeIndicator = '<span class="staff-type-indicator staff-type-supervisor">Supervisor</span>';
-            else if (member.staffStatus === 'contractor') typeIndicator = '<span class="staff-type-indicator staff-type-contractor">Contractor</span>';
-            const isPermanent = member.staffStatus === 'supervisor' || member.staffStatus === 'contractor';
+            if (member.staffType === 'supervisor') typeIndicator = '<span class="staff-type-indicator staff-type-supervisor">Supervisor</span>';
+            else if (member.staffType === 'contractor') typeIndicator = '<span class="staff-type-indicator staff-type-contractor">Contractor</span>';
+            const isPermanent = member.staffType === 'supervisor' || member.staffType === 'contractor';
             html += `
                 <tr>
                     <td>${avatarHtml}</td>
@@ -1799,7 +1799,7 @@ function renderAssignedStaffTab() {
 
 function renderUnassignedStaffTab() {
     const staff = JSON.parse(localStorage.getItem('staffAccounts')) || [];
-    const unassignedStaff = staff.filter(m => countAssignedServicesForStaff(m.id) === 0 && m.staffStatus !== 'supervisor' && m.staffStatus !== 'contractor');
+    const unassignedStaff = staff.filter(m => countAssignedServicesForStaff(m.id) === 0 && m.staffType !== 'supervisor' && m.staffType !== 'contractor');
     let html = '';
     if (unassignedStaff.length === 0) {
         html = `<tr><td colspan="5" class="text-center text-muted py-4">All staff assigned</td></tr>`;
@@ -1943,7 +1943,7 @@ function generateProfessionalReport() {
                             <td><strong>${escapeHtml(s.name)}</strong></td>
                             <td>${escapeHtml(s.email)}</td>
                             <td><span class="badge bg-success">Active</span></td>
-                            <td>${escapeHtml(s.staffStatus || 'normal')}</td>
+                            <td>${escapeHtml(s.staffType || 'normal')}</td>
                             <td>${count}</td>
                         </tr>`;
                     }).join('')}</tbody>
@@ -2269,9 +2269,9 @@ function initializeSampleData() {
     }
     if (!localStorage.getItem('staffAccounts')) {
         localStorage.setItem('staffAccounts', JSON.stringify([
-            { id: 4001, name: 'Fatma Ali', email: 'fatma@staff.com', phone: '+255 777 111111', password: 'staff123', staffStatus: 'supervisor', photo: null, status: 'active' },
-            { id: 4002, name: 'Hassan Juma', email: 'hassan@staff.com', phone: '+255 777 222222', password: 'staff123', staffStatus: 'contractor', photo: null, status: 'active' },
-            { id: 4003, name: 'Amina Salum', email: 'amina@staff.com', phone: '+255 777 333333', password: 'staff123', staffStatus: 'normal', photo: null, status: 'active' }
+            { id: 4001, name: 'Fatma Ali', email: 'fatma@staff.com', phone: '+255 777 111111', password: 'staff123', staffType: 'supervisor', photo: null, status: 'active' },
+            { id: 4002, name: 'Hassan Juma', email: 'hassan@staff.com', phone: '+255 777 222222', password: 'staff123', staffType: 'contractor', photo: null, status: 'active' },
+            { id: 4003, name: 'Amina Salum', email: 'amina@staff.com', phone: '+255 777 333333', password: 'staff123', staffType: 'normal', photo: null, status: 'active' }
         ]));
     }
 }

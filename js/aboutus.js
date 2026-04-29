@@ -365,7 +365,7 @@ function showWelcomeMessage() {
     const hasVisited = localStorage.getItem('hasVisitedAbout');
     if (!hasVisited) {
         setTimeout(() => {
-            showNotification('Welcome to CSMS! Discover why we are Zanzibar\'s trusted cleaning service.', 'info');
+            showNotification('Welcome to CleanSpark! Discover why we are Zanzibar\'s trusted cleaning service.', 'info');
             localStorage.setItem('hasVisitedAbout', 'true');
         }, 1500);
     }

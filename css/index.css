@@ -674,6 +674,17 @@ a {
     width: 16px;
 }
 
+.contact-info li a {
+    color: rgba(255,255,255,0.82);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.contact-info li a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
 .newsletter-form {
     display: flex;
     gap: 8px;

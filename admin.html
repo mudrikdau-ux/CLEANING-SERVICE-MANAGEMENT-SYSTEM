@@ -443,7 +443,7 @@
                     <div class="legend-item"><span class="legend-dot legend-yellow"></span><span>Just Started</span></div>
                     <div class="legend-item"><span class="legend-dot legend-blue"></span><span>In Progress</span></div>
                     <div class="legend-item"><span class="legend-dot legend-black"></span><span>Supervisor</span></div>
-                    <div class="legend-item"><span class="legend-dot legend-pink"></span><span>Contractor Worker</span></div>
+                    <div class="legend-item"><span class="legend-dot legend-pink"></span><span>Normal</span></div>
                 </div>
 
                 <div id="tab-allStaff" class="assign-tab-content active">
@@ -681,10 +681,9 @@
                             <input type="email" id="staffEmail" class="form-control" placeholder="staff@csms.co.tz">
                         </div>
                         <div class="col-md-2 col-sm-6">
-                            <label class="form-label field-label">Staff Status <span class="text-danger">*</span></label>
-                            <select id="staffStatus" class="form-select">
-                                <option value="normal">Normal Worker</option>
-                                <option value="contractor">Contractor Worker</option>
+                            <label class="form-label field-label">Staff Type <span class="text-danger">*</span></label>
+                            <select id="staffType" class="form-select">
+                                <option value="normal">Normal</option>
                                 <option value="supervisor">Supervisor</option>
                             </select>
                         </div>
@@ -747,7 +746,7 @@
             <!-- MESSAGES SECTION -->
             <div id="messagesSection" class="admin-section">
                 <div class="section-header">
-                    <h2><i class="bi bi-envelope-fill"></i> Customer Messages</h2>
+                    <h2><i class="bi bi-envelope-fill"></i> Messages</h2>
                     <p>View and respond to customer and supervisor inquiries</p>
                 </div>
 
@@ -1014,10 +1013,9 @@
                         <input type="email" id="editStaffEmail" class="form-control">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label field-label">Staff Status</label>
-                        <select id="editStaffStatus" class="form-select">
-                            <option value="normal">Normal Worker</option>
-                            <option value="contractor">Contractor Worker</option>
+                        <label class="form-label field-label">Staff Type</label>
+                        <select id="editstaffType" class="form-select">
+                            <option value="normal">Normal</option>
                             <option value="supervisor">Supervisor</option>
                         </select>
                     </div>
