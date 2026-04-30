@@ -1,19 +1,19 @@
 // ========== STORAGE KEYS ==========
 const STORAGE_KEYS = {
-    PROFILE: 'csms_profile',
-    LOCATIONS: 'csms_locations',
-    PAYMENT_METHODS: 'csms_payment_methods',
-    NOTIFICATIONS: 'csms_notifications',
-    PREFERENCES: 'csms_preferences',
-    SERVICE_HISTORY: 'csms_service_history',
-    IS_LOGGED_IN: 'csms_is_logged_in'
+    PROFILE: 'cleanspark_profile',
+    LOCATIONS: 'cleanspark_locations',
+    PAYMENT_METHODS: 'cleanspark_payment_methods',
+    NOTIFICATIONS: 'cleanspark_notifications',
+    PREFERENCES: 'cleanspark_preferences',
+    SERVICE_HISTORY: 'cleanspark_service_history',
+    IS_LOGGED_IN: 'cleanspark_is_logged_in'
 };
 
 // ========== INITIAL DATA ==========
 let currentUser = {
     firstName: 'Aly',
     lastName: 'Hassan',
-    email: 'aly@csms.co.tz',
+    email: 'aly@cleanspark.co.tz',
     phone: '+255 777 123 456'
 };
 
@@ -25,9 +25,9 @@ let currentUser = {
  * In a real application replace this with a server-side session/token check.
  *
  * To simulate a logged-in user in the browser console run:
- *   localStorage.setItem('csms_is_logged_in', 'true')
+ *   localStorage.setItem('cleanspark_is_logged_in', 'true')
  * To simulate a logged-out user:
- *   localStorage.removeItem('csms_is_logged_in')
+ *   localStorage.removeItem('cleanspark_is_logged_in')
  */
 function isUserLoggedIn() {
     return localStorage.getItem(STORAGE_KEYS.IS_LOGGED_IN) === 'true';
@@ -153,7 +153,7 @@ function initProfilePicture() {
 
     const profileIcon = profilePicture.querySelector('i');
 
-    const savedImage = localStorage.getItem('csms_profile_picture');
+    const savedImage = localStorage.getItem('cleanspark_profile_picture');
     if (savedImage && profileImage && profileIcon) {
         profileImage.src = savedImage;
         profileImage.style.display = 'block';
@@ -185,7 +185,7 @@ function initProfilePicture() {
                     }
                     if (profileIcon) profileIcon.style.display = 'none';
                     if (removeBtn) removeBtn.style.display = 'inline-block';
-                    localStorage.setItem('csms_profile_picture', imageData);
+                    localStorage.setItem('cleanspark_profile_picture', imageData);
                     updateSidebarAvatar(imageData);
                     updateLogoutAvatar(imageData);
                     updateDeleteAvatar(imageData);
@@ -205,7 +205,7 @@ function initProfilePicture() {
             }
             if (profileIcon) profileIcon.style.display = 'flex';
             removeBtn.style.display = 'none';
-            localStorage.removeItem('csms_profile_picture');
+            localStorage.removeItem('cleanspark_profile_picture');
             resetSidebarAvatar();
             resetLogoutAvatar();
             resetDeleteAvatar();
@@ -335,7 +335,7 @@ function initializeData() {
                 serviceType: 'Deep House Cleaning',
                 serviceIcon: 'fa-home',
                 status: 'completed',
-                date: '2024-12-15',
+                date: '2026-12-15',
                 time: '10:00 AM',
                 duration: '4 hours',
                 staff: 'Mohammed Ali',
@@ -348,7 +348,7 @@ function initializeData() {
                 serviceType: 'Office Cleaning',
                 serviceIcon: 'fa-building',
                 status: 'completed',
-                date: '2024-12-10',
+                date: '2026-12-10',
                 time: '08:00 AM',
                 duration: '3 hours',
                 staff: 'Fatima Hassan',
@@ -361,7 +361,7 @@ function initializeData() {
                 serviceType: 'Carpet Cleaning',
                 serviceIcon: 'fa-rug',
                 status: 'in-progress',
-                date: '2024-12-20',
+                date: '2026-12-20',
                 time: '02:00 PM',
                 duration: '2 hours',
                 staff: 'Juma Khamis',
@@ -402,7 +402,7 @@ function loadProfileData() {
         if (displayName) displayName.textContent = fullName || 'User';
         if (displayEmail) displayEmail.textContent = profile.email || 'user@example.com';
 
-        const savedImage = localStorage.getItem('csms_profile_picture');
+        const savedImage = localStorage.getItem('cleanspark_profile_picture');
         if (!savedImage) {
             const initial = profile.firstName ? profile.firstName.charAt(0).toUpperCase() : 'U';
             const avatarDiv = document.querySelector('.user-avatar');
@@ -425,7 +425,7 @@ function updateLogoutModalInfo(profile) {
     const el = (id) => document.getElementById(id);
     if (el('logoutUserName')) el('logoutUserName').textContent = fullName || 'User';
     if (el('logoutUserEmail')) el('logoutUserEmail').textContent = profile.email || 'user@example.com';
-    if (!localStorage.getItem('csms_profile_picture')) resetLogoutAvatar();
+    if (!localStorage.getItem('cleanspark_profile_picture')) resetLogoutAvatar();
 }
 
 function updateDeleteModalInfo(profile) {
@@ -433,8 +433,8 @@ function updateDeleteModalInfo(profile) {
     const el = (id) => document.getElementById(id);
     if (el('deleteUserName')) el('deleteUserName').textContent = fullName || 'User';
     if (el('deleteUserEmail')) el('deleteUserEmail').textContent = profile.email || 'user@example.com';
-    if (!localStorage.getItem('csms_profile_picture')) resetDeleteAvatar();
-    else updateDeleteAvatar(localStorage.getItem('csms_profile_picture'));
+    if (!localStorage.getItem('cleanspark_profile_picture')) resetDeleteAvatar();
+    else updateDeleteAvatar(localStorage.getItem('cleanspark_profile_picture'));
 }
 
 function saveProfile(event) {
@@ -459,7 +459,7 @@ function saveProfile(event) {
 
     localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
     loadProfileData();
-    if (!localStorage.getItem('csms_profile_picture')) resetSidebarAvatar();
+    if (!localStorage.getItem('cleanspark_profile_picture')) resetSidebarAvatar();
     updateLogoutModalInfo(profile);
     updateDeleteModalInfo(profile);
     showNotification('Profile updated successfully!', 'success');
@@ -965,7 +965,7 @@ function performAccountDeletion() {
 
             // Wipe all user data from localStorage
             Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
-            localStorage.removeItem('csms_profile_picture');
+            localStorage.removeItem('cleanspark_profile_picture');
 
             // Close modal then redirect
             if (window.deleteAccountModal) window.deleteAccountModal.hide();

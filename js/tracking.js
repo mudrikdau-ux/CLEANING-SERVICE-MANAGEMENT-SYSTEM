@@ -1,20 +1,18 @@
 // ============================================================================
-// CSMS TRACKING DASHBOARD - ENHANCED & PROFESSIONAL JAVASCRIPT
+// CleanSpark TRACKING DASHBOARD - ENHANCED & PROFESSIONAL JAVASCRIPT
 // ============================================================================
 
 // ----------------------------- AUTHENTICATION CHECK -----------------------------
 
 (function checkAuth() {
-    // Check if user is already logged in via sessionStorage
-    let isLoggedIn = sessionStorage.getItem('csms_loggedIn') === 'true';
+    let isLoggedIn = sessionStorage.getItem('cleanspark_loggedIn') === 'true';
     
-    // If not logged in, check if there's user data (auto-login for demo/testing)
     if (!isLoggedIn) {
-        const user = sessionStorage.getItem('csms_user');
+        const user = sessionStorage.getItem('cleanspark_user');
         if (user) {
             try {
-                JSON.parse(user); // Validate JSON
-                sessionStorage.setItem('csms_loggedIn', 'true');
+                JSON.parse(user);
+                sessionStorage.setItem('cleanspark_loggedIn', 'true');
                 isLoggedIn = true;
             } catch(e) {
                 console.error('Invalid user session data');
@@ -22,16 +20,14 @@
         }
     }
     
-    // Auto-login for demo purposes - REMOVE THIS IN PRODUCTION
-    // This simulates a logged-in user for testing
     if (!isLoggedIn) {
         const demoUser = {
             name: 'John Doe',
             email: 'john.doe@example.com',
             phone: '+255 777 123 456'
         };
-        sessionStorage.setItem('csms_loggedIn', 'true');
-        sessionStorage.setItem('csms_user', JSON.stringify(demoUser));
+        sessionStorage.setItem('cleanspark_loggedIn', 'true');
+        sessionStorage.setItem('cleanspark_user', JSON.stringify(demoUser));
         isLoggedIn = true;
         console.log('Demo auto-login activated - Remove this in production!');
     }
@@ -40,12 +36,10 @@
     const dashboard = document.getElementById('dashboardWrapper');
     
     if (isLoggedIn) {
-        // User is logged in - show dashboard
         if (overlay) overlay.style.display = 'none';
         if (dashboard) dashboard.style.display = 'flex';
         
-        // Update user profile in sidebar
-        const user = sessionStorage.getItem('csms_user');
+        const user = sessionStorage.getItem('cleanspark_user');
         if (user) {
             try {
                 const userData = JSON.parse(user);
@@ -55,7 +49,6 @@
             }
         }
     } else {
-        // User is not logged in - show login required overlay
         if (overlay) overlay.style.display = 'flex';
         if (dashboard) dashboard.style.display = 'none';
     }
@@ -74,14 +67,10 @@ function updateUserProfile(userData) {
     }
 }
 
-/**
- * Simulate login - Call this function when user logs in
- * Example: simulateLogin('John Doe', 'john@example.com');
- */
 function simulateLogin(name, email) {
     const userData = { name, email };
-    sessionStorage.setItem('csms_loggedIn', 'true');
-    sessionStorage.setItem('csms_user', JSON.stringify(userData));
+    sessionStorage.setItem('cleanspark_loggedIn', 'true');
+    sessionStorage.setItem('cleanspark_user', JSON.stringify(userData));
     
     const overlay = document.getElementById('loginRequiredOverlay');
     const dashboard = document.getElementById('dashboardWrapper');
@@ -91,19 +80,16 @@ function simulateLogin(name, email) {
     updateUserProfile(userData);
     showNotification('Welcome back, ' + name + '!', 'success');
     
-    // Re-initialize the dashboard
     if (document.getElementById('dynamicPanel').children.length === 0) {
         initDashboard();
     }
 }
 
-/**
- * Logout function
- */
 function logoutUser() {
-    sessionStorage.removeItem('csms_loggedIn');
-    sessionStorage.removeItem('csms_user');
-    sessionStorage.removeItem('csms_payment_methods');
+    sessionStorage.removeItem('cleanspark_loggedIn');
+    sessionStorage.removeItem('cleanspark_user');
+    sessionStorage.removeItem('cleanspark_payment_methods');
+    sessionStorage.removeItem('cleanspark_terms_agreed');
     userPaymentMethods = [];
     
     const overlay = document.getElementById('loginRequiredOverlay');
@@ -111,14 +97,12 @@ function logoutUser() {
     if (overlay) overlay.style.display = 'flex';
     if (dashboard) dashboard.style.display = 'none';
     
-    // Clear dynamic panel
     const dynamicPanel = document.getElementById('dynamicPanel');
     if (dynamicPanel) dynamicPanel.innerHTML = '';
 }
 
 // ----------------------------- CONFIGURATION & DATA -----------------------------
 
-// Bookings Database
 const bookings = [
     { id: 101, status: "upcoming",  service: "Premium Home Deep Cleaning",         date: "2026-04-05", price: "TZS 212,000", address: "Stone Town, Unguja",       staffId: 1 },
     { id: 102, status: "upcoming",  service: "AC Maintenance & Filter Replacement", date: "2026-04-12", price: "TZS 285,000", address: "Mbweni Residence",          staffId: 2 },
@@ -129,7 +113,6 @@ const bookings = [
     { id: 107, status: "unpaid",    service: "Upholstery & Mattress Deep Clean",    date: "2026-03-20", price: "TZS 233,000", address: "Michenzani",                 staffId: 2 }
 ];
 
-// Staff Database
 const staffMembers = {
     1: { id: 1, name: "Amina Khalid", initials: "AK", role: "Senior Cleaning Technician", phone: "+255 712 345 678", experience: "5 Years", specialization: "Residential Deep Cleaning", rating: 4.8, totalReviews: 134, ratingBreakdown: { 5: 98, 4: 24, 3: 8, 2: 3, 1: 1 } },
     2: { id: 2, name: "Hassan Omar", initials: "HO", role: "HVAC & AC Specialist", phone: "+255 765 987 432", experience: "7 Years", specialization: "AC Maintenance & Upholstery", rating: 4.6, totalReviews: 89, ratingBreakdown: { 5: 61, 4: 18, 3: 6, 2: 3, 1: 1 } },
@@ -138,14 +121,12 @@ const staffMembers = {
     5: { id: 5, name: "Zuwena Ali", initials: "ZA", role: "Villa & Estate Cleaner", phone: "+255 778 222 111", experience: "6 Years", specialization: "Villa & Large Property Cleaning", rating: 4.7, totalReviews: 155, ratingBreakdown: { 5: 120, 4: 25, 3: 7, 2: 2, 1: 1 } }
 };
 
-// Payment History Database
 const paymentHistory = [
-    { id: 'PAY-001', service: 'Office Carpet Steam Cleaning', amount: 'TZS 499,000', date: '2026-03-18', method: 'Visa •••• 4242' },
-    { id: 'PAY-002', service: 'Kitchen Sanitization Service', amount: 'TZS 178,000', date: '2026-03-02', method: 'M-Pesa' },
-    { id: 'PAY-003', service: 'AC Maintenance', amount: 'TZS 285,000', date: '2026-02-15', method: 'Mastercard •••• 8888' }
+    { id: 'PAY-001', service: 'Office Carpet Steam Cleaning', amount: 'TZS 499,000', date: '2026-03-18', method: 'Visa •••• 4242', status: 'completed', transactionId: 'TXN-20260318-A1B2C3', reference: 'CSMS-103', paymentDate: '2026-03-18 14:32:00', payerName: 'John Doe', payerEmail: 'john.doe@example.com' },
+    { id: 'PAY-002', service: 'Kitchen Sanitization Service', amount: 'TZS 178,000', date: '2026-03-02', method: 'M-Pesa', status: 'completed', transactionId: 'TXN-20260302-D4E5F6', reference: 'CSMS-104', paymentDate: '2026-03-02 10:15:00', payerName: 'John Doe', payerEmail: 'john.doe@example.com' },
+    { id: 'PAY-003', service: 'AC Maintenance', amount: 'TZS 285,000', date: '2026-02-15', method: 'Mastercard •••• 8888', status: 'completed', transactionId: 'TXN-20260215-G7H8I9', reference: 'CSMS-108', paymentDate: '2026-02-15 09:00:00', payerName: 'John Doe', payerEmail: 'john.doe@example.com' }
 ];
 
-// Notifications Database
 const notifications = [
     { id: 1, icon: 'bi-calendar-check', bgColor: '#e8f0fe', iconColor: '#4361ee', title: 'Booking Confirmed', message: 'Your Home Deep Cleaning is scheduled for Apr 5.', time: '2 hours ago' },
     { id: 2, icon: 'bi-star-half', bgColor: '#fff3cd', iconColor: '#f59e0b', title: 'Rate Your Service', message: 'How was your Kitchen Sanitization? Leave a review.', time: '1 day ago' },
@@ -153,7 +134,6 @@ const notifications = [
     { id: 4, icon: 'bi-gift', bgColor: '#d1e7dd', iconColor: '#198754', title: 'Special Offer!', message: 'Get 20% off your next booking with code CLEAN20.', time: '5 days ago' }
 ];
 
-// Available payment methods for adding
 const availablePaymentMethods = {
     mobileMoney: [
         { id: 'mix-by-yas', name: 'Mix by Yas', icon: 'fas fa-mobile-alt', color: '#1a73e8', bgColor: '#e8f0fe' },
@@ -170,13 +150,10 @@ const availablePaymentMethods = {
     ]
 };
 
-// User's added payment methods
-let userPaymentMethods = JSON.parse(sessionStorage.getItem('csms_payment_methods') || '[]');
+let userPaymentMethods = JSON.parse(sessionStorage.getItem('cleanspark_payment_methods') || '[]');
 
-// Session storage for submitted reviews
 const submittedReviews = {};
 
-// Quotes data
 const quotesData = [
     { 
         id: 'QTE-2026-001', 
@@ -191,7 +168,7 @@ const quotesData = [
             { description: 'Restroom sanitization', quantity: 3, rate: 'TZS 15,000', amount: 'TZS 45,000' }
         ],
         total: 'TZS 449,000',
-        notes: 'Service includes eco-friendly cleaning products. Equipment provided by CSMS.'
+        notes: 'Service includes eco-friendly cleaning products. Equipment provided by CleanSpark.'
     },
     { 
         id: 'QTE-2026-002', 
@@ -356,6 +333,330 @@ function getStatusBadge(status) {
     };
 }
 
+// ----------------------------- SHARE FUNCTIONALITY -----------------------------
+
+function openShareModal(quoteData) {
+    const shareUrl = `https://cleanspark.co.tz/quotes/${quoteData.id}`;
+    const shareText = `Check out this quote from CleanSpark: ${quoteData.service} - ${quoteData.total}`;
+    
+    const bodyHtml = `
+        <div class="share-preview-card">
+            <div class="share-quote-id">Quote #${escapeHtml(quoteData.id)}</div>
+            <div class="share-quote-service">${escapeHtml(quoteData.service)}</div>
+            <div class="share-quote-total">${quoteData.total}</div>
+        </div>
+        
+        <h6 class="fw-bold mb-3 text-center">Share via</h6>
+        <div class="share-options-grid">
+            <button class="share-option-btn share-whatsapp" data-share="whatsapp">
+                <div class="share-icon-circle"><i class="fab fa-whatsapp"></i></div>
+                <span>WhatsApp</span>
+            </button>
+            <button class="share-option-btn share-facebook" data-share="facebook">
+                <div class="share-icon-circle"><i class="fab fa-facebook-f"></i></div>
+                <span>Facebook</span>
+            </button>
+            <button class="share-option-btn share-twitter" data-share="twitter">
+                <div class="share-icon-circle"><i class="fab fa-twitter"></i></div>
+                <span>Twitter</span>
+            </button>
+            <button class="share-option-btn share-email" data-share="email">
+                <div class="share-icon-circle"><i class="fas fa-envelope"></i></div>
+                <span>Email</span>
+            </button>
+            <button class="share-option-btn share-sms" data-share="sms">
+                <div class="share-icon-circle"><i class="fas fa-sms"></i></div>
+                <span>SMS</span>
+            </button>
+            <button class="share-option-btn share-linkedin" data-share="linkedin">
+                <div class="share-icon-circle"><i class="fab fa-linkedin-in"></i></div>
+                <span>LinkedIn</span>
+            </button>
+            <button class="share-option-btn share-telegram" data-share="telegram">
+                <div class="share-icon-circle"><i class="fab fa-telegram-plane"></i></div>
+                <span>Telegram</span>
+            </button>
+            <button class="share-option-btn share-copy" data-share="copy">
+                <div class="share-icon-circle"><i class="fas fa-link"></i></div>
+                <span>Copy Link</span>
+            </button>
+        </div>
+        
+        <div class="share-link-section">
+            <input type="text" class="share-link-input" value="${escapeHtml(shareUrl)}" readonly id="shareLinkInput">
+            <button class="share-link-copy-btn" id="copyLinkBtn">
+                <i class="bi bi-clipboard me-1"></i> Copy
+            </button>
+        </div>
+    `;
+    
+    const labelEl = document.getElementById('shareModalLabel');
+    if (labelEl) labelEl.innerHTML = `<i class="bi bi-share-fill me-2"></i>Share Quote #${quoteData.id}`;
+    
+    const bodyEl = document.getElementById('shareModalBody');
+    if (bodyEl) bodyEl.innerHTML = bodyHtml;
+    
+    const shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
+    shareModal.show();
+    
+    // Share button handlers
+    document.querySelectorAll('.share-option-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const platform = this.dataset.share;
+            handleShare(platform, quoteData, shareUrl, shareText);
+        });
+    });
+    
+    // Copy link button
+    document.getElementById('copyLinkBtn')?.addEventListener('click', function() {
+        const linkInput = document.getElementById('shareLinkInput');
+        if (linkInput) {
+            linkInput.select();
+            document.execCommand('copy');
+            showNotification('Link copied to clipboard!', 'success');
+        }
+    });
+}
+
+function handleShare(platform, quoteData, shareUrl, shareText) {
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(shareText);
+    
+    switch(platform) {
+        case 'whatsapp':
+            window.open(`https://wa.me/?text=${encodedText}%20${encodedUrl}`, '_blank');
+            break;
+        case 'facebook':
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, '_blank');
+            break;
+        case 'twitter':
+            window.open(`https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`, '_blank');
+            break;
+        case 'email':
+            window.location.href = `mailto:?subject=Quote%20%23${quoteData.id}%20-%20CleanSpark&body=${encodedText}%0A%0AView%20Quote:%20${encodedUrl}`;
+            break;
+        case 'sms':
+            window.location.href = `sms:?body=${encodedText}%20${encodedUrl}`;
+            break;
+        case 'linkedin':
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, '_blank');
+            break;
+        case 'telegram':
+            window.open(`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`, '_blank');
+            break;
+        case 'copy':
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showNotification('Link copied to clipboard!', 'success');
+            });
+            break;
+    }
+}
+
+// ----------------------------- APPROVE QUOTE FUNCTIONALITY -----------------------------
+
+function openApproveQuoteModal(quoteData) {
+    const bodyHtml = `
+        <div class="text-center">
+            <div class="approve-success-icon">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <h5 class="fw-bold">Approve Quote #${escapeHtml(quoteData.id)}</h5>
+            <p class="text-muted">Please review the quote details before approving.</p>
+        </div>
+        
+        <div class="approve-summary-card">
+            <div class="approve-summary-row">
+                <span>Service</span>
+                <span>${escapeHtml(quoteData.service)}</span>
+            </div>
+            <div class="approve-summary-row">
+                <span>Quote Date</span>
+                <span>${escapeHtml(quoteData.date)}</span>
+            </div>
+            <div class="approve-summary-row">
+                <span>Valid Until</span>
+                <span>${escapeHtml(quoteData.validUntil)}</span>
+            </div>
+            <div class="approve-summary-row">
+                <span>Number of Items</span>
+                <span>${quoteData.items.length} service items</span>
+            </div>
+            <div class="approve-summary-row" style="font-weight: 700; font-size: 1.1rem;">
+                <span>Total Amount</span>
+                <span style="color: #059669;">${quoteData.total}</span>
+            </div>
+        </div>
+        
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="agreeApproveTerms">
+            <label class="form-check-label" for="agreeApproveTerms" style="font-size: 0.85rem;">
+                I have reviewed and agree to the terms and conditions of this quote. I understand that approving this quote will create a binding service agreement with CleanSpark.
+            </label>
+        </div>
+        
+        <button class="btn-approve-confirm" id="confirmApproveBtn" disabled>
+            <i class="bi bi-check-circle-fill me-2"></i> Confirm Approval
+        </button>
+    `;
+    
+    const labelEl = document.getElementById('approveQuoteModalLabel');
+    if (labelEl) labelEl.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>Approve Quote #${quoteData.id}`;
+    
+    const bodyEl = document.getElementById('approveQuoteModalBody');
+    if (bodyEl) bodyEl.innerHTML = bodyHtml;
+    
+    const approveModal = new bootstrap.Modal(document.getElementById('approveQuoteModal'));
+    approveModal.show();
+    
+    const checkbox = document.getElementById('agreeApproveTerms');
+    const confirmBtn = document.getElementById('confirmApproveBtn');
+    
+    if (checkbox && confirmBtn) {
+        checkbox.addEventListener('change', function() {
+            confirmBtn.disabled = !this.checked;
+        });
+        
+        confirmBtn.addEventListener('click', function() {
+            quoteData.status = 'approved';
+            approveModal.hide();
+            
+            // Show success overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'payment-success-overlay';
+            overlay.innerHTML = `
+                <div class="payment-success-card">
+                    <div class="success-checkmark">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2">Quote Approved!</h4>
+                    <p class="text-muted mb-3">Quote #${escapeHtml(quoteData.id)} has been approved successfully.</p>
+                    <div class="bg-light rounded-3 p-3 mb-3 text-start">
+                        <small class="text-muted">Service: ${escapeHtml(quoteData.service)}</small><br>
+                        <small class="text-muted">Total: ${quoteData.total}</small><br>
+                        <small class="text-muted">Date: ${new Date().toLocaleString()}</small>
+                    </div>
+                    <button class="btn btn-primary rounded-pill px-4" onclick="this.closest('.payment-success-overlay').remove()">
+                        <i class="bi bi-check-circle me-2"></i> Done
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) overlay.remove();
+            });
+            
+            showNotification(`Quote #${quoteData.id} approved successfully!`, 'success');
+            setTimeout(() => renderPanel('quotes'), 800);
+        });
+    }
+}
+
+// ----------------------------- PAYMENT DETAILS MODAL -----------------------------
+
+function openPaymentDetailsModal(payment) {
+    const bodyHtml = `
+        <div class="text-center mb-4">
+            <span class="payment-status-badge payment-status-${payment.status}">${payment.status.toUpperCase()}</span>
+            <h4 class="fw-bold mt-3">${payment.amount}</h4>
+            <p class="text-muted">${escapeHtml(payment.service)}</p>
+        </div>
+        
+        <div class="payment-detail-section">
+            <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i>Payment Information</h6>
+            <div class="payment-detail-row">
+                <span class="payment-detail-label">Payment ID</span>
+                <span class="payment-detail-value">${escapeHtml(payment.id)}</span>
+            </div>
+            <div class="payment-detail-row">
+                <span class="payment-detail-label">Transaction ID</span>
+                <span class="payment-detail-value">${escapeHtml(payment.transactionId)}</span>
+            </div>
+            <div class="payment-detail-row">
+                <span class="payment-detail-label">Reference</span>
+                <span class="payment-detail-value">${escapeHtml(payment.reference)}</span>
+            </div>
+            <div class="payment-detail-row">
+                <span class="payment-detail-label">Payment Method</span>
+                <span class="payment-detail-value">${escapeHtml(payment.method)}</span>
+            </div>
+            <div class="payment-detail-row">
+                <span class="payment-detail-label">Payment Date</span>
+                <span class="payment-detail-value">${escapeHtml(payment.paymentDate)}</span>
+            </div>
+            <div class="payment-detail-row">
+                <span class="payment-detail-label">Amount</span>
+                <span class="payment-detail-value" style="color: #059669; font-size: 1.1rem;">${payment.amount}</span>
+            </div>
+        </div>
+        
+        <div class="payment-detail-section">
+            <h6 class="fw-bold mb-3"><i class="bi bi-person me-2"></i>Payer Information</h6>
+            <div class="payment-detail-row">
+                <span class="payment-detail-label">Name</span>
+                <span class="payment-detail-value">${escapeHtml(payment.payerName)}</span>
+            </div>
+            <div class="payment-detail-row">
+                <span class="payment-detail-label">Email</span>
+                <span class="payment-detail-value">${escapeHtml(payment.payerEmail)}</span>
+            </div>
+        </div>
+        
+        <button class="btn btn-outline-primary rounded-pill w-100" id="downloadReceiptBtn">
+            <i class="bi bi-download me-2"></i> Download Receipt
+        </button>
+    `;
+    
+    const labelEl = document.getElementById('paymentDetailsModalLabel');
+    if (labelEl) labelEl.innerHTML = `<i class="bi bi-receipt me-2"></i>Payment Receipt`;
+    
+    const bodyEl = document.getElementById('paymentDetailsModalBody');
+    if (bodyEl) bodyEl.innerHTML = bodyHtml;
+    
+    const detailsModal = new bootstrap.Modal(document.getElementById('paymentDetailsModal'));
+    detailsModal.show();
+    
+    document.getElementById('downloadReceiptBtn')?.addEventListener('click', function() {
+        const receiptContent = `
+            <div style="font-family: 'Inter', sans-serif; padding: 30px;">
+                <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #4361ee; padding-bottom: 20px;">
+                    <h2 style="color: #4361ee; font-weight: 800;">CleanSpark</h2>
+                    <p style="color: #6c757d;">Cleaning Service Management System</p>
+                    <p style="color: #6c757d;">Stone Town, Zanzibar | info@cleanspark.co.tz</p>
+                </div>
+                <h3 style="text-align: center; margin-bottom: 20px;">Payment Receipt</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <tr><td style="padding: 8px; color: #6c757d; font-weight: 500;">Receipt No:</td><td style="padding: 8px; font-weight: 600;">${payment.id}</td></tr>
+                    <tr style="background: #f8fafc;"><td style="padding: 8px; color: #6c757d; font-weight: 500;">Transaction ID:</td><td style="padding: 8px; font-weight: 600;">${payment.transactionId}</td></tr>
+                    <tr><td style="padding: 8px; color: #6c757d; font-weight: 500;">Date:</td><td style="padding: 8px; font-weight: 600;">${payment.paymentDate}</td></tr>
+                    <tr style="background: #f8fafc;"><td style="padding: 8px; color: #6c757d; font-weight: 500;">Service:</td><td style="padding: 8px; font-weight: 600;">${payment.service}</td></tr>
+                    <tr><td style="padding: 8px; color: #6c757d; font-weight: 500;">Method:</td><td style="padding: 8px; font-weight: 600;">${payment.method}</td></tr>
+                    <tr style="background: #f8fafc; font-size: 1.2rem;"><td style="padding: 8px; color: #6c757d; font-weight: 700;">Amount:</td><td style="padding: 8px; font-weight: 800; color: #059669;">${payment.amount}</td></tr>
+                </table>
+                <p style="text-align: center; color: #6c757d; margin-top: 20px;">Thank you for choosing CleanSpark!</p>
+                <p style="text-align: center; color: #6c757d; font-size: 0.8rem;">&copy; 2026 CleanSpark - Cleaning Service Management System</p>
+            </div>
+        `;
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Receipt ${payment.id} - CleanSpark</title>
+                    <style>
+                        body { font-family: 'Inter', sans-serif; padding: 20px; }
+                        @media print { body { padding: 10px; } }
+                    </style>
+                </head>
+                <body>${receiptContent}</body>
+            </html>
+        `);
+        printWindow.document.close();
+        setTimeout(() => printWindow.print(), 500);
+        showNotification('Receipt sent to printer!', 'success');
+    });
+}
+
 // ----------------------------- PAYMENT METHOD FORM -----------------------------
 
 function showAddPaymentMethodForm(totalAmount) {
@@ -440,7 +741,6 @@ function showAddPaymentMethodForm(totalAmount) {
 
     if (modalEl) {
         modalEl.querySelectorAll('.add-method-card').forEach(card => {
-            // Avoid attaching to saved methods
             if (card.style.borderColor === 'rgb(187, 247, 208)') return;
             
             card.addEventListener('click', function() {
@@ -448,7 +748,6 @@ function showAddPaymentMethodForm(totalAmount) {
                 const methodName = this.dataset.methodName;
                 const methodType = this.dataset.methodType;
                 
-                // Highlight selected
                 modalEl.querySelectorAll('.add-method-card').forEach(c => c.style.borderColor = '#e2e8f0');
                 this.style.borderColor = 'var(--primary-color)';
                 this.style.background = '#eff1fe';
@@ -537,14 +836,12 @@ function renderPaymentForm(type, methodName, totalAmount) {
             </button>
         `;
         
-        // Card number formatting
         document.getElementById('cardNumber')?.addEventListener('input', function(e) {
             let val = this.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
             let formatted = val.match(/.{1,4}/g)?.join(' ') || '';
             this.value = formatted;
         });
         
-        // Expiry formatting
         document.getElementById('cardExpiry')?.addEventListener('input', function(e) {
             let val = this.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
             if (val.length >= 2) val = val.substring(0,2) + '/' + val.substring(2);
@@ -602,7 +899,7 @@ function saveNewPaymentMethod(methodData) {
         bgColor: methodData.bgColor,
         addedAt: new Date().toISOString()
     });
-    sessionStorage.setItem('csms_payment_methods', JSON.stringify(userPaymentMethods));
+    sessionStorage.setItem('cleanspark_payment_methods', JSON.stringify(userPaymentMethods));
 }
 
 // ----------------------------- SHOW PAYMENT METHODS -----------------------------
@@ -822,7 +1119,7 @@ function showPaymentSuccess(amount, methodName) {
             <h4 class="fw-bold mb-2">Payment Successful!</h4>
             <p class="text-muted mb-3">${amount} paid via ${methodName}</p>
             <div class="bg-light rounded-3 p-3 mb-3 text-start">
-                <small class="text-muted">Transaction ID: CSMS-${Date.now().toString(36).toUpperCase()}</small><br>
+                <small class="text-muted">Transaction ID: CleanSpark-${Date.now().toString(36).toUpperCase()}</small><br>
                 <small class="text-muted">Date: ${new Date().toLocaleString()}</small>
             </div>
             <button class="btn btn-primary rounded-pill px-4" onclick="this.closest('.payment-success-overlay').remove()">
@@ -836,14 +1133,12 @@ function showPaymentSuccess(amount, methodName) {
         if (e.target === overlay) overlay.remove();
     });
     
-    // Update bookings status for unpaid bookings
     setTimeout(() => {
         bookings.forEach(b => { 
             if (b.status === 'unpaid') { 
                 b.status = 'delivered'; 
             } 
         });
-        // Refresh payments panel if visible
         if (document.getElementById('outstandingList')) {
             loadOutstandingPayments();
         }
@@ -876,10 +1171,10 @@ function openQuoteViewer(quoteData) {
         <div class="quote-document" id="quoteDocumentContent">
             <div class="quote-doc-header">
                 <div class="quote-doc-company">
-                    <h3>CSMS</h3>
+                    <h3>CleanSpark</h3>
                     <p>Cleaning Service Management System</p>
                     <p>Stone Town, Zanzibar</p>
-                    <p>info@csms.co.tz | +255 777 123 456</p>
+                    <p>info@cleanspark.co.tz | +255 777 123 456</p>
                 </div>
                 <div class="quote-doc-number">
                     <div class="doc-label">Quote Number</div>
@@ -924,7 +1219,7 @@ function openQuoteViewer(quoteData) {
             <div class="quote-doc-footer">
                 <p><strong>Notes:</strong> ${escapeHtml(quoteData.notes)}</p>
                 <p class="mt-3"><strong>Terms:</strong> This quote is valid until the date specified above. Payment is due upon service completion. Cancellation within 24 hours may incur a 25% fee.</p>
-                <p class="mt-3 text-center text-muted">Thank you for choosing CSMS - Zanzibar's Premier Cleaning Service</p>
+                <p class="mt-3 text-center text-muted">Thank you for choosing CleanSpark - Zanzibar's Premier Cleaning Service</p>
             </div>
         </div>
     `;
@@ -932,7 +1227,6 @@ function openQuoteViewer(quoteData) {
     const quoteModal = new bootstrap.Modal(document.getElementById('quotePdfModal'));
     quoteModal.show();
 
-    // Add action buttons
     const actionsDiv = document.createElement('div');
     actionsDiv.innerHTML = `
         <div class="quote-actions-bar">
@@ -951,25 +1245,96 @@ function openQuoteViewer(quoteData) {
     `;
     bodyEl.appendChild(actionsDiv);
 
-    // Download functionality
+    // Download functionality with professional layout
     document.getElementById('downloadQuoteBtn')?.addEventListener('click', function() {
-        const quoteContent = document.getElementById('quoteDocumentContent');
-        if (!quoteContent) return;
+        const printContent = `
+            <div style="font-family: 'Inter', 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; background: white;">
+                <!-- Logo Header -->
+                <div style="text-align: center; margin-bottom: 30px; padding-bottom: 25px; border-bottom: 3px solid #4361ee;">
+                    <div style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; margin-bottom: 15px;">
+                        <span style="font-size: 2rem; font-weight: 800; color: white; letter-spacing: 2px;">✨ CleanSpark</span>
+                    </div>
+                    <p style="color: #6c757d; margin: 5px 0; font-size: 0.9rem;">Cleaning Service Management System</p>
+                    <p style="color: #6c757d; font-size: 0.8rem;">Stone Town, Zanzibar | info@cleanspark.co.tz | +255 777 123 456</p>
+                </div>
+                
+                <!-- Quote Title -->
+                <div style="text-align: center; margin: 25px 0;">
+                    <h2 style="color: #1e1e2f; font-weight: 800; margin: 0;">PROFESSIONAL QUOTE</h2>
+                    <p style="color: #4361ee; font-weight: 600; font-size: 1.1rem; margin-top: 5px;">Quote #${escapeHtml(quoteData.id)}</p>
+                </div>
+                
+                <!-- Status & Info -->
+                <div style="display: flex; justify-content: space-between; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <div style="flex: 1; min-width: 200px; background: #f8fafc; border-radius: 12px; padding: 20px;">
+                        <h4 style="color: #4361ee; font-weight: 700; margin: 0 0 12px 0; font-size: 1rem;">Client Information</h4>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Name:</strong> John Doe</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Email:</strong> john.doe@example.com</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Service:</strong> ${escapeHtml(quoteData.service)}</p>
+                    </div>
+                    <div style="flex: 1; min-width: 200px; background: #f8fafc; border-radius: 12px; padding: 20px;">
+                        <h4 style="color: #4361ee; font-weight: 700; margin: 0 0 12px 0; font-size: 1rem;">Quote Details</h4>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Date Issued:</strong> ${escapeHtml(quoteData.date)}</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Valid Until:</strong> ${escapeHtml(quoteData.validUntil)}</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Status:</strong> ${quoteData.status.toUpperCase()}</p>
+                    </div>
+                </div>
+                
+                <!-- Items Table -->
+                <table style="width: 100%; border-collapse: collapse; margin: 25px 0;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <th style="padding: 12px 16px; text-align: left; font-size: 0.85rem; font-weight: 600;">Description</th>
+                            <th style="padding: 12px 16px; text-align: center; font-size: 0.85rem; font-weight: 600;">Qty</th>
+                            <th style="padding: 12px 16px; text-align: right; font-size: 0.85rem; font-weight: 600;">Rate</th>
+                            <th style="padding: 12px 16px; text-align: right; font-size: 0.85rem; font-weight: 600;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${quoteData.items.map((item, index) => `
+                            <tr style="background: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #eef2f8;">
+                                <td style="padding: 10px 16px; font-size: 0.9rem;">${escapeHtml(item.description)}</td>
+                                <td style="padding: 10px 16px; text-align: center; font-size: 0.9rem;">${item.quantity}</td>
+                                <td style="padding: 10px 16px; text-align: right; font-size: 0.9rem;">${item.rate}</td>
+                                <td style="padding: 10px 16px; text-align: right; font-weight: 600; font-size: 0.9rem;">${item.amount}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                
+                <!-- Total -->
+                <div style="text-align: right; margin: 20px 0; padding: 15px 20px; background: #f0f4ff; border-radius: 10px;">
+                    <span style="font-size: 1.3rem; font-weight: 800; color: #4361ee;">Total: ${quoteData.total}</span>
+                </div>
+                
+                <!-- Notes & Terms -->
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <p style="font-size: 0.85rem; color: #6c757d;"><strong>Notes:</strong> ${escapeHtml(quoteData.notes)}</p>
+                    <p style="font-size: 0.85rem; color: #6c757d;"><strong>Terms:</strong> This quote is valid until the date specified above. Payment is due upon service completion.</p>
+                </div>
+                
+                <!-- Footer -->
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                    <p style="color: #6c757d; font-size: 0.9rem;">Thank you for choosing CleanSpark - Zanzibar's Premier Cleaning Service</p>
+                    <p style="color: #94a3b8; font-size: 0.75rem;">&copy; 2026 CleanSpark. All rights reserved. | www.cleanspark.co.tz</p>
+                </div>
+            </div>
+        `;
         
-        const content = quoteContent.innerHTML;
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
             <html>
                 <head>
-                    <title>Quote #${quoteData.id} - CSMS</title>
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+                    <title>Quote #${quoteData.id} - CleanSpark</title>
                     <style>
-                        body { font-family: 'Inter', sans-serif; padding: 40px; }
-                        @media print { body { padding: 20px; } }
+                        @media print {
+                            body { margin: 0; padding: 20px; }
+                            @page { margin: 10mm; }
+                        }
+                        body { margin: 0; padding: 20px; font-family: 'Inter', 'Segoe UI', sans-serif; }
                     </style>
                 </head>
-                <body>${content}</body>
+                <body>${printContent}</body>
             </html>
         `);
         printWindow.document.close();
@@ -979,45 +1344,14 @@ function openQuoteViewer(quoteData) {
 
     // Share functionality
     document.getElementById('shareQuoteBtn')?.addEventListener('click', function() {
-        const shareBodyHtml = `
-            <div class="text-center">
-                <p class="mb-3">Share Quote #${escapeHtml(quoteData.id)}</p>
-                <div class="share-options">
-                    <button class="share-option whatsapp" title="Share via WhatsApp" onclick="window.open('https://wa.me/?text=Quote%20%23${quoteData.id}%20from%20CSMS')">
-                        <i class="fab fa-whatsapp"></i>
-                    </button>
-                    <button class="share-option email" title="Share via Email" onclick="window.location.href='mailto:?subject=Quote%20%23${quoteData.id}%20-%20CSMS&body=Please%20find%20attached%20quote%20%23${quoteData.id}%20for%20${encodeURIComponent(quoteData.service)}'">
-                        <i class="fas fa-envelope"></i>
-                    </button>
-                    <button class="share-option sms" title="Share via SMS">
-                        <i class="fas fa-sms"></i>
-                    </button>
-                    <button class="share-option copy" title="Copy Link" id="copyQuoteLinkBtn">
-                        <i class="fas fa-link"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        const shareModal = openGlobalModal(
-            '<i class="bi bi-share-fill me-2"></i>Share Quote',
-            shareBodyHtml,
-            '<button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>'
-        );
-        
-        document.getElementById('copyQuoteLinkBtn')?.addEventListener('click', function() {
-            navigator.clipboard.writeText(`https://csms.co.tz/quotes/${quoteData.id}`).then(() => {
-                showNotification('Quote link copied to clipboard!', 'success');
-                if (shareModal) shareModal.hide();
-            });
-        });
+        quoteModal.hide();
+        openShareModal(quoteData);
     });
 
     // Approve functionality
     document.getElementById('approveQuoteBtn')?.addEventListener('click', function() {
-        quoteData.status = 'approved';
         quoteModal.hide();
-        showNotification('Quote #' + quoteData.id + ' approved successfully!', 'success');
-        setTimeout(() => renderPanel('quotes'), 500);
+        openApproveQuoteModal(quoteData);
     });
 }
 
@@ -1056,7 +1390,7 @@ function openStaffModal(bookingId) {
         </div>
         <div class="staff-details-body">
             <div class="staff-info-card">
-                <div class="staff-info-row"><div class="staff-info-icon icon-blue"><i class="bi bi-telephone-fill"></i></div><div><span class="staff-info-label">Phone</span><span class="staff-info-value">${escapeHtml(staff.phone)}</span></div></div>
+                <div class="staff-info-row"><div class="staff-info-icon icon-blue"><i class="bi bi-telephone-fill"></i></div><div><span class="staff-info-label">Phone</span><span class="staff-info-value"><a href="tel:${staff.phone.replace(/\s+/g, '')}" style="color: var(--dark-color); text-decoration: none;">${escapeHtml(staff.phone)}</a></span></div></div>
                 <div class="staff-info-row"><div class="staff-info-icon icon-green"><i class="bi bi-briefcase-fill"></i></div><div><span class="staff-info-label">Experience</span><span class="staff-info-value">${escapeHtml(staff.experience)}</span></div></div>
                 <div class="staff-info-row"><div class="staff-info-icon icon-purple"><i class="bi bi-award-fill"></i></div><div><span class="staff-info-label">Specialization</span><span class="staff-info-value">${escapeHtml(staff.specialization)}</span></div></div>
                 <div class="staff-info-row"><div class="staff-info-icon icon-orange"><i class="bi bi-calendar3"></i></div><div><span class="staff-info-label">Service Date</span><span class="staff-info-value">${escapeHtml(booking.date)}</span></div></div>
@@ -1259,7 +1593,7 @@ function loadBookings(type) {
                 </div>
                 <hr>
                 <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-muted-custom"><i class="bi bi-chat-left-text"></i> Reference: CSMS-${booking.id}</small>
+                    <small class="text-muted-custom"><i class="bi bi-chat-left-text"></i> Reference: CleanSpark-${booking.id}</small>
                     ${booking.status === 'delivered' && !hasRated ? `<span style="font-size:0.78rem;color:var(--primary-color);font-weight:600;"><i class="bi bi-star me-1"></i>Tap to rate</span>` : ''}
                 </div>
                 <span class="click-hint"><i class="bi bi-eye"></i> View staff details</span>
@@ -1433,17 +1767,21 @@ const panelRenderers = {
         </div>
     `,
 
-    terms: () => `
-        <div class="section-header"><h1 class="page-title"><i class="bi bi-file-earmark-text text-primary me-2"></i>Terms & Conditions</h1></div>
-        <div class="settings-card text-center p-5">
-            <i class="bi bi-check2-circle text-success" style="font-size: 4rem;"></i>
-            <h4 class="fw-bold mt-3">Review Our Service Agreement</h4>
-            <p class="text-muted">Please take a moment to read our updated Terms & Conditions and Privacy Policy.</p>
-            <button class="btn btn-primary rounded-pill px-5 py-2 mt-3" id="openTermsModalBtn">
-                <i class="bi bi-file-earmark-text me-2"></i> Read Terms & Conditions
-            </button>
-        </div>
-    `,
+    terms: () => {
+        const hasAgreed = sessionStorage.getItem('cleanspark_terms_agreed') === 'true';
+        return `
+            <div class="section-header"><h1 class="page-title"><i class="bi bi-file-earmark-text text-primary me-2"></i>Terms & Conditions</h1></div>
+            <div class="settings-card text-center p-5">
+                ${hasAgreed ? '<i class="bi bi-check2-circle text-success" style="font-size: 4rem;"></i>' : '<i class="bi bi-file-earmark-text text-primary" style="font-size: 4rem;"></i>'}
+                <h4 class="fw-bold mt-3">${hasAgreed ? 'Terms & Conditions Accepted' : 'Review Our Service Agreement'}</h4>
+                <p class="text-muted">${hasAgreed ? 'You have already agreed to our Terms & Conditions. You can review them anytime below.' : 'Please take a moment to read our updated Terms & Conditions and Privacy Policy.'}</p>
+                <button class="btn btn-primary rounded-pill px-5 py-2 mt-3" id="openTermsModalBtn">
+                    <i class="bi bi-file-earmark-text me-2"></i> ${hasAgreed ? 'View Terms & Conditions' : 'Read Terms & Conditions'}
+                </button>
+                ${hasAgreed ? '<p class="text-success mt-2" style="font-size: 0.8rem;"><i class="bi bi-check-circle-fill me-1"></i> Agreed on ' + (sessionStorage.getItem('cleanspark_terms_agreed_date') || 'N/A') + '</p>' : ''}
+            </div>
+        `;
+    },
 
     delete: () => `
         <div class="section-header"><h1 class="page-title text-danger"><i class="bi bi-trash3 me-2"></i>Delete My Tracking</h1></div>
@@ -1478,14 +1816,13 @@ const panelRenderers = {
 function renderPanel(menuType) {
     const renderer = panelRenderers[menuType];
     if (!renderer) {
-        DOM.dynamicPanel.innerHTML = `<div class="empty-state"><i class="bi bi-grid"></i><h4>CSMS Dashboard</h4><p>Select an option from the menu</p></div>`;
+        DOM.dynamicPanel.innerHTML = `<div class="empty-state"><i class="bi bi-grid"></i><h4>CleanSpark Dashboard</h4><p>Select an option from the menu</p></div>`;
         return;
     }
 
     DOM.dynamicPanel.innerHTML = renderer();
     closeSidebar();
 
-    // Post-render actions
     setTimeout(() => {
         switch(menuType) {
             case 'bookings':
@@ -1516,13 +1853,25 @@ function renderPanel(menuType) {
                 const historyList = document.getElementById('paymentHistoryList');
                 if (historyList) {
                     historyList.innerHTML = paymentHistory.map(p => `
-                        <div class="payment-card">
+                        <div class="payment-card" style="cursor: pointer;" data-payment-id="${p.id}">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div><h6 class="fw-bold mb-1">${escapeHtml(p.service)}</h6><span class="text-muted small">${p.date} · ${p.method}</span></div>
-                                <span class="fw-bold text-success">${p.amount}</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fw-bold text-success">${p.amount}</span>
+                                    <i class="bi bi-chevron-right text-muted"></i>
+                                </div>
                             </div>
                         </div>
                     `).join('');
+                    
+                    // Add click handlers for payment history
+                    historyList.querySelectorAll('.payment-card').forEach(card => {
+                        card.addEventListener('click', function() {
+                            const paymentId = this.dataset.paymentId;
+                            const payment = paymentHistory.find(p => p.id === paymentId);
+                            if (payment) openPaymentDetailsModal(payment);
+                        });
+                    });
                 }
                 break;
                 
@@ -1545,9 +1894,9 @@ function renderPanel(menuType) {
                             </div>
                             <div class="mt-3 p-3 bg-light rounded-3" id="callUsDetails" style="display:none;">
                                 <h6 class="fw-bold"><i class="bi bi-headset me-2"></i>Customer Support Hours</h6>
-                                <p class="mb-1"><strong>General Line:</strong> +255 777 123 456</p>
-                                <p class="mb-1"><strong>Emergency (24/7):</strong> +255 800 111 222</p>
-                                <p class="mb-1"><strong>WhatsApp:</strong> +255 712 345 678</p>
+                                <p class="mb-1"><strong>General Line:</strong> <a href="tel:+255777123456" style="color: var(--dark-color);">+255 777 123 456</a></p>
+                                <p class="mb-1"><strong>Emergency (24/7):</strong> <a href="tel:+255800111222" style="color: var(--dark-color);">+255 800 111 222</a></p>
+                                <p class="mb-1"><strong>WhatsApp:</strong> <a href="https://wa.me/255712345678" target="_blank" style="color: var(--dark-color);">+255 712 345 678</a></p>
                                 <p class="mb-0 small text-muted">Available Mon-Sat: 8AM - 8PM (EAT)</p>
                             </div>
                         </div>
@@ -1559,8 +1908,8 @@ function renderPanel(menuType) {
                             </div>
                             <div class="mt-3 p-3 bg-light rounded-3" id="emailSupportDetails" style="display:none;">
                                 <h6 class="fw-bold"><i class="bi bi-envelope-open me-2"></i>Email Contacts</h6>
-                                <p class="mb-1"><strong>General:</strong> <a href="mailto:info@csms.co.tz">info@csms.co.tz</a></p>
-                                <p class="mb-1"><strong>Billing:</strong> <a href="mailto:billing@csms.co.tz">billing@csms.co.tz</a></p>
+                                <p class="mb-1"><strong>General:</strong> <a href="mailto:info@cleanspark.co.tz" style="color: var(--dark-color);">info@cleanspark.co.tz</a></p>
+                                <p class="mb-1"><strong>Billing:</strong> <a href="mailto:billing@cleanspark.co.tz" style="color: var(--dark-color);">billing@cleanspark.co.tz</a></p>
                                 <p class="mb-0 small text-muted">Response time: Within 2-4 hours</p>
                             </div>
                         </div>
@@ -1609,34 +1958,80 @@ function renderPanel(menuType) {
                 
             case 'terms':
                 document.getElementById('openTermsModalBtn')?.addEventListener('click', () => {
+                    const hasAgreed = sessionStorage.getItem('cleanspark_terms_agreed') === 'true';
                     const bodyHtml = `
                         <div class="terms-scroll">
-                            <h5 class="terms-section-title">1. Service Agreement</h5>
-                            <p>By engaging CSMS, you agree to these terms designed for a transparent and professional relationship.</p>
-                            <h5 class="terms-section-title">2. Cancellation & Rescheduling</h5>
-                            <p>Free cancellation up to 24 hours before service. Late cancellations may incur a 25% fee.</p>
-                            <h5 class="terms-section-title">3. Quality Guarantee</h5>
-                            <p>100% satisfaction guaranteed. Report issues within 12 hours for free re-service.</p>
-                            <h5 class="terms-section-title">4. Payment Terms</h5>
-                            <p>Payment due upon completion. We accept mobile money, Visa, and Mastercard.</p>
+                            <h5 class="terms-section-title">1. Introduction</h5>
+                            <p>Welcome to CleanSpark. By accessing or using our cleaning services, you agree to be bound by these Terms and Conditions. Please read them carefully before engaging our services. These terms constitute a legally binding agreement between you ("the Client") and CleanSpark ("the Company," "we," "us," or "our"), registered in Stone Town, Zanzibar.</p>
+                            
+                            <h5 class="terms-section-title">2. Services Provided</h5>
+                            <p>CleanSpark provides professional residential and commercial cleaning services including but not limited to: deep cleaning, carpet cleaning, office cleaning, sanitization services, AC maintenance, upholstery cleaning, and specialized cleaning solutions. All services are performed by trained and vetted professionals in accordance with industry standards.</p>
+                            
+                            <h5 class="terms-section-title">3. Booking and Scheduling</h5>
+                            <p>Clients may book services through our website, mobile application, or by contacting our customer support team. Bookings are confirmed upon receipt of a confirmation notification. We reserve the right to reschedule services due to unforeseen circumstances, and will provide reasonable notice when possible.</p>
+                            
+                            <h5 class="terms-section-title">4. Cancellation & Rescheduling</h5>
+                            <p>Free cancellation is available up to 24 hours before the scheduled service time. Cancellations made less than 24 hours in advance may incur a cancellation fee of 25% of the service cost. Rescheduling is subject to availability and must be requested at least 12 hours before the scheduled service.</p>
+                            
+                            <h5 class="terms-section-title">5. Pricing and Payment</h5>
+                            <p>All prices are quoted in Tanzanian Shillings (TZS) and are inclusive of applicable taxes unless otherwise stated. Payment is due upon completion of services unless alternative arrangements have been made. We accept mobile money payments (M-Pesa, Airtel Money, Tigo Pesa, HaloPesa, Mix by Yas, Azam Pay), Visa, Mastercard, and American Express.</p>
+                            
+                            <h5 class="terms-section-title">6. Quality Guarantee</h5>
+                            <p>CleanSpark is committed to delivering exceptional service. We offer a 100% satisfaction guarantee. If you are not satisfied with the quality of our service, you must report the issue within 12 hours of service completion. We will re-clean the affected areas at no additional cost.</p>
+                            
+                            <h5 class="terms-section-title">7. Client Responsibilities</h5>
+                            <p>Clients are responsible for providing access to the premises at the scheduled time, securing pets, and removing any valuable or fragile items from areas to be cleaned. CleanSpark is not liable for damage to items that were not properly secured by the client.</p>
+                            
+                            <h5 class="terms-section-title">8. Insurance and Liability</h5>
+                            <p>CleanSpark maintains comprehensive liability insurance. In the unlikely event of damage to property caused by our staff during service delivery, clients must report such incidents within 24 hours. Our liability is limited to the cost of the service provided or the repair/replacement value of the damaged item, whichever is lower.</p>
+                            
+                            <h5 class="terms-section-title">9. Privacy and Data Protection</h5>
+                            <p>We collect and process personal information in accordance with applicable data protection laws. Client information is used solely for service delivery, billing, and communication purposes. We do not share personal information with third parties without consent, except as required by law.</p>
+                            
+                            <h5 class="terms-section-title">10. Staff Conduct</h5>
+                            <p>All CleanSpark staff undergo thorough background checks and training. Our team members are professional, courteous, and respectful. Any concerns regarding staff conduct should be reported immediately to our customer support team.</p>
+                            
+                            <h5 class="terms-section-title">11. Amendments</h5>
+                            <p>CleanSpark reserves the right to modify these Terms and Conditions at any time. Clients will be notified of material changes via email or through our platform. Continued use of our services after changes constitute acceptance of the updated terms.</p>
+                            
+                            <h5 class="terms-section-title">12. Governing Law</h5>
+                            <p>These Terms and Conditions are governed by the laws of the United Republic of Tanzania. Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the courts of Tanzania.</p>
+                            
+                            <h5 class="terms-section-title">13. Contact Information</h5>
+                            <p>For questions or concerns regarding these Terms and Conditions, please contact us at:<br>
+                            Email: info@cleanspark.co.tz<br>
+                            Phone: +255 777 123 456<br>
+                            Address: Stone Town, Zanzibar</p>
+                            
                             <p class="mt-4"><strong>Last Updated:</strong> March 15, 2026</p>
                         </div>
+                        ${!hasAgreed ? `
                         <div class="form-check mt-3">
                             <input class="form-check-input" type="checkbox" id="agreeTermsCheck">
-                            <label class="form-check-label fw-medium" for="agreeTermsCheck">I agree to the Terms & Conditions.</label>
+                            <label class="form-check-label fw-medium" for="agreeTermsCheck">I have read and agree to the Terms & Conditions.</label>
                         </div>
+                        ` : ''}
                     `;
-                    const modal = openGlobalModal('<i class="bi bi-file-earmark-text me-2"></i>Terms & Conditions', bodyHtml,
-                        `<button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Back</button>
-                         <button class="btn btn-primary rounded-pill px-4" id="confirmAgreeBtn" disabled>I Agree</button>`);
-                    const checkbox = document.getElementById('agreeTermsCheck');
-                    const agreeBtn = document.getElementById('confirmAgreeBtn');
-                    if (checkbox && agreeBtn) {
-                        checkbox.addEventListener('change', () => { agreeBtn.disabled = !checkbox.checked; });
-                        agreeBtn.addEventListener('click', () => {
-                            if (modal) modal.hide();
-                            showNotification('✅ Thank you! You have agreed to the Terms.', 'success');
-                        });
+                    const footerHtml = !hasAgreed 
+                        ? `<button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                           <button class="btn btn-primary rounded-pill px-4" id="confirmAgreeBtn" disabled>I Agree</button>`
+                        : `<button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>`;
+                    
+                    const modal = openGlobalModal('<i class="bi bi-file-earmark-text me-2"></i>Terms & Conditions', bodyHtml, footerHtml);
+                    
+                    if (!hasAgreed) {
+                        const checkbox = document.getElementById('agreeTermsCheck');
+                        const agreeBtn = document.getElementById('confirmAgreeBtn');
+                        if (checkbox && agreeBtn) {
+                            checkbox.addEventListener('change', () => { agreeBtn.disabled = !checkbox.checked; });
+                            agreeBtn.addEventListener('click', () => {
+                                if (modal) modal.hide();
+                                sessionStorage.setItem('cleanspark_terms_agreed', 'true');
+                                sessionStorage.setItem('cleanspark_terms_agreed_date', new Date().toLocaleDateString());
+                                showNotification('✅ Thank you! You have agreed to the Terms & Conditions.', 'success');
+                                setTimeout(() => renderPanel('terms'), 500);
+                            });
+                        }
                     }
                 });
                 break;
@@ -1670,7 +2065,7 @@ function renderPanel(menuType) {
                 break;
                 
             case 'logout':
-                const userData = JSON.parse(sessionStorage.getItem('csms_user') || '{"name":"John Doe","email":"john.doe@example.com"}');
+                const userData = JSON.parse(sessionStorage.getItem('cleanspark_user') || '{"name":"John Doe","email":"john.doe@example.com"}');
                 const logoutNameEl = document.getElementById('logoutUserName');
                 const logoutEmailEl = document.getElementById('logoutUserEmail');
                 if (logoutNameEl) logoutNameEl.textContent = userData.name;
@@ -1681,7 +2076,7 @@ function renderPanel(menuType) {
                         '<i class="bi bi-box-arrow-right me-2"></i>Confirm Logout',
                         `<div class="text-center">
                             <i class="bi bi-box-arrow-right text-warning" style="font-size: 3rem;"></i>
-                            <h5 class="fw-bold mt-3">Sign Out of CSMS?</h5>
+                            <h5 class="fw-bold mt-3">Sign Out of CleanSpark?</h5>
                             <p class="text-muted">You are logged in as <strong>${userData.name}</strong>.</p>
                         </div>`,
                         `<button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
@@ -1756,7 +2151,6 @@ function initDashboard() {
         });
     }
 
-    // Load default panel
     renderPanel('bookings');
     const bookingsMenuItem = document.querySelector('.menu li[data-menu="bookings"]');
     if (bookingsMenuItem && DOM.menuItems) {
@@ -1768,18 +2162,14 @@ function initDashboard() {
 // ----------------------------- INITIALIZATION -----------------------------
 
 function init() {
-    // Check if user is logged in
-    const isLoggedIn = sessionStorage.getItem('csms_loggedIn') === 'true';
+    const isLoggedIn = sessionStorage.getItem('cleanspark_loggedIn') === 'true';
     
     if (isLoggedIn) {
         initDashboard();
     }
     
-    // Add demo login buttons to overlay if present
     const overlay = document.getElementById('loginRequiredOverlay');
     if (overlay && !isLoggedIn) {
-        // The overlay already has login/register links in HTML
-        // We can add a quick demo login button
         const card = overlay.querySelector('.login-required-card');
         if (card) {
             const demoBtn = document.createElement('button');
@@ -1805,5 +2195,9 @@ window.openGlobalModal = openGlobalModal;
 window.showPaymentMethods = showPaymentMethods;
 window.simulateLogin = simulateLogin;
 window.logoutUser = logoutUser;
+window.openQuoteViewer = openQuoteViewer;
+window.openShareModal = openShareModal;
+window.openApproveQuoteModal = openApproveQuoteModal;
+window.openPaymentDetailsModal = openPaymentDetailsModal;
 
 document.addEventListener('DOMContentLoaded', init);

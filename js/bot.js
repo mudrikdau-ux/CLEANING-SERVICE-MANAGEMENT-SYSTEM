@@ -1,756 +1,827 @@
 // ========================================
-// CSMS CHATBOT - Professional Customer Assistant
-// Version: 2.0 | For Customer Use Only
-// Integrated with Tracking Dashboard
+// CLEANSPARK CHATBOT - Intelligent Assistant
+// Professional, Context-Aware, Fully Featured
 // ========================================
 
-class CSMSChatbot {
-    constructor() {
-        this.isOpen = false;
-        this.messages = [];
-        this.isTyping = false;
-        this.typingTimeout = null;
-        this.currentResponseDelay = null;
-        this.conversationContext = {};
-        this.ratingGiven = false;
-        
-        // Bot knowledge base
-        this.knowledgeBase = this.initKnowledgeBase();
-        
-        // Quick replies mapping
-        this.quickReplies = [
-            { text: "💬 Services & Pricing", intent: "pricing" },
-            { text: "📍 Locations Served", intent: "locations" },
-            { text: "📅 How to Book", intent: "booking_guide" },
-            { text: "💰 Payment Methods", intent: "payment" },
-            { text: "🕐 Working Hours", intent: "hours" },
-            { text: "❓ Contact Support", intent: "contact" }
-        ];
-        
-        this.init();
+class CleanSparkChatbot {
+  constructor() {
+    // Core State
+    this.isOpen = false;
+    this.messages = [];
+    this.isTyping = false;
+    this.conversationContext = {
+      userName: null,
+      lastIntent: null,
+      messageCount: 0,
+    };
+    this.ratingGiven = false;
+
+    // System Configuration
+    this.config = {
+      botName: 'CleanSpark Assistant',
+      companyName: 'CleanSpark',
+      supportPhone: '+255 777 123 456',
+      supportEmail: 'info@cleanspark.co.tz',
+      supportHours: 'Mon-Sat: 8:00 AM - 8:00 PM',
+      emergencyLine: '+255 800 111 222',
+      responseDelayMin: 600,
+      responseDelayMax: 1200,
+    };
+
+    // Initialize Knowledge Base & Response Rules
+    this.initSystemPrompt();
+    this.initKnowledgeBase();
+    this.initResponseRules();
+
+    // Quick Actions
+    this.quickActions = [
+      { icon: '🧹', text: 'Services & Pricing', intent: 'pricing' },
+      { icon: '📍', text: 'Service Areas', intent: 'locations' },
+      { icon: '📅', text: 'How to Book', intent: 'booking_guide' },
+      { icon: '💳', text: 'Payment Methods', intent: 'payment' },
+      { icon: '🕐', text: 'Working Hours', intent: 'hours' },
+      { icon: '📞', text: 'Contact Support', intent: 'contact' },
+    ];
+
+    this.init();
+  }
+
+  // ==================== SYSTEM PROMPT ====================
+  initSystemPrompt() {
+    this.systemPrompt = {
+      role: `You are ${this.config.botName}, a professional AI chatbot for CleanSpark, a cleaning services management system based in Zanzibar.`,
+      responsibilities: [
+        'Answer customer questions about services, bookings, pricing, and website usage',
+        'Guide users on how to book, track services, and manage their account',
+        'Provide clear and helpful support at all times',
+      ],
+      style: [
+        'Friendly, professional, and polite',
+        'Clear and concise (avoid long paragraphs)',
+        'Helpful and solution-oriented',
+      ],
+      rules: [
+        'Only answer based on CleanSpark information provided',
+        'Do not make up information',
+        'If unsure, direct the user to contact support',
+        'Always prioritize helping the user complete their task (booking, tracking, etc.)',
+      ],
+    };
+  }
+
+  // ==================== KNOWLEDGE BASE ====================
+  initKnowledgeBase() {
+    this.knowledgeBase = {
+      company: {
+        name: 'CleanSpark',
+        tagline: 'Zanzibar\'s Premier Cleaning Service',
+        founded: 2020,
+        location: 'Stone Town, Zanzibar',
+        description:
+          'Professional and reliable cleaning solutions for homes and businesses across Zanzibar.',
+        mission:
+          'To deliver spotless, healthy spaces through trusted, eco-friendly cleaning services.',
+        team: '50+ trained, background-checked professionals.',
+      },
+      services: [
+        {
+          name: 'Home Cleaning',
+          price: 'From TZS 50,000',
+          duration: '2-3 hours',
+          desc: 'Complete home cleaning including kitchen, bathrooms, and living areas.',
+        },
+        {
+          name: 'Office Cleaning',
+          price: 'From TZS 75,000',
+          duration: '3-4 hours',
+          desc: 'Professional office cleaning to maintain hygiene and productivity.',
+        },
+        {
+          name: 'Deep Cleaning',
+          price: 'From TZS 100,000',
+          duration: '4-6 hours',
+          desc: 'Intensive top-to-bottom cleaning for a truly fresh space.',
+        },
+        {
+          name: 'Carpet & Upholstery',
+          price: 'From TZS 60,000',
+          duration: '1-2 hours',
+          desc: 'Steam cleaning and stain removal for carpets and furniture.',
+        },
+        {
+          name: 'Window Cleaning',
+          price: 'From TZS 40,000',
+          duration: '1-2 hours',
+          desc: 'Streak-free window cleaning inside and out.',
+        },
+        {
+          name: 'Post-Construction',
+          price: 'From TZS 90,000',
+          duration: '4-6 hours',
+          desc: 'Complete cleanup after renovation or construction.',
+        },
+      ],
+      locations: [
+        'Stone Town',
+        'Mbweni',
+        'Fumba',
+        'Kiwengwa',
+        'Nungwi',
+        'Paje',
+        'Jambiani',
+        'Michenzani',
+      ],
+      pricing: {
+        note: 'Pricing varies based on space size and specific requirements.',
+        freeEstimate: true,
+        discountWeekly: '5% off',
+        discountMonthly: '10% off',
+      },
+      booking: {
+        steps: [
+          '1. Register or log in to your account',
+          '2. Choose your desired service',
+          '3. Select date and time',
+          '4. Provide location details',
+          '5. Confirm and complete booking',
+        ],
+        tracking:
+          'Log in and go to your Dashboard to track your booking status in real-time.',
+        cancellation:
+          'Free cancellation up to 24 hours before service.',
+      },
+      payment: [
+        'M-Pesa',
+        'Airtel Money',
+        'Tigo Pesa',
+        'Visa/Mastercard',
+        'Bank Transfer',
+        'Cash (+5,000 TZS fee)',
+      ],
+      contact: {
+        phone: '+255 777 123 456',
+        whatsapp: '+255 777 123 456',
+        email: 'info@cleanspark.co.tz',
+        address: 'Stone Town, Zanzibar, Tanzania',
+      },
+      faq: {
+        ecoFriendly:
+          'Yes! We use environmentally safe, non-toxic cleaning products.',
+        insured: 'All staff are fully insured and bonded for your peace of mind.',
+        satisfaction:
+          '100% satisfaction guarantee. Report issues within 12 hours for free re-service.',
+      },
+    };
+  }
+
+  // ==================== RESPONSE RULES ====================
+  initResponseRules() {
+    this.responseRules = {
+      booking:
+        'Explain steps clearly: Register → Login → Book Service. Mention that tracking is available on the Dashboard.',
+      tracking:
+        'Tell them to log in and go to Dashboard to track booking status.',
+      pricing:
+        'Explain that pricing varies based on size and requirements. Offer a free quote.',
+      services:
+        'List main services: Home Cleaning, Office Cleaning, Deep Cleaning, Carpet & Upholstery, Window Cleaning, Post-Construction.',
+      unclear: 'Ask a clarifying question to better understand their needs.',
+      outsideScope:
+        'Politely say you only assist with CleanSpark services and provide contact info for further help.',
+      closing:
+        'Always end with a helpful suggestion or offer further assistance.',
+    };
+  }
+
+  // ==================== INITIALIZATION ====================
+  init() {
+    this.createUI();
+    this.attachEvents();
+    this.loadHistory();
+    this.setupOutsideClick();
+
+    // Auto-open for first-time visitors after short delay
+    if (!sessionStorage.getItem('cleanspark_chatbot_opened')) {
+      setTimeout(() => {
+        if (!this.isOpen) this.toggleWindow(true);
+      }, 2500);
+      sessionStorage.setItem('cleanspark_chatbot_opened', 'true');
     }
-    
-    initKnowledgeBase() {
-        return {
-            company: {
-                name: "CSMS (Cleaning Service Management System)",
-                founded: 2020,
-                location: "Stone Town, Zanzibar",
-                description: "Zanzibar's premier cleaning service provider offering professional and reliable cleaning solutions for homes and businesses.",
-                mission: "To provide reliable, high-quality cleaning services that enhance the comfort, health, and well-being of our customers.",
-                team: "50+ trained professionals, all background-checked and certified."
-            },
-            
-            services: [
-                { name: "Home Cleaning", price: "TZS 50,000", duration: "2-3 hours", description: "Complete home cleaning including kitchen, bathrooms, and living areas.", features: ["Eco-friendly products", "All rooms covered", "Surface disinfecting"] },
-                { name: "Office Cleaning", price: "TZS 75,000", duration: "3-4 hours", description: "Professional office cleaning to maintain hygiene and productivity.", features: ["Workstation cleaning", "Conference rooms", "After-hours available"] },
-                { name: "Carpet Cleaning", price: "TZS 60,000", duration: "1-2 hours/room", description: "Deep carpet cleaning with steam technology.", features: ["Stain removal", "Deodorizing", "Quick-dry"] },
-                { name: "Window Cleaning", price: "TZS 40,000", duration: "1-2 hours", description: "Streak-free window cleaning for homes and offices.", features: ["Interior/exterior", "Frame wiping", "Safety equipment"] },
-                { name: "Vehicle Cleaning", price: "TZS 45,000", duration: "1-2 hours", description: "Complete interior and exterior vehicle cleaning.", features: ["Wash and wax", "Interior vacuuming", "Tire shine"] },
-                { name: "Pool Cleaning", price: "TZS 80,000", duration: "2-3 hours", description: "Professional pool cleaning and maintenance.", features: ["Chemical balancing", "Filter cleaning", "Surface skimming"] },
-                { name: "Mattress Cleaning", price: "TZS 55,000", duration: "1 hour/mattress", description: "Deep cleaning to remove dust mites and allergens.", features: ["UV sanitization", "Stain treatment", "Deodorizing"] },
-                { name: "Upholstery Cleaning", price: "TZS 65,000", duration: "2-3 hours", description: "Professional cleaning for sofas and furniture.", features: ["Fabric protection", "Stain removal", "Quick drying"] },
-                { name: "Post-Construction", price: "TZS 90,000", duration: "4-6 hours", description: "Complete cleaning after construction work.", features: ["Dust removal", "Debris cleanup", "Final polish"] },
-                { name: "Hotel & Airbnb", price: "TZS 100,000", duration: "2-4 hours", description: "Fast turnover cleaning for short-stay properties.", features: ["Linen change", "Kitchen cleaning", "Same-day service"] },
-                { name: "Laundry & Ironing", price: "TZS 54,000", duration: "24-hour turnaround", description: "Professional laundry and ironing service.", features: ["Free pickup/delivery", "Stain treatment", "Delicate care"] },
-                { name: "Pest Control", price: "TZS 54,000", duration: "1-2 hours", description: "Safe and effective pest elimination.", features: ["Child/pet safe", "6-month guarantee", "Follow-up included"] },
-                { name: "Event Setup & Cleanup", price: "TZS 90,000", duration: "3-6 hours", description: "Full event support from setup to cleanup.", features: ["Furniture arrangement", "Decoration setup", "Waste disposal"] },
-                { name: "AC & Refrigerator", price: "TZS 45,000", duration: "1-2 hours", description: "Cleaning and maintenance of AC units and fridges.", features: ["Filter cleaning", "Coil cleaning", "Performance check"] },
-                { name: "Industrial Cleaning", price: "TZS 100,000", duration: "4-8 hours", description: "Heavy-duty cleaning for factories and warehouses.", features: ["Floor degreasing", "High-pressure washing", "Safety-compliant"] },
-                { name: "Water Tank Cleaning", price: "TZS 70,000", duration: "2-3 hours", description: "Professional tank cleaning and sanitization.", features: ["Sludge removal", "Disinfection", "Water testing"] },
-                { name: "Curtain Cleaning", price: "TZS 40,000", duration: "2-3 hours", description: "Gentle cleaning for all curtain types.", features: ["Machine washing", "Steam ironing", "Rehanging service"] },
-                { name: "Garden Cleaning", price: "TZS 55,000", duration: "2-4 hours", description: "Professional garden maintenance.", features: ["Lawn mowing", "Weed removal", "Waste disposal"] }
-            ],
-            
-            locations: {
-                served: ["Stone Town", "Ngambo", "Mbweni", "Fumba", "Kiwengwa", "Nungwi", "Paje", "Jambiani", "Michenzani", "Zanzibar University", "ZSSF"],
-                unguja: "All areas in Unguja island are served",
-                pemba: "Limited service in Pemba - call for availability",
-                response_time: "Typically arrives within 1-2 hours of scheduled time",
-                travel_fee: "No travel fees within Stone Town area"
-            },
-            
-            pricing: {
-                base_rate: "20,000 TZS per cleaner per hour",
-                materials_fee: "10,000 TZS if materials are provided",
-                cash_fee: "5,000 TZS extra for cash payments",
-                weekly_discount: "5% off for weekly subscriptions",
-                monthly_discount: "10% off for monthly subscriptions",
-                free_estimate: "Free on-site estimates available"
-            },
-            
-            hours: {
-                customer_support: "Mon-Sat: 8:00 AM - 8:00 PM",
-                phone_hours: "Mon-Fri: 8:00 AM - 6:00 PM",
-                emergency: "24/7 emergency line: +255 800 111 222",
-                booking_cutoff: "Book at least 24 hours in advance for best availability"
-            },
-            
-            booking: {
-                steps: [
-                    "1. Choose your service type and preferences",
-                    "2. Select date and time",
-                    "3. Provide your location details",
-                    "4. Enter your contact information",
-                    "5. Choose payment method and complete booking"
-                ],
-                requirements: [
-                    "Clear access to the area being cleaned",
-                    "Working electricity and water supply",
-                    "Safe parking for our team's vehicle"
-                ],
-                cancellation_policy: "Free cancellation up to 24 hours before service. Late cancellations may incur a 25% fee.",
-                link: "Visit our Services page to start booking"
-            },
-            
-            payment_methods: [
-                { name: "M-Pesa", type: "Mobile Money", fee: "No extra fee" },
-                { name: "Airtel Money", type: "Mobile Money", fee: "No extra fee" },
-                { name: "Tigo Pesa", type: "Mobile Money", fee: "No extra fee" },
-                { name: "Visa/Mastercard", type: "Card", fee: "No extra fee" },
-                { name: "Bank Transfer", type: "Bank", fee: "No extra fee" },
-                { name: "Cash", type: "Cash", fee: "+5,000 TZS" }
-            ],
-            
-            contact: {
-                phone: "+255 777 123 456",
-                whatsapp: "+255 777 123 456",
-                email: "info@csms.co.tz",
-                support_email: "support@csms.co.tz",
-                address: "Stone Town, Zanzibar, Tanzania",
-                website: "www.csms.co.tz"
-            },
-            
-            faq: {
-                response_time: "We typically respond to messages within 2-4 hours on business days.",
-                eco_friendly: "Yes! We use environmentally safe, non-toxic cleaning products that are safe for families and pets.",
-                insured: "Yes, all staff are fully insured and bonded for your peace of mind.",
-                satisfaction: "We offer a 100% satisfaction guarantee. Report issues within 12 hours for free re-service.",
-                staff_training: "All staff undergo rigorous training and background checks before joining our team.",
-                equipment: "We bring all necessary cleaning equipment and supplies to each job."
-            }
-        };
-    }
-    
-    init() {
-        this.createChatbotUI();
-        this.attachEventListeners();
-        this.loadFromStorage();
-        
-        // Auto-open after 3 seconds on first visit
-        if (!sessionStorage.getItem('chatbot_opened')) {
-            setTimeout(() => {
-                if (!this.isOpen) this.toggleChatbot();
-            }, 3000);
-            sessionStorage.setItem('chatbot_opened', 'true');
-        }
-    }
-    
-    createChatbotUI() {
-        // Create floating button if not exists
-        if (!document.querySelector('.chatbot-button')) {
-            const btn = document.createElement('div');
-            btn.className = 'chatbot-button';
-            btn.innerHTML = `
-                <i class="fas fa-comment-dots"></i>
-                <span class="notification-badge">●</span>
-            `;
-            document.body.appendChild(btn);
-            this.button = btn;
-        }
-        
-        // Create container if not exists
-        if (!document.querySelector('.chatbot-container')) {
-            const container = document.createElement('div');
-            container.className = 'chatbot-container closed';
-            container.innerHTML = `
-                <div class="chatbot-header">
-                    <div class="chatbot-header-info">
-                        <div class="chatbot-avatar">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="chatbot-header-text">
-                            <h4>CSMS Assistant</h4>
-                            <p>Here to help 24/7</p>
-                        </div>
-                    </div>
-                    <button class="chatbot-close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="chatbot-status">
-                    <span class="status-dot"></span>
-                    <span>Online • Usually replies in seconds</span>
-                </div>
-                <div class="chatbot-messages"></div>
-                <div class="quick-replies" id="quickReplies"></div>
-                <div class="chatbot-input-area">
-                    <input type="text" class="chatbot-input" placeholder="Type your message..." autocomplete="off">
-                    <button class="chatbot-send">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-                <div class="scroll-to-bottom" id="scrollToBottom">
-                    <i class="fas fa-arrow-down"></i>
-                </div>
-            `;
-            document.body.appendChild(container);
-            this.container = container;
-            
-            // Add suggested questions section
-            const suggestedDiv = document.createElement('div');
-            suggestedDiv.className = 'suggested-questions';
-            suggestedDiv.innerHTML = `
-                <div class="suggested-title">
-                    <i class="fas fa-lightbulb"></i> Suggested Questions
-                </div>
-                <div class="suggested-buttons" id="suggestedButtons"></div>
-            `;
-            this.container.querySelector('.chatbot-messages').after(suggestedDiv);
-            this.populateSuggestedQuestions();
-        }
-        
-        this.button = document.querySelector('.chatbot-button');
-        this.container = document.querySelector('.chatbot-container');
-        this.messagesContainer = this.container.querySelector('.chatbot-messages');
-        this.input = this.container.querySelector('.chatbot-input');
-        this.sendBtn = this.container.querySelector('.chatbot-send');
-        this.closeBtn = this.container.querySelector('.chatbot-close');
-        this.quickRepliesContainer = this.container.querySelector('#quickReplies');
-        this.scrollBtn = this.container.querySelector('#scrollToBottom');
-    }
-    
-    populateSuggestedQuestions() {
-        const container = document.getElementById('suggestedButtons');
-        if (!container) return;
-        
-        const suggestions = [
-            { text: "📋 What services do you offer?", query: "What services do you offer?" },
-            { text: "💰 How much does home cleaning cost?", query: "How much does home cleaning cost?" },
-            { text: "📍 Do you serve my area?", query: "Do you serve my area?" },
-            { text: "📅 How do I book?", query: "How do I book a service?" },
-            { text: "🕐 What are your hours?", query: "What are your business hours?" }
-        ];
-        
-        container.innerHTML = suggestions.map(s => 
-            `<button class="suggested-btn" data-query="${this.escapeHtml(s.query)}">${s.text}</button>`
-        ).join('');
-        
-        container.querySelectorAll('.suggested-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.input.value = btn.dataset.query;
-                this.sendMessage();
-            });
-        });
-    }
-    
-    attachEventListeners() {
-        this.button.addEventListener('click', () => this.toggleChatbot());
-        this.closeBtn.addEventListener('click', () => this.toggleChatbot());
-        this.sendBtn.addEventListener('click', () => this.sendMessage());
-        this.input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.sendMessage();
-        });
-        
-        // Scroll to bottom button
-        this.messagesContainer.addEventListener('scroll', () => {
-            const isNearBottom = this.messagesContainer.scrollHeight - this.messagesContainer.scrollTop - this.messagesContainer.clientHeight < 100;
-            this.scrollBtn.classList.toggle('visible', !isNearBottom);
-        });
-        
-        this.scrollBtn.addEventListener('click', () => this.scrollToBottom());
-        
-        // Close on escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isOpen) this.toggleChatbot();
-        });
-    }
-    
-    toggleChatbot() {
-        this.isOpen = !this.isOpen;
-        this.container.classList.toggle('closed', !this.isOpen);
-        
-        if (this.isOpen && this.messages.length === 0) {
-            this.addWelcomeMessage();
-        } else if (this.isOpen) {
-            this.scrollToBottom();
-        }
-    }
-    
-    addWelcomeMessage() {
-        const welcomeMessages = [
-            "👋 Hello! I'm CSMS Assistant, your cleaning service expert!",
-            "✨ I can help you with service details, pricing, booking, and more.",
-            "💬 What would you like to know about our cleaning services today?"
-        ];
-        
-        let index = 0;
-        const showNext = () => {
-            if (index < welcomeMessages.length) {
-                this.addMessage(welcomeMessages[index], 'bot');
-                index++;
-                setTimeout(showNext, 800);
-            } else {
-                this.showQuickReplies();
-            }
-        };
-        showNext();
-    }
-    
-    showQuickReplies() {
-        this.quickRepliesContainer.innerHTML = this.quickReplies.map(qr => 
-            `<button class="quick-reply-btn" data-intent="${qr.intent}">${qr.text}</button>`
-        ).join('');
-        
-        this.quickRepliesContainer.querySelectorAll('.quick-reply-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const intent = btn.dataset.intent;
-                this.handleIntent(intent);
-            });
-        });
-    }
-    
-    handleIntent(intent) {
-        switch(intent) {
-            case 'pricing':
-                this.showPricingInfo();
-                break;
-            case 'locations':
-                this.showLocationsInfo();
-                break;
-            case 'booking_guide':
-                this.showBookingGuide();
-                break;
-            case 'payment':
-                this.showPaymentInfo();
-                break;
-            case 'hours':
-                this.showHoursInfo();
-                break;
-            case 'contact':
-                this.showContactInfo();
-                break;
-            default:
-                this.processUserMessage(this.quickReplies.find(q => q.intent === intent)?.text || '');
-        }
-    }
-    
-    async sendMessage() {
-        const message = this.input.value.trim();
-        if (!message) return;
-        
-        this.addMessage(message, 'user');
-        this.input.value = '';
-        this.hideQuickReplies();
-        
-        await this.simulateTyping();
-        this.processUserMessage(message);
-    }
-    
-    addMessage(text, sender) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message message-${sender}`;
-        
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        messageDiv.innerHTML = `
-            <div class="message-bubble">${this.formatMessage(text)}</div>
-            <div class="message-time">${time}</div>
-        `;
-        
-        this.messagesContainer.appendChild(messageDiv);
+  }
+
+  createUI() {
+    // Create FAB button
+    const fab = document.createElement('button');
+    fab.className = 'cleanspark-chatbot-fab';
+    fab.setAttribute('aria-label', 'Open chat support');
+    fab.innerHTML = `
+      <span class="cleanspark-chatbot-fab-pulse"></span>
+      <svg class="cleanspark-chatbot-fab-icon" viewBox="0 0 24 24">
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/>
+        <path d="M7 9h10v2H7zm0 3h7v2H7z"/>
+      </svg>
+      <span class="cleanspark-chatbot-fab-dot"></span>
+    `;
+    document.body.appendChild(fab);
+    this.fab = fab;
+
+    // Create Chat Window
+    const window = document.createElement('div');
+    window.className = 'cleanspark-chatbot-window closed';
+    window.innerHTML = `
+      <div class="cleanspark-chatbot-header">
+        <div class="cleanspark-chatbot-brand">
+          <div class="cleanspark-chatbot-logo">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <div class="cleanspark-chatbot-brand-text">
+            <h4>${this.config.botName}</h4>
+            <span>Online · Replies instantly</span>
+          </div>
+        </div>
+        <div class="cleanspark-chatbot-header-actions">
+          <button class="cleanspark-chatbot-header-btn cleanspark-chatbot-close" aria-label="Close chat">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="cleanspark-chatbot-messages" id="cleansparkMessages"></div>
+      <div class="cleanspark-chatbot-quick-actions" id="cleansparkQuickActions"></div>
+      <div class="cleanspark-chatbot-input-area">
+        <input type="text" class="cleanspark-chatbot-input" placeholder="Type your message..." autocomplete="off" id="cleansparkInput">
+        <button class="cleanspark-chatbot-send-btn" aria-label="Send message" id="cleansparkSendBtn">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      <div class="cleanspark-chatbot-scroll-btn" id="cleansparkScrollBtn">
+        <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+      </div>
+    `;
+    document.body.appendChild(window);
+    this.window = window;
+
+    // Cache elements
+    this.messagesContainer = document.getElementById('cleansparkMessages');
+    this.input = document.getElementById('cleansparkInput');
+    this.sendBtn = document.getElementById('cleansparkSendBtn');
+    this.closeBtn = this.window.querySelector('.cleanspark-chatbot-close');
+    this.quickActionsContainer = document.getElementById(
+      'cleansparkQuickActions'
+    );
+    this.scrollBtn = document.getElementById('cleansparkScrollBtn');
+  }
+
+  attachEvents() {
+    this.fab.addEventListener('click', () => this.toggleWindow());
+    this.closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggleWindow(false);
+    });
+    this.sendBtn.addEventListener('click', () => this.handleSend());
+    this.input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') this.handleSend();
+    });
+
+    // Scroll to bottom detection
+    this.messagesContainer.addEventListener('scroll', () => {
+      const threshold = 80;
+      const isNearBottom =
+        this.messagesContainer.scrollHeight -
+          this.messagesContainer.scrollTop -
+          this.messagesContainer.clientHeight <
+        threshold;
+      this.scrollBtn.classList.toggle('visible', !isNearBottom);
+    });
+    this.scrollBtn.addEventListener('click', () => this.scrollToBottom());
+
+    // Escape key to close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isOpen) this.toggleWindow(false);
+    });
+  }
+
+  setupOutsideClick() {
+    document.addEventListener('click', (e) => {
+      if (
+        this.isOpen &&
+        !this.window.contains(e.target) &&
+        !this.fab.contains(e.target)
+      ) {
+        // Optional: close on outside click. Uncomment if desired.
+        // this.toggleWindow(false);
+      }
+    });
+  }
+
+  // ==================== UI ACTIONS ====================
+  toggleWindow(forceState = null) {
+    this.isOpen = forceState !== null ? forceState : !this.isOpen;
+
+    if (this.isOpen) {
+      this.window.classList.remove('closed');
+      this.fab.classList.add('open');
+      if (this.messages.length === 0) {
+        this.showWelcomeSequence();
+      } else {
+        this.renderQuickActions();
         this.scrollToBottom();
-        
-        this.messages.push({ text, sender, time });
-        this.saveToStorage();
+      }
+      this.input.focus();
+    } else {
+      this.window.classList.add('closed');
+      this.fab.classList.remove('open');
     }
-    
-    formatMessage(text) {
-        // Convert URLs to links
-        let formatted = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
-        
-        // Convert email to mailto
-        formatted = formatted.replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, '<a href="mailto:$1">$1</a>');
-        
-        // Convert phone numbers
-        formatted = formatted.replace(/(\+255\s?\d{3}\s?\d{3}\s?\d{3})/g, '<a href="tel:$1">$1</a>');
-        
-        // Handle line breaks
-        formatted = formatted.replace(/\n/g, '<br>');
-        
-        // Format bold text
-        formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        
-        // Format lists
-        formatted = formatted.replace(/•\s/g, '<br>• ');
-        
-        return formatted;
-    }
-    
-    async simulateTyping() {
-        this.isTyping = true;
-        const typingDiv = document.createElement('div');
-        typingDiv.className = 'message message-bot typing';
-        typingDiv.innerHTML = `
-            <div class="typing-indicator">
-                <span></span><span></span><span></span>
-            </div>
-        `;
-        this.messagesContainer.appendChild(typingDiv);
+  }
+
+  handleSend() {
+    const text = this.input.value.trim();
+    if (!text || this.isTyping) return;
+
+    this.addMessage(text, 'user');
+    this.input.value = '';
+    this.conversationContext.messageCount++;
+
+    this.simulateTyping().then(() => {
+      this.processMessage(text);
+    });
+  }
+
+  // ==================== MESSAGING ====================
+  addMessage(text, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `cleanspark-chatbot-message ${sender}`;
+    const time = new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    messageDiv.innerHTML = `
+      <div class="cleanspark-chatbot-bubble">${this.formatText(text)}</div>
+      <div class="cleanspark-chatbot-time">${time}</div>
+    `;
+
+    this.messagesContainer.appendChild(messageDiv);
+    this.scrollToBottom();
+
+    this.messages.push({ text, sender, time });
+    this.saveHistory();
+  }
+
+  formatText(text) {
+    let formatted = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    formatted = formatted.replace(/\n/g, '<br>');
+    formatted = formatted.replace(
+      /\*\*(.*?)\*\*/g,
+      '<strong>$1</strong>'
+    );
+    formatted = formatted.replace(
+      /(https?:\/\/[^\s]+)/g,
+      '<a href="$1" target="_blank" rel="noopener">$1</a>'
+    );
+    formatted = formatted.replace(
+      /(\+255\s?\d{3}\s?\d{3}\s?\d{3})/g,
+      '<a href="tel:$1">$1</a>'
+    );
+    return formatted;
+  }
+
+  async simulateTyping() {
+    this.isTyping = true;
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'cleanspark-chatbot-message bot';
+    typingDiv.innerHTML = `
+      <div class="cleanspark-chatbot-typing">
+        <span class="cleanspark-chatbot-typing-dot"></span>
+        <span class="cleanspark-chatbot-typing-dot"></span>
+        <span class="cleanspark-chatbot-typing-dot"></span>
+      </div>
+    `;
+    this.messagesContainer.appendChild(typingDiv);
+    this.scrollToBottom();
+
+    const delay =
+      Math.random() *
+        (this.config.responseDelayMax - this.config.responseDelayMin) +
+      this.config.responseDelayMin;
+    await new Promise((resolve) => setTimeout(resolve, delay));
+
+    typingDiv.remove();
+    this.isTyping = false;
+  }
+
+  botResponse(text) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'cleanspark-chatbot-message bot';
+    const time = new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const bubble = document.createElement('div');
+    bubble.className = 'cleanspark-chatbot-bubble';
+    messageDiv.appendChild(bubble);
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'cleanspark-chatbot-time';
+    timeDiv.textContent = time;
+    messageDiv.appendChild(timeDiv);
+
+    this.messagesContainer.appendChild(messageDiv);
+
+    // Typing effect
+    const words = text.split(' ');
+    let index = 0;
+    const typeNext = () => {
+      if (index < words.length) {
+        bubble.innerHTML = this.formatText(
+          words.slice(0, index + 1).join(' ')
+        );
+        index++;
         this.scrollToBottom();
-        
-        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-        
-        typingDiv.remove();
-        this.isTyping = false;
+        setTimeout(typeNext, 25 + Math.random() * 20);
+      } else {
+        this.messages.push({ text, sender: 'bot', time });
+        this.saveHistory();
+        this.renderQuickActions();
+      }
+    };
+    typeNext();
+  }
+
+  // ==================== INTENT PROCESSING ====================
+  processMessage(text) {
+    const lower = text.toLowerCase();
+    let response = null;
+
+    // Greetings
+    if (
+      this.matchKeywords(lower, [
+        'hello',
+        'hi',
+        'hey',
+        'greetings',
+        'good morning',
+        'good afternoon',
+      ])
+    ) {
+      response = `👋 Hello! Welcome to **${this.config.companyName}**. How can I assist you with our cleaning services today?`;
+      this.conversationContext.lastIntent = 'greeting';
     }
-    
-    processUserMessage(message) {
-        const lowerMsg = message.toLowerCase();
-        let response = null;
-        
-        // Check for greeting
-        if (this.matchesAny(lowerMsg, ['hello', 'hi', 'hey', 'greetings', 'good morning', 'good afternoon'])) {
-            response = "👋 Hello! Welcome to CSMS Cleaning Services. How can I help you today?";
-        }
-        
-        // Services info
-        else if (this.matchesAny(lowerMsg, ['service', 'services', 'what do you do', 'cleaning services', 'offer', 'list'])) {
-            response = this.getServicesList();
-        }
-        
-        // Specific service pricing
-        else if (this.matchesAny(lowerMsg, ['home cleaning', 'house cleaning', 'residential'])) {
-            response = this.getServiceDetails('Home Cleaning');
-        }
-        else if (this.matchesAny(lowerMsg, ['office cleaning', 'commercial cleaning', 'corporate'])) {
-            response = this.getServiceDetails('Office Cleaning');
-        }
-        else if (this.matchesAny(lowerMsg, ['carpet cleaning', 'carpet'])) {
-            response = this.getServiceDetails('Carpet Cleaning');
-        }
-        else if (this.matchesAny(lowerMsg, ['window cleaning', 'windows'])) {
-            response = this.getServiceDetails('Window Cleaning');
-        }
-        else if (this.matchesAny(lowerMsg, ['vehicle cleaning', 'car cleaning', 'auto cleaning'])) {
-            response = this.getServiceDetails('Vehicle Cleaning');
-        }
-        else if (this.matchesAny(lowerMsg, ['pool cleaning', 'pool'])) {
-            response = this.getServiceDetails('Pool Cleaning');
-        }
-        else if (this.matchesAny(lowerMsg, ['mattress cleaning', 'mattress'])) {
-            response = this.getServiceDetails('Mattress Cleaning');
-        }
-        else if (this.matchesAny(lowerMsg, ['upholstery', 'sofa', 'couch', 'furniture cleaning'])) {
-            response = this.getServiceDetails('Upholstery Cleaning');
-        }
-        
-        // Pricing
-        else if (this.matchesAny(lowerMsg, ['price', 'pricing', 'cost', 'how much', 'rates', 'fee', 'fees', 'expensive', 'cheap'])) {
-            response = this.getPricingInfo();
-        }
-        
-        // Locations
-        else if (this.matchesAny(lowerMsg, ['location', 'area', 'serve', 'where', 'zanzibar', 'unguja', 'pemba', 'stone town', 'mbweni', 'nungwi', 'kivunge', 'paje'])) {
-            response = this.getLocationInfo();
-        }
-        
-        // Booking
-        else if (this.matchesAny(lowerMsg, ['book', 'booking', 'schedule', 'appointment', 'reserve', 'how to book', 'reservation'])) {
-            response = this.getBookingInfo();
-        }
-        
-        // Payment
-        else if (this.matchesAny(lowerMsg, ['payment', 'pay', 'mobile money', 'mpesa', 'airtel', 'card', 'cash', 'visa', 'mastercard', 'bank transfer'])) {
-            response = this.getPaymentInfo();
-        }
-        
-        // Hours
-        else if (this.matchesAny(lowerMsg, ['hour', 'hours', 'time', 'working hours', 'business hours', 'open', 'closed', 'when', 'available'])) {
-            response = this.getHoursInfo();
-        }
-        
-        // Contact
-        else if (this.matchesAny(lowerMsg, ['contact', 'support', 'help', 'phone', 'email', 'whatsapp', 'reach', 'talk', 'speak', 'call'])) {
-            response = this.getContactInfo();
-        }
-        
-        // Satisfaction guarantee
-        else if (this.matchesAny(lowerMsg, ['guarantee', 'satisfaction', 'refund', 're-service', 'not happy'])) {
-            response = "✅ **100% Satisfaction Guarantee!**\n\nIf you're not completely satisfied with our service, report any issues within 12 hours and we'll provide a free re-service at no extra cost. Your satisfaction is our priority!";
-        }
-        
-        // Eco-friendly
-        else if (this.matchesAny(lowerMsg, ['eco', 'green', 'environment', 'products', 'safe', 'non-toxic', 'chemicals'])) {
-            response = "🌿 **Eco-Friendly Commitment**\n\nWe use only environmentally safe, non-toxic cleaning products. Our solutions are:\n• Safe for children and pets\n• Biodegradable\n• Free from harsh chemicals\n• Effective yet gentle on surfaces";
-        }
-        
-        // Insurance
-        else if (this.matchesAny(lowerMsg, ['insurance', 'insured', 'bonded', 'liability', 'trust', 'safe'])) {
-            response = "🛡️ **Fully Insured & Bonded**\n\nAll CSMS staff members are:\n• Fully vetted with background checks\n• Covered by liability insurance\n• Bonded for your protection\n• Trained in safety protocols\n\nYou can trust our team completely!";
-        }
-        
-        // Cancellation
-        else if (this.matchesAny(lowerMsg, ['cancel', 'cancellation', 'change', 'reschedule', 'postpone'])) {
-            response = "📅 **Cancellation & Rescheduling Policy**\n\n• Free cancellation up to 24 hours before scheduled service\n• 25% fee for late cancellations (less than 24 hours)\n• Free rescheduling (subject to availability)\n• No-shows may incur full service charge\n\nContact us as soon as possible to make changes.";
-        }
-        
-        // Discounts
-        else if (this.matchesAny(lowerMsg, ['discount', 'offer', 'promo', 'deal', 'sale', 'cheap', 'affordable', 'special'])) {
-            response = "🎉 **Current Offers**\n\n• **Weekly Service**: 5% off regular pricing\n• **Monthly Service**: 10% off regular pricing\n• **Referral Program**: Get 15% off when you refer a friend\n• **First-time customer**: 10% off your first booking\n\nContact us to learn more about our loyalty programs!";
-        }
-        
-        // About company
-        else if (this.matchesAny(lowerMsg, ['about', 'company', 'csms', 'who are you', 'background', 'history', 'tell me about csms'])) {
-            response = `🏢 **About CSMS**\n\n${this.knowledgeBase.company.description}\n\n📅 **Founded**: ${this.knowledgeBase.company.founded}\n📍 **Location**: ${this.knowledgeBase.company.location}\n👥 **Team**: ${this.knowledgeBase.company.team}\n\n🎯 **Mission**: ${this.knowledgeBase.company.mission}`;
-        }
-        
-        // Thank you
-        else if (this.matchesAny(lowerMsg, ['thank', 'thanks', 'appreciate', 'grateful', 'thank you'])) {
-            response = "You're very welcome! 😊\n\nIs there anything else I can help you with? Feel free to ask about our services, pricing, or booking process.";
-        }
-        
-        // Rating request
-        else if (this.matchesAny(lowerMsg, ['rate', 'rating', 'feedback', 'review'])) {
-            response = this.getRatingPrompt();
-        }
-        
-        // Farewell
-        else if (this.matchesAny(lowerMsg, ['bye', 'goodbye', 'see you', 'exit', 'quit', 'good night'])) {
-            response = "👋 Thank you for chatting with CSMS Assistant! Have a wonderful day!\n\n💚 Remember, we're here whenever you need us. Come back anytime!";
-        }
-        
-        // Help
-        else if (this.matchesAny(lowerMsg, ['help', 'what can you do', 'assist', 'options'])) {
-            response = this.getHelpMessage();
-        }
-        
-        // Default response
-        else {
-            response = this.getHelpMessage();
-        }
-        
-        this.addResponseWithTyping(response);
+    // Services
+    else if (
+      this.matchKeywords(lower, [
+        'service',
+        'services',
+        'what do you offer',
+        'list',
+        'cleaning',
+      ])
+    ) {
+      response = this.getServicesResponse();
+      this.conversationContext.lastIntent = 'services';
     }
-    
-    addResponseWithTyping(response) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message message-bot`;
-        
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const bubbleDiv = document.createElement('div');
-        bubbleDiv.className = 'message-bubble';
-        
-        messageDiv.appendChild(bubbleDiv);
-        
-        const timeDiv = document.createElement('div');
-        timeDiv.className = 'message-time';
-        timeDiv.textContent = time;
-        messageDiv.appendChild(timeDiv);
-        
-        this.messagesContainer.appendChild(messageDiv);
-        
-        // Word-by-word typing effect
-        let words = response.split(' ');
-        let currentText = '';
-        let wordIndex = 0;
-        
-        const typeNextWord = () => {
-            if (wordIndex < words.length) {
-                currentText += (currentText ? ' ' : '') + words[wordIndex];
-                bubbleDiv.innerHTML = this.formatMessage(currentText);
-                wordIndex++;
-                this.scrollToBottom();
-                setTimeout(typeNextWord, 40 + Math.random() * 30);
-            } else {
-                this.messages.push({ text: response, sender: 'bot', time });
-                this.saveToStorage();
-                this.showQuickReplies();
-                if (!this.ratingGiven && this.messages.length > 10) {
-                    setTimeout(() => this.offerRating(), 2000);
-                }
-            }
+    // Pricing
+    else if (
+      this.matchKeywords(lower, [
+        'price',
+        'pricing',
+        'cost',
+        'how much',
+        'rates',
+        'fee',
+        'quote',
+      ])
+    ) {
+      response = this.getPricingResponse();
+      this.conversationContext.lastIntent = 'pricing';
+    }
+    // Locations
+    else if (
+      this.matchKeywords(lower, [
+        'location',
+        'area',
+        'where',
+        'serve',
+        'zanzibar',
+        'stone town',
+      ])
+    ) {
+      response = this.getLocationsResponse();
+      this.conversationContext.lastIntent = 'locations';
+    }
+    // Booking
+    else if (
+      this.matchKeywords(lower, [
+        'book',
+        'booking',
+        'schedule',
+        'appointment',
+        'reserve',
+        'how to book',
+      ])
+    ) {
+      response = this.getBookingResponse();
+      this.conversationContext.lastIntent = 'booking';
+    }
+    // Tracking
+    else if (
+      this.matchKeywords(lower, [
+        'track',
+        'tracking',
+        'status',
+        'my booking',
+        'where is my',
+      ])
+    ) {
+      response = this.getTrackingResponse();
+      this.conversationContext.lastIntent = 'tracking';
+    }
+    // Payment
+    else if (
+      this.matchKeywords(lower, [
+        'payment',
+        'pay',
+        'mpesa',
+        'airtel',
+        'card',
+        'cash',
+        'bank',
+      ])
+    ) {
+      response = this.getPaymentResponse();
+      this.conversationContext.lastIntent = 'payment';
+    }
+    // Hours
+    else if (
+      this.matchKeywords(lower, [
+        'hour',
+        'hours',
+        'time',
+        'open',
+        'closed',
+        'when',
+        'available',
+      ])
+    ) {
+      response = `🕐 **Operating Hours**\n\n📞 Customer Support: ${this.config.supportHours}\n🚨 Emergency: ${this.config.emergencyLine} (24/7)\n\nWe recommend booking at least 24 hours in advance for best availability.`;
+      this.conversationContext.lastIntent = 'hours';
+    }
+    // Contact
+    else if (
+      this.matchKeywords(lower, [
+        'contact',
+        'support',
+        'phone',
+        'email',
+        'whatsapp',
+        'reach',
+        'call',
+      ])
+    ) {
+      response = this.getContactResponse();
+      this.conversationContext.lastIntent = 'contact';
+    }
+    // FAQ
+    else if (this.matchKeywords(lower, ['eco', 'safe', 'products', 'green'])) {
+      response = `🌿 **Eco-Friendly**: ${this.knowledgeBase.faq.ecoFriendly}`;
+    } else if (
+      this.matchKeywords(lower, ['insurance', 'insured', 'bonded'])
+    ) {
+      response = `🛡️ **Insurance**: ${this.knowledgeBase.faq.insured}`;
+    } else if (
+      this.matchKeywords(lower, ['guarantee', 'satisfaction', 'refund'])
+    ) {
+      response = `✅ **Satisfaction Guarantee**: ${this.knowledgeBase.faq.satisfaction}`;
+    }
+    // Thank you
+    else if (
+      this.matchKeywords(lower, ['thank', 'thanks', 'appreciate'])
+    ) {
+      response = `You're very welcome! 😊 Is there anything else I can help you with?`;
+    }
+    // Farewell
+    else if (
+      this.matchKeywords(lower, ['bye', 'goodbye', 'see you'])
+    ) {
+      response = `👋 Thank you for chatting with **${this.config.botName}**! Have a sparkling clean day! ✨`;
+    }
+    // Fallback
+    else {
+      response = `I'm not sure I understood that completely. Could you please rephrase? I'm here to help with questions about our cleaning services, booking, pricing, or tracking.`;
+      this.conversationContext.lastIntent = 'unclear';
+    }
+
+    this.botResponse(response);
+
+    // Offer rating after several interactions
+    if (this.conversationContext.messageCount > 6 && !this.ratingGiven) {
+      setTimeout(() => this.offerRating(), 1500);
+    }
+  }
+
+  matchKeywords(text, keywords) {
+    return keywords.some((kw) => text.includes(kw));
+  }
+
+  // ==================== RESPONSE GENERATORS ====================
+  getServicesResponse() {
+    let msg = `🧹 **Our Cleaning Services**\n\n`;
+    this.knowledgeBase.services.forEach((s) => {
+      msg += `• **${s.name}** — ${s.price} (${s.duration})\n   ${s.desc}\n\n`;
+    });
+    msg += `Which service are you interested in? I can provide more details!`;
+    return msg;
+  }
+
+  getPricingResponse() {
+    return `💰 **Pricing Information**\n\n${this.knowledgeBase.pricing.note}\n\n✅ **Free Estimates** available!\n🎁 **Weekly**: ${this.knowledgeBase.pricing.discountWeekly}\n🎁 **Monthly**: ${this.knowledgeBase.pricing.discountMonthly}\n\nWould you like a quote for a specific service?`;
+  }
+
+  getLocationsResponse() {
+    const areas = this.knowledgeBase.locations.join(', ');
+    return `📍 **Service Areas in Zanzibar**\n\nWe proudly serve: ${areas}, and surrounding areas.\n\n🚗 No travel fees within Stone Town. Contact us to confirm availability in your specific location!`;
+  }
+
+  getBookingResponse() {
+    const steps = this.knowledgeBase.booking.steps.join('\n');
+    return `📅 **How to Book**\n\n${steps}\n\n⏱️ **Tracking**: ${this.knowledgeBase.booking.tracking}\n\n❌ **Cancellation**: ${this.knowledgeBase.booking.cancellation}\n\nReady to book? Visit our Services page to get started!`;
+  }
+
+  getTrackingResponse() {
+    return `🔍 **Track Your Booking**\n\n${this.knowledgeBase.booking.tracking}\n\nMake sure you're logged in to see real-time updates on your service status. Need further help? I'm here!`;
+  }
+
+  getPaymentResponse() {
+    const methods = this.knowledgeBase.payment.join(', ');
+    return `💳 **Accepted Payments**\n\nWe accept: ${methods}.\n\n🔒 All transactions are secure. Payment collected upon service completion.`;
+  }
+
+  getContactResponse() {
+    return `📞 **Contact CleanSpark**\n\n📱 Phone/WhatsApp: ${this.knowledgeBase.contact.phone}\n📧 Email: ${this.knowledgeBase.contact.email}\n📍 ${this.knowledgeBase.contact.address}\n\nWe're here to help! Reach out anytime.`;
+  }
+
+  // ==================== QUICK ACTIONS ====================
+  renderQuickActions() {
+    if (!this.quickActionsContainer) return;
+    this.quickActionsContainer.innerHTML = this.quickActions
+      .map(
+        (qa) =>
+          `<button class="cleanspark-chatbot-quick-btn" data-intent="${qa.intent}">${qa.icon} ${qa.text}</button>`
+      )
+      .join('');
+
+    this.quickActionsContainer.querySelectorAll('button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const intent = btn.dataset.intent;
+        this.triggerQuickAction(intent);
+      });
+    });
+  }
+
+  triggerQuickAction(intent) {
+    this.input.value = '';
+    let msg = '';
+    switch (intent) {
+      case 'pricing':
+        msg = 'Tell me about your pricing';
+        break;
+      case 'locations':
+        msg = 'What areas do you serve?';
+        break;
+      case 'booking_guide':
+        msg = 'How do I book a service?';
+        break;
+      case 'payment':
+        msg = 'What payment methods do you accept?';
+        break;
+      case 'hours':
+        msg = 'What are your working hours?';
+        break;
+      case 'contact':
+        msg = 'How can I contact support?';
+        break;
+      default:
+        return;
+    }
+    this.addMessage(msg, 'user');
+    this.conversationContext.messageCount++;
+    this.simulateTyping().then(() => this.processMessage(msg));
+  }
+
+  // ==================== RATING ====================
+  offerRating() {
+    if (this.ratingGiven) return;
+    this.ratingGiven = true;
+
+    const ratingDiv = document.createElement('div');
+    ratingDiv.className = 'cleanspark-chatbot-message bot';
+    ratingDiv.innerHTML = `
+      <div class="cleanspark-chatbot-bubble">
+        ⭐ **Rate our conversation**<br>
+        <div class="cleanspark-chatbot-rating">
+          ${[1, 2, 3, 4, 5]
+            .map((i) => `<button data-rating="${i}">☆</button>`)
+            .join('')}
+        </div>
+      </div>
+    `;
+    this.messagesContainer.appendChild(ratingDiv);
+    this.scrollToBottom();
+
+    const buttons = ratingDiv.querySelectorAll('button');
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b, idx) => {
+          b.textContent = idx < parseInt(btn.dataset.rating) ? '★' : '☆';
+          b.classList.toggle(
+            'active',
+            idx < parseInt(btn.dataset.rating)
+          );
+        });
+        setTimeout(() => {
+          const rating = parseInt(btn.dataset.rating);
+          const thanks =
+            rating >= 4
+              ? '🎉 Thank you for the great rating! We truly appreciate it.'
+              : '🙏 Thanks for your feedback! We are always improving.';
+          this.botResponse(thanks);
+        }, 400);
+      });
+    });
+  }
+
+  // ==================== WELCOME SEQUENCE ====================
+  showWelcomeSequence() {
+    const greetings = [
+      `👋 Hello! I'm **${this.config.botName}**, your personal cleaning service expert.`,
+      `✨ I can help you with service details, pricing, booking, tracking, and more.`,
+      `💬 How can I assist you today? Use the buttons below or type your question!`,
+    ];
+    let i = 0;
+    const next = () => {
+      if (i < greetings.length) {
+        this.botResponse(greetings[i]);
+        i++;
+        setTimeout(next, 900);
+      }
+    };
+    next();
+    this.renderQuickActions();
+  }
+
+  // ==================== UTILS ====================
+  scrollToBottom() {
+    if (this.messagesContainer) {
+      this.messagesContainer.scrollTop =
+        this.messagesContainer.scrollHeight;
+    }
+  }
+
+  saveHistory() {
+    try {
+      const data = {
+        messages: this.messages.slice(-40),
+        context: this.conversationContext,
+      };
+      localStorage.setItem('cleanspark_chat_history', JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  loadHistory() {
+    try {
+      const raw = localStorage.getItem('cleanspark_chat_history');
+      if (raw) {
+        const data = JSON.parse(raw);
+        this.messages = data.messages || [];
+        this.conversationContext = data.context || {
+          messageCount: 0,
         };
-        
-        typeNextWord();
-    }
-    
-    offerRating() {
-        if (this.ratingGiven) return;
-        this.ratingGiven = true;
-        
-        const ratingMsg = "💬 **How was your experience with me today?**\n\nRate our conversation:";
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message message-bot';
-        
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        messageDiv.innerHTML = `
-            <div class="message-bubble">
-                ${this.formatMessage(ratingMsg)}
-                <div class="bot-rating-stars" id="botRatingStars">
-                    <i class="far fa-star" data-rating="1"></i>
-                    <i class="far fa-star" data-rating="2"></i>
-                    <i class="far fa-star" data-rating="3"></i>
-                    <i class="far fa-star" data-rating="4"></i>
-                    <i class="far fa-star" data-rating="5"></i>
-                </div>
-            </div>
-            <div class="message-time">${time}</div>
-        `;
-        
-        this.messagesContainer.appendChild(messageDiv);
-        this.scrollToBottom();
-        
-        const stars = messageDiv.querySelectorAll('.bot-rating-stars i');
-        stars.forEach(star => {
-            star.addEventListener('click', () => {
-                const rating = parseInt(star.dataset.rating);
-                stars.forEach((s, i) => {
-                    if (i < rating) {
-                        s.className = 'fas fa-star active';
-                    } else {
-                        s.className = 'far fa-star';
-                    }
-                });
-                
-                setTimeout(() => {
-                    const thankMsg = rating >= 4 
-                        ? "🎉 Thank you so much for the wonderful rating! It means the world to us. Keep shining! ✨"
-                        : "🙏 Thank you for your honest feedback. We're always working to improve! 💪";
-                    this.addResponseWithTyping(thankMsg);
-                }, 500);
-            });
+        // Re-render past messages
+        this.messages.forEach((m) => {
+          const div = document.createElement('div');
+          div.className = `cleanspark-chatbot-message ${m.sender}`;
+          div.innerHTML = `
+            <div class="cleanspark-chatbot-bubble">${this.formatText(m.text)}</div>
+            <div class="cleanspark-chatbot-time">${m.time}</div>
+          `;
+          this.messagesContainer.appendChild(div);
         });
-    }
-    
-    matchesAny(text, keywords) {
-        return keywords.some(keyword => text.includes(keyword));
-    }
-    
-    getServicesList() {
-        let serviceList = "🧹 **Our Professional Cleaning Services**\n\n";
-        this.knowledgeBase.services.slice(0, 8).forEach(service => {
-            serviceList += `• **${service.name}** — ${service.price} (${service.duration})\n`;
-        });
-        serviceList += "\n✨ Plus many more specialized services! Ask me about a specific service for full details.";
-        return serviceList;
-    }
-    
-    getServiceDetails(name) {
-        const service = this.knowledgeBase.services.find(s => s.name === name);
-        if (!service) return this.getHelpMessage();
-        
-        return `🧹 **${service.name}**\n\n💰 **Price**: ${service.price}\n⏱️ **Duration**: ${service.duration}\n📝 **Description**: ${service.description}\n\n✅ **Includes**:\n${service.features.map(f => `• ${f}`).join('\n')}\n\nWould you like to book this service? Visit our Services page to schedule!`;
-    }
-    
-    getPricingInfo() {
-        return `💰 **CSMS Pricing Guide**\n\n• **Base Rate**: ${this.knowledgeBase.pricing.base_rate}\n• **Materials Fee**: ${this.knowledgeBase.pricing.materials_fee} (if provided by us)\n• **Cash Payment Fee**: ${this.knowledgeBase.pricing.cash_fee}\n• **Weekly Service**: ${this.knowledgeBase.pricing.weekly_discount}\n• **Monthly Service**: ${this.knowledgeBase.pricing.monthly_discount}\n• **Free Estimates**: ${this.knowledgeBase.pricing.free_estimate}\n\n💳 **Accepted Payments**: Mobile Money (M-PESA, Airtel, Tigo), Visa/Mastercard, Bank Transfer, Cash\n\nNeed a specific quote? Tell me which service you're interested in!`;
-    }
-    
-    getLocationInfo() {
-        return `📍 **Service Locations in Zanzibar**\n\n✅ **Areas We Serve**:\n${this.knowledgeBase.locations.served.slice(0, 8).map(area => `• ${area}`).join('\n')} + more\n\n🏝️ **Unguja**: ${this.knowledgeBase.locations.unguja}\n🌿 **Pemba**: ${this.knowledgeBase.locations.pemba}\n⏱️ **Response Time**: ${this.knowledgeBase.locations.response_time}\n\n🚗 **Travel Fee**: ${this.knowledgeBase.locations.travel_fee}\n\nIs your area listed? Let me know if you have questions about specific locations!`;
-    }
-    
-    getBookingInfo() {
-        return `📅 **How to Book a Service**\n\n**Steps**:\n${this.knowledgeBase.booking.steps.join('\n')}\n\n**Requirements**:\n${this.knowledgeBase.booking.requirements.join('\n')}\n\n❌ **Cancellation**: ${this.knowledgeBase.booking.cancellation_policy}\n\n🔗 **${this.knowledgeBase.booking.link}**\n\nWould you like me to guide you through the booking process?`;
-    }
-    
-    getPaymentInfo() {
-        let methods = "💳 **Accepted Payment Methods**\n\n";
-        this.knowledgeBase.payment_methods.forEach(m => {
-            methods += `• **${m.name}** (${m.type}) — ${m.fee}\n`;
-        });
-        methods += "\n🔒 All payments are secure and encrypted. We never store your payment information.\n\n💰 **Payment is collected upon service completion** (except for advance bookings).";
-        return methods;
-    }
-    
-    getHoursInfo() {
-        return `🕐 **CSMS Operating Hours**\n\n📞 **Customer Support**: ${this.knowledgeBase.hours.customer_support}\n📱 **Phone Support**: ${this.knowledgeBase.hours.phone_hours}\n🚨 **Emergency Line**: ${this.knowledgeBase.hours.emergency}\n⏰ **Booking Cutoff**: ${this.knowledgeBase.hours.booking_cutoff}\n\n✨ For urgent assistance outside hours, please call our emergency line or send an email and we'll respond first thing in the morning.`;
-    }
-    
-    getContactInfo() {
-        return `📞 **Contact CSMS**\n\n📱 **Phone**: ${this.knowledgeBase.contact.phone}\n💬 **WhatsApp**: ${this.knowledgeBase.contact.whatsapp}\n📧 **Email**: ${this.knowledgeBase.contact.email}\n📩 **Support**: ${this.knowledgeBase.contact.support_email}\n📍 **Address**: ${this.knowledgeBase.contact.address}\n🌐 **Website**: ${this.knowledgeBase.contact.website}\n\n⏰ We typically respond within 2-4 hours during business days.\n\nNeed immediate assistance? Call our hotline for urgent matters!`;
-    }
-    
-    getRatingPrompt() {
-        return "⭐ **We value your feedback!** ⭐\n\nYour ratings help us improve our services. If you've used our services, please leave a review on our website or contact page. For chat feedback, just click the stars above when prompted!\n\nThank you for helping CSMS grow! 🙏";
-    }
-    
-    getHelpMessage() {
-        return `🤖 **CSMS Assistant**\n\nI can help you with:\n\n💬 **Services & Pricing** — Learn about our cleaning services\n📍 **Service Areas** — Where we operate in Zanzibar\n📅 **Booking Process** — How to schedule a cleaning\n💰 **Payment Methods** — All accepted payment options\n🕐 **Hours of Operation** — When we're available\n📞 **Contact Information** — How to reach us\n\nJust type your question or use the quick reply buttons above!\n\nWhat would you like to know?`;
-    }
-    
-    showPricingInfo() {
-        this.addResponseWithTyping(this.getPricingInfo());
-    }
-    
-    showLocationsInfo() {
-        this.addResponseWithTyping(this.getLocationInfo());
-    }
-    
-    showBookingGuide() {
-        this.addResponseWithTyping(this.getBookingInfo());
-    }
-    
-    showPaymentInfo() {
-        this.addResponseWithTyping(this.getPaymentInfo());
-    }
-    
-    showHoursInfo() {
-        this.addResponseWithTyping(this.getHoursInfo());
-    }
-    
-    showContactInfo() {
-        this.addResponseWithTyping(this.getContactInfo());
-    }
-    
-    hideQuickReplies() {
-        this.quickRepliesContainer.innerHTML = '';
-    }
-    
-    scrollToBottom() {
-        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-    }
-    
-    escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.appendChild(document.createTextNode(str));
-        return div.innerHTML;
-    }
-    
-    saveToStorage() {
-        const saveData = {
-            messages: this.messages.slice(-50),
-            context: this.conversationContext,
-            timestamp: new Date().toISOString()
-        };
-        localStorage.setItem('csms_chat_history', JSON.stringify(saveData));
-    }
-    
-    loadFromStorage() {
-        const saved = localStorage.getItem('csms_chat_history');
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                this.messages = data.messages || [];
-                this.conversationContext = data.context || {};
-            } catch(e) {}
-        }
-    }
+        if (this.messages.length > 0) this.renderQuickActions();
+      }
+    } catch (e) {}
+  }
 }
 
-// Initialize chatbot when DOM is ready
+// ==================== GLOBAL INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
-    window.csmsChatbot = new CSMSChatbot();
+  window.cleansparkChatbot = new CleanSparkChatbot();
 });
 
-// Global function to open chatbot (for support card integration)
+// Global function for external triggers (e.g., "Live Chat" buttons)
 window.openChatbot = () => {
-    if (window.csmsChatbot && !window.csmsChatbot.isOpen) {
-        window.csmsChatbot.toggleChatbot();
-    } else if (window.csmsChatbot) {
-        window.csmsChatbot.toggleChatbot();
-    }
+  if (window.cleansparkChatbot) {
+    window.cleansparkChatbot.toggleWindow(true);
+  }
 };

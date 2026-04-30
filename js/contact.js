@@ -160,7 +160,7 @@ class ContactFormHandler {
     sendEmailSimulation(formData) {
         // Simulate email sending
         console.log('Email would be sent to admin:', {
-            to: 'info@csms.co.tz',
+            to: 'info@cleanspark.co.tz',
             from: formData.email,
             subject: `New Contact Form: ${formData.subject}`,
             message: `
@@ -286,6 +286,37 @@ class ContactFormHandler {
     }
 }
 
+// ========== WORKING HOURS 24/7 CARD FUNCTION ==========
+function showWorkingHoursCard() {
+    const overlay = document.getElementById('workingHoursOverlay');
+    const card = document.getElementById('workingHoursCard');
+    
+    if (overlay && card) {
+        overlay.classList.add('active');
+        card.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeWorkingHoursCard() {
+    const overlay = document.getElementById('workingHoursOverlay');
+    const card = document.getElementById('workingHoursCard');
+    
+    if (overlay && card) {
+        overlay.classList.remove('active');
+        card.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Close working hours card with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeWorkingHoursCard();
+        closeQuickContact();
+    }
+});
+
 // ========== QUICK CONTACT FUNCTION ==========
 function showQuickContact() {
     // Remove existing modal if any
@@ -313,7 +344,7 @@ function showQuickContact() {
                             <i class="fab fa-whatsapp"></i>
                             <span>WhatsApp</span>
                         </button>
-                        <button class="contact-option" onclick="window.location.href='mailto:info@csms.co.tz'">
+                        <button class="contact-option" onclick="window.location.href='mailto:info@cleanspark.co.tz'">
                             <i class="fas fa-envelope"></i>
                             <span>Email</span>
                         </button>
@@ -341,7 +372,7 @@ function closeQuickContact() {
 function sendQuickMessage() {
     const message = document.getElementById('quickMessage')?.value;
     if (message && message.trim()) {
-        window.location.href = `mailto:info@csms.co.tz?subject=Quick Message from CSMS Website&body=${encodeURIComponent(message.trim())}`;
+        window.location.href = `mailto:info@cleanspark.co.tz?subject=Quick Message from CleanSpark Website&body=${encodeURIComponent(message.trim())}`;
         closeQuickContact();
         setTimeout(() => {
             const handler = new ContactFormHandler();
@@ -439,3 +470,5 @@ window.closeQuickContact = closeQuickContact;
 window.sendQuickMessage = sendQuickMessage;
 window.openSidebar = openSidebar;
 window.closeSidebar = closeSidebar;
+window.showWorkingHoursCard = showWorkingHoursCard;
+window.closeWorkingHoursCard = closeWorkingHoursCard;
