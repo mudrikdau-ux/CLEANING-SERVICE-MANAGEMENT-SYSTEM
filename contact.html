@@ -15,7 +15,246 @@
 </head>
 <body>
 
-<!-- Right Sidebar -->
+<!-- FAQ Detail Modals -->
+<div class="faq-modal-overlay" id="faqModal1" onclick="closeFaqModal('faqModal1')">
+    <div class="faq-modal-container" onclick="event.stopPropagation()">
+        <div class="faq-modal-header">
+            <div class="faq-modal-icon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <div>
+                <h3>How quickly can I get a response?</h3>
+                <span class="faq-modal-badge">Response Time</span>
+            </div>
+            <button class="faq-modal-close" onclick="closeFaqModal('faqModal1')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="faq-modal-body">
+            <div class="faq-detail-answer">
+                <p>We take pride in our fast and efficient communication. Here's what you can expect when you reach out to CleanSpark:</p>
+                
+                <div class="faq-detail-points">
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>Standard Inquiries</h4>
+                            <p>We typically respond to all inquiries within <strong>24 hours</strong> during business days. Most emails receive a response within 2-4 hours.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>Phone Support</h4>
+                            <p>For urgent matters, please call <a href="tel:+255777123456">+255 777 123 456</a>. Our support line is available <strong>24/7</strong> for immediate assistance.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>Live Chat</h4>
+                            <p>Our live chat is available <strong>24/7</strong> for instant responses. No waiting required - connect with a representative immediately.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="faq-detail-cta">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Pro tip: For fastest response, include your service preference and preferred date/time in your message.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="faq-modal-overlay" id="faqModal2" onclick="closeFaqModal('faqModal2')">
+    <div class="faq-modal-container" onclick="event.stopPropagation()">
+        <div class="faq-modal-header">
+            <div class="faq-modal-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <h3>Do you offer emergency cleaning services?</h3>
+                <span class="faq-modal-badge emergency-badge">Emergency Services</span>
+            </div>
+            <button class="faq-modal-close" onclick="closeFaqModal('faqModal2')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="faq-modal-body">
+            <div class="faq-detail-answer">
+                <p>Yes, CleanSpark offers <strong>emergency cleaning services</strong> for those unexpected situations that can't wait. We understand that cleaning emergencies happen, and we're here to help whenever you need us.</p>
+                
+                <div class="faq-detail-points">
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon emergency-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>Rapid Response</h4>
+                            <p>Our emergency team can be dispatched immediately upon receiving your call. We aim to arrive at your location as quickly as possible.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon emergency-icon">
+                            <i class="fas fa-list-check"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>What Qualifies as Emergency?</h4>
+                            <p>Water damage cleanup, post-event cleaning, biohazard situations, unexpected guest arrivals, and urgent move-in/move-out cleaning.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon emergency-icon">
+                            <i class="fas fa-tag"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>Emergency Rates</h4>
+                            <p>Emergency services may include a small surcharge depending on the time and nature of the request. We'll always provide a clear quote before starting any work.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="faq-detail-cta emergency-cta">
+                    <i class="fas fa-phone-alt"></i>
+                    <span>For immediate emergency assistance, call our 24/7 hotline: <a href="tel:+255777123456">+255 777 123 456</a></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="faq-modal-overlay" id="faqModal3" onclick="closeFaqModal('faqModal3')">
+    <div class="faq-modal-container" onclick="event.stopPropagation()">
+        <div class="faq-modal-header">
+            <div class="faq-modal-icon">
+                <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <div>
+                <h3>What areas do you serve?</h3>
+                <span class="faq-modal-badge">Service Areas</span>
+            </div>
+            <button class="faq-modal-close" onclick="closeFaqModal('faqModal3')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="faq-modal-body">
+            <div class="faq-detail-answer">
+                <p>CleanSpark proudly serves <strong>all areas across Zanzibar</strong> and continues to expand our coverage. No matter where you are on the island, we're ready to provide our premium cleaning services.</p>
+                
+                <div class="faq-detail-points">
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon area-icon">
+                            <i class="fas fa-city"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>Main Service Areas</h4>
+                            <p>Stone Town, Ngambo, Mbweni, Kisauni, Mazizini, Mbweni, Chukwani, Migombani, and surrounding regions within Zanzibar.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon area-icon">
+                            <i class="fas fa-expand-arrows-alt"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>Expanding Coverage</h4>
+                            <p>We're continuously expanding our service area. If you're unsure whether we cover your location, contact us and we'll confirm availability.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon area-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>Travel Information</h4>
+                            <p>Our teams are strategically located across the island to ensure fast response times. For areas outside main zones, a small travel fee may apply.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="faq-detail-cta area-cta">
+                    <i class="fas fa-search-location"></i>
+                    <span>Not sure if we cover your area? <a href="tel:+255777123456">Call us</a> or fill out the contact form to check availability.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="faq-modal-overlay" id="faqModal4" onclick="closeFaqModal('faqModal4')">
+    <div class="faq-modal-container" onclick="event.stopPropagation()">
+        <div class="faq-modal-header">
+            <div class="faq-modal-icon">
+                <i class="fas fa-leaf"></i>
+            </div>
+            <div>
+                <h3>Are your cleaning products eco-friendly?</h3>
+                <span class="faq-modal-badge eco-badge-faq">Eco-Friendly</span>
+            </div>
+            <button class="faq-modal-close" onclick="closeFaqModal('faqModal4')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="faq-modal-body">
+            <div class="faq-detail-answer">
+                <p>Absolutely! Environmental responsibility is at the core of our operations. We use <strong>environmentally safe, non-toxic cleaning products</strong> that are safe for your family, pets, and the planet.</p>
+                
+                <div class="faq-detail-points">
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon eco-point-icon">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>Certified Green Products</h4>
+                            <p>All our cleaning solutions are biodegradable, phosphate-free, and made from plant-based ingredients. They meet international environmental standards.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon eco-point-icon">
+                            <i class="fas fa-baby"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>Safe for Everyone</h4>
+                            <p>Our products are safe for children, pets, and people with allergies or respiratory sensitivities. No harsh chemical residues left behind.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-detail-point">
+                        <div class="faq-detail-point-icon eco-point-icon">
+                            <i class="fas fa-recycle"></i>
+                        </div>
+                        <div class="faq-detail-point-content">
+                            <h4>Sustainable Practices</h4>
+                            <p>Beyond products, we use microfiber cloths to reduce waste, HEPA-filter vacuums for better air quality, and minimize water usage in our cleaning processes.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="eco-faq-badges">
+                    <span class="eco-faq-badge-item"><i class="fas fa-check-circle"></i> Biodegradable</span>
+                    <span class="eco-faq-badge-item"><i class="fas fa-check-circle"></i> Non-Toxic</span>
+                    <span class="eco-faq-badge-item"><i class="fas fa-check-circle"></i> Plant-Based</span>
+                    <span class="eco-faq-badge-item"><i class="fas fa-check-circle"></i> EcoCert</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Right Sidebar Navigation -->
 <div id="sidebar">
     <a href="javascript:void(0)" class="closebtn" onclick="closeSidebar()"><i class="fas fa-times"></i></a>
     <a href="index.html"><i class="fas fa-home"></i> Home</a>
@@ -32,6 +271,8 @@
 <!-- Top Bar -->
 <div class="top-bar">
     <a href="index.html"><img src="image/logo.jpeg" alt="CleanSpark Logo" class="logo"></a>
+
+    <div class="top-bar-spacer"></div>
 
     <a href="login.html" class="btn btn-primary" id="headerLoginBtn"><i class="fas fa-sign-in-alt"></i> Login</a>
     <span class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></span>
@@ -99,13 +340,13 @@
                         </div>
                         
                         <div class="info-item animate-on-scroll working-hours-trigger" onclick="showWorkingHoursCard()">
-                            <div class="info-icon">
+                            <div class="info-icon working-hours-icon">
                                 <i class="fas fa-clock"></i>
                             </div>
                             <div class="info-content">
                                 <h5>Working Hours</h5>
-                                <p style="color: #198754; font-weight: 600;">Available 24/7 - Always Open</p>
-                                <span class="info-sub" style="color: #198754;">Click for more details</span>
+                                <p class="working-hours-text">Available 24/7 - Always Open</p>
+                                <span class="info-sub working-hours-sub">Click for more details</span>
                             </div>
                         </div>
                     </div>
@@ -258,42 +499,58 @@
         
         <div class="row g-4">
             <div class="col-md-6 animate-on-scroll">
-                <div class="faq-item">
+                <div class="faq-item faq-clickable" onclick="openFaqModal('faqModal1')">
                     <div class="faq-question">
                         <i class="fas fa-question-circle"></i>
                         <h5>How quickly can I get a response?</h5>
+                        <i class="fas fa-chevron-right faq-arrow"></i>
                     </div>
                     <p>We typically respond to all inquiries within 24 hours during business days. For urgent matters, please call our support line.</p>
+                    <div class="faq-click-hint">
+                        <span>Click for detailed answer <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
             
             <div class="col-md-6 animate-on-scroll">
-                <div class="faq-item">
+                <div class="faq-item faq-clickable" onclick="openFaqModal('faqModal2')">
                     <div class="faq-question">
                         <i class="fas fa-question-circle"></i>
                         <h5>Do you offer emergency cleaning services?</h5>
+                        <i class="fas fa-chevron-right faq-arrow"></i>
                     </div>
                     <p>Yes, we offer emergency cleaning services. Please call our hotline for immediate assistance.</p>
+                    <div class="faq-click-hint">
+                        <span>Click for detailed answer <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
             
             <div class="col-md-6 animate-on-scroll">
-                <div class="faq-item">
+                <div class="faq-item faq-clickable" onclick="openFaqModal('faqModal3')">
                     <div class="faq-question">
                         <i class="fas fa-question-circle"></i>
                         <h5>What areas do you serve?</h5>
+                        <i class="fas fa-chevron-right faq-arrow"></i>
                     </div>
                     <p>We serve all areas across Zanzibar, including Stone Town, Ngambo, Mbweni, and surrounding regions.</p>
+                    <div class="faq-click-hint">
+                        <span>Click for detailed answer <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
             
             <div class="col-md-6 animate-on-scroll">
-                <div class="faq-item">
+                <div class="faq-item faq-clickable" onclick="openFaqModal('faqModal4')">
                     <div class="faq-question">
                         <i class="fas fa-question-circle"></i>
                         <h5>Are your cleaning products eco-friendly?</h5>
+                        <i class="fas fa-chevron-right faq-arrow"></i>
                     </div>
                     <p>Absolutely! We use environmentally safe, non-toxic cleaning products that are safe for your family and pets.</p>
+                    <div class="faq-click-hint">
+                        <span>Click for detailed answer <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
         </div>

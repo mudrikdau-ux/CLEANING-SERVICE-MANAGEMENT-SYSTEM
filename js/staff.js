@@ -16,9 +16,9 @@ const staffAccount = {
 
 // Additional supervisor accounts for demo
 const supervisorAccounts = [
-  { id: 2, email: "zssf.supervisor@csms.com", password: "1234", name: "Ali Hassan", role: "Site Supervisor", phone: "+255 777 111 222", joinDate: "2024-02-01", isSupervisor: true, supervisorLocation: "ZSSF" },
-  { id: 3, email: "mall.supervisor@csms.com", password: "1234", name: "Fatma Omar", role: "Site Supervisor", phone: "+255 777 333 444", joinDate: "2024-02-15", isSupervisor: true, supervisorLocation: "Michenzani Mall" },
-  { id: 4, email: "uni.supervisor@csms.com", password: "1234", name: "Said Juma", role: "Site Supervisor", phone: "+255 777 555 666", joinDate: "2024-01-20", isSupervisor: true, supervisorLocation: "Zanzibar University" }
+  { id: 2, email: "zssf.supervisor@CleanSpark.com", password: "1234", name: "Ali Hassan", role: "Site Supervisor", phone: "+255 777 111 222", joinDate: "2024-02-01", isSupervisor: true, supervisorLocation: "ZSSF" },
+  { id: 3, email: "mall.supervisor@CleanSpark.com", password: "1234", name: "Fatma Omar", role: "Site Supervisor", phone: "+255 777 333 444", joinDate: "2024-02-15", isSupervisor: true, supervisorLocation: "Michenzani Mall" },
+  { id: 4, email: "uni.supervisor@CleanSpark.com", password: "1234", name: "Said Juma", role: "Site Supervisor", phone: "+255 777 555 666", joinDate: "2024-01-20", isSupervisor: true, supervisorLocation: "Zanzibar University" }
 ];
 
 // ========== JOBS DATABASE ==========
@@ -113,7 +113,7 @@ let chatMessages = [];
 
 // Load supervisor data from localStorage
 function loadSupervisorData() {
-  const storedAttendance = localStorage.getItem('csms_attendance');
+  const storedAttendance = localStorage.getItem('CleanSpark_attendance');
   if (storedAttendance) {
     attendanceRecords = JSON.parse(storedAttendance);
   } else {
@@ -128,12 +128,12 @@ function loadSupervisorData() {
     saveAttendanceRecords();
   }
   
-  const storedReports = localStorage.getItem('csms_reports');
+  const storedReports = localStorage.getItem('CleanSpark_reports');
   if (storedReports) {
     weeklyReports = JSON.parse(storedReports);
   }
   
-  const storedChat = localStorage.getItem('csms_chat');
+  const storedChat = localStorage.getItem('CleanSpark_chat');
   if (storedChat) {
     chatMessages = JSON.parse(storedChat);
   } else {
@@ -145,15 +145,15 @@ function loadSupervisorData() {
 }
 
 function saveAttendanceRecords() {
-  localStorage.setItem('csms_attendance', JSON.stringify(attendanceRecords));
+  localStorage.setItem('CleanSpark_attendance', JSON.stringify(attendanceRecords));
 }
 
 function saveReports() {
-  localStorage.setItem('csms_reports', JSON.stringify(weeklyReports));
+  localStorage.setItem('CleanSpark_reports', JSON.stringify(weeklyReports));
 }
 
 function saveChatMessages() {
-  localStorage.setItem('csms_chat', JSON.stringify(chatMessages));
+  localStorage.setItem('CleanSpark_chat', JSON.stringify(chatMessages));
 }
 
 // ========== SUPERVISOR FUNCTIONS ==========
@@ -331,7 +331,7 @@ function generateWeeklyReport() {
     </div>
     <hr>
     <div style="text-align: center; font-size: 12px; color: #718096;">
-      This is an official CSMS supervisor report.
+      This is an official CleanSpark supervisor report.
     </div>
   `;
   
@@ -356,7 +356,7 @@ function downloadReport() {
   
   const report = currentGeneratedReport;
   const reportText = `
-CSMS WEEKLY SUPERVISOR REPORT
+CleanSpark WEEKLY SUPERVISOR REPORT
 ================================
 Report #: ${report.reportNumber}
 Location: ${report.location}
@@ -888,7 +888,7 @@ function showForgotPassword() {
 }
 
 function showDemoCredentials() {
-  showNotification('Demo Credentials:\nStaff: mudrikdau@gmail.com / 1234\nSupervisor (ZSSF): zssf.supervisor@csms.com / 1234\nSupervisor (Mall): mall.supervisor@csms.com / 1234\nSupervisor (Uni): uni.supervisor@csms.com / 1234', 'info');
+  showNotification('Demo Credentials:\nStaff: mudrikdau@gmail.com / 1234\nSupervisor (ZSSF): zssf.supervisor@CleanSpark.com / 1234\nSupervisor (Mall): mall.supervisor@CleanSpark.com / 1234\nSupervisor (Uni): uni.supervisor@CleanSpark.com / 1234', 'info');
 }
 
 // ========== CHANGE PASSWORD FEATURE ==========
@@ -1596,7 +1596,7 @@ function setupNavButtons() {
 
 // ========== CASH PAYMENT MODULE FUNCTIONS ==========
 function loadPaymentValidations() {
-  const stored = localStorage.getItem('csms_payments');
+  const stored = localStorage.getItem('CleanSpark_payments');
   if (stored) {
     paymentValidations = JSON.parse(stored);
   } else {
@@ -1635,7 +1635,7 @@ function loadPaymentValidations() {
 }
 
 function savePaymentValidations() {
-  localStorage.setItem('csms_payments', JSON.stringify(paymentValidations));
+  localStorage.setItem('CleanSpark_payments', JSON.stringify(paymentValidations));
 }
 
 function updatePaymentStats() {
@@ -1794,7 +1794,7 @@ function generateReceipt(payment) {
   const receiptContent = `
     <div style="text-align: center;">
       <h4>PAYMENT RECEIPT</h4>
-      <p style="color: #718096;">Thank you for choosing CSMS Cleaning Services</p>
+      <p style="color: #718096;">Thank you for choosing CleanSpark Cleaning Services</p>
     </div>
     <div class="receipt-details">
       <div class="receipt-row">
@@ -1885,7 +1885,7 @@ function printReceipt() {
   printWindow.document.write(`
     <html>
     <head>
-      <title>CSMS Payment Receipt</title>
+      <title>CleanSpark Payment Receipt</title>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
       <style>
         body { font-family: 'Inter', sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }

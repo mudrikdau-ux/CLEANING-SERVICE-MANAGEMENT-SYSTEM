@@ -528,6 +528,14 @@ a {
     text-align: center;
     padding: 12px;
     transition: all 0.3s ease;
+    cursor: pointer; /* Make all features visibly clickable */
+    border-radius: 10px;
+    position: relative;
+}
+
+.feature-item:hover {
+    background: rgba(255,255,255,0.08);
+    transform: translateY(-5px);
 }
 
 .feature-icon {
@@ -562,6 +570,7 @@ a {
     font-weight: 700;
     color: white;
     margin-bottom: 8px;
+    pointer-events: none;
 }
 
 .feature-item p {
@@ -569,6 +578,76 @@ a {
     font-size: 0.9rem;
     margin: 0;
     font-weight: 400;
+    pointer-events: none;
+}
+
+/* Feature Modal Styling */
+.feature-modal .modal-content {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+}
+
+.feature-modal .modal-header {
+    border-bottom: none;
+    padding: 1.5rem 1.5rem 0.5rem;
+    background: white;
+}
+
+.feature-modal .modal-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--dark-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.feature-modal .modal-body {
+    padding: 1.5rem;
+}
+
+.feature-modal .modal-footer {
+    border-top: none;
+    padding: 1rem 1.5rem 1.5rem;
+}
+
+.feature-detail-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.feature-detail-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.feature-detail-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #555;
+}
+
+.feature-detail-list li:last-child {
+    border-bottom: none;
+}
+
+.feature-detail-list li i {
+    color: var(--success-color);
+    font-size: 1.1rem;
 }
 
 /* ===== FOOTER ===== */

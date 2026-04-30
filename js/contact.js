@@ -15,7 +15,6 @@ class ContactFormHandler {
             this.addInputValidation();
         }
         this.initScrollAnimation();
-        this.initFaqToggle();
         this.initPhoneValidation();
     }
     
@@ -275,16 +274,37 @@ class ContactFormHandler {
             observer.observe(element);
         });
     }
-    
-    initFaqToggle() {
-        const faqItems = document.querySelectorAll('.faq-item');
-        faqItems.forEach(item => {
-            item.addEventListener('click', () => {
-                item.classList.toggle('expanded');
-            });
-        });
+}
+
+// ========== FAQ MODAL FUNCTIONS ==========
+function openFaqModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
 }
+
+function closeFaqModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Close FAQ modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const activeFaqModal = document.querySelector('.faq-modal-overlay.active');
+        if (activeFaqModal) {
+            activeFaqModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        closeWorkingHoursCard();
+        closeQuickContact();
+    }
+});
 
 // ========== WORKING HOURS 24/7 CARD FUNCTION ==========
 function showWorkingHoursCard() {
@@ -309,11 +329,10 @@ function closeWorkingHoursCard() {
     }
 }
 
-// Close working hours card with Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
+// Close working hours card when clicking overlay
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'workingHoursOverlay') {
         closeWorkingHoursCard();
-        closeQuickContact();
     }
 });
 
@@ -374,10 +393,6 @@ function sendQuickMessage() {
     if (message && message.trim()) {
         window.location.href = `mailto:info@cleanspark.co.tz?subject=Quick Message from CleanSpark Website&body=${encodeURIComponent(message.trim())}`;
         closeQuickContact();
-        setTimeout(() => {
-            const handler = new ContactFormHandler();
-            handler.showNotification('Opening email client...', 'success');
-        }, 100);
     } else {
         const handler = new ContactFormHandler();
         handler.showNotification('Please enter a message first', 'error');
@@ -389,6 +404,7 @@ function openSidebar() {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
         sidebar.style.width = '280px';
+        document.body.style.overflow = 'hidden';
     }
 }
 
@@ -396,8 +412,24 @@ function closeSidebar() {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
         sidebar.style.width = '0';
+        document.body.style.overflow = 'auto';
     }
 }
+
+// Close sidebar when clicking outside on desktop
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.querySelector('.hamburger');
+    
+    if (sidebar && hamburger) {
+        const sidebarWidth = sidebar.style.width;
+        if (sidebarWidth === '280px' && 
+            !sidebar.contains(event.target) && 
+            !hamburger.contains(event.target)) {
+            closeSidebar();
+        }
+    }
+});
 
 // ========== NAVBAR SCROLL EFFECT ==========
 function initNavbarScroll() {
@@ -405,7 +437,7 @@ function initNavbarScroll() {
     if (navbar) {
         window.addEventListener('scroll', () => {
             if (window.scrollY > 100) {
-                navbar.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
+                navbar.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
             } else {
                 navbar.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
             }
@@ -461,7 +493,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Log page view
-    console.log('Contact page loaded and initialized');
+    console.log('Contact page loaded and initialized with FAQ modals');
+    
+    // Ensure hamburger is visible on all screen sizes
+    const hamburger = document.querySelector('.hamburger');
+    if (hamburger) {
+        hamburger.style.display = 'block';
+    }
 });
 
 // ========== EXPOSE FUNCTIONS GLOBALLY ==========
@@ -472,3 +510,5 @@ window.openSidebar = openSidebar;
 window.closeSidebar = closeSidebar;
 window.showWorkingHoursCard = showWorkingHoursCard;
 window.closeWorkingHoursCard = closeWorkingHoursCard;
+window.openFaqModal = openFaqModal;
+window.closeFaqModal = closeFaqModal;

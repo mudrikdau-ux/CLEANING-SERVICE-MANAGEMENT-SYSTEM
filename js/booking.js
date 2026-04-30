@@ -401,7 +401,7 @@
             printWindow.document.write(`
                 <html>
                 <head>
-                    <title>CSMS Receipt</title>
+                    <title>CleanSpark Receipt</title>
                     <style>
                         body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
                         .receipt { border: 2px solid #e2e8f0; border-radius: 16px; padding: 30px; }
@@ -444,8 +444,8 @@
         if (!currentBookingData) return;
         
         const booking = currentBookingData;
-        const shareText = `CSMS Cleaning Service Booking Confirmed!\n\nBooking ID: ${booking.bookingId}\nService: ${booking.cleaners} cleaner(s) × ${booking.hours} hrs\nDate: ${booking.scheduleDate} at ${booking.scheduleTime}\nAmount: TZS ${booking.totalAmount.toLocaleString()}\n\nThank you for choosing CSMS!`;
-        const shareUrl = `https://csms.co.tz/booking/${booking.bookingId}`;
+        const shareText = `CleanSpark Cleaning Service Booking Confirmed!\n\nBooking ID: ${booking.bookingId}\nService: ${booking.cleaners} cleaner(s) × ${booking.hours} hrs\nDate: ${booking.scheduleDate} at ${booking.scheduleTime}\nAmount: TZS ${booking.totalAmount.toLocaleString()}\n\nThank you for choosing CleanSpark!`;
+        const shareUrl = `https://CleanSpark.co.tz/booking/${booking.bookingId}`;
         
         let url = '';
         
@@ -455,7 +455,7 @@
                 window.open(url, '_blank');
                 break;
             case 'email':
-                url = `mailto:?subject=CSMS Booking Confirmation - ${booking.bookingId}&body=${encodeURIComponent(shareText + '\n\nView details: ' + shareUrl)}`;
+                url = `mailto:?subject=CleanSpark Booking Confirmation - ${booking.bookingId}&body=${encodeURIComponent(shareText + '\n\nView details: ' + shareUrl)}`;
                 window.location.href = url;
                 break;
             case 'sms':

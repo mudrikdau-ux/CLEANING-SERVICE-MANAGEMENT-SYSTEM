@@ -21,6 +21,90 @@ document.addEventListener('click', function(event) {
     }
 });
 
+// ========== MODAL FUNCTIONS ==========
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Add click event to close when clicking overlay
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal(modalId);
+            }
+        });
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const activeModal = document.querySelector('.modal-overlay.active');
+        if (activeModal) {
+            activeModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    }
+});
+
+// ========== CHATBOT INTEGRATION ==========
+function openChatbot() {
+    // Show notification that chatbot is opening
+    showChatbotNotification();
+    
+    // Try to open chatbot if it exists
+    setTimeout(() => {
+        const chatbotButton = document.querySelector('.chatbot-toggle, .chatbot-icon, [id*="chat"], [class*="chat"]');
+        if (chatbotButton) {
+            chatbotButton.click();
+        } else {
+            // If chatbot elements not found, try common selectors
+            const chatElements = document.querySelectorAll('[onclick*="chat"], [onclick*="bot"], .bot-toggle, #bot-button');
+            if (chatElements.length > 0) {
+                chatElements[0].click();
+            }
+        }
+    }, 800);
+}
+
+function showChatbotNotification() {
+    // Remove existing notification if any
+    const existingNotification = document.querySelector('.chatbot-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    // Create notification
+    const notification = document.createElement('div');
+    notification.className = 'chatbot-notification';
+    notification.innerHTML = `
+        <i class="fas fa-robot"></i>
+        <span>Opening 24/7 Support Chat...</span>
+        <button class="chatbot-notification-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.animation = 'slideInRight 0.3s ease reverse';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 3000);
+}
+
 // ========== ANIMATION ON SCROLL ==========
 function initScrollAnimation() {
     const elements = document.querySelectorAll('.animate-on-scroll');
@@ -285,7 +369,7 @@ function addNotificationStyles() {
             min-width: 280px;
             max-width: 350px;
             border-left: 4px solid #4bb543;
-            animation: slideInRight 0.3s ease-out;
+            animation: slideInRightNotif 0.3s ease-out;
         }
         
         .notification-content {
@@ -335,7 +419,7 @@ function addNotificationStyles() {
             color: #333;
         }
         
-        @keyframes slideInRight {
+        @keyframes slideInRightNotif {
             from {
                 transform: translateX(100%);
                 opacity: 0;
@@ -434,11 +518,14 @@ document.addEventListener('DOMContentLoaded', () => {
     showWelcomeMessage();
     updateLoginUI();
     
-    console.log('About Us page fully loaded and initialized');
+    console.log('About Us page fully loaded and initialized with interactive modals');
 });
 
 // ========== EXPORT FUNCTIONS FOR GLOBAL USE ==========
 window.showNotification = showNotification;
 window.openSidebar = openSidebar;
 window.closeSidebar = closeSidebar;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.openChatbot = openChatbot;
 window.initStatisticsCounter = initStatisticsCounter;

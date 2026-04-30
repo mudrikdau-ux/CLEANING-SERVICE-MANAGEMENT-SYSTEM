@@ -122,9 +122,9 @@ const staffMembers = {
 };
 
 const paymentHistory = [
-    { id: 'PAY-001', service: 'Office Carpet Steam Cleaning', amount: 'TZS 499,000', date: '2026-03-18', method: 'Visa •••• 4242', status: 'completed', transactionId: 'TXN-20260318-A1B2C3', reference: 'CSMS-103', paymentDate: '2026-03-18 14:32:00', payerName: 'John Doe', payerEmail: 'john.doe@example.com' },
-    { id: 'PAY-002', service: 'Kitchen Sanitization Service', amount: 'TZS 178,000', date: '2026-03-02', method: 'M-Pesa', status: 'completed', transactionId: 'TXN-20260302-D4E5F6', reference: 'CSMS-104', paymentDate: '2026-03-02 10:15:00', payerName: 'John Doe', payerEmail: 'john.doe@example.com' },
-    { id: 'PAY-003', service: 'AC Maintenance', amount: 'TZS 285,000', date: '2026-02-15', method: 'Mastercard •••• 8888', status: 'completed', transactionId: 'TXN-20260215-G7H8I9', reference: 'CSMS-108', paymentDate: '2026-02-15 09:00:00', payerName: 'John Doe', payerEmail: 'john.doe@example.com' }
+    { id: 'PAY-001', service: 'Office Carpet Steam Cleaning', amount: 'TZS 499,000', date: '2026-03-18', method: 'Visa •••• 4242', status: 'completed', transactionId: 'TXN-20260318-A1B2C3', reference: 'CleanSpark-103', paymentDate: '2026-03-18 14:32:00', payerName: 'John Doe', payerEmail: 'john.doe@example.com' },
+    { id: 'PAY-002', service: 'Kitchen Sanitization Service', amount: 'TZS 178,000', date: '2026-03-02', method: 'M-Pesa', status: 'completed', transactionId: 'TXN-20260302-D4E5F6', reference: 'CleanSpark-104', paymentDate: '2026-03-02 10:15:00', payerName: 'John Doe', payerEmail: 'john.doe@example.com' },
+    { id: 'PAY-003', service: 'AC Maintenance', amount: 'TZS 285,000', date: '2026-02-15', method: 'Mastercard •••• 8888', status: 'completed', transactionId: 'TXN-20260215-G7H8I9', reference: 'CleanSpark-108', paymentDate: '2026-02-15 09:00:00', payerName: 'John Doe', payerEmail: 'john.doe@example.com' }
 ];
 
 const notifications = [
@@ -1879,7 +1879,7 @@ function renderPanel(menuType) {
                 const supportCards = document.getElementById('supportCards');
                 if (supportCards) {
                     supportCards.innerHTML = `
-                        <div class="support-card" onclick="window.openChatbot ? window.openChatbot() : (window.csmsChatbot && window.csmsChatbot.toggleChatbot())">
+                        <div class="support-card" onclick="window.openChatbot ? window.openChatbot() : (window.CleanSparkChatbot && window.CleanSparkChatbot.toggleChatbot())">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="service-icon"><i class="bi bi-chat-dots fs-4"></i></div>
                                 <div><h5 class="fw-bold mb-1">Live Chat Support</h5><p class="text-muted mb-0 small">Chat with our AI assistant 24/7</p></div>

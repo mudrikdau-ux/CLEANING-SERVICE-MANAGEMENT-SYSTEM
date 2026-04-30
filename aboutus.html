@@ -10,10 +10,577 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/aboutus.css">
-     <!-- Chatbot CSS -->
+    <!-- Chatbot CSS -->
     <link rel="stylesheet" href="css/bot.css">
 </head>
 <body>
+
+<!-- Mission Modal -->
+<div class="modal-overlay" id="missionModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-icon">
+                <i class="fas fa-bullseye"></i>
+            </div>
+            <h2>Our Mission</h2>
+            <button class="modal-close" onclick="closeModal('missionModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-image-section">
+                <img src="image/aboutus.jpeg" alt="Our Mission" onerror="this.src='image/logo.jpeg'">
+            </div>
+            <div class="modal-content-section">
+                <h3>Delivering Excellence in Every Clean</h3>
+                <p class="modal-intro">At CleanSpark, our mission is to provide reliable, high-quality cleaning services that enhance the comfort, health, and well-being of our customers while maintaining the highest standards of professionalism and environmental responsibility.</p>
+                
+                <div class="mission-details">
+                    <div class="mission-point">
+                        <div class="mission-point-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="mission-point-content">
+                            <h4>Excellence in Service Delivery</h4>
+                            <p>We consistently deliver superior cleaning results through rigorous quality control, attention to detail, and a commitment to exceeding customer expectations. Every job is completed to the highest standards.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mission-point">
+                        <div class="mission-point-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="mission-point-content">
+                            <h4>Customer-Centric Approach</h4>
+                            <p>Our customers are at the heart of everything we do. We listen, understand, and tailor our services to meet individual needs, ensuring complete satisfaction with every visit.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mission-point">
+                        <div class="mission-point-icon">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
+                        <div class="mission-point-content">
+                            <h4>Continuous Improvement</h4>
+                            <p>We invest in ongoing training, advanced equipment, and innovative cleaning techniques to stay at the forefront of the industry and deliver better results with each service.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mission-stats">
+                    <div class="mission-stat">
+                        <div class="mission-stat-number">98%</div>
+                        <div class="mission-stat-label">Customer Satisfaction</div>
+                    </div>
+                    <div class="mission-stat">
+                        <div class="mission-stat-number">50+</div>
+                        <div class="mission-stat-label">Trained Professionals</div>
+                    </div>
+                    <div class="mission-stat">
+                        <div class="mission-stat-number">24/7</div>
+                        <div class="mission-stat-label">Availability</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vision Modal -->
+<div class="modal-overlay" id="visionModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-icon">
+                <i class="fas fa-eye"></i>
+            </div>
+            <h2>Our Vision</h2>
+            <button class="modal-close" onclick="closeModal('visionModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-image-section">
+                <img src="image/aboutus.jpeg" alt="Our Vision" onerror="this.src='image/logo.jpeg'">
+            </div>
+            <div class="modal-content-section">
+                <h3>Shaping the Future of Cleaning in Tanzania</h3>
+                <p class="modal-intro">To become the leading cleaning service provider in Zanzibar and across Tanzania, setting new standards for quality, innovation, and customer satisfaction in the cleaning industry.</p>
+                
+                <div class="vision-details">
+                    <div class="vision-point">
+                        <div class="vision-point-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="vision-point-content">
+                            <h4>Industry Leadership</h4>
+                            <p>We aim to be the benchmark for excellence in the cleaning industry, recognized for our unwavering commitment to quality, reliability, and customer service across Tanzania.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="vision-point">
+                        <div class="vision-point-icon">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div class="vision-point-content">
+                            <h4>Innovation & Excellence</h4>
+                            <p>Embracing cutting-edge technology, eco-friendly solutions, and modern cleaning methodologies to provide services that are not just effective but also sustainable and future-ready.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="vision-point">
+                        <div class="vision-point-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="vision-point-content">
+                            <h4>Sustainable Growth</h4>
+                            <p>Expanding our reach while maintaining our core values, creating employment opportunities, and contributing positively to the communities we serve across Tanzania.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="vision-goals">
+                    <h4><i class="fas fa-flag-checkered"></i> Our 2026 Goals</h4>
+                    <ul>
+                        <li><i class="fas fa-check-circle"></i> Expand to 5 major cities in Tanzania</li>
+                        <li><i class="fas fa-check-circle"></i> Train 200+ cleaning professionals</li>
+                        <li><i class="fas fa-check-circle"></i> Achieve 99% customer satisfaction rate</li>
+                        <li><i class="fas fa-check-circle"></i> Launch eco-friendly product line</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feature Modals -->
+<div class="modal-overlay" id="expertTeamModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <h2>Expert Team</h2>
+            <button class="modal-close" onclick="closeModal('expertTeamModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-image-section">
+                <img src="image/aboutus.jpeg" alt="Expert Team" onerror="this.src='image/logo.jpeg'">
+            </div>
+            <div class="modal-content-section">
+                <h3>Meet Our Professional Cleaning Experts</h3>
+                <p class="modal-intro">Our team consists of highly trained, background-checked, and experienced professionals dedicated to delivering exceptional cleaning services.</p>
+                
+                <div class="feature-highlights">
+                    <div class="highlight-item">
+                        <i class="fas fa-certificate"></i>
+                        <div>
+                            <h4>Certified Professionals</h4>
+                            <p>All team members undergo rigorous certification programs and continuous training to ensure they meet our high standards.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <div>
+                            <h4>Background Verified</h4>
+                            <p>Every team member passes comprehensive background checks for your safety and peace of mind.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-graduation-cap"></i>
+                        <div>
+                            <h4>Continuous Training</h4>
+                            <p>Regular workshops and training sessions keep our team updated with the latest cleaning techniques.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="team-highlights-stats">
+                    <div class="team-stat">
+                        <span class="team-stat-number">50+</span>
+                        <span class="team-stat-label">Team Members</span>
+                    </div>
+                    <div class="team-stat">
+                        <span class="team-stat-number">100%</span>
+                        <span class="team-stat-label">Certified</span>
+                    </div>
+                    <div class="team-stat">
+                        <span class="team-stat-number">12+</span>
+                        <span class="team-stat-label">Avg Years Experience</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="competitivePricingModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-icon">
+                <i class="fas fa-tag"></i>
+            </div>
+            <h2>Competitive Pricing</h2>
+            <button class="modal-close" onclick="closeModal('competitivePricingModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-image-section">
+                <img src="image/aboutus.jpeg" alt="Competitive Pricing" onerror="this.src='image/logo.jpeg'">
+            </div>
+            <div class="modal-content-section">
+                <h3>Affordable Excellence Without Compromise</h3>
+                <p class="modal-intro">We believe that premium cleaning services should be accessible to everyone. Our transparent pricing ensures you get the best value for your investment.</p>
+                
+                <div class="feature-highlights">
+                    <div class="highlight-item">
+                        <i class="fas fa-check-double"></i>
+                        <div>
+                            <h4>Price Match Guarantee</h4>
+                            <p>Found a better price? We'll match it and provide an additional 10% discount on your first service.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <div>
+                            <h4>Free Estimates</h4>
+                            <p>Get detailed, no-obligation quotes tailored to your specific needs with no hidden charges.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <div>
+                            <h4>Flexible Packages</h4>
+                            <p>Choose from various service packages designed to fit different budgets and requirements.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pricing-info">
+                    <h4><i class="fas fa-info-circle"></i> Our Pricing Philosophy</h4>
+                    <p>Quality doesn't have to be expensive. We optimize our operations to deliver premium services at competitive rates, ensuring you receive exceptional value with every service.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="fastReliableModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h2>Fast & Reliable</h2>
+            <button class="modal-close" onclick="closeModal('fastReliableModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-image-section">
+                <img src="image/aboutus.jpeg" alt="Fast & Reliable" onerror="this.src='image/logo.jpeg'">
+            </div>
+            <div class="modal-content-section">
+                <h3>Speed Without Sacrificing Quality</h3>
+                <p class="modal-intro">We understand that time is valuable. Our efficient processes and dedicated team ensure prompt, reliable service delivery when you need it most.</p>
+                
+                <div class="feature-highlights">
+                    <div class="highlight-item">
+                        <i class="fas fa-bolt"></i>
+                        <div>
+                            <h4>Same-Day Service</h4>
+                            <p>Need urgent cleaning? Our rapid response team can be at your doorstep within hours for most service requests.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-calendar-check"></i>
+                        <div>
+                            <h4>Punctual & Reliable</h4>
+                            <p>We respect your schedule. Our team arrives on time, every time, and completes work within the agreed timeframe.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-truck"></i>
+                        <div>
+                            <h4>Quick Response Times</h4>
+                            <p>Average response time of under 30 minutes for inquiries and rapid deployment for emergency cleaning needs.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="reliability-stats">
+                    <div class="reliability-stat">
+                        <span class="reliability-number">30min</span>
+                        <span class="reliability-label">Avg Response Time</span>
+                    </div>
+                    <div class="reliability-stat">
+                        <span class="reliability-number">99%</span>
+                        <span class="reliability-label">On-Time Rate</span>
+                    </div>
+                    <div class="reliability-stat">
+                        <span class="reliability-number">24/7</span>
+                        <span class="reliability-label">Availability</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="ecoFriendlyModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-icon">
+                <i class="fas fa-leaf"></i>
+            </div>
+            <h2>Eco-Friendly</h2>
+            <button class="modal-close" onclick="closeModal('ecoFriendlyModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-image-section">
+                <img src="image/aboutus.jpeg" alt="Eco-Friendly" onerror="this.src='image/logo.jpeg'">
+            </div>
+            <div class="modal-content-section">
+                <h3>Clean Spaces, Healthy Planet</h3>
+                <p class="modal-intro">We're committed to protecting both your health and the environment by using eco-friendly products and sustainable cleaning practices.</p>
+                
+                <div class="feature-highlights">
+                    <div class="highlight-item">
+                        <i class="fas fa-seedling"></i>
+                        <div>
+                            <h4>Green Products</h4>
+                            <p>All our cleaning solutions are biodegradable, non-toxic, and safe for children, pets, and the environment.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-recycle"></i>
+                        <div>
+                            <h4>Sustainable Practices</h4>
+                            <p>We minimize waste through reusable materials, proper recycling, and efficient resource management.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-globe-africa"></i>
+                        <div>
+                            <h4>Environmental Commitment</h4>
+                            <p>Part of our profits support local environmental initiatives and community green projects in Zanzibar.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="eco-badges">
+                    <div class="eco-badge">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Biodegradable</span>
+                    </div>
+                    <div class="eco-badge">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Non-Toxic</span>
+                    </div>
+                    <div class="eco-badge">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Vegan</span>
+                    </div>
+                    <div class="eco-badge">
+                        <i class="fas fa-check-circle"></i>
+                        <span>EcoCert</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="fullyInsuredModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h2>Fully Insured</h2>
+            <button class="modal-close" onclick="closeModal('fullyInsuredModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-image-section">
+                <img src="image/aboutus.jpeg" alt="Fully Insured" onerror="this.src='image/logo.jpeg'">
+            </div>
+            <div class="modal-content-section">
+                <h3>Complete Peace of Mind</h3>
+                <p class="modal-intro">We provide comprehensive insurance coverage to protect both our clients and our team, ensuring worry-free cleaning services.</p>
+                
+                <div class="feature-highlights">
+                    <div class="highlight-item">
+                        <i class="fas fa-building"></i>
+                        <div>
+                            <h4>Liability Insurance</h4>
+                            <p>Full coverage against any accidental damage to your property during our cleaning services.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-user-shield"></i>
+                        <div>
+                            <h4>Worker's Compensation</h4>
+                            <p>All our employees are covered by worker's compensation insurance for your protection.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-clipboard-check"></i>
+                        <div>
+                            <h4>Bonded Services</h4>
+                            <p>Our bonding provides additional financial protection and demonstrates our commitment to professional service.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="insurance-details">
+                    <h4><i class="fas fa-check-circle"></i> Our Coverage Includes:</h4>
+                    <ul>
+                        <li><i class="fas fa-check"></i> General Liability: Up to $2,000,000</li>
+                        <li><i class="fas fa-check"></i> Property Damage Protection</li>
+                        <li><i class="fas fa-check"></i> Employee Dishonesty Coverage</li>
+                        <li><i class="fas fa-check"></i> Completed Operations Coverage</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Testimonial Modals -->
+<div class="modal-overlay" id="testimonial1Modal">
+    <div class="modal-container testimonial-modal">
+        <div class="modal-header">
+            <div class="modal-icon testimonial-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <h2>Client Review</h2>
+            <button class="modal-close" onclick="closeModal('testimonial1Modal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body testimonial-detail-body">
+            <div class="testimonial-detail-header">
+                <div class="testimonial-detail-author">
+                    <div class="testimonial-detail-avatar">
+                        <span>AH</span>
+                    </div>
+                    <div class="testimonial-detail-info">
+                        <h3>Ali Hassan</h3>
+                        <span class="testimonial-detail-role">Business Owner</span>
+                        <div class="testimonial-detail-rating">★★★★★</div>
+                        <span class="testimonial-detail-date">January 15, 2026</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-detail-content">
+                <div class="testimonial-detail-quote">
+                    <i class="fas fa-quote-left"></i>
+                </div>
+                <p class="testimonial-detail-text">"Absolutely amazing service! The team was professional, punctual, and left my office spotless. Highly recommend CleanSpark for any cleaning needs. I've been using their services for my business premises for over 6 months now, and they consistently deliver exceptional results. The attention to detail is remarkable - every corner, every surface is perfectly cleaned. What sets them apart is their reliability and professionalism. They understand business needs and work around our schedule to minimize disruption."</p>
+                <div class="testimonial-detail-footer">
+                    <div class="testimonial-service-used">
+                        <strong>Service Used:</strong> Commercial Office Cleaning
+                    </div>
+                    <div class="testimonial-verified">
+                        <i class="fas fa-check-circle"></i> Verified Customer
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="testimonial2Modal">
+    <div class="modal-container testimonial-modal">
+        <div class="modal-header">
+            <div class="modal-icon testimonial-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <h2>Client Review</h2>
+            <button class="modal-close" onclick="closeModal('testimonial2Modal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body testimonial-detail-body">
+            <div class="testimonial-detail-header">
+                <div class="testimonial-detail-author">
+                    <div class="testimonial-detail-avatar">
+                        <span>FJ</span>
+                    </div>
+                    <div class="testimonial-detail-info">
+                        <h3>Fatma Juma</h3>
+                        <span class="testimonial-detail-role">Homeowner</span>
+                        <div class="testimonial-detail-rating">★★★★★</div>
+                        <span class="testimonial-detail-date">February 3, 2026</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-detail-content">
+                <div class="testimonial-detail-quote">
+                    <i class="fas fa-quote-left"></i>
+                </div>
+                <p class="testimonial-detail-text">"Best cleaning service in Zanzibar! They transformed my home and made it feel brand new. The attention to detail is impressive - they cleaned areas I hadn't even thought about. The team was courteous, efficient, and used products that left a fresh, clean scent without any harsh chemical smells. As someone with allergies, I really appreciate their use of eco-friendly products. My home has never looked this good, and I'm now a regular customer. I recommend them to all my friends and family."</p>
+                <div class="testimonial-detail-footer">
+                    <div class="testimonial-service-used">
+                        <strong>Service Used:</strong> Deep House Cleaning
+                    </div>
+                    <div class="testimonial-verified">
+                        <i class="fas fa-check-circle"></i> Verified Customer
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="testimonial3Modal">
+    <div class="modal-container testimonial-modal">
+        <div class="modal-header">
+            <div class="modal-icon testimonial-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <h2>Client Review</h2>
+            <button class="modal-close" onclick="closeModal('testimonial3Modal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body testimonial-detail-body">
+            <div class="testimonial-detail-header">
+                <div class="testimonial-detail-author">
+                    <div class="testimonial-detail-avatar">
+                        <span>ZM</span>
+                    </div>
+                    <div class="testimonial-detail-info">
+                        <h3>Zainab Mwinyi</h3>
+                        <span class="testimonial-detail-role">Property Manager</span>
+                        <div class="testimonial-detail-rating">★★★★★</div>
+                        <span class="testimonial-detail-date">March 10, 2026</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-detail-content">
+                <div class="testimonial-detail-quote">
+                    <i class="fas fa-quote-left"></i>
+                </div>
+                <p class="testimonial-detail-text">"Professional, reliable, and affordable. Their eco-friendly products are a huge plus. We've been using their services for over a year now for multiple properties I manage. CleanSpark has consistently delivered outstanding results across all our properties - from luxury apartments to commercial spaces. Their team is always punctual, well-equipped, and professional. The booking system is easy to use, and their customer service is responsive. They've become an invaluable partner in maintaining our properties to the highest standards."</p>
+                <div class="testimonial-detail-footer">
+                    <div class="testimonial-service-used">
+                        <strong>Service Used:</strong> Multi-Property Management Cleaning
+                    </div>
+                    <div class="testimonial-verified">
+                        <i class="fas fa-check-circle"></i> Verified Customer
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Right Sidebar -->
 <div id="sidebar">
@@ -114,7 +681,7 @@
     <div class="container">
         <div class="row g-4">
             <div class="col-md-6 animate-on-scroll">
-                <div class="mission-card">
+                <div class="mission-card clickable-card" onclick="openModal('missionModal')">
                     <div class="card-icon">
                         <i class="fas fa-bullseye"></i>
                     </div>
@@ -125,10 +692,13 @@
                         <li><i class="fas fa-check"></i> Customer-Centric Approach</li>
                         <li><i class="fas fa-check"></i> Continuous Improvement</li>
                     </ul>
+                    <div class="click-hint">
+                        <span>Click to learn more <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
             <div class="col-md-6 animate-on-scroll">
-                <div class="vision-card">
+                <div class="vision-card clickable-card" onclick="openModal('visionModal')">
                     <div class="card-icon">
                         <i class="fas fa-eye"></i>
                     </div>
@@ -139,6 +709,9 @@
                         <li><i class="fas fa-star"></i> Innovation & Excellence</li>
                         <li><i class="fas fa-star"></i> Sustainable Growth</li>
                     </ul>
+                    <div class="click-hint">
+                        <span>Click to learn more <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -156,7 +729,7 @@
         
         <div class="row g-4">
             <div class="col-md-4 animate-on-scroll">
-                <div class="feature-card">
+                <div class="feature-card clickable-card" onclick="openModal('expertTeamModal')">
                     <div class="feature-icon">
                         <i class="fas fa-users"></i>
                     </div>
@@ -166,10 +739,13 @@
                         <span>✓ 50+ Team Members</span>
                         <span>✓ 100% Certified</span>
                     </div>
+                    <div class="click-hint">
+                        <span>Click for details <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4 animate-on-scroll">
-                <div class="feature-card">
+                <div class="feature-card clickable-card" onclick="openModal('competitivePricingModal')">
                     <div class="feature-icon">
                         <i class="fas fa-tag"></i>
                     </div>
@@ -179,10 +755,13 @@
                         <span>✓ Price Match Guarantee</span>
                         <span>✓ Free Estimates</span>
                     </div>
+                    <div class="click-hint">
+                        <span>Click for details <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4 animate-on-scroll">
-                <div class="feature-card">
+                <div class="feature-card clickable-card" onclick="openModal('fastReliableModal')">
                     <div class="feature-icon">
                         <i class="fas fa-clock"></i>
                     </div>
@@ -192,10 +771,13 @@
                         <span>✓ Same-Day Service</span>
                         <span>✓ 24/7 Support</span>
                     </div>
+                    <div class="click-hint">
+                        <span>Click for details <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4 animate-on-scroll">
-                <div class="feature-card">
+                <div class="feature-card clickable-card" onclick="openModal('ecoFriendlyModal')">
                     <div class="feature-icon">
                         <i class="fas fa-leaf"></i>
                     </div>
@@ -205,10 +787,13 @@
                         <span>✓ Green Products</span>
                         <span>✓ Sustainable Practices</span>
                     </div>
+                    <div class="click-hint">
+                        <span>Click for details <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4 animate-on-scroll">
-                <div class="feature-card">
+                <div class="feature-card clickable-card" onclick="openModal('fullyInsuredModal')">
                     <div class="feature-icon">
                         <i class="fas fa-shield-alt"></i>
                     </div>
@@ -218,10 +803,13 @@
                         <span>✓ Liability Insurance</span>
                         <span>✓ Worker's Comp</span>
                     </div>
+                    <div class="click-hint">
+                        <span>Click for details <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4 animate-on-scroll">
-                <div class="feature-card">
+                <div class="feature-card clickable-card" id="supportFeatureCard" onclick="openChatbot()">
                     <div class="feature-icon">
                         <i class="fas fa-headset"></i>
                     </div>
@@ -230,6 +818,9 @@
                     <div class="feature-stats">
                         <span>✓ Live Chat</span>
                         <span>✓ Phone Support</span>
+                    </div>
+                    <div class="click-hint">
+                        <span>Click to chat now <i class="fas fa-comments"></i></span>
                     </div>
                 </div>
             </div>
@@ -319,7 +910,7 @@
         
         <div class="row g-4">
             <div class="col-md-4 animate-on-scroll">
-                <div class="testimonial-card">
+                <div class="testimonial-card clickable-card" onclick="openModal('testimonial1Modal')">
                     <div class="testimonial-quote">
                         <i class="fas fa-quote-left"></i>
                     </div>
@@ -333,10 +924,13 @@
                             ★★★★★
                         </div>
                     </div>
+                    <div class="click-hint">
+                        <span>Click for full review <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4 animate-on-scroll">
-                <div class="testimonial-card">
+                <div class="testimonial-card clickable-card" onclick="openModal('testimonial2Modal')">
                     <div class="testimonial-quote">
                         <i class="fas fa-quote-left"></i>
                     </div>
@@ -350,10 +944,13 @@
                             ★★★★★
                         </div>
                     </div>
+                    <div class="click-hint">
+                        <span>Click for full review <i class="fas fa-arrow-right"></i></span>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4 animate-on-scroll">
-                <div class="testimonial-card">
+                <div class="testimonial-card clickable-card" onclick="openModal('testimonial3Modal')">
                     <div class="testimonial-quote">
                         <i class="fas fa-quote-left"></i>
                     </div>
@@ -366,6 +963,9 @@
                         <div class="author-rating">
                             ★★★★★
                         </div>
+                    </div>
+                    <div class="click-hint">
+                        <span>Click for full review <i class="fas fa-arrow-right"></i></span>
                     </div>
                 </div>
             </div>

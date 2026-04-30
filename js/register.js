@@ -787,7 +787,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 gender: gender
             }));
             
-            showNotification('Registration successful! Welcome to CSMS!', 'success');
+            showNotification('Registration successful! Welcome to CleanSpark!', 'success');
             
             // Check for pending booking
             const pendingBooking = localStorage.getItem('pendingBooking');
