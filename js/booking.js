@@ -333,7 +333,7 @@
         
         receiptContent.innerHTML = `
             <div class="text-center mb-3" id="receiptHeaderContent">
-                <strong>CSMS Cleaning Services</strong>
+                <strong>CleanSpark</strong>
                 <p class="text-muted small">Official Payment Receipt</p>
             </div>
             <div class="border-top border-bottom py-2 mb-2">
@@ -388,7 +388,7 @@
             
             // Convert to image and download
             const link = document.createElement('a');
-            link.download = `CSMS_Receipt_${currentBookingData?.bookingId || 'booking'}.png`;
+            link.download = `CleanSpark_Receipt_${currentBookingData?.bookingId || 'booking'}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
             

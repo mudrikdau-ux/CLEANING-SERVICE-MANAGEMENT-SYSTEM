@@ -384,7 +384,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const emailInput = this.querySelector('input[type="email"]');
             if (emailInput && emailInput.value) {
                 if (validateEmail(emailInput.value)) {
-                    showNotification('Thank you for subscribing!', 'success');
+                    // Save newsletter subscription
+                    let subscribers = JSON.parse(localStorage.getItem('cleanspark_newsletter_subscribers')) || [];
+                    if (!subscribers.includes(emailInput.value)) {
+                        subscribers.push(emailInput.value);
+                        localStorage.setItem('cleanspark_newsletter_subscribers', JSON.stringify(subscribers));
+                    }
+                    showNotification('Thank you for subscribing to CleanSpark newsletter!', 'success');
                     emailInput.value = '';
                 } else {
                     showNotification('Please enter a valid email address', 'danger');
