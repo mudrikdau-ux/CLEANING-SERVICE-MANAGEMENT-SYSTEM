@@ -280,6 +280,10 @@
         localStorage.setItem('bookings', JSON.stringify(bookings));
         
         currentBookingData = bookingData;
+        
+        // Launch celebration animation
+        launchCelebration();
+        
         showReceipt(bookingData);
     }
     
@@ -320,6 +324,10 @@
         localStorage.setItem('pendingCashPayments', JSON.stringify(pendingCash));
         
         currentBookingData = bookingData;
+        
+        // Launch celebration animation
+        launchCelebration();
+        
         showReceipt(bookingData);
     }
     
@@ -361,6 +369,33 @@
         
         receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
         receiptModal.show();
+    }
+    
+    // ========== CELEBRATION FUNCTION ==========
+    function launchCelebration() {
+        const duration = 3 * 1000;
+        const end = Date.now() + duration;
+
+        (function frame() {
+            confetti({
+                particleCount: 5,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#4361ee', '#4cc9f0', '#f72585', '#f8961e', '#4bb543']
+            });
+            confetti({
+                particleCount: 5,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#4361ee', '#4cc9f0', '#f72585', '#f8961e', '#4bb543']
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
     }
     
     // ========== RECEIPT DOWNLOAD FUNCTIONALITY ==========

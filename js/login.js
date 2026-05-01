@@ -59,6 +59,9 @@ function handleLoginSuccess(email, userData = {}) {
         ...userData
     }));
     
+    // Launch celebration animation
+    launchCelebration();
+    
     const pendingBooking = getPendingBooking();
     if (pendingBooking) {
         showNotification('Login successful! Redirecting to booking...', 'success');
@@ -535,6 +538,33 @@ function getFromStorage(key) {
     return data ? JSON.parse(data) : null;
 }
 
+// ===== CELEBRATION FUNCTION =====
+function launchCelebration() {
+    const duration = 3 * 1000;
+    const end = Date.now() + duration;
+
+    (function frame() {
+        confetti({
+            particleCount: 5,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#4361ee', '#4cc9f0', '#f72585', '#f8961e', '#4bb543']
+        });
+        confetti({
+            particleCount: 5,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#4361ee', '#4cc9f0', '#f72585', '#f8961e', '#4bb543']
+        });
+
+        if (Date.now() < end) {
+            requestAnimationFrame(frame);
+        }
+    }());
+}
+
 // ===== GOOGLE LOGIN HANDLER =====
 function handleGoogleLogin() {
     showNotification('Google login successful!', 'success');
@@ -544,6 +574,8 @@ function handleGoogleLogin() {
         email: 'user@gmail.com',
         provider: 'google'
     }));
+    
+    launchCelebration();
     
     const pendingBooking = localStorage.getItem('pendingBooking');
     if (pendingBooking) {
@@ -718,6 +750,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }));
             
             showNotification('Registration successful!', 'success');
+            
+            // Launch celebration animation
+            launchCelebration();
             
             const pendingBooking = localStorage.getItem('pendingBooking');
             if (pendingBooking) {

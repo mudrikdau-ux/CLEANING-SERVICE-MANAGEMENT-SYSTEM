@@ -535,6 +535,33 @@ function getFromStorage(key) {
     return data ? JSON.parse(data) : null;
 }
 
+// ===== CELEBRATION FUNCTION =====
+function launchCelebration() {
+    const duration = 3 * 1000;
+    const end = Date.now() + duration;
+
+    (function frame() {
+        confetti({
+            particleCount: 5,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#4361ee', '#4cc9f0', '#f72585', '#f8961e', '#4bb543']
+        });
+        confetti({
+            particleCount: 5,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#4361ee', '#4cc9f0', '#f72585', '#f8961e', '#4bb543']
+        });
+
+        if (Date.now() < end) {
+            requestAnimationFrame(frame);
+        }
+    }());
+}
+
 // ===== GOOGLE REGISTER HANDLER =====
 function handleGoogleRegister() {
     showNotification('Google registration successful!', 'success');
@@ -546,6 +573,8 @@ function handleGoogleRegister() {
         lastName: 'User',
         provider: 'google'
     }));
+    
+    launchCelebration();
     
     const pendingBooking = localStorage.getItem('pendingBooking');
     if (pendingBooking) {
@@ -789,6 +818,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             showNotification('Registration successful! Welcome to CleanSpark!', 'success');
             
+            // Launch celebration animation
+            launchCelebration();
+            
             // Check for pending booking
             const pendingBooking = localStorage.getItem('pendingBooking');
             if (pendingBooking) {
@@ -800,6 +832,32 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.href = 'index.html';
                 }, 1500);
             }
+        });
+    }
+    
+    // ===== TERMS AND CONDITIONS MODAL LOGIC =====
+    const termsModalElement = document.getElementById('termsModal');
+    const openTermsLink = document.getElementById('openTermsModal');
+    const agreeTermsBtn = document.getElementById('agreeTermsBtn');
+    const termsCheckbox = document.getElementById('terms');
+    
+    if (termsModalElement && openTermsLink && agreeTermsBtn && termsCheckbox) {
+        const termsModal = new bootstrap.Modal(termsModalElement);
+        
+        openTermsLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            termsModal.show();
+        });
+        
+        agreeTermsBtn.addEventListener('click', function() {
+            termsCheckbox.checked = true;
+            termsModal.hide();
+            showNotification('You have agreed to the Terms and Conditions', 'success');
+        });
+        
+        // Ensure checkbox is unchecked when modal is opened if not already checked
+        termsModalElement.addEventListener('show.bs.modal', function () {
+            // We don't auto-check here, user must click "I Agree"
         });
     }
     
