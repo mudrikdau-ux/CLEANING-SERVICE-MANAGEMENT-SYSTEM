@@ -21,7 +21,7 @@
   <div class="login-card">
     <div class="login-header">
       <div class="logo-icon">
-        <i class="bi bi-brush-fill"></i>
+        <img src="image/logo.jpeg" alt="CleanSpark Logo">
       </div>
       <h3>Staff Portal</h3>
       <p>CleanSpark Cleaning Service Management</p>
@@ -56,7 +56,7 @@
   <!-- Top Navigation Bar -->
   <nav class="dashboard-nav">
     <div class="nav-brand">
-      <i class="bi bi-brush-fill"></i>
+      <img src="image/logo.jpeg" alt="CleanSpark Logo" class="nav-logo">
       <span>CleanSpark Staff Portal</span>
     </div>
     <div class="nav-menu">
@@ -294,7 +294,7 @@
             </button>
           </div>
           <div class="mt-2 text-end">
-            <button id="attachReportToChatBtn" class="btn-sm btn-outline-primary" disabled>
+            <button id="attachReportToChatBtn" class="btn-attach-report" disabled>
               <i class="bi bi-paperclip"></i> Attach Last Report
             </button>
           </div>
@@ -346,6 +346,27 @@
   </div>
 </div>
 
+<!-- Payment Stats Detail Modal -->
+<div id="paymentStatsDetailModal" class="detail-modal" style="display:none;">
+  <div class="detail-modal-content">
+    <div class="detail-modal-header">
+      <div class="detail-modal-title">
+        <i id="paymentStatsDetailIcon" class="bi bi-cash-stack"></i>
+        <h2 id="paymentStatsDetailTitle">Payment Details</h2>
+      </div>
+      <button id="closePaymentStatsDetailModal" class="close-modal-btn">&times;</button>
+    </div>
+    <div class="detail-modal-body" id="paymentStatsDetailContent">
+      <!-- Payment stats details will be dynamically loaded -->
+    </div>
+    <div class="detail-modal-footer">
+      <button id="closePaymentStatsDetailFooter" class="btn-close-detail">
+        <i class="bi bi-x-circle"></i> Close
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Logout Confirmation Modal -->
 <div id="logoutConfirmModal" class="logout-modal-overlay" style="display:none;">
   <div class="logout-modal-container">
@@ -383,7 +404,7 @@
   <div class="receipt-modal-content">
     <div class="receipt-header">
       <div class="receipt-logo">
-        <i class="bi bi-brush-fill"></i>
+        <img src="image/logo.jpeg" alt="CleanSpark Logo" class="receipt-logo-img">
         <h3>CleanSpark Cleaning Services</h3>
       </div>
       <button id="closeReceiptModalBtn" class="close-modal">&times;</button>
@@ -407,7 +428,7 @@
   <div class="receipt-modal-content" style="max-width: 600px;">
     <div class="receipt-header">
       <div class="receipt-logo">
-        <i class="bi bi-file-text"></i>
+        <img src="image/logo.jpeg" alt="CleanSpark Logo" class="receipt-logo-img">
         <h3>Weekly Report Preview</h3>
       </div>
       <button id="closeReportModalBtn" class="close-modal">&times;</button>
@@ -417,10 +438,58 @@
     </div>
     <div class="receipt-footer">
       <button id="confirmDownloadReportBtn" class="btn-print">
-        <i class="bi bi-download"></i> Download
+        <i class="bi bi-download"></i> Download PDF
       </button>
       <button id="closeReportPreviewBtn" class="btn-close-receipt">
         <i class="bi bi-x-circle"></i> Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Message Action Modal -->
+<div id="chatActionModal" class="chat-action-modal" style="display:none;">
+  <div class="chat-action-content">
+    <button class="chat-action-btn" data-action="copy">
+      <i class="bi bi-clipboard"></i> Copy Message
+    </button>
+    <button class="chat-action-btn" data-action="edit">
+      <i class="bi bi-pencil"></i> Edit Message
+    </button>
+    <button class="chat-action-btn" data-action="delete-for-me">
+      <i class="bi bi-eye-slash"></i> Delete for Me
+    </button>
+    <button class="chat-action-btn" data-action="delete-for-all">
+      <i class="bi bi-trash"></i> Delete for Everyone
+    </button>
+    <button class="chat-action-btn chat-action-cancel" data-action="cancel">
+      <i class="bi bi-x"></i> Cancel
+    </button>
+  </div>
+</div>
+
+<!-- Edit Message Modal -->
+<div id="editMessageModal" class="detail-modal" style="display:none;">
+  <div class="detail-modal-content" style="max-width: 500px;">
+    <div class="detail-modal-header">
+      <div class="detail-modal-title">
+        <i class="bi bi-pencil"></i>
+        <h2>Edit Message</h2>
+      </div>
+      <button id="closeEditMessageModal" class="close-modal-btn">&times;</button>
+    </div>
+    <div class="detail-modal-body">
+      <div class="form-group">
+        <label><i class="bi bi-chat-dots"></i> Edit your message</label>
+        <textarea id="editMessageInput" class="form-control" rows="4" placeholder="Edit your message..."></textarea>
+      </div>
+    </div>
+    <div class="detail-modal-footer">
+      <button id="cancelEditMessage" class="btn-close-detail">
+        <i class="bi bi-x"></i> Cancel
+      </button>
+      <button id="saveEditMessage" class="btn-validate-payment">
+        <i class="bi bi-check"></i> Save Changes
       </button>
     </div>
   </div>
