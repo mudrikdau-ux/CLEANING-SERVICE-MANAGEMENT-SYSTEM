@@ -1,7 +1,9 @@
 // ============================================================
 //  CleanSpark ADMIN PANEL — admin.js (COMPLETE - FINAL)
 //  All prices in TZS | Contractors, Invoice, Messages, Reports
-//  Enhanced Logout Flow | Professional Report Generation
+//  Enhanced Logout Flow | Professional PDF Report Generation
+//  Worker Names Field | Logo Integration
+//  FIXED: Professional PDF Invoice Download
 // ============================================================
 
 // ========== MISSING ASSIGNMENT FUNCTIONS ==========
@@ -498,13 +500,9 @@ function cancelLogout() {
 }
 
 function confirmLogout() {
-    // Hide the confirmation dialog
     document.getElementById('logoutOverlay').style.display = 'none';
-    
-    // Show loading screen
     document.getElementById('logoutLoading').style.display = 'flex';
     
-    // Animate progress bar
     const progressBar = document.getElementById('logoutProgressBar');
     let progress = 0;
     
@@ -521,16 +519,13 @@ function confirmLogout() {
 }
 
 function performLogout() {
-    // Clear session
     sessionStorage.clear();
     
-    // Brief delay for animation
     setTimeout(() => {
         document.getElementById('logoutLoading').style.display = 'none';
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('loginSection').style.display = 'flex';
         
-        // Reset login form
         document.getElementById('adminEmail').value = '';
         document.getElementById('adminPassword').value = '';
         document.querySelector('.step-2').classList.remove('active');
@@ -541,7 +536,6 @@ function performLogout() {
     }, 500);
 }
 
-// Override the sidebar logout to use enhanced flow
 function logoutAdmin() {
     initiateLogout();
 }
@@ -951,12 +945,13 @@ function clearEditServiceImage() {
     document.getElementById('editImagePreview').src = '';
 }
 
-// ========== CONTRACTORS ==========
+// ========== CONTRACTORS (WITH WORKER NAMES) ==========
 function addContractor() {
     const name          = document.getElementById('contractorName').value.trim();
     const type          = document.getElementById('contractorType').value;
     const location      = document.getElementById('contractorLocation').value.trim();
     const workers       = parseInt(document.getElementById('contractorWorkers').value) || 0;
+    const workerNamesText = document.getElementById('contractorWorkerNames').value.trim();
     const startDate     = document.getElementById('contractorStartDate').value;
     const endDate       = document.getElementById('contractorEndDate').value;
     const contractValue = parseInt(document.getElementById('contractorValue').value) || 0;
@@ -970,6 +965,10 @@ function addContractor() {
         return;
     }
 
+    const workerNames = workerNamesText 
+        ? workerNamesText.split('\n').map(w => w.trim()).filter(w => w.length > 0)
+        : [];
+
     const servicesList = servicesStr ? servicesStr.split(',').map(s => s.trim()).filter(s => s) : [];
 
     const contractors = JSON.parse(localStorage.getItem('contractors')) || [];
@@ -980,6 +979,7 @@ function addContractor() {
         type,
         location,
         workersAssigned: workers,
+        workerNames: workerNames,
         contractStart: startDate,
         contractEnd: endDate,
         contractValue,
@@ -994,11 +994,11 @@ function addContractor() {
     contractors.push(newContractor);
     localStorage.setItem('contractors', JSON.stringify(contractors));
 
-    // Clear form
     document.getElementById('contractorName').value = '';
     document.getElementById('contractorType').value = 'private';
     document.getElementById('contractorLocation').value = '';
     document.getElementById('contractorWorkers').value = '';
+    document.getElementById('contractorWorkerNames').value = '';
     document.getElementById('contractorStartDate').value = '';
     document.getElementById('contractorEndDate').value = '';
     document.getElementById('contractorValue').value = '';
@@ -1032,6 +1032,10 @@ function renderContractorsTable(contractors) {
                 ? '<span class="contractor-type-badge contractor-private"><i class="bi bi-briefcase me-1"></i>Private</span>'
                 : '<span class="contractor-type-badge contractor-government"><i class="bi bi-building-fill me-1"></i>Government</span>';
 
+            const workerNamesDisplay = contractor.workerNames && contractor.workerNames.length > 0
+                ? `<div class="worker-names-list">${contractor.workerNames.map(w => `<span class="worker-name-tag"><i class="bi bi-person"></i> ${escapeHtml(w)}</span>`).join('')}</div>`
+                : `<span class="text-muted" style="font-size:11px;">No workers listed</span>`;
+
             html += `
                 <tr>
                     <td>
@@ -1040,7 +1044,10 @@ function renderContractorsTable(contractors) {
                     </td>
                     <td>${typeBadge}</td>
                     <td>${escapeHtml(contractor.location || '—')}</td>
-                    <td><span class="badge bg-primary" style="font-size:12px;">${contractor.workersAssigned || 0} workers</span></td>
+                    <td>
+                        <span class="badge bg-primary" style="font-size:12px;">${contractor.workersAssigned || 0} workers</span>
+                        <div style="margin-top:4px;">${workerNamesDisplay}</div>
+                    </td>
                     <td style="font-size:12px;">
                         <i class="bi bi-calendar3 me-1"></i>${escapeHtml(contractor.contractStart || '—')} 
                         — ${escapeHtml(contractor.contractEnd || '—')}
@@ -1069,6 +1076,10 @@ function viewContractorDetails(contractorId) {
     const contractor = contractors.find(c => c.id == contractorId);
     if (!contractor) return;
     currentContractorId = contractorId;
+
+    const workerNamesDisplay = contractor.workerNames && contractor.workerNames.length > 0
+        ? contractor.workerNames.map(w => `<span class="worker-name-tag"><i class="bi bi-person"></i> ${escapeHtml(w)}</span>`).join('')
+        : '<span class="text-muted">No workers listed</span>';
 
     document.getElementById('contractorDetailsBody').innerHTML = `
         <div class="contractor-detail-section">
@@ -1102,6 +1113,12 @@ function viewContractorDetails(contractorId) {
                     <div class="label">Workers Assigned</div>
                     <div class="value">${contractor.workersAssigned || 0}</div>
                 </div>
+            </div>
+        </div>
+        <div class="contractor-detail-section">
+            <h6><i class="bi bi-people me-1"></i>Worker Names</h6>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                ${workerNamesDisplay}
             </div>
         </div>
         <div class="contractor-detail-section">
@@ -1282,17 +1299,155 @@ function showInvoicePreview(invoiceData) {
     new bootstrap.Modal(document.getElementById('invoicePreviewModal')).show();
 }
 
+// ============================================================
+//  PROFESSIONAL PDF INVOICE DOWNLOAD (FIXED)
+//  Uses jsPDF + html2canvas to generate a properly formatted PDF
+// ============================================================
+function downloadInvoicePDF() {
+    if (!currentInvoiceData) {
+        showNotification('No invoice data to download', 'error');
+        return;
+    }
+
+    const inv = currentInvoiceData;
+
+    // Build professional PDF invoice HTML
+    const pdfHTML = `
+        <div class="invoice-pdf-container">
+            <!-- Header with Logo & Company Details -->
+            <div class="invoice-pdf-header">
+                <div class="invoice-pdf-company">
+                    <img src="image/logo.jpeg" alt="CleanSpark Logo" class="invoice-pdf-logo" onerror="this.style.display='none';">
+                    <div class="invoice-pdf-company-info">
+                        <h2>CleanSpark</h2>
+                        <p>Cleaning Service Management System</p>
+                        <p>Zanzibar, Tanzania</p>
+                        <p>info@CleanSpark.co.tz | +255 777 000 000</p>
+                    </div>
+                </div>
+                <div class="invoice-pdf-title-section">
+                    <h1 class="invoice-pdf-title">INVOICE</h1>
+                    <p class="invoice-pdf-number">#${escapeHtml(inv.id)}</p>
+                    <div class="invoice-pdf-dates">
+                        <span><strong>Date:</strong> ${escapeHtml(inv.invoiceDate)}</span>
+                        ${inv.dueDate ? `<span><strong>Due Date:</strong> ${escapeHtml(inv.dueDate)}</span>` : ''}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bill To Section -->
+            <div class="invoice-pdf-bill-to">
+                <h5>Bill To:</h5>
+                <p class="bill-name">${escapeHtml(inv.contractorName)}</p>
+                <p class="bill-type">${escapeHtml(inv.contractorType === 'private' ? 'Private Company' : 'Government Organization')}</p>
+            </div>
+
+            <!-- Invoice Items Table -->
+            <table class="invoice-pdf-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Details</th>
+                        <th>Amount (TZS)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Work / Service</strong></td>
+                        <td>${escapeHtml(inv.workDesc)}</td>
+                        <td>TZS ${Number(inv.workCost).toLocaleString('en-TZ')}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Staff Cost</strong></td>
+                        <td>${inv.workersCount || 5} Workers</td>
+                        <td>TZS ${Number(inv.workersCost).toLocaleString('en-TZ')}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Equipment Cost</strong></td>
+                        <td>Cleaning Equipment &amp; Supplies</td>
+                        <td>TZS ${Number(inv.equipmentCost).toLocaleString('en-TZ')}</td>
+                    </tr>
+                    <tr class="invoice-pdf-total-row">
+                        <td colspan="2">TOTAL AMOUNT</td>
+                        <td>TZS ${Number(inv.total).toLocaleString('en-TZ')}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Footer -->
+            <div class="invoice-pdf-footer">
+                <p class="thank-you">Thank you for your business!</p>
+                <p>CleanSpark Cleaning Service Management System</p>
+                <p>Zanzibar, Tanzania | info@CleanSpark.co.tz</p>
+                <p style="margin-top:8px;font-size:10px;">This is a computer-generated invoice. No signature required.</p>
+            </div>
+        </div>
+    `;
+
+    // Set the template content
+    const template = document.getElementById('invoicePDFTemplate');
+    template.innerHTML = pdfHTML;
+    template.style.left = '0';
+    template.style.position = 'relative';
+
+    // Use html2canvas to capture the invoice as image, then jsPDF to save as PDF
+    html2canvas(template, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        allowTaint: true
+    }).then(canvas => {
+        // Reset template position
+        template.style.left = '-9999px';
+        template.style.position = 'absolute';
+
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth - 16;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        let heightLeft = imgHeight;
+        let position = 8;
+
+        pdf.addImage(imgData, 'PNG', 8, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 8, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+
+        const fileName = `CleanSpark_Invoice_${inv.id}_${inv.invoiceDate}.pdf`;
+        pdf.save(fileName);
+
+        showNotification('Professional PDF invoice downloaded successfully!', 'success');
+    }).catch(error => {
+        console.error('PDF generation error:', error);
+        // Fallback: open print window
+        template.style.left = '-9999px';
+        template.style.position = 'absolute';
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html><html><head><title>Invoice ${inv.id}</title>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+            <link rel="stylesheet" href="css/admin.css">
+            <style>body{font-family:'Inter',sans-serif;padding:40px;background:#fff;}</style>
+            </head><body>${pdfHTML}</body></html>`);
+        printWindow.document.close();
+        setTimeout(() => printWindow.print(), 500);
+    });
+}
+
+// Keep the old downloadInvoice for backward compatibility (renamed to avoid conflict)
 function downloadInvoice() {
-    if (!currentInvoiceData) return;
-    const invoiceHTML = document.getElementById('invoicePreviewBody').innerHTML;
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <!DOCTYPE html><html><head><title>Invoice ${currentInvoiceData.id}</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <style>body{font-family:'Inter',sans-serif;padding:40px;max-width:800px;margin:auto;}@media print{body{padding:20px;}}</style>
-        </head><body>${invoiceHTML}</body></html>`);
-    printWindow.document.close();
-    setTimeout(() => printWindow.print(), 500);
+    downloadInvoicePDF();
 }
 
 function shareInvoice() {
@@ -1324,8 +1479,8 @@ function loadInvoices() {
                     <td><strong style="color:var(--primary)">${formatTZS(inv.total)}</strong></td>
                     <td><span class="badge bg-info">Generated</span></td>
                     <td style="text-align:center;">
-                        <button class="action-btn action-btn-view" onclick='showInvoicePreview(${JSON.stringify(inv).replace(/'/g, "&#39;")})' title="View"><i class="bi bi-eye-fill"></i></button>
-                        <button class="action-btn action-btn-edit" onclick='currentInvoiceData=${JSON.stringify(inv).replace(/'/g, "&#39;")};downloadInvoice()' title="Download"><i class="bi bi-download"></i></button>
+                        <button class="action-btn action-btn-view" onclick='currentInvoiceData=${JSON.stringify(inv).replace(/'/g, "&#39;")};showInvoicePreview(currentInvoiceData)' title="View"><i class="bi bi-eye-fill"></i></button>
+                        <button class="action-btn action-btn-edit" onclick='currentInvoiceData=${JSON.stringify(inv).replace(/'/g, "&#39;")};downloadInvoicePDF()' title="Download PDF"><i class="bi bi-file-earmark-pdf"></i></button>
                         <button class="action-btn action-btn-reply" onclick='currentInvoiceData=${JSON.stringify(inv).replace(/'/g, "&#39;")};shareInvoice()' title="Share"><i class="bi bi-share-fill"></i></button>
                     </td>
                 </tr>`;
@@ -1731,9 +1886,6 @@ function switchAssignTab(tabName, btnEl) {
     }
 }
 
-// [Include all assignment render functions from previous version - renderAllStaffTab, renderAssignedStaffTab, etc.]
-// For brevity, I'm including the key functions. The full assignment module is in the previous response.
-
 function renderAllStaffTab() {
     const staff = JSON.parse(localStorage.getItem('staffAccounts')) || [];
     const assignments = getAssignmentData();
@@ -1818,10 +1970,7 @@ function renderUnassignedStaffTab() {
     document.getElementById('unassignedStaffList').innerHTML = html;
 }
 
-// Additional assignment functions (renderAssignedServicesTab, renderUnassignedServicesTab, openAssignServiceModal, etc.) 
-// are included from the previous complete version. They remain unchanged.
-
-// ========== PROFESSIONAL REPORT GENERATION ==========
+// ========== PROFESSIONAL PDF REPORT GENERATION ==========
 function generateProfessionalReport() {
     const fromDate = document.getElementById('reportFromDate').value;
     const toDate = document.getElementById('reportToDate').value;
@@ -1842,7 +1991,6 @@ function generateProfessionalReport() {
     const supervisorMsgs = JSON.parse(localStorage.getItem('supervisor_messages')) || [];
     const assignments = JSON.parse(localStorage.getItem('serviceAssignments')) || {};
 
-    // Filter invoices by date range
     const filteredInvoices = invoices.filter(inv => inv.invoiceDate >= fromDate && inv.invoiceDate <= toDate);
     const totalRevenue = filteredInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
 
@@ -1866,11 +2014,10 @@ function generateProfessionalReport() {
         detailedData: {}
     };
 
-    // Build report HTML
     let reportHTML = `
         <div class="report-preview">
             <div class="report-cover">
-                <div class="report-logo"><i class="bi bi-brush-fill"></i></div>
+                <div class="report-logo"><i class="bi bi-building-fill"></i></div>
                 <h2>CleanSpark Professional Report</h2>
                 <p class="report-subtitle">Cleaning Service Management System</p>
             </div>
@@ -1930,7 +2077,6 @@ function generateProfessionalReport() {
                 </div>
             </div>`;
 
-    // Staff Details Section
     if (reportType === 'all' || reportType === 'staff') {
         reportHTML += `
             <div class="report-section">
@@ -1951,7 +2097,6 @@ function generateProfessionalReport() {
             </div>`;
     }
 
-    // Contractors Section
     if (reportType === 'all' || reportType === 'contractors') {
         reportHTML += `
             <div class="report-section">
@@ -1971,7 +2116,6 @@ function generateProfessionalReport() {
             </div>`;
     }
 
-    // Revenue Section
     if (reportType === 'all' || reportType === 'revenue') {
         reportHTML += `
             <div class="report-section">
@@ -2003,6 +2147,51 @@ function generateProfessionalReport() {
     document.getElementById('reportPreviewBody').innerHTML = reportHTML;
     new bootstrap.Modal(document.getElementById('reportPreviewModal')).show();
     showNotification('Professional report generated!', 'success');
+}
+
+function downloadReportAsPDF() {
+    if (!generatedReportData) {
+        showNotification('Please generate a report first', 'error');
+        return;
+    }
+
+    const reportElement = document.getElementById('reportPreviewBody');
+    
+    html2canvas(reportElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+    }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth - 20;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        let heightLeft = imgHeight;
+        let position = 10;
+
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+
+        const fileName = `CleanSpark_Report_${generatedReportData.type}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        pdf.save(fileName);
+        showNotification('PDF report downloaded successfully!', 'success');
+    }).catch(error => {
+        console.error('PDF generation error:', error);
+        showNotification('Error generating PDF. Please try again.', 'error');
+    });
 }
 
 function downloadGeneratedReport() {
@@ -2239,9 +2428,9 @@ function exportData() {
 function initializeSampleData() {
     if (!localStorage.getItem('contractors')) {
         localStorage.setItem('contractors', JSON.stringify([
-            { id: 1001, companyName: 'Zanzibar Beach Resort', type: 'private', location: 'Nungwi, Zanzibar', contactPerson: 'Ahmed Hassan', email: 'ahmed@zanzibarbeach.com', phone: '+255 777 123456', workersAssigned: 8, contractStart: '2024-01-15', contractEnd: '2025-01-14', contractValue: 24000000, status: 'active', services: ['Daily Room Cleaning', 'Pool Maintenance', 'Laundry Service'] },
-            { id: 1002, companyName: 'Stone Town Municipal Office', type: 'government', location: 'Stone Town, Zanzibar', contactPerson: 'Fatma Ali', email: 'fatma@stonetown.go.tz', phone: '+255 777 654321', workersAssigned: 12, contractStart: '2024-03-01', contractEnd: '2025-02-28', contractValue: 36000000, status: 'active', services: ['Office Cleaning', 'Waste Management', 'Grounds Maintenance'] },
-            { id: 1003, companyName: 'Nungwi Paradise Hotel', type: 'private', location: 'Nungwi Beach', contactPerson: 'John Mwangi', email: 'john@nungwiparadise.com', phone: '+255 777 987654', workersAssigned: 5, contractStart: '2024-06-01', contractEnd: '2024-12-31', contractValue: 15000000, status: 'active', services: ['Beach Cleaning', 'Room Service'] }
+            { id: 1001, companyName: 'Zanzibar Beach Resort', type: 'private', location: 'Nungwi, Zanzibar', contactPerson: 'Ahmed Hassan', email: 'ahmed@zanzibarbeach.com', phone: '+255 777 123456', workersAssigned: 8, workerNames: ['Ahmed Hassan', 'Fatma Ali', 'John Mwangi', 'Amina Salum', 'Juma Khamis', 'Asha Bakari', 'Mohammed Juma', 'Aisha Mohammed'], contractStart: '2024-01-15', contractEnd: '2025-01-14', contractValue: 24000000, status: 'active', services: ['Daily Room Cleaning', 'Pool Maintenance', 'Laundry Service'] },
+            { id: 1002, companyName: 'Stone Town Municipal Office', type: 'government', location: 'Stone Town, Zanzibar', contactPerson: 'Fatma Ali', email: 'fatma@stonetown.go.tz', phone: '+255 777 654321', workersAssigned: 12, workerNames: ['Hassan Juma', 'Zainab Omar', 'Abdul Rashid', 'Maryam Hassan', 'Khalid Bakari', 'Saida Mohammed', 'Rashid Ali', 'Zuwena Juma', 'Hamisi Khamis', 'Mwajuma Salum', 'Juma Abdallah', 'Asha Mohammed'], contractStart: '2024-03-01', contractEnd: '2025-02-28', contractValue: 36000000, status: 'active', services: ['Office Cleaning', 'Waste Management', 'Grounds Maintenance'] },
+            { id: 1003, companyName: 'Nungwi Paradise Hotel', type: 'private', location: 'Nungwi Beach', contactPerson: 'John Mwangi', email: 'john@nungwiparadise.com', phone: '+255 777 987654', workersAssigned: 5, workerNames: ['Peter Charles', 'Grace Michael', 'David John', 'Sarah William', 'James Brown'], contractStart: '2024-06-01', contractEnd: '2024-12-31', contractValue: 15000000, status: 'active', services: ['Beach Cleaning', 'Room Service'] }
         ]));
     }
     if (!localStorage.getItem('supervisor_messages')) {

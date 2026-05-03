@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
@@ -56,7 +58,8 @@
     <div class="login-card animate__animated animate__fadeInUp">
         <div class="login-header">
             <div class="logo-icon">
-                <i class="bi bi-shield-lock-fill"></i>
+                <img src="image/logo.jpeg" alt="CleanSpark" class="login-logo-img" onerror="this.style.display='none';this.parentElement.querySelector('.login-logo-fallback').style.display='block';">
+                <i class="bi bi-building-fill login-logo-fallback" style="display:none;"></i>
             </div>
             <h3>Admin Portal</h3>
             <p>CleanSpark Cleaning Service Management System</p>
@@ -114,7 +117,10 @@
     <!-- Top Navigation Bar -->
     <nav class="dashboard-nav">
         <div class="nav-brand">
-            <i class="bi bi-brush-fill"></i>
+            <img src="image/logo.jpeg" alt="CleanSpark Logo" class="brand-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="brand-logo-fallback" style="display:none; width:36px; height:36px; border-radius:8px; background:linear-gradient(135deg, #667eea, #764ba2); align-items:center; justify-content:center;">
+                <span style="color:white; font-weight:800; font-size:16px;">CS</span>
+            </div>
             <span>CleanSpark Admin</span>
         </div>
         <div class="nav-user">
@@ -246,8 +252,13 @@
                             <input type="text" id="contractorLocation" class="form-control" placeholder="e.g. Stone Town, Zanzibar">
                         </div>
                         <div class="col-md-2 col-sm-6">
-                            <label class="form-label field-label">Workers Assigned</label>
+                            <label class="form-label field-label">Workers Count</label>
                             <input type="number" id="contractorWorkers" class="form-control" placeholder="e.g. 10" min="0">
+                        </div>
+                        <div class="col-md-6 col-sm-12">
+                            <label class="form-label field-label">Contractor Worker Names <span class="text-danger">*</span></label>
+                            <textarea id="contractorWorkerNames" class="form-control" rows="3" placeholder="Enter worker names (one per line)&#10;e.g.:&#10;Ahmed Hassan&#10;Fatma Ali&#10;John Mwangi"></textarea>
+                            <small class="text-muted" style="font-size:11px;">Enter each worker name on a new line</small>
                         </div>
                         <div class="col-md-2 col-sm-6">
                             <label class="form-label field-label">Contract Start</label>
@@ -819,8 +830,8 @@
                             </button>
                         </div>
                         <div class="col-md-2">
-                            <button onclick="generateReport()" class="btn btn-outline-primary w-100">
-                                <i class="bi bi-download me-1"></i>Quick Export
+                            <button onclick="downloadReportAsPDF()" class="btn btn-success w-100">
+                                <i class="bi bi-file-earmark-pdf me-1"></i>Download PDF
                             </button>
                         </div>
                     </div>
@@ -840,6 +851,8 @@
                         </div>
                     </div>
                 </div>
+                
+                <div id="reportPDFTemplate" style="display:none;"></div>
             </div>
 
             <!-- SETTINGS SECTION -->
@@ -1123,7 +1136,7 @@
             <div class="modal-body" id="invoicePreviewBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" onclick="downloadInvoice()"><i class="bi bi-download me-1"></i>Download</button>
+                <button type="button" class="btn btn-success" onclick="downloadInvoicePDF()"><i class="bi bi-file-earmark-pdf me-1"></i>Download PDF</button>
                 <button type="button" class="btn btn-primary" onclick="shareInvoice()"><i class="bi bi-share-fill me-1"></i>Share</button>
             </div>
         </div>
@@ -1168,6 +1181,9 @@
     </div>
 </div>
 
+<!-- Hidden invoice template for PDF generation -->
+<div id="invoicePDFTemplate" style="position:absolute; left:-9999px; top:0; width:800px; background:#ffffff; font-family:'Inter',sans-serif; padding:40px;"></div>
+
 <!-- Report Preview Modal -->
 <div class="modal fade" id="reportPreviewModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
@@ -1179,7 +1195,7 @@
             <div class="modal-body" id="reportPreviewBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" onclick="downloadGeneratedReport()"><i class="bi bi-download me-1"></i>Download Report</button>
+                <button type="button" class="btn btn-success" onclick="downloadReportAsPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>Download PDF</button>
                 <button type="button" class="btn btn-primary" onclick="shareGeneratedReport()"><i class="bi bi-share-fill me-1"></i>Share Report</button>
             </div>
         </div>
@@ -1189,7 +1205,6 @@
 <!-- Toast Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="js/admin.js"></script>

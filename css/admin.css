@@ -1,10 +1,10 @@
 /* ========================================
    CleanSpark ADMIN PANEL — admin.css
-   Complete with Logout Overlay, Report Preview,
-   and Contractor Add Form styles
+   Complete with Logo Support, Worker Names Field,
+   PDF Report Styles, and Professional Design
    ======================================== */
 
-   /* ============================================================
+/* ============================================================
    SERVICES ASSIGNMENT SECTION STYLES — COMPLETE FIX
    ============================================================ */
 
@@ -592,6 +592,38 @@ body {
 }
 
 /* ========================================
+   BRAND LOGO STYLES
+   ======================================== */
+.brand-logo {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+
+.brand-logo:hover {
+    transform: scale(1.05);
+}
+
+.brand-logo-fallback {
+    display: none;
+}
+
+/* Login page logo */
+.login-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 14px;
+}
+
+.login-logo-fallback {
+    font-size: 30px;
+    color: white;
+}
+
+/* ========================================
    LOGOUT OVERLAY STYLES
    ======================================== */
 .logout-overlay {
@@ -834,6 +866,7 @@ body {
     justify-content: center;
     margin: 0 auto 16px;
     box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    overflow: hidden;
 }
 
 .logo-icon i { font-size: 30px; color: white; }
@@ -1015,15 +1048,7 @@ body {
 .nav-brand {
     display: flex;
     align-items: center;
-    gap: 8px;
-}
-
-.nav-brand i {
-    font-size: 22px;
-    background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    gap: 10px;
 }
 
 .nav-brand span {
@@ -1333,6 +1358,32 @@ textarea.form-control {
 }
 
 .input-tzs .form-control { padding-left: 42px; }
+
+/* ========================================
+   CONTRACTOR WORKER NAMES FIELD
+   ======================================== */
+#contractorWorkerNames {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.8;
+    resize: vertical;
+    min-height: 85px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#contractorWorkerNames:focus {
+    border-color: var(--grad-start);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+}
+
+#contractorWorkerNames::placeholder {
+    color: #a0aec0;
+    font-size: 12px;
+}
 
 /* ========================================
    WHAT'S INCLUDED — MANUAL ENTRY
@@ -1784,10 +1835,11 @@ textarea.form-control {
 }
 
 /* ========================================
-   REPORT PREVIEW STYLES
+   PDF REPORT STYLES (Professional Design)
    ======================================== */
 .report-preview {
     font-family: 'Inter', sans-serif;
+    color: #1a202c;
 }
 
 .report-cover {
@@ -1795,6 +1847,7 @@ textarea.form-control {
     padding: 40px 20px;
     border-bottom: 3px solid var(--grad-start);
     margin-bottom: 24px;
+    background: linear-gradient(to bottom, #fafbff, white);
 }
 
 .report-cover .report-logo {
@@ -1804,28 +1857,30 @@ textarea.form-control {
 }
 
 .report-cover h2 {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 800;
     color: var(--dark-color);
     margin-bottom: 4px;
+    letter-spacing: -0.5px;
 }
 
 .report-cover .report-subtitle {
     font-size: 14px;
     color: var(--text-muted);
+    font-weight: 500;
 }
 
 .report-meta-row {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 28px;
 }
 
 .report-meta-item {
     flex: 1;
     min-width: 150px;
-    padding: 12px 16px;
+    padding: 14px 18px;
     background: #f7fafc;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
@@ -1836,7 +1891,7 @@ textarea.form-control {
     font-weight: 600;
     text-transform: uppercase;
     color: var(--text-muted);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     margin-bottom: 4px;
 }
 
@@ -1847,15 +1902,16 @@ textarea.form-control {
 }
 
 .report-section {
-    margin-bottom: 24px;
+    margin-bottom: 28px;
+    page-break-inside: avoid;
 }
 
 .report-section h5 {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--grad-start);
-    margin-bottom: 12px;
-    padding-bottom: 8px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
     border-bottom: 2px solid rgba(102, 126, 234, 0.2);
     display: flex;
     align-items: center;
@@ -1883,7 +1939,7 @@ textarea.form-control {
 .report-table td {
     padding: 10px 12px;
     border-bottom: 1px solid #f7fafc;
-    font-size: 12px;
+    font-size: 12.5px;
 }
 
 .report-summary-grid {
@@ -1898,6 +1954,11 @@ textarea.form-control {
     border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     text-align: center;
+    transition: transform 0.2s;
+}
+
+.report-summary-card:hover {
+    transform: translateY(-2px);
 }
 
 .report-summary-card .summary-icon {
@@ -1907,7 +1968,7 @@ textarea.form-control {
 }
 
 .report-summary-card .summary-value {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 800;
     color: var(--dark-color);
 }
@@ -1917,15 +1978,29 @@ textarea.form-control {
     color: var(--text-muted);
     font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.03em;
 }
 
 .report-footer {
     text-align: center;
-    padding-top: 20px;
+    padding-top: 24px;
     border-top: 1px solid var(--border);
-    margin-top: 24px;
+    margin-top: 28px;
     font-size: 11px;
     color: var(--text-muted);
+}
+
+/* PDF-specific styles */
+@media print {
+    body {
+        background: white;
+    }
+    .report-preview {
+        padding: 20px;
+    }
+    .report-cover {
+        background: white;
+    }
 }
 
 /* ========================================
@@ -2268,6 +2343,244 @@ textarea.form-control {
 }
 
 /* ========================================
+   PROFESSIONAL INVOICE PDF STYLES
+   ======================================== */
+.invoice-pdf-container {
+    width: 800px;
+    background: #ffffff;
+    font-family: 'Inter', 'Helvetica', sans-serif;
+    color: #1a202c;
+    padding: 50px 45px;
+}
+
+.invoice-pdf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 25px;
+    border-bottom: 3px solid #667eea;
+    margin-bottom: 30px;
+}
+
+.invoice-pdf-company {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.invoice-pdf-logo {
+    width: 55px;
+    height: 55px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.invoice-pdf-company-info h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #667eea;
+    margin: 0 0 2px 0;
+    letter-spacing: -0.3px;
+}
+
+.invoice-pdf-company-info p {
+    font-size: 11px;
+    color: #718096;
+    margin: 1px 0;
+}
+
+.invoice-pdf-title-section {
+    text-align: right;
+}
+
+.invoice-pdf-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #1a202c;
+    margin: 0;
+    letter-spacing: 2px;
+}
+
+.invoice-pdf-number {
+    font-size: 13px;
+    color: #667eea;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.invoice-pdf-dates {
+    font-size: 11px;
+    color: #718096;
+    margin-top: 8px;
+}
+
+.invoice-pdf-dates span {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.invoice-pdf-bill-to {
+    margin-bottom: 28px;
+}
+
+.invoice-pdf-bill-to h5 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #718096;
+    margin: 0 0 6px 0;
+}
+
+.invoice-pdf-bill-to .bill-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a202c;
+}
+
+.invoice-pdf-bill-to .bill-type {
+    font-size: 12px;
+    color: #718096;
+    font-weight: 500;
+}
+
+.invoice-pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+}
+
+.invoice-pdf-table thead th {
+    background: #667eea;
+    color: #ffffff;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    text-align: left;
+    border: none;
+}
+
+.invoice-pdf-table thead th:last-child {
+    text-align: right;
+}
+
+.invoice-pdf-table tbody td {
+    padding: 13px 16px;
+    font-size: 13px;
+    color: #1a202c;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.invoice-pdf-table tbody td:last-child {
+    text-align: right;
+    font-weight: 600;
+}
+
+.invoice-pdf-table tbody tr:nth-child(even) {
+    background: #f7fafc;
+}
+
+.invoice-pdf-total-row td {
+    font-weight: 800 !important;
+    font-size: 16px !important;
+    color: #667eea !important;
+    border-top: 3px solid #667eea !important;
+    background: #f8f7ff !important;
+    padding: 15px 16px !important;
+}
+
+.invoice-pdf-total-row td:first-child {
+    text-align: right;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.invoice-pdf-footer {
+    margin-top: 35px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+.invoice-pdf-footer p {
+    font-size: 12px;
+    color: #718096;
+    margin: 3px 0;
+}
+
+.invoice-pdf-footer .thank-you {
+    font-size: 14px;
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 6px;
+}
+
+/* ========================================
+   CONTRACTOR DETAIL MODAL
+   ======================================== */
+.contractor-detail-section {
+    margin-bottom: 24px;
+}
+
+.contractor-detail-section h6 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--grad-start);
+    margin-bottom: 12px;
+}
+
+.contractor-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.contractor-info-item {
+    padding: 10px;
+    background: #f7fafc;
+    border-radius: 8px;
+}
+
+.contractor-info-item .label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.contractor-info-item .value {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+/* ========================================
+   WORKER NAMES LIST STYLES
+   ======================================== */
+.worker-names-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.worker-name-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    background: rgba(102, 126, 234, 0.08);
+    color: var(--grad-start);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* ========================================
    TOAST NOTIFICATIONS
    ======================================== */
 .toast-container { z-index: 9999; }
@@ -2320,12 +2633,15 @@ textarea.form-control {
     .sidebar-menu li { padding: 8px 12px; margin: 2px 8px; font-size: 13px; }
     .sidebar-menu li i { font-size: 16px; width: 20px; }
     .logout-dialog { padding: 30px 24px; }
+    .brand-logo { width: 30px; height: 30px; }
+    .invoice-pdf-container { width: 100%; padding: 30px 25px; }
 }
 
 @media (max-width: 768px) {
     .login-card { padding: 24px 20px; max-width: 100%; }
     .logo-icon { width: 50px; height: 50px; }
     .logo-icon i { font-size: 24px; }
+    .login-logo-img { width: 100%; height: 100%; }
     .login-header h3 { font-size: 20px; }
     .otp-input { width: 40px; height: 45px; font-size: 18px; }
     .otp-input-group { gap: 6px; }
@@ -2377,6 +2693,8 @@ textarea.form-control {
     .logout-icon-main { font-size: 28px; }
     .logout-dialog h3 { font-size: 18px; }
     .btn-logout-cancel, .btn-logout-confirm { padding: 10px 18px; font-size: 13px; }
+    
+    .brand-logo { width: 28px; height: 28px; }
 }
 
 @media (max-width: 576px) {
@@ -2385,6 +2703,14 @@ textarea.form-control {
     .otp-input { width: 38px; height: 42px; font-size: 16px; }
     .logout-actions { flex-direction: column; }
     .btn-logout-cancel, .btn-logout-confirm { width: 100%; justify-content: center; }
+    
+    .report-meta-row {
+        flex-direction: column;
+    }
+    
+    .contractor-info-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 400px) {
@@ -2392,4 +2718,5 @@ textarea.form-control {
     .sidebar-menu li span { font-size: 12px; }
     .sidebar-menu li i { font-size: 14px; }
     .sidebar-menu li { padding: 6px 10px; }
+    .brand-logo { width: 24px; height: 24px; }
 }
