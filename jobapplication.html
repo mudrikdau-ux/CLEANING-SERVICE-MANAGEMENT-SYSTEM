@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>CleanSpark · Job Application</title>
+  <!-- External resources for icons & fonts (professional clean look) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Separate CSS file -->
+  <link rel="stylesheet" href="css/jobapplication.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- CleanSpark brand header -->
+    <header class="brand-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <div class="logo-text">
+          <span class="brand-name">CleanSpark</span>
+          <span class="brand-tagline">Careers</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="status-badge" id="globalStatusBadge">
+          <i class="fas fa-circle"></i> <span id="globalStatusText">Checking...</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- Main content area -->
+    <main class="main-content">
+      <!-- Dynamic panel: closed state or application form -->
+      <div id="dynamicPanel" class="panel-container">
+        <!-- Content will be injected by JavaScript based on window status -->
+      </div>
+    </main>
+
+    <!-- Footer note -->
+    <footer class="app-footer">
+      <p>© <span id="currentYear"></span> CleanSpark Inc. All rights reserved. Equal opportunity employer.</p>
+    </footer>
+  </div>
+
+  <!-- Hidden canvas for confetti animation -->
+  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
+  <!-- Separate JavaScript file -->
+  <script src="js/jobapplication.js"></script>
+</body>
+</html>

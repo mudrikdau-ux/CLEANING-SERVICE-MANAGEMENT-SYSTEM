@@ -1,7 +1,8 @@
 /* ========================================
    CleanSpark ADMIN PANEL — admin.css
    Complete with Logo Support, Worker Names Field,
-   PDF Report Styles, and Professional Design
+   PDF Report Styles, Professional Design,
+   and Job Applications Section
    ======================================== */
 
 /* ============================================================
@@ -1202,6 +1203,600 @@ body {
 }
 
 /* ========================================
+   APPLICATION WINDOW CONTROL
+   ======================================== */
+.application-window-control {
+    margin-bottom: 24px;
+}
+
+.window-status-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.window-status-card.window-open {
+    border-color: #16a34a;
+    background: linear-gradient(135deg, rgba(22,163,74,0.03), white);
+}
+
+.window-status-card.window-closed {
+    border-color: #dc2626;
+    background: linear-gradient(135deg, rgba(220,38,38,0.03), white);
+}
+
+.window-status-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 28px;
+}
+
+.window-open .window-status-icon {
+    background: rgba(22,163,74,0.1);
+    color: #16a34a;
+}
+
+.window-closed .window-status-icon {
+    background: rgba(220,38,38,0.1);
+    color: #dc2626;
+}
+
+.window-status-info {
+    flex: 1;
+}
+
+.window-status-info h4 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 4px;
+}
+
+.window-status-info p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.window-status-info .window-status-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-top: 6px;
+}
+
+.window-status-badge.open {
+    background: rgba(22,163,74,0.1);
+    color: #16a34a;
+    border: 1px solid rgba(22,163,74,0.2);
+}
+
+.window-status-badge.closed {
+    background: rgba(220,38,38,0.1);
+    color: #dc2626;
+    border: 1px solid rgba(220,38,38,0.2);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #cbd5e1;
+    border-radius: 32px;
+    transition: all 0.35s ease;
+}
+
+.toggle-slider:before {
+    content: '';
+    position: absolute;
+    height: 26px;
+    width: 26px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.35s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(28px);
+}
+
+/* ========================================
+   APPLICATIONS GRID
+   ======================================== */
+.applications-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.application-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--card-shadow);
+    border: 1.5px solid var(--border);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.application-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    border-color: var(--grad-start);
+}
+
+.application-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.applicant-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    font-size: 18px;
+    flex-shrink: 0;
+    letter-spacing: -0.5px;
+}
+
+.applicant-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.applicant-info h5 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.applicant-info .position-badge {
+    font-size: 12px;
+    color: var(--grad-start);
+    font-weight: 600;
+    background: rgba(102,126,234,0.08);
+    padding: 2px 10px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-top: 4px;
+}
+
+.application-card-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.app-detail-mini {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.app-detail-mini i {
+    font-size: 13px;
+    color: var(--grad-start);
+    width: 16px;
+    text-align: center;
+}
+
+.application-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.application-card-footer .app-date {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Application Status Badges */
+.application-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.app-status-pending {
+    background: rgba(245,158,11,0.1);
+    color: #d97706;
+    border: 1px solid rgba(245,158,11,0.2);
+}
+
+.app-status-under-review {
+    background: rgba(59,130,246,0.1);
+    color: #2563eb;
+    border: 1px solid rgba(59,130,246,0.2);
+}
+
+.app-status-approved {
+    background: rgba(22,163,74,0.1);
+    color: #16a34a;
+    border: 1px solid rgba(22,163,74,0.2);
+}
+
+.app-status-rejected {
+    background: rgba(220,38,38,0.08);
+    color: #dc2626;
+    border: 1px solid rgba(220,38,38,0.15);
+}
+
+/* ========================================
+   APPLICATION DETAIL MODAL
+   ======================================== */
+.application-detail {
+    font-family: 'Inter', sans-serif;
+}
+
+.app-detail-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 24px;
+}
+
+.app-detail-avatar-lg {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    font-size: 28px;
+    flex-shrink: 0;
+    letter-spacing: -1px;
+}
+
+.app-detail-header-info h4 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 4px;
+}
+
+.app-detail-header-info .position-title {
+    font-size: 14px;
+    color: var(--grad-start);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.app-detail-header-info .app-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.app-detail-header-info .app-meta-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f7fafc;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+}
+
+.app-detail-header-info .app-meta-tag i {
+    color: var(--grad-start);
+    font-size: 12px;
+}
+
+.app-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.app-detail-field {
+    padding: 14px 16px;
+    background: #f7fafc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.app-detail-field .field-label-mini {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.app-detail-field .field-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.app-detail-section {
+    margin-bottom: 20px;
+}
+
+.app-detail-section h6 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--grad-start);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(102,126,234,0.15);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.app-documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.app-document-card {
+    padding: 16px 12px;
+    background: #f7fafc;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.app-document-card:hover {
+    border-color: var(--grad-start);
+    background: rgba(102,126,234,0.05);
+    transform: translateY(-2px);
+}
+
+.app-document-card i {
+    font-size: 32px;
+    color: var(--grad-start);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.app-document-card span {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-main);
+    display: block;
+    word-break: break-word;
+}
+
+/* ========================================
+   APPLICATION PDF STYLES
+   ======================================== */
+.application-pdf-container {
+    width: 800px;
+    background: #ffffff;
+    font-family: 'Inter', 'Helvetica', sans-serif;
+    color: #1a202c;
+    padding: 50px 45px;
+}
+
+.app-pdf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 25px;
+    border-bottom: 3px solid #667eea;
+    margin-bottom: 30px;
+}
+
+.app-pdf-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.app-pdf-logo {
+    width: 55px;
+    height: 55px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.app-pdf-company-info h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #667eea;
+    margin: 0 0 2px 0;
+}
+
+.app-pdf-company-info p {
+    font-size: 11px;
+    color: #718096;
+    margin: 1px 0;
+}
+
+.app-pdf-title-section {
+    text-align: right;
+}
+
+.app-pdf-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1a202c;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.app-pdf-ref {
+    font-size: 13px;
+    color: #667eea;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.app-pdf-section {
+    margin-bottom: 24px;
+}
+
+.app-pdf-section h5 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #667eea;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.app-pdf-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.app-pdf-info-item {
+    padding: 10px 14px;
+    background: #f7fafc;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.app-pdf-info-item .label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #718096;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.app-pdf-info-item .value {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a202c;
+}
+
+.app-pdf-status {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.app-pdf-footer {
+    margin-top: 35px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+    font-size: 11px;
+    color: #718096;
+}
+
+/* ========================================
+   SEARCH BOX
+   ======================================== */
+.search-box {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 350px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    font-size: 15px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 9px 14px 9px 40px;
+    border: 2px solid var(--border);
+    border-radius: 25px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--text-main);
+    background: white;
+    transition: all 0.2s;
+}
+
+.search-input:focus {
+    border-color: var(--grad-start);
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    outline: none;
+}
+
+/* ========================================
    FILTER BAR
    ======================================== */
 .filter-bar {
@@ -1213,6 +1808,7 @@ body {
     background: white;
     border-radius: var(--radius);
     box-shadow: var(--card-shadow);
+    align-items: center;
 }
 
 .filter-btn {
@@ -1816,6 +2412,10 @@ textarea.form-control {
 .action-btn-view:hover { background: #0dcaf0; color: white; box-shadow: 0 3px 8px rgba(13, 202, 240, 0.3); }
 .action-btn-reply { background: rgba(34, 197, 94, 0.1); color: var(--success-color); }
 .action-btn-reply:hover { background: var(--success-color); color: white; box-shadow: 0 3px 8px rgba(34, 197, 94, 0.3); }
+.action-btn-approve { background: rgba(22,163,74,0.1); color: #16a34a; }
+.action-btn-approve:hover { background: #16a34a; color: white; box-shadow: 0 3px 8px rgba(22,163,74,0.3); }
+.action-btn-reject { background: rgba(220,38,38,0.1); color: #dc2626; }
+.action-btn-reject:hover { background: #dc2626; color: white; box-shadow: 0 3px 8px rgba(220,38,38,0.3); }
 
 .included-tags {
     display: flex;
@@ -2188,6 +2788,36 @@ textarea.form-control {
 }
 
 .btn-success:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4); }
+
+.btn-warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    border: none !important;
+    color: white !important;
+    padding: 9px 20px;
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-warning:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(245,158,11,0.4); }
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    border: none !important;
+    color: white !important;
+    padding: 9px 20px;
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(239,68,68,0.4); }
 
 .upload-zone {
     border: 2px dashed #cbd5e1;
@@ -2635,6 +3265,9 @@ textarea.form-control {
     .logout-dialog { padding: 30px 24px; }
     .brand-logo { width: 30px; height: 30px; }
     .invoice-pdf-container { width: 100%; padding: 30px 25px; }
+    .applications-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+    .app-detail-grid { grid-template-columns: 1fr; }
+    .app-detail-header { flex-direction: column; align-items: center; text-align: center; }
 }
 
 @media (max-width: 768px) {
@@ -2695,6 +3328,11 @@ textarea.form-control {
     .btn-logout-cancel, .btn-logout-confirm { padding: 10px 18px; font-size: 13px; }
     
     .brand-logo { width: 28px; height: 28px; }
+    
+    .applications-grid { grid-template-columns: 1fr; }
+    .window-status-card { flex-direction: column; text-align: center; }
+    .window-status-toggle { margin-top: 8px; }
+    .app-detail-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 576px) {
@@ -2711,6 +3349,10 @@ textarea.form-control {
     .contractor-info-grid {
         grid-template-columns: 1fr;
     }
+    
+    .app-documents-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 @media (max-width: 400px) {
@@ -2719,4 +3361,7 @@ textarea.form-control {
     .sidebar-menu li i { font-size: 14px; }
     .sidebar-menu li { padding: 6px 10px; }
     .brand-logo { width: 24px; height: 24px; }
+    .app-documents-grid {
+        grid-template-columns: 1fr;
+    }
 }

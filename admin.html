@@ -167,6 +167,10 @@
                     <i class="bi bi-people-fill"></i>
                     <span>Staff Management</span>
                 </li>
+                <li data-section="applications">
+                    <i class="bi bi-file-earmark-person-fill"></i>
+                    <span>Job Applications</span>
+                </li>
                 <li data-section="messages">
                     <i class="bi bi-envelope-fill"></i>
                     <span>Messages</span>
@@ -754,6 +758,76 @@
                 </div>
             </div>
 
+            <!-- JOB APPLICATIONS SECTION -->
+            <div id="applicationsSection" class="admin-section">
+                <div class="section-header">
+                    <h2><i class="bi bi-file-earmark-person-fill"></i> Job Applications Management</h2>
+                    <p>Review and manage job applications from candidates</p>
+                </div>
+
+                <!-- Application Window Control -->
+                <div class="application-window-control">
+                    <div class="window-status-card" id="windowStatusCard">
+                        <div class="window-status-icon">
+                            <i class="bi bi-window-stack"></i>
+                        </div>
+                        <div class="window-status-info">
+                            <h4>Application Window</h4>
+                            <p id="windowStatusText">Status: Loading...</p>
+                        </div>
+                        <div class="window-status-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="applicationWindowToggle" onchange="toggleApplicationWindow()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="stats-grid" id="applicationsStats"></div>
+
+                <!-- Search & Filter -->
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="applicationSearch" placeholder="Search applications..." oninput="filterApplications()" class="search-input">
+                    </div>
+                    <button class="filter-btn active" onclick="filterApplicationStatus('all', this)"><i class="bi bi-list-ul"></i> All</button>
+                    <button class="filter-btn" onclick="filterApplicationStatus('pending', this)"><i class="bi bi-clock"></i> Pending</button>
+                    <button class="filter-btn" onclick="filterApplicationStatus('under_review', this)"><i class="bi bi-eye"></i> Under Review</button>
+                    <button class="filter-btn" onclick="filterApplicationStatus('approved', this)"><i class="bi bi-check-circle"></i> Approved</button>
+                    <button class="filter-btn" onclick="filterApplicationStatus('rejected', this)"><i class="bi bi-x-circle"></i> Rejected</button>
+                </div>
+
+                <!-- Applications Cards Grid -->
+                <div class="applications-grid" id="applicationsGrid"></div>
+
+                <!-- Applications Table -->
+                <div class="table-container mt-4">
+                    <div class="table-header-bar">
+                        <span class="table-title">All Applications</span>
+                        <span class="badge-currency" id="applicationsCount">0 Applications</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="applicationsTable">
+                            <thead>
+                                <tr>
+                                    <th>Applicant</th>
+                                    <th>Position</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th style="text-align:center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="applicationsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- MESSAGES SECTION -->
             <div id="messagesSection" class="admin-section">
                 <div class="section-header">
@@ -1181,8 +1255,29 @@
     </div>
 </div>
 
+<!-- Application Detail Modal -->
+<div class="modal fade" id="applicationDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-vcard me-2"></i>Application Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="applicationDetailBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="downloadApplicationPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>Download PDF</button>
+                <button type="button" class="btn btn-primary" onclick="shareApplication()"><i class="bi bi-share-fill me-1"></i>Share</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Hidden invoice template for PDF generation -->
 <div id="invoicePDFTemplate" style="position:absolute; left:-9999px; top:0; width:800px; background:#ffffff; font-family:'Inter',sans-serif; padding:40px;"></div>
+
+<!-- Hidden application template for PDF generation -->
+<div id="applicationPDFTemplate" style="position:absolute; left:-9999px; top:0; width:800px; background:#ffffff; font-family:'Inter',sans-serif; padding:40px;"></div>
 
 <!-- Report Preview Modal -->
 <div class="modal fade" id="reportPreviewModal" tabindex="-1" aria-hidden="true">

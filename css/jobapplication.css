@@ -1,0 +1,461 @@
+/* jobapplication.css */
+/* CleanSpark professional theme: clean whites, electric blue accents, modern typography */
+
+:root {
+  --clean-bg: #f8fafc;
+  --surface: #ffffff;
+  --primary: #0f3b5e;
+  --primary-light: #1e5a8a;
+  --accent: #2e7eb0;
+  --electric: #3b9cdb;
+  --success: #0d7c4b;
+  --success-light: #e6f4ec;
+  --warning: #b85b14;
+  --danger: #b82e2e;
+  --text-main: #1e293b;
+  --text-muted: #475569;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 20px 30px -12px rgba(0, 0, 0, 0.12);
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-sm: 8px;
+  --transition: 0.25s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: linear-gradient(145deg, #f0f4f9 0%, #e9eff5 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  margin: 0;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+/* Brand header */
+.brand-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  padding: 1.2rem 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(2px);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.logo-icon {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 8px 16px -6px rgba(15, 59, 94, 0.3);
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 1.6rem;
+  letter-spacing: -0.3px;
+  color: var(--primary);
+  line-height: 1.2;
+}
+
+.brand-tagline {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+.status-badge {
+  background: #f1f5f9;
+  padding: 0.6rem 1.3rem;
+  border-radius: 40px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.status-badge i {
+  font-size: 0.7rem;
+}
+
+.status-open {
+  background: var(--success-light);
+  color: var(--success);
+  border-color: #b8e0c8;
+}
+
+.status-closed {
+  background: #fef2f2;
+  color: var(--danger);
+  border-color: #fbcbcb;
+}
+
+/* Main panel */
+.main-content {
+  flex: 1;
+}
+
+.panel-container {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 2rem 2.2rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Closed state card */
+.closed-card {
+  text-align: center;
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.8rem;
+}
+
+.closed-icon {
+  font-size: 4.5rem;
+  color: var(--text-muted);
+  background: #f1f5f9;
+  width: 110px;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto;
+  opacity: 0.9;
+}
+
+.closed-card h2 {
+  font-weight: 700;
+  font-size: 2rem;
+  color: var(--primary);
+}
+
+.closed-card p {
+  color: var(--text-muted);
+  font-size: 1.15rem;
+  max-width: 450px;
+}
+
+/* Application form step indicator */
+.step-progress {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+.step-progress::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  background: var(--border);
+  z-index: 0;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+.step-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all 0.3s;
+  background: white;
+}
+
+.step.active .step-circle {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(15, 59, 94, 0.4);
+}
+
+.step.completed .step-circle {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.step-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.step.active .step-label {
+  color: var(--primary);
+}
+
+/* Form styles */
+.form-step {
+  display: none;
+}
+
+.form-step.active-step {
+  display: block;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.8rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+label i {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+input, select, textarea {
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: #fafbfc;
+  transition: var(--transition);
+  outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--electric);
+  box-shadow: 0 0 0 3px rgba(59, 156, 219, 0.15);
+  background: white;
+}
+
+/* Upload area */
+.upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1.2rem;
+  margin-top: 0.8rem;
+}
+
+.upload-card {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: #fcfdff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.upload-card i {
+  font-size: 2rem;
+  color: var(--accent);
+}
+
+.upload-card span {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.upload-card .file-name {
+  font-size: 0.75rem;
+  color: var(--success);
+  word-break: break-all;
+}
+
+.upload-card:hover {
+  border-color: var(--accent);
+  background: #f0f7ff;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+/* Buttons */
+.btn-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.85rem 2rem;
+  border-radius: 40px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  background: white;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  box-shadow: 0 8px 18px -8px rgba(15, 59, 94, 0.4);
+}
+
+.btn-primary:hover {
+  background: var(--primary-light);
+}
+
+.btn-outline {
+  border: 1px solid var(--border);
+}
+
+.btn-outline:hover {
+  background: #f1f5f9;
+}
+
+/* Success message */
+.success-message {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.checkmark-animated {
+  font-size: 4rem;
+  color: var(--success);
+  animation: pop 0.5s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  80% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.reference-number {
+  background: #f0f9f4;
+  padding: 0.6rem 1.5rem;
+  border-radius: 30px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--primary);
+}
+
+/* Confetti canvas */
+.confetti-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* Footer */
+.app-footer {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: 0.8rem;
+  }
+  .brand-header {
+    padding: 1rem;
+  }
+  .panel-container {
+    padding: 1.5rem;
+  }
+}

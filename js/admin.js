@@ -2,7 +2,7 @@
 //  CleanSpark ADMIN PANEL — admin.js (COMPLETE - FINAL)
 //  All prices in TZS | Contractors, Invoice, Messages, Reports
 //  Enhanced Logout Flow | Professional PDF Report Generation
-//  Worker Names Field | Logo Integration
+//  Worker Names Field | Logo Integration | Job Applications
 //  FIXED: Professional PDF Invoice Download
 // ============================================================
 
@@ -337,6 +337,8 @@ let currentContractorId = null;
 let currentInvoiceData = null;
 let currentContractorFilter = 'all';
 let currentMessageFilter = 'all';
+let currentApplicationFilter = 'all';
+let currentApplicationId = null;
 let bookingChart = null;
 let revenueChart = null;
 let logoutTimer = null;
@@ -539,7 +541,6 @@ function performLogout() {
 function logoutAdmin() {
     initiateLogout();
 }
-
 // ========== NAVIGATION ==========
 function showSection(sectionId) {
     document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
@@ -553,6 +554,10 @@ function showSection(sectionId) {
 
     if (sectionId === 'assignment') {
         loadAssignmentSection();
+    }
+    
+    if (sectionId === 'applications') {
+        loadApplications();
     }
 
     if (window.innerWidth <= 768) {
@@ -573,6 +578,7 @@ function setupMenuClickHandlers() {
 // ========== DASHBOARD INIT ==========
 function initDashboard() {
     initializeSampleData();
+    initializeApplicationSampleData();
     loadDashboardStats();
     loadServices();
     loadBookings();
@@ -583,12 +589,615 @@ function initDashboard() {
     initCharts();
     loadRecentBookings();
     loadSettings();
+    loadApplicationWindowStatus();
     setupMenuClickHandlers();
     initIncludedManualEntry('includedManualEntry', 'addIncludedItemBtn', []);
     populateInvoiceContractors();
     loadAssignmentSection();
 }
 
+// ========== JOB APPLICATIONS MODULE ==========
+
+function getApplications() {
+    return JSON.parse(localStorage.getItem('jobApplications')) || [];
+}
+
+function saveApplications(apps) {
+    localStorage.setItem('jobApplications', JSON.stringify(apps));
+}
+
+function getApplicationWindowStatus() {
+    return JSON.parse(localStorage.getItem('applicationWindowOpen')) || false;
+}
+
+function setApplicationWindowStatus(isOpen) {
+    localStorage.setItem('applicationWindowOpen', JSON.stringify(isOpen));
+}
+
+function loadApplicationWindowStatus() {
+    const isOpen = getApplicationWindowStatus();
+    const toggle = document.getElementById('applicationWindowToggle');
+    const statusCard = document.getElementById('windowStatusCard');
+    const statusText = document.getElementById('windowStatusText');
+    
+    if (toggle) toggle.checked = isOpen;
+    if (statusCard) {
+        statusCard.className = 'window-status-card ' + (isOpen ? 'window-open' : 'window-closed');
+    }
+    if (statusText) {
+        statusText.innerHTML = isOpen 
+            ? '<span class="window-status-badge open">● Applications Open</span> — Users can submit applications'
+            : '<span class="window-status-badge closed">● Applications Closed</span> — Users cannot submit applications';
+    }
+}
+
+function toggleApplicationWindow() {
+    const isOpen = document.getElementById('applicationWindowToggle').checked;
+    setApplicationWindowStatus(isOpen);
+    loadApplicationWindowStatus();
+    showNotification(isOpen ? 'Application window is now OPEN' : 'Application window is now CLOSED', isOpen ? 'success' : 'warning');
+}
+
+function loadApplications() {
+    loadApplicationWindowStatus();
+    loadApplicationsStats();
+    renderApplicationsGrid();
+    renderApplicationsTable();
+}
+
+function loadApplicationsStats() {
+    const apps = getApplications();
+    const total = apps.length;
+    const approved = apps.filter(a => a.status === 'approved').length;
+    const rejected = apps.filter(a => a.status === 'rejected').length;
+    const underReview = apps.filter(a => a.status === 'under_review').length;
+    const pending = apps.filter(a => a.status === 'pending').length;
+
+    const statsGrid = document.getElementById('applicationsStats');
+    if (statsGrid) {
+        statsGrid.innerHTML = `
+            <div class="stat-card" onclick="filterApplicationStatus('all', event.target.closest('.filter-btn'))">
+                <div class="stat-icon"><i class="bi bi-file-earmark-person"></i></div>
+                <div class="stat-value">${total}</div>
+                <div class="stat-label">Total Applications</div>
+            </div>
+            <div class="stat-card" onclick="filterApplicationStatus('approved', event.target.closest('.filter-btn'))">
+                <div class="stat-icon" style="background:rgba(22,163,74,0.1);"><i class="bi bi-check-circle-fill" style="color:#16a34a;"></i></div>
+                <div class="stat-value">${approved}</div>
+                <div class="stat-label">Approved</div>
+            </div>
+            <div class="stat-card" onclick="filterApplicationStatus('rejected', event.target.closest('.filter-btn'))">
+                <div class="stat-icon" style="background:rgba(220,38,38,0.1);"><i class="bi bi-x-circle-fill" style="color:#dc2626;"></i></div>
+                <div class="stat-value">${rejected}</div>
+                <div class="stat-label">Rejected</div>
+            </div>
+            <div class="stat-card" onclick="filterApplicationStatus('under_review', event.target.closest('.filter-btn'))">
+                <div class="stat-icon" style="background:rgba(59,130,246,0.1);"><i class="bi bi-eye-fill" style="color:#2563eb;"></i></div>
+                <div class="stat-value">${underReview}</div>
+                <div class="stat-label">Under Review</div>
+            </div>
+            <div class="stat-card" onclick="filterApplicationStatus('pending', event.target.closest('.filter-btn'))">
+                <div class="stat-icon" style="background:rgba(245,158,11,0.1);"><i class="bi bi-clock-fill" style="color:#d97706;"></i></div>
+                <div class="stat-value">${pending}</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        `;
+    }
+}
+
+function filterApplicationStatus(status, btnEl) {
+    currentApplicationFilter = status;
+    document.querySelectorAll('#applicationsSection .filter-btn').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    renderApplicationsGrid();
+    renderApplicationsTable();
+}
+
+function filterApplications() {
+    renderApplicationsGrid();
+    renderApplicationsTable();
+}
+
+function renderApplicationsGrid() {
+    let apps = getApplications();
+    
+    if (currentApplicationFilter !== 'all') {
+        apps = apps.filter(a => a.status === currentApplicationFilter);
+    }
+    
+    const searchTerm = document.getElementById('applicationSearch')?.value.trim().toLowerCase();
+    if (searchTerm) {
+        apps = apps.filter(a => 
+            a.fullName.toLowerCase().includes(searchTerm) ||
+            a.email.toLowerCase().includes(searchTerm) ||
+            a.position.toLowerCase().includes(searchTerm) ||
+            (a.phone && a.phone.includes(searchTerm))
+        );
+    }
+
+    const grid = document.getElementById('applicationsGrid');
+    if (!grid) return;
+
+    if (apps.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;" class="empty-state"><i class="bi bi-inbox"></i><p>No applications found</p></div>`;
+        return;
+    }
+
+    const recentApps = [...apps].reverse().slice(0, 6);
+    
+    grid.innerHTML = recentApps.map(app => {
+        const initials = app.fullName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        const statusConfig = getApplicationStatusConfig(app.status);
+        const date = app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : '—';
+        
+        return `
+            <div class="application-card" onclick="viewApplicationDetail(${app.id})">
+                <div class="application-card-header">
+                    <div class="applicant-avatar">${escapeHtml(initials)}</div>
+                    <div class="applicant-info">
+                        <h5>${escapeHtml(app.fullName)}</h5>
+                        <span class="position-badge">${escapeHtml(app.position)}</span>
+                    </div>
+                </div>
+                <div class="application-card-body">
+                    <div class="app-detail-mini"><i class="bi bi-envelope"></i>${escapeHtml(app.email)}</div>
+                    <div class="app-detail-mini"><i class="bi bi-telephone"></i>${escapeHtml(app.phone || '—')}</div>
+                    <div class="app-detail-mini"><i class="bi bi-gender-ambiguous"></i>${escapeHtml(app.gender || '—')}</div>
+                    <div class="app-detail-mini"><i class="bi bi-geo-alt"></i>${escapeHtml((app.address || '').substring(0, 25))}${app.address && app.address.length > 25 ? '…' : ''}</div>
+                </div>
+                <div class="application-card-footer">
+                    <span class="app-date"><i class="bi bi-calendar3 me-1"></i>${date}</span>
+                    <span class="application-status ${statusConfig.class}">${statusConfig.icon} ${statusConfig.label}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    if (apps.length > 6) {
+        grid.innerHTML += `<div style="grid-column:1/-1;text-align:center;padding:12px;color:var(--text-muted);font-size:13px;">Showing 6 of ${apps.length} applications. View all in table below.</div>`;
+    }
+}
+
+function renderApplicationsTable() {
+    let apps = getApplications();
+    
+    if (currentApplicationFilter !== 'all') {
+        apps = apps.filter(a => a.status === currentApplicationFilter);
+    }
+    
+    const searchTerm = document.getElementById('applicationSearch')?.value.trim().toLowerCase();
+    if (searchTerm) {
+        apps = apps.filter(a => 
+            a.fullName.toLowerCase().includes(searchTerm) ||
+            a.email.toLowerCase().includes(searchTerm) ||
+            a.position.toLowerCase().includes(searchTerm) ||
+            (a.phone && a.phone.includes(searchTerm))
+        );
+    }
+
+    const tbody = document.getElementById('applicationsTableBody');
+    const countEl = document.getElementById('applicationsCount');
+    if (countEl) countEl.textContent = `${apps.length} Applications`;
+    if (!tbody) return;
+
+    if (apps.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No applications found</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = [...apps].reverse().map(app => {
+        const statusConfig = getApplicationStatusConfig(app.status);
+        const date = app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : '—';
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(app.fullName)}</strong></td>
+                <td>${escapeHtml(app.position)}</td>
+                <td>${escapeHtml(app.phone || '—')}</td>
+                <td>${escapeHtml(app.email)}</td>
+                <td>${date}</td>
+                <td><span class="application-status ${statusConfig.class}">${statusConfig.icon} ${statusConfig.label}</span></td>
+                <td style="text-align:center;white-space:nowrap;">
+                    <button class="action-btn action-btn-view" onclick="viewApplicationDetail(${app.id})" title="View Details"><i class="bi bi-eye-fill"></i></button>
+                    <button class="action-btn action-btn-approve" onclick="approveApplication(${app.id})" title="Approve"><i class="bi bi-check-lg"></i></button>
+                    <button class="action-btn action-btn-reject" onclick="rejectApplication(${app.id})" title="Reject"><i class="bi bi-x-lg"></i></button>
+                    <button class="action-btn action-btn-delete" onclick="deleteApplication(${app.id})" title="Delete"><i class="bi bi-trash3-fill"></i></button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function getApplicationStatusConfig(status) {
+    const configs = {
+        pending: { class: 'app-status-pending', icon: '⏳', label: 'Pending' },
+        under_review: { class: 'app-status-under-review', icon: '👁', label: 'Under Review' },
+        approved: { class: 'app-status-approved', icon: '✅', label: 'Approved' },
+        rejected: { class: 'app-status-rejected', icon: '❌', label: 'Rejected' }
+    };
+    return configs[status] || configs.pending;
+}
+
+function viewApplicationDetail(appId) {
+    const apps = getApplications();
+    const app = apps.find(a => a.id == appId);
+    if (!app) return;
+    
+    currentApplicationId = appId;
+    const initials = app.fullName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const statusConfig = getApplicationStatusConfig(app.status);
+    const date = app.submittedAt ? new Date(app.submittedAt).toLocaleString() : '—';
+    
+    const body = document.getElementById('applicationDetailBody');
+    body.innerHTML = `
+        <div class="application-detail">
+            <div class="app-detail-header">
+                <div class="app-detail-avatar-lg">${escapeHtml(initials)}</div>
+                <div class="app-detail-header-info">
+                    <h4>${escapeHtml(app.fullName)}</h4>
+                    <div class="position-title">📋 ${escapeHtml(app.position)}</div>
+                    <div class="app-meta-row">
+                        <span class="app-meta-tag"><i class="bi bi-calendar3"></i> ${date}</span>
+                        <span class="app-meta-tag application-status ${statusConfig.class}">${statusConfig.icon} ${statusConfig.label}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="app-detail-grid">
+                <div class="app-detail-field">
+                    <div class="field-label-mini">📧 Email</div>
+                    <div class="field-value">${escapeHtml(app.email)}</div>
+                </div>
+                <div class="app-detail-field">
+                    <div class="field-label-mini">📞 Phone</div>
+                    <div class="field-value">${escapeHtml(app.phone || '—')}</div>
+                </div>
+                <div class="app-detail-field">
+                    <div class="field-label-mini">⚧ Gender</div>
+                    <div class="field-value">${escapeHtml(app.gender || '—')}</div>
+                </div>
+                <div class="app-detail-field">
+                    <div class="field-label-mini">🎂 Date of Birth</div>
+                    <div class="field-value">${escapeHtml(app.dob || '—')}</div>
+                </div>
+                <div class="app-detail-field" style="grid-column:1/-1;">
+                    <div class="field-label-mini">📍 Address</div>
+                    <div class="field-value">${escapeHtml(app.address || '—')}</div>
+                </div>
+            </div>
+            
+            ${app.coverLetter ? `
+            <div class="app-detail-section">
+                <h6>📝 Application Letter</h6>
+                <div class="message-body-box">${escapeHtml(app.coverLetter)}</div>
+            </div>` : ''}
+            
+            <div class="app-detail-section">
+                <h6>📎 Documents</h6>
+                <div class="app-documents-grid">
+                    ${app.cv ? `
+                    <div class="app-document-card" onclick="window.open('${app.cv}', '_blank')">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                        <span>CV / Resume</span>
+                    </div>` : '<div class="app-document-card"><i class="bi bi-file-earmark-x"></i><span>No CV</span></div>'}
+                    
+                    ${app.idDocument ? `
+                    <div class="app-document-card" onclick="window.open('${app.idDocument}', '_blank')">
+                        <i class="bi bi-person-vcard"></i>
+                        <span>ID Document</span>
+                    </div>` : '<div class="app-document-card"><i class="bi bi-file-earmark-x"></i><span>No ID</span></div>'}
+                    
+                    ${app.certificates && app.certificates.length > 0 ? `
+                    <div class="app-document-card" onclick="window.open('${app.certificates[0]}', '_blank')">
+                        <i class="bi bi-award"></i>
+                        <span>Certificates (${app.certificates.length})</span>
+                    </div>` : '<div class="app-document-card"><i class="bi bi-file-earmark-x"></i><span>No Certificates</span></div>'}
+                </div>
+            </div>
+            
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;">
+                <button class="btn btn-success" onclick="approveApplication(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
+                    <i class="bi bi-check-circle me-1"></i>Approve
+                </button>
+                <button class="btn btn-warning" onclick="markUnderReview(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
+                    <i class="bi bi-eye me-1"></i>Mark Under Review
+                </button>
+                <button class="btn btn-danger" onclick="rejectApplication(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
+                    <i class="bi bi-x-circle me-1"></i>Reject
+                </button>
+                <button class="btn btn-ghost" onclick="deleteApplication(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
+                    <i class="bi bi-trash3 me-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    `;
+    
+    new bootstrap.Modal(document.getElementById('applicationDetailModal')).show();
+}
+
+function approveApplication(appId) {
+    const apps = getApplications();
+    const index = apps.findIndex(a => a.id == appId);
+    if (index === -1) return;
+    apps[index].status = 'approved';
+    apps[index].updatedAt = new Date().toISOString();
+    saveApplications(apps);
+    loadApplications();
+    showNotification('Application approved!', 'success');
+}
+
+function rejectApplication(appId) {
+    const apps = getApplications();
+    const index = apps.findIndex(a => a.id == appId);
+    if (index === -1) return;
+    apps[index].status = 'rejected';
+    apps[index].updatedAt = new Date().toISOString();
+    saveApplications(apps);
+    loadApplications();
+    showNotification('Application rejected.', 'warning');
+}
+
+function markUnderReview(appId) {
+    const apps = getApplications();
+    const index = apps.findIndex(a => a.id == appId);
+    if (index === -1) return;
+    apps[index].status = 'under_review';
+    apps[index].updatedAt = new Date().toISOString();
+    saveApplications(apps);
+    loadApplications();
+    showNotification('Application marked as Under Review.', 'info');
+}
+
+function deleteApplication(appId) {
+    if (!confirm('Are you sure you want to delete this application? This cannot be undone.')) return;
+    let apps = getApplications();
+    apps = apps.filter(a => a.id != appId);
+    saveApplications(apps);
+    loadApplications();
+    showNotification('Application deleted.', 'success');
+}
+
+// ========== DOWNLOAD APPLICATION AS PDF ==========
+function downloadApplicationPDF() {
+    if (!currentApplicationId) {
+        showNotification('No application selected', 'error');
+        return;
+    }
+    
+    const apps = getApplications();
+    const app = apps.find(a => a.id == currentApplicationId);
+    if (!app) return;
+    
+    const statusConfig = getApplicationStatusConfig(app.status);
+    const date = app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : '—';
+    
+    const pdfHTML = `
+        <div class="application-pdf-container">
+            <div class="app-pdf-header">
+                <div class="app-pdf-header-left">
+                    <img src="image/logo.jpeg" alt="CleanSpark Logo" class="app-pdf-logo" onerror="this.style.display='none';">
+                    <div class="app-pdf-company-info">
+                        <h2>CleanSpark</h2>
+                        <p>Cleaning Service Management System</p>
+                        <p>Zanzibar, Tanzania | info@CleanSpark.co.tz</p>
+                    </div>
+                </div>
+                <div class="app-pdf-title-section">
+                    <h1 class="app-pdf-title">JOB APPLICATION</h1>
+                    <p class="app-pdf-ref">Ref: #${escapeHtml(String(app.id).slice(-6))}</p>
+                    <p class="app-pdf-status" style="color:${statusConfig.class.includes('approved') ? '#16a34a' : statusConfig.class.includes('rejected') ? '#dc2626' : '#2563eb'};">${statusConfig.icon} ${statusConfig.label}</p>
+                </div>
+            </div>
+            
+            <div class="app-pdf-section">
+                <h5>Applicant Information</h5>
+                <div class="app-pdf-info-grid">
+                    <div class="app-pdf-info-item">
+                        <div class="label">Full Name</div>
+                        <div class="value">${escapeHtml(app.fullName)}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Email</div>
+                        <div class="value">${escapeHtml(app.email)}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Phone</div>
+                        <div class="value">${escapeHtml(app.phone || '—')}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Gender</div>
+                        <div class="value">${escapeHtml(app.gender || '—')}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Date of Birth</div>
+                        <div class="value">${escapeHtml(app.dob || '—')}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Position Applied</div>
+                        <div class="value">${escapeHtml(app.position)}</div>
+                    </div>
+                    <div class="app-pdf-info-item" style="grid-column:1/-1;">
+                        <div class="label">Address</div>
+                        <div class="value">${escapeHtml(app.address || '—')}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Date Submitted</div>
+                        <div class="value">${date}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Status</div>
+                        <div class="value">${statusConfig.label}</div>
+                    </div>
+                </div>
+            </div>
+            
+            ${app.coverLetter ? `
+            <div class="app-pdf-section">
+                <h5>Application Letter</h5>
+                <p style="font-size:13px;line-height:1.7;color:#1a202c;">${escapeHtml(app.coverLetter)}</p>
+            </div>` : ''}
+            
+            <div class="app-pdf-section">
+                <h5>Documents Attached</h5>
+                <p style="font-size:13px;">
+                    📄 CV/Resume: ${app.cv ? '✅ Attached' : '❌ Not provided'}<br>
+                    🪪 ID Document: ${app.idDocument ? '✅ Attached' : '❌ Not provided'}<br>
+                    🏅 Certificates: ${app.certificates && app.certificates.length > 0 ? '✅ ' + app.certificates.length + ' file(s) attached' : '❌ Not provided'}
+                </p>
+            </div>
+            
+            <div class="app-pdf-footer">
+                <p>This is a computer-generated application document from CleanSpark Recruitment System.</p>
+                <p>CleanSpark Cleaning Service Management | Zanzibar, Tanzania</p>
+                <p>Generated on ${new Date().toLocaleString('en-TZ')}</p>
+            </div>
+        </div>
+    `;
+    
+    const template = document.getElementById('applicationPDFTemplate');
+    template.innerHTML = pdfHTML;
+    template.style.left = '0';
+    template.style.position = 'relative';
+    
+    html2canvas(template, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+    }).then(canvas => {
+        template.style.left = '-9999px';
+        template.style.position = 'absolute';
+        
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth - 16;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        let heightLeft = imgHeight;
+        let position = 8;
+        
+        pdf.addImage(imgData, 'PNG', 8, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 8, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+        
+        const fileName = `CleanSpark_Application_${app.fullName.replace(/\s+/g, '_')}_${date}.pdf`;
+        pdf.save(fileName);
+        showNotification('Application PDF downloaded successfully!', 'success');
+    }).catch(error => {
+        console.error('PDF generation error:', error);
+        template.style.left = '-9999px';
+        template.style.position = 'absolute';
+        showNotification('Error generating PDF. Opening print view instead.', 'warning');
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`<!DOCTYPE html><html><head><title>Application</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/admin.css"></head><body>${pdfHTML}</body></html>`);
+        printWindow.document.close();
+        setTimeout(() => printWindow.print(), 500);
+    });
+}
+
+// ========== SHARE APPLICATION ==========
+function shareApplication() {
+    if (!currentApplicationId) return;
+    
+    const apps = getApplications();
+    const app = apps.find(a => a.id == currentApplicationId);
+    if (!app) return;
+    
+    const shareText = `📋 Job Application - CleanSpark\n\n👤 ${app.fullName}\n📧 ${app.email}\n📞 ${app.phone || 'N/A'}\n💼 ${app.position}\n📅 ${app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : 'N/A'}\n📊 Status: ${getApplicationStatusConfig(app.status).label}\n\n— CleanSpark Recruitment System`;
+    
+    if (navigator.share) {
+        navigator.share({ title: 'Job Application', text: shareText }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(shareText).then(() => {
+            showNotification('Application details copied! Share via WhatsApp or Email.', 'success');
+        }).catch(() => {
+            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+        });
+    }
+}
+
+// ========== INITIALIZE SAMPLE JOB APPLICATION DATA ==========
+function initializeApplicationSampleData() {
+    if (!localStorage.getItem('jobApplications')) {
+        const sampleApps = [
+            {
+                id: Date.now() - 4,
+                fullName: 'Zainab Omar Mohammed',
+                email: 'zainab.omar@email.com',
+                phone: '+255 777 123 456',
+                gender: 'Female',
+                dob: '1995-03-15',
+                address: 'Mkunazini Street, Stone Town, Zanzibar',
+                position: 'Senior Cleaning Supervisor',
+                coverLetter: 'I am writing to express my strong interest in the Senior Cleaning Supervisor position at CleanSpark. With over 5 years of experience in hospitality cleaning management, I have developed excellent leadership skills and a deep understanding of cleaning protocols.',
+                cv: null,
+                idDocument: null,
+                certificates: [],
+                status: 'pending',
+                submittedAt: new Date(Date.now() - 4 * 86400000).toISOString()
+            },
+            {
+                id: Date.now() - 3,
+                fullName: 'Abdul Rashid Juma',
+                email: 'abdul.rashid@email.com',
+                phone: '+255 777 234 567',
+                gender: 'Male',
+                dob: '1990-07-22',
+                address: 'Shangani, Stone Town, Zanzibar',
+                position: 'Office Cleaner',
+                coverLetter: 'I am a hardworking and reliable individual seeking the Office Cleaner position. I have experience in maintaining clean office environments and take pride in my attention to detail.',
+                cv: null,
+                idDocument: null,
+                certificates: [],
+                status: 'under_review',
+                submittedAt: new Date(Date.now() - 3 * 86400000).toISOString()
+            },
+            {
+                id: Date.now() - 2,
+                fullName: 'Maryam Hassan Ali',
+                email: 'maryam.hassan@email.com',
+                phone: '+255 777 345 678',
+                gender: 'Female',
+                dob: '1998-11-08',
+                address: 'Mlandege, Zanzibar',
+                position: 'Deep Cleaning Specialist',
+                coverLetter: 'With specialized training in deep cleaning techniques and eco-friendly products, I am excited about the opportunity to join the CleanSpark team. I am passionate about creating spotless and healthy environments.',
+                cv: null,
+                idDocument: null,
+                certificates: [],
+                status: 'approved',
+                submittedAt: new Date(Date.now() - 2 * 86400000).toISOString()
+            },
+            {
+                id: Date.now() - 1,
+                fullName: 'Khalid Bakari Salum',
+                email: 'khalid.bakari@email.com',
+                phone: '+255 777 456 789',
+                gender: 'Male',
+                dob: '1992-05-30',
+                address: 'Bububu, Zanzibar',
+                position: 'Grounds Maintenance Worker',
+                coverLetter: 'I have 3 years of experience in grounds maintenance and landscaping. I am physically fit, reliable, and ready to contribute to maintaining beautiful outdoor spaces for CleanSpark clients.',
+                cv: null,
+                idDocument: null,
+                certificates: [],
+                status: 'rejected',
+                submittedAt: new Date(Date.now() - 1 * 86400000).toISOString()
+            }
+        ];
+        localStorage.setItem('jobApplications', JSON.stringify(sampleApps));
+    }
+}
 // ========== DASHBOARD STATS (CLICKABLE) ==========
 function loadDashboardStats() {
     const services = JSON.parse(localStorage.getItem('adminServices')) || [];
@@ -597,6 +1206,7 @@ function loadDashboardStats() {
     const messages = JSON.parse(localStorage.getItem('contact_messages')) || [];
     const supervisorMsgs = JSON.parse(localStorage.getItem('supervisor_messages')) || [];
     const contractors = JSON.parse(localStorage.getItem('contractors')) || [];
+    const applications = JSON.parse(localStorage.getItem('jobApplications')) || [];
 
     document.getElementById('dashboardStats').innerHTML = `
         <div class="stat-card" onclick="showDashboardDetail('services')">
@@ -623,6 +1233,11 @@ function loadDashboardStats() {
             <div class="stat-icon"><i class="bi bi-building"></i></div>
             <div class="stat-value">${contractors.length}</div>
             <div class="stat-label">Contractors</div>
+        </div>
+        <div class="stat-card" onclick="showSection('applications')">
+            <div class="stat-icon" style="background:rgba(236,72,153,0.1);"><i class="bi bi-file-earmark-person-fill" style="color:#ec4899;"></i></div>
+            <div class="stat-value">${applications.length}</div>
+            <div class="stat-label">Job Applications</div>
         </div>
     `;
 }
@@ -1155,41 +1770,8 @@ function viewContractorDetails(contractorId) {
     new bootstrap.Modal(document.getElementById('contractorDetailsModal')).show();
 }
 
-function generateInvoiceForContractor(contractorId) {
-    bootstrap.Modal.getInstance(document.getElementById('contractorDetailsModal'))?.hide();
-    
-    const contractors = JSON.parse(localStorage.getItem('contractors')) || [];
-    const contractor = contractors.find(c => c.id == contractorId);
-    if (!contractor) return;
-
-    const workCost = Math.round((contractor.contractValue || 12000000) / 12) || 500000;
-    const workersCost = (contractor.workersAssigned || 5) * 150000;
-    const equipmentCost = 75000;
-    const total = workCost + workersCost + equipmentCost;
-
-    currentInvoiceData = {
-        id: 'INV-' + Date.now().toString().slice(-8),
-        contractorId: contractorId,
-        contractorName: contractor.companyName,
-        contractorType: contractor.type,
-        invoiceDate: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        workDesc: 'Monthly Cleaning Services',
-        workCost,
-        workersCost,
-        equipmentCost,
-        total,
-        workersCount: contractor.workersAssigned || 5,
-        createdAt: new Date().toISOString()
-    };
-
-    const invoices = JSON.parse(localStorage.getItem('invoices')) || [];
-    invoices.push(currentInvoiceData);
-    localStorage.setItem('invoices', JSON.stringify(invoices));
-
-    showInvoicePreview(currentInvoiceData);
-    loadInvoices();
-    showNotification('Invoice generated successfully!', 'success');
+function generateContractorInvoice() {
+    if (currentContractorId) generateInvoiceForContractor(currentContractorId);
 }
 
 // ========== INVOICE ==========
@@ -1257,6 +1839,43 @@ function generateInvoice() {
     showNotification('Invoice generated successfully!', 'success');
 }
 
+function generateInvoiceForContractor(contractorId) {
+    bootstrap.Modal.getInstance(document.getElementById('contractorDetailsModal'))?.hide();
+    
+    const contractors = JSON.parse(localStorage.getItem('contractors')) || [];
+    const contractor = contractors.find(c => c.id == contractorId);
+    if (!contractor) return;
+
+    const workCost = Math.round((contractor.contractValue || 12000000) / 12) || 500000;
+    const workersCost = (contractor.workersAssigned || 5) * 150000;
+    const equipmentCost = 75000;
+    const total = workCost + workersCost + equipmentCost;
+
+    currentInvoiceData = {
+        id: 'INV-' + Date.now().toString().slice(-8),
+        contractorId: contractorId,
+        contractorName: contractor.companyName,
+        contractorType: contractor.type,
+        invoiceDate: new Date().toISOString().split('T')[0],
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        workDesc: 'Monthly Cleaning Services',
+        workCost,
+        workersCost,
+        equipmentCost,
+        total,
+        workersCount: contractor.workersAssigned || 5,
+        createdAt: new Date().toISOString()
+    };
+
+    const invoices = JSON.parse(localStorage.getItem('invoices')) || [];
+    invoices.push(currentInvoiceData);
+    localStorage.setItem('invoices', JSON.stringify(invoices));
+
+    showInvoicePreview(currentInvoiceData);
+    loadInvoices();
+    showNotification('Invoice generated successfully!', 'success');
+}
+
 function showInvoicePreview(invoiceData) {
     currentInvoiceData = invoiceData;
 
@@ -1298,7 +1917,6 @@ function showInvoicePreview(invoiceData) {
 
     new bootstrap.Modal(document.getElementById('invoicePreviewModal')).show();
 }
-
 // ============================================================
 //  PROFESSIONAL PDF INVOICE DOWNLOAD (FIXED)
 //  Uses jsPDF + html2canvas to generate a properly formatted PDF
@@ -1311,10 +1929,8 @@ function downloadInvoicePDF() {
 
     const inv = currentInvoiceData;
 
-    // Build professional PDF invoice HTML
     const pdfHTML = `
         <div class="invoice-pdf-container">
-            <!-- Header with Logo & Company Details -->
             <div class="invoice-pdf-header">
                 <div class="invoice-pdf-company">
                     <img src="image/logo.jpeg" alt="CleanSpark Logo" class="invoice-pdf-logo" onerror="this.style.display='none';">
@@ -1335,14 +1951,12 @@ function downloadInvoicePDF() {
                 </div>
             </div>
 
-            <!-- Bill To Section -->
             <div class="invoice-pdf-bill-to">
                 <h5>Bill To:</h5>
                 <p class="bill-name">${escapeHtml(inv.contractorName)}</p>
                 <p class="bill-type">${escapeHtml(inv.contractorType === 'private' ? 'Private Company' : 'Government Organization')}</p>
             </div>
 
-            <!-- Invoice Items Table -->
             <table class="invoice-pdf-table">
                 <thead>
                     <tr>
@@ -1374,7 +1988,6 @@ function downloadInvoicePDF() {
                 </tbody>
             </table>
 
-            <!-- Footer -->
             <div class="invoice-pdf-footer">
                 <p class="thank-you">Thank you for your business!</p>
                 <p>CleanSpark Cleaning Service Management System</p>
@@ -1384,13 +1997,11 @@ function downloadInvoicePDF() {
         </div>
     `;
 
-    // Set the template content
     const template = document.getElementById('invoicePDFTemplate');
     template.innerHTML = pdfHTML;
     template.style.left = '0';
     template.style.position = 'relative';
 
-    // Use html2canvas to capture the invoice as image, then jsPDF to save as PDF
     html2canvas(template, {
         scale: 2,
         useCORS: true,
@@ -1398,7 +2009,6 @@ function downloadInvoicePDF() {
         backgroundColor: '#ffffff',
         allowTaint: true
     }).then(canvas => {
-        // Reset template position
         template.style.left = '-9999px';
         template.style.position = 'absolute';
 
@@ -1430,7 +2040,6 @@ function downloadInvoicePDF() {
         showNotification('Professional PDF invoice downloaded successfully!', 'success');
     }).catch(error => {
         console.error('PDF generation error:', error);
-        // Fallback: open print window
         template.style.left = '-9999px';
         template.style.position = 'absolute';
         const printWindow = window.open('', '_blank');
@@ -1445,7 +2054,6 @@ function downloadInvoicePDF() {
     });
 }
 
-// Keep the old downloadInvoice for backward compatibility (renamed to avoid conflict)
 function downloadInvoice() {
     downloadInvoicePDF();
 }
@@ -2412,6 +3020,7 @@ function exportData() {
         bookings: JSON.parse(localStorage.getItem('customerBookings')) || [],
         contractors: JSON.parse(localStorage.getItem('contractors')) || [],
         invoices: JSON.parse(localStorage.getItem('invoices')) || [],
+        applications: JSON.parse(localStorage.getItem('jobApplications')) || [],
         exportDate: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
