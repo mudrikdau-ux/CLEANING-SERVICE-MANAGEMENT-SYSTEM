@@ -1255,16 +1255,24 @@
     </div>
 </div>
 
-<!-- Application Detail Modal -->
+<!-- Application Detail Modal (UPDATED - PROFESSIONAL REDESIGN) -->
 <div class="modal fade" id="applicationDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content modal-styled">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-person-vcard me-2"></i>Application Details</h5>
+        <div class="modal-content modal-styled app-detail-modal-content">
+            <div class="modal-header app-detail-modal-header">
+                <div class="app-modal-header-inner">
+                    <div class="app-modal-header-icon">
+                        <i class="bi bi-person-vcard"></i>
+                    </div>
+                    <div class="app-modal-header-text">
+                        <h5 class="modal-title" id="applicationDetailModalTitle">Application Details</h5>
+                        <p class="app-modal-header-subtitle">Comprehensive applicant profile and documents</p>
+                    </div>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="applicationDetailBody"></div>
-            <div class="modal-footer">
+            <div class="modal-body app-detail-modal-body" id="applicationDetailBody"></div>
+            <div class="modal-footer app-detail-modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-success" onclick="downloadApplicationPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>Download PDF</button>
                 <button type="button" class="btn btn-primary" onclick="shareApplication()"><i class="bi bi-share-fill me-1"></i>Share</button>

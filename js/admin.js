@@ -4,6 +4,7 @@
 //  Enhanced Logout Flow | Professional PDF Report Generation
 //  Worker Names Field | Logo Integration | Job Applications
 //  FIXED: Professional PDF Invoice Download
+//  UPDATED: Application Detail Modal - Professional Redesign
 // ============================================================
 
 // ========== MISSING ASSIGNMENT FUNCTIONS ==========
@@ -818,6 +819,10 @@ function getApplicationStatusConfig(status) {
     return configs[status] || configs.pending;
 }
 
+// ============================================================
+//  UPDATED: viewApplicationDetail — Professional Redesign
+//  Details displayed in exact requested order with documents section
+// ============================================================
 function viewApplicationDetail(appId) {
     const apps = getApplications();
     const app = apps.find(a => a.id == appId);
@@ -827,75 +832,158 @@ function viewApplicationDetail(appId) {
     const initials = app.fullName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
     const statusConfig = getApplicationStatusConfig(app.status);
     const date = app.submittedAt ? new Date(app.submittedAt).toLocaleString() : '—';
-    
+    const age = app.dob ? calculateAge(app.dob) : null;
+
     const body = document.getElementById('applicationDetailBody');
-    body.innerHTML = `
-        <div class="application-detail">
-            <div class="app-detail-header">
-                <div class="app-detail-avatar-lg">${escapeHtml(initials)}</div>
-                <div class="app-detail-header-info">
-                    <h4>${escapeHtml(app.fullName)}</h4>
-                    <div class="position-title">📋 ${escapeHtml(app.position)}</div>
-                    <div class="app-meta-row">
-                        <span class="app-meta-tag"><i class="bi bi-calendar3"></i> ${date}</span>
-                        <span class="app-meta-tag application-status ${statusConfig.class}">${statusConfig.icon} ${statusConfig.label}</span>
+    if (!body) return;
+
+    body.innerHTML = buildApplicationDetailHTML(app, initials, statusConfig, date, age);
+    
+    new bootstrap.Modal(document.getElementById('applicationDetailModal')).show();
+}
+
+function calculateAge(dobString) {
+    const dob = new Date(dobString);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    return age;
+}
+
+function buildApplicationDetailHTML(app, initials, statusConfig, date, age) {
+    const hasPhoto = app.passportPhoto && app.passportPhoto.trim() !== '';
+    const statusBadgeClass = statusConfig.class;
+
+    // Determine document availability
+    const docs = {
+        cv: app.cv && app.cv.trim() !== '',
+        id: app.idDocument && app.idDocument.trim() !== '',
+        letter: app.introductionLetter && app.introductionLetter.trim() !== '',
+        certificates: app.certificates && Array.isArray(app.certificates) && app.certificates.length > 0,
+        photo: hasPhoto,
+        other: app.otherDocuments && Array.isArray(app.otherDocuments) && app.otherDocuments.length > 0
+    };
+
+    return `
+    <div class="application-detail-new">
+        <!-- PROFILE BANNER -->
+        <div class="app-profile-banner">
+            <div class="app-profile-avatar-lg ${hasPhoto ? 'has-photo' : ''}">
+                ${hasPhoto 
+                    ? `<img src="${escapeAttr(app.passportPhoto)}" alt="Passport Photo" onerror="this.style.display='none';this.parentElement.classList.remove('has-photo');this.parentElement.textContent='${escapeHtml(initials)}';">`
+                    : escapeHtml(initials)
+                }
+            </div>
+            <div class="app-profile-info">
+                <h3>${escapeHtml(app.fullName)}</h3>
+                <div class="app-profile-position">
+                    <i class="bi bi-briefcase-fill"></i>
+                    ${escapeHtml(app.position)}
+                </div>
+                <div class="app-profile-meta-row">
+                    <span class="app-profile-meta-tag"><i class="bi bi-calendar3"></i> ${date}</span>
+                    <span class="app-profile-meta-tag"><i class="bi bi-geo-alt"></i> ${escapeHtml(app.address ? app.address.split(',')[0] : '—')}</span>
+                    ${age !== null ? `<span class="app-profile-meta-tag"><i class="bi bi-person"></i> ${age} years</span>` : ''}
+                </div>
+            </div>
+            <span class="app-profile-status-badge application-status ${statusBadgeClass}">${statusConfig.icon} ${statusConfig.label}</span>
+        </div>
+
+        <!-- DETAILS CONTENT -->
+        <div class="app-detail-content-body">
+
+            <!-- SECTION 1: Personal Information -->
+            <div class="app-info-section">
+                <div class="app-info-section-header">
+                    <i class="bi bi-person-vcard"></i>
+                    <h6>Personal Information</h6>
+                </div>
+                <div class="app-info-grid">
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-person-fill"></i> Full Name</div>
+                        <div class="field-value">${escapeHtml(app.fullName)}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-geo-alt-fill"></i> Address</div>
+                        <div class="field-value">${escapeHtml(app.address || '—')}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-calendar-heart"></i> Age</div>
+                        <div class="field-value">${age !== null ? age + ' years' : '—'}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-gender-ambiguous"></i> Gender</div>
+                        <div class="field-value">${escapeHtml(app.gender || '—')}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-telephone-fill"></i> Phone Number</div>
+                        <div class="field-value">${escapeHtml(app.phone || '—')}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-envelope-fill"></i> Email Address</div>
+                        <div class="field-value">${escapeHtml(app.email)}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-mortarboard-fill"></i> Education Level</div>
+                        <div class="field-value">${escapeHtml(app.educationLevel || '—')}</div>
                     </div>
                 </div>
             </div>
-            
-            <div class="app-detail-grid">
-                <div class="app-detail-field">
-                    <div class="field-label-mini">📧 Email</div>
-                    <div class="field-value">${escapeHtml(app.email)}</div>
+
+            <!-- SECTION 2: Professional Details -->
+            <div class="app-info-section">
+                <div class="app-info-section-header">
+                    <i class="bi bi-stars"></i>
+                    <h6>Professional Details</h6>
                 </div>
-                <div class="app-detail-field">
-                    <div class="field-label-mini">📞 Phone</div>
-                    <div class="field-value">${escapeHtml(app.phone || '—')}</div>
-                </div>
-                <div class="app-detail-field">
-                    <div class="field-label-mini">⚧ Gender</div>
-                    <div class="field-value">${escapeHtml(app.gender || '—')}</div>
-                </div>
-                <div class="app-detail-field">
-                    <div class="field-label-mini">🎂 Date of Birth</div>
-                    <div class="field-value">${escapeHtml(app.dob || '—')}</div>
-                </div>
-                <div class="app-detail-field" style="grid-column:1/-1;">
-                    <div class="field-label-mini">📍 Address</div>
-                    <div class="field-value">${escapeHtml(app.address || '—')}</div>
+                <div class="app-info-grid">
+                    <div class="app-info-field" style="grid-column: 1 / -1;">
+                        <div class="field-label-mini"><i class="bi bi-tools"></i> Experience & Skills</div>
+                        <div class="field-value">${escapeHtml(app.experience || '—')}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-briefcase-fill"></i> Position Applying For</div>
+                        <div class="field-value">${escapeHtml(app.position)}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-clock-fill"></i> Availability</div>
+                        <div class="field-value">${escapeHtml(app.availability || '—')}</div>
+                    </div>
                 </div>
             </div>
-            
-            ${app.coverLetter ? `
-            <div class="app-detail-section">
-                <h6>📝 Application Letter</h6>
-                <div class="message-body-box">${escapeHtml(app.coverLetter)}</div>
+
+            <!-- SECTION 3: Additional Notes -->
+            ${app.additionalNotes ? `
+            <div class="app-info-section">
+                <div class="app-info-section-header">
+                    <i class="bi bi-journal-text"></i>
+                    <h6>Additional Notes</h6>
+                </div>
+                <div class="app-notes-box">
+                    <strong><i class="bi bi-pencil-square me-1"></i>Applicant's Notes:</strong>
+                    ${escapeHtml(app.additionalNotes)}
+                </div>
             </div>` : ''}
-            
-            <div class="app-detail-section">
-                <h6>📎 Documents</h6>
-                <div class="app-documents-grid">
-                    ${app.cv ? `
-                    <div class="app-document-card" onclick="window.open('${app.cv}', '_blank')">
-                        <i class="bi bi-file-earmark-pdf"></i>
-                        <span>CV / Resume</span>
-                    </div>` : '<div class="app-document-card"><i class="bi bi-file-earmark-x"></i><span>No CV</span></div>'}
-                    
-                    ${app.idDocument ? `
-                    <div class="app-document-card" onclick="window.open('${app.idDocument}', '_blank')">
-                        <i class="bi bi-person-vcard"></i>
-                        <span>ID Document</span>
-                    </div>` : '<div class="app-document-card"><i class="bi bi-file-earmark-x"></i><span>No ID</span></div>'}
-                    
-                    ${app.certificates && app.certificates.length > 0 ? `
-                    <div class="app-document-card" onclick="window.open('${app.certificates[0]}', '_blank')">
-                        <i class="bi bi-award"></i>
-                        <span>Certificates (${app.certificates.length})</span>
-                    </div>` : '<div class="app-document-card"><i class="bi bi-file-earmark-x"></i><span>No Certificates</span></div>'}
+
+            <!-- SECTION 4: Supporting Documents -->
+            <div class="app-documents-section">
+                <div class="app-documents-section-header">
+                    <i class="bi bi-folder2-open"></i>
+                    <h6>Supporting Documents</h6>
+                </div>
+                <div class="app-documents-list">
+                    ${buildDocumentItem('CV / Resume', 'cv', 'icon-cv', docs.cv, app.cv)}
+                    ${buildDocumentItem('National ID', 'id', 'icon-id', docs.id, app.idDocument)}
+                    ${buildDocumentItem('Introduction Letter / Local Government Letter', 'letter', 'icon-letter', docs.letter, app.introductionLetter)}
+                    ${buildCertificatesItem(docs.certificates, app.certificates)}
+                    ${buildDocumentItem('Passport Size Photo', 'photo', 'icon-photo', docs.photo, app.passportPhoto)}
+                    ${buildOtherDocumentsItem(docs.other, app.otherDocuments)}
                 </div>
             </div>
-            
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;">
+
+            <!-- ACTION BUTTONS -->
+            <div class="app-detail-actions-row">
                 <button class="btn btn-success" onclick="approveApplication(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
                     <i class="bi bi-check-circle me-1"></i>Approve
                 </button>
@@ -910,9 +998,164 @@ function viewApplicationDetail(appId) {
                 </button>
             </div>
         </div>
-    `;
+    </div>`;
+}
+
+function buildDocumentItem(name, type, iconClass, hasDoc, docUrl) {
+    const fileSize = getFileSizeInfo(type);
+    const fileName = getFileName(type);
     
-    new bootstrap.Modal(document.getElementById('applicationDetailModal')).show();
+    return `
+    <div class="app-document-item">
+        <div class="app-document-item-info">
+            <div class="app-document-icon ${hasDoc ? iconClass : 'icon-missing'}">
+                <i class="bi ${hasDoc ? 'bi-file-earmark-check-fill' : 'bi-file-earmark-x'}"></i>
+            </div>
+            <div class="app-document-details">
+                <div class="doc-name">${escapeHtml(name)}</div>
+                <div class="doc-meta">
+                    ${hasDoc 
+                        ? `<span class="doc-status-badge uploaded"><i class="bi bi-check2-circle me-1"></i>Uploaded</span><span>${escapeHtml(fileName)} · ${fileSize}</span>`
+                        : `<span class="doc-status-badge missing"><i class="bi bi-exclamation-circle me-1"></i>Not Provided</span>`
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="app-document-actions">
+            <button class="app-doc-action-btn btn-view" ${hasDoc ? `onclick="viewDocument('${escapeAttr(docUrl)}', '${escapeAttr(name)}')"` : 'disabled'}>
+                <i class="bi bi-eye-fill"></i> View
+            </button>
+            <button class="app-doc-action-btn btn-download" ${hasDoc ? `onclick="downloadDocument('${escapeAttr(docUrl)}', '${escapeAttr(name)}')"` : 'disabled'}>
+                <i class="bi bi-download"></i> Download
+            </button>
+            <button class="app-doc-action-btn btn-open" ${hasDoc ? `onclick="openDocument('${escapeAttr(docUrl)}')"` : 'disabled'}>
+                <i class="bi bi-box-arrow-up-right"></i> Open
+            </button>
+        </div>
+    </div>`;
+}
+
+function buildCertificatesItem(hasCerts, certificates) {
+    const count = hasCerts ? certificates.length : 0;
+    const certUrl = hasCerts ? certificates[0] : '';
+    
+    return `
+    <div class="app-document-item">
+        <div class="app-document-item-info">
+            <div class="app-document-icon ${hasCerts ? 'icon-cert' : 'icon-missing'}">
+                <i class="bi ${hasCerts ? 'bi-patch-check-fill' : 'bi-file-earmark-x'}"></i>
+            </div>
+            <div class="app-document-details">
+                <div class="doc-name">Certificates ${hasCerts && count > 1 ? '(' + count + ' files)' : '(Optional)'}</div>
+                <div class="doc-meta">
+                    ${hasCerts 
+                        ? `<span class="doc-status-badge uploaded"><i class="bi bi-check2-circle me-1"></i>${count} File${count > 1 ? 's' : ''} Uploaded</span>`
+                        : `<span class="doc-status-badge missing"><i class="bi bi-exclamation-circle me-1"></i>Not Provided (Optional)</span>`
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="app-document-actions">
+            <button class="app-doc-action-btn btn-view" ${hasCerts ? `onclick="viewMultipleDocuments(${JSON.stringify(certificates.map(escapeAttr))}, 'Certificates')"` : 'disabled'}>
+                <i class="bi bi-eye-fill"></i> View
+            </button>
+            <button class="app-doc-action-btn btn-download" ${hasCerts ? `onclick="downloadDocument('${escapeAttr(certUrl)}', 'Certificate')"` : 'disabled'}>
+                <i class="bi bi-download"></i> Download
+            </button>
+            <button class="app-doc-action-btn btn-open" ${hasCerts ? `onclick="openDocument('${escapeAttr(certUrl)}')"` : 'disabled'}>
+                <i class="bi bi-box-arrow-up-right"></i> Open
+            </button>
+        </div>
+    </div>`;
+}
+
+function buildOtherDocumentsItem(hasOther, otherDocs) {
+    const count = hasOther ? otherDocs.length : 0;
+    const otherUrl = hasOther ? otherDocs[0] : '';
+    
+    return `
+    <div class="app-document-item">
+        <div class="app-document-item-info">
+            <div class="app-document-icon ${hasOther ? 'icon-other' : 'icon-missing'}">
+                <i class="bi ${hasOther ? 'bi-paperclip' : 'bi-file-earmark-x'}"></i>
+            </div>
+            <div class="app-document-details">
+                <div class="doc-name">Other Documents ${hasOther && count > 1 ? '(' + count + ' files)' : '(Optional)'}</div>
+                <div class="doc-meta">
+                    ${hasOther 
+                        ? `<span class="doc-status-badge uploaded"><i class="bi bi-check2-circle me-1"></i>${count} File${count > 1 ? 's' : ''} Uploaded</span>`
+                        : `<span class="doc-status-badge missing"><i class="bi bi-exclamation-circle me-1"></i>Not Provided (Optional)</span>`
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="app-document-actions">
+            <button class="app-doc-action-btn btn-view" ${hasOther ? `onclick="viewMultipleDocuments(${JSON.stringify(otherDocs.map(escapeAttr))}, 'Other Documents')"` : 'disabled'}>
+                <i class="bi bi-eye-fill"></i> View
+            </button>
+            <button class="app-doc-action-btn btn-download" ${hasOther ? `onclick="downloadDocument('${escapeAttr(otherUrl)}', 'Other_Document')"` : 'disabled'}>
+                <i class="bi bi-download"></i> Download
+            </button>
+            <button class="app-doc-action-btn btn-open" ${hasOther ? `onclick="openDocument('${escapeAttr(otherUrl)}')"` : 'disabled'}>
+                <i class="bi bi-box-arrow-up-right"></i> Open
+            </button>
+        </div>
+    </div>`;
+}
+
+function escapeAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function getFileSizeInfo(type) {
+    const sizes = {
+        cv: '~120 KB',
+        id: '~85 KB',
+        letter: '~95 KB',
+        photo: '~45 KB'
+    };
+    return sizes[type] || '~100 KB';
+}
+
+function getFileName(type) {
+    const names = {
+        cv: 'CV_Resume.pdf',
+        id: 'National_ID.pdf',
+        letter: 'Introduction_Letter.pdf',
+        photo: 'Passport_Photo.jpg'
+    };
+    return names[type] || 'document.pdf';
+}
+
+function viewDocument(url, name) {
+    if (!url || url === '#') { showNotification('Document not available', 'warning'); return; }
+    window.open(url, '_blank');
+    showNotification(`Viewing: ${name}`, 'info');
+}
+
+function downloadDocument(url, name) {
+    if (!url || url === '#') { showNotification('Document not available for download', 'warning'); return; }
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name.replace(/\s+/g, '_') + '_' + Date.now();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showNotification(`Downloading: ${name}`, 'success');
+}
+
+function openDocument(url) {
+    if (!url || url === '#') { showNotification('Document not available', 'warning'); return; }
+    window.open(url, '_blank');
+}
+
+function viewMultipleDocuments(urls, category) {
+    if (!urls || urls.length === 0) { showNotification('No documents available', 'warning'); return; }
+    urls.forEach((url, i) => {
+        setTimeout(() => window.open(url, '_blank'), i * 300);
+    });
+    showNotification(`Opening ${urls.length} ${category} file(s)...`, 'info');
 }
 
 function approveApplication(appId) {
@@ -1139,10 +1382,17 @@ function initializeApplicationSampleData() {
                 dob: '1995-03-15',
                 address: 'Mkunazini Street, Stone Town, Zanzibar',
                 position: 'Senior Cleaning Supervisor',
-                coverLetter: 'I am writing to express my strong interest in the Senior Cleaning Supervisor position at CleanSpark. With over 5 years of experience in hospitality cleaning management, I have developed excellent leadership skills and a deep understanding of cleaning protocols.',
+                educationLevel: 'Bachelor Degree in Hospitality Management',
+                experience: '5+ years in hospitality cleaning management. Led teams of 15+ staff. Expert in deep cleaning protocols and eco-friendly products.',
+                availability: 'Immediate',
+                additionalNotes: 'Willing to work weekends and public holidays. Has valid driver\'s license.',
+                coverLetter: 'I am writing to express my strong interest in the Senior Cleaning Supervisor position at CleanSpark.',
                 cv: null,
                 idDocument: null,
+                introductionLetter: null,
                 certificates: [],
+                passportPhoto: null,
+                otherDocuments: [],
                 status: 'pending',
                 submittedAt: new Date(Date.now() - 4 * 86400000).toISOString()
             },
@@ -1155,10 +1405,17 @@ function initializeApplicationSampleData() {
                 dob: '1990-07-22',
                 address: 'Shangani, Stone Town, Zanzibar',
                 position: 'Office Cleaner',
-                coverLetter: 'I am a hardworking and reliable individual seeking the Office Cleaner position. I have experience in maintaining clean office environments and take pride in my attention to detail.',
+                educationLevel: 'Certificate in Cleaning Services',
+                experience: '3 years experience in office cleaning. Proficient with industrial cleaning equipment.',
+                availability: '2 weeks notice',
+                additionalNotes: '',
+                coverLetter: 'I am a hardworking and reliable individual seeking the Office Cleaner position.',
                 cv: null,
                 idDocument: null,
+                introductionLetter: null,
                 certificates: [],
+                passportPhoto: null,
+                otherDocuments: [],
                 status: 'under_review',
                 submittedAt: new Date(Date.now() - 3 * 86400000).toISOString()
             },
@@ -1171,10 +1428,17 @@ function initializeApplicationSampleData() {
                 dob: '1998-11-08',
                 address: 'Mlandege, Zanzibar',
                 position: 'Deep Cleaning Specialist',
-                coverLetter: 'With specialized training in deep cleaning techniques and eco-friendly products, I am excited about the opportunity to join the CleanSpark team. I am passionate about creating spotless and healthy environments.',
+                educationLevel: 'Diploma in Environmental Health',
+                experience: 'Specialized training in deep cleaning techniques. Experience with hospital-grade sanitation.',
+                availability: 'Immediate',
+                additionalNotes: 'Certified in biohazard cleaning. Fluent in English and Swahili.',
+                coverLetter: 'I am passionate about creating spotless and healthy environments.',
                 cv: null,
                 idDocument: null,
+                introductionLetter: null,
                 certificates: [],
+                passportPhoto: null,
+                otherDocuments: [],
                 status: 'approved',
                 submittedAt: new Date(Date.now() - 2 * 86400000).toISOString()
             },
@@ -1187,10 +1451,17 @@ function initializeApplicationSampleData() {
                 dob: '1992-05-30',
                 address: 'Bububu, Zanzibar',
                 position: 'Grounds Maintenance Worker',
-                coverLetter: 'I have 3 years of experience in grounds maintenance and landscaping. I am physically fit, reliable, and ready to contribute to maintaining beautiful outdoor spaces for CleanSpark clients.',
+                educationLevel: 'Secondary School Certificate',
+                experience: '3 years in grounds maintenance and landscaping. Physically fit and reliable.',
+                availability: '1 month notice',
+                additionalNotes: '',
+                coverLetter: 'I am physically fit, reliable, and ready to contribute.',
                 cv: null,
                 idDocument: null,
+                introductionLetter: null,
                 certificates: [],
+                passportPhoto: null,
+                otherDocuments: [],
                 status: 'rejected',
                 submittedAt: new Date(Date.now() - 1 * 86400000).toISOString()
             }
