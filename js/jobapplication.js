@@ -1,5 +1,6 @@
 // jobapplication.js
 // CleanSpark Job Application - fully functional logic with status check, multi-step form, uploads, confetti
+// + Application Tracking feature
 
 (function () {
   // ---- APPLICATION WINDOW STATUS (simulated - can be dynamic) ----
@@ -11,6 +12,10 @@
   const totalSteps = 3;
   // Store uploaded file names for display
   const uploadedFiles = {};
+  // Track current view: 'form', 'tracking', 'closed'
+  let currentView = 'form';
+  // Store previous form state for back navigation from tracking
+  let previousFormState = null;
 
   // DOM elements
   const dynamicPanel = document.getElementById('dynamicPanel');
@@ -23,6 +28,71 @@
   // Set current year
   const yearSpan = document.getElementById('currentYear');
   if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+
+  // ---- Simulated application database for tracking ----
+  // In a real app, this would be fetched from a server
+  const applicationsDB = [
+    {
+      ref: 'CS-A1B2C3D4',
+      name: 'John Smith',
+      position: 'Office Cleaner',
+      submissionDate: '2024-01-15',
+      status: 'pending',
+      stage: 1,
+      lastUpdated: '2024-01-15',
+      stages: [
+        { name: 'Submitted', date: '2024-01-15', completed: true },
+        { name: 'Under Review', date: '2024-01-18', completed: false },
+        { name: 'Interview', date: null, completed: false },
+        { name: 'Decision', date: null, completed: false }
+      ]
+    },
+    {
+      ref: 'CS-E5F6G7H8',
+      name: 'Sarah Johnson',
+      position: 'Janitor',
+      submissionDate: '2024-01-10',
+      status: 'review',
+      stage: 2,
+      lastUpdated: '2024-01-20',
+      stages: [
+        { name: 'Submitted', date: '2024-01-10', completed: true },
+        { name: 'Under Review', date: '2024-01-20', completed: true },
+        { name: 'Interview', date: '2024-01-28', completed: false },
+        { name: 'Decision', date: null, completed: false }
+      ]
+    },
+    {
+      ref: 'CS-I9J0K1L2',
+      name: 'Michael Brown',
+      position: 'Supervisor',
+      submissionDate: '2024-01-05',
+      status: 'approved',
+      stage: 4,
+      lastUpdated: '2024-01-25',
+      stages: [
+        { name: 'Submitted', date: '2024-01-05', completed: true },
+        { name: 'Under Review', date: '2024-01-10', completed: true },
+        { name: 'Interview', date: '2024-01-18', completed: true },
+        { name: 'Decision', date: '2024-01-25', completed: true }
+      ]
+    },
+    {
+      ref: 'CS-M3N4O5P6',
+      name: 'Emily Davis',
+      position: 'Housekeeper',
+      submissionDate: '2024-01-08',
+      status: 'rejected',
+      stage: 4,
+      lastUpdated: '2024-01-22',
+      stages: [
+        { name: 'Submitted', date: '2024-01-08', completed: true },
+        { name: 'Under Review', date: '2024-01-12', completed: true },
+        { name: 'Interview', date: '2024-01-19', completed: true },
+        { name: 'Decision', date: '2024-01-22', completed: true }
+      ]
+    }
+  ];
 
   // ---- Toast notification system ----
   function showToast(message, type = 'error') {
@@ -70,6 +140,7 @@
   }
 
   function renderClosedState() {
+    currentView = 'closed';
     dynamicPanel.innerHTML = `
       <div class="closed-card">
         <div class="closed-icon">
@@ -80,12 +151,20 @@
         <div style="margin-top: 0.5rem; color: var(--text-muted);">
           <i class="far fa-clock"></i> Next opening: TBD
         </div>
+        <button class="btn btn-outline" id="goToTrackingFromClosed" style="margin-top: 1rem;">
+          <i class="fas fa-search"></i> Track Existing Application
+        </button>
       </div>
     `;
+    
+    document.getElementById('goToTrackingFromClosed')?.addEventListener('click', () => {
+      renderTrackingInterface();
+    });
   }
 
   // ---- Build application form (multi-step) ----
   function renderApplicationForm() {
+    currentView = 'form';
     dynamicPanel.innerHTML = `
       <div class="form-container" id="applicationFormContainer">
         <!-- Step indicator -->
@@ -607,6 +686,25 @@
   function handleSubmit(e) {
     e.preventDefault();
     const ref = generateReference();
+    
+    // Save this application to the simulated database
+    const formData = getFormData();
+    applicationsDB.push({
+      ref: ref,
+      name: formData.fullName,
+      position: formData.position,
+      submissionDate: new Date().toISOString().split('T')[0],
+      status: 'pending',
+      stage: 1,
+      lastUpdated: new Date().toISOString().split('T')[0],
+      stages: [
+        { name: 'Submitted', date: new Date().toISOString().split('T')[0], completed: true },
+        { name: 'Under Review', date: null, completed: false },
+        { name: 'Interview', date: null, completed: false },
+        { name: 'Decision', date: null, completed: false }
+      ]
+    });
+    
     dynamicPanel.innerHTML = `
       <div class="success-message">
         <div class="checkmark-animated"><i class="fas fa-check-circle"></i></div>
@@ -619,7 +717,7 @@
           <p style="color: var(--text-muted);">Thank you for your interest in joining CleanSpark!</p>
         </div>
         <p>Your reference number:</p>
-        <div class="reference-number" style="font-size:1.3rem; margin:1rem 0;">${ref}</div>
+        <div class="reference-number" style="font-size:1.3rem; margin:1rem 0;" id="submittedRef">${ref}</div>
         <p style="color: var(--text-muted); font-size: 0.9rem;">Please save this number for future reference.</p>
         <div class="btn-group" style="justify-content:center; margin-top:2rem;">
           <button class="btn btn-outline" id="downloadSummaryBtn"><i class="fas fa-download"></i> Download Summary</button>
@@ -644,11 +742,408 @@
     });
   }
 
+  // ==================== APPLICATION TRACKING FEATURE ====================
+
+  /**
+   * Renders the tracking interface where users can search for their application
+   */
+  function renderTrackingInterface(prefillRef = '') {
+    currentView = 'tracking';
+    
+    dynamicPanel.innerHTML = `
+      <div class="tracking-interface" id="trackingInterface">
+        <!-- Back button -->
+        <div class="back-btn-container">
+          <button class="back-btn" id="backToApplicationBtn">
+            <i class="fas fa-arrow-left"></i> Back to Application
+          </button>
+        </div>
+        
+        <!-- Tracking header -->
+        <div class="tracking-header">
+          <div class="tracking-header-icon">
+            <i class="fas fa-binoculars"></i>
+          </div>
+          <h2>Track Your Application</h2>
+          <p>Enter your application reference number to check your status</p>
+        </div>
+
+        <!-- Search box -->
+        <div class="tracking-search-box">
+          <div class="tracking-input-group">
+            <div class="tracking-input-wrapper">
+              <label for="trackingRefInput">
+                <i class="fas fa-hashtag"></i> Application Reference Number
+              </label>
+              <input 
+                type="text" 
+                id="trackingRefInput" 
+                class="tracking-input-field" 
+                placeholder="e.g., CS-A1B2C3D4" 
+                value="${prefillRef}"
+                autocomplete="off"
+              >
+            </div>
+            <button class="track-btn" id="trackBtn">
+              <i class="fas fa-search"></i> Track Application
+            </button>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.8rem;">
+            <i class="fas fa-info-circle"></i> Your reference number can be found in the confirmation email or after submitting your application.
+          </p>
+        </div>
+
+        <!-- Results container (initially hidden) -->
+        <div id="trackingResultContainer"></div>
+      </div>
+    `;
+
+    // Attach event listeners
+    document.getElementById('backToApplicationBtn')?.addEventListener('click', () => {
+      if (APPLICATION_WINDOW_OPEN) {
+        renderApplicationForm();
+      } else {
+        renderClosedState();
+      }
+    });
+
+    document.getElementById('trackBtn')?.addEventListener('click', () => {
+      handleTrackApplication();
+    });
+
+    // Allow Enter key to trigger search
+    document.getElementById('trackingRefInput')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleTrackApplication();
+      }
+    });
+
+    // If a prefill reference was provided, automatically search
+    if (prefillRef) {
+      setTimeout(() => {
+        handleTrackApplication();
+      }, 300);
+    }
+  }
+
+  /**
+   * Handles the tracking search
+   */
+  function handleTrackApplication() {
+    const refInput = document.getElementById('trackingRefInput');
+    const resultContainer = document.getElementById('trackingResultContainer');
+    const trackBtn = document.getElementById('trackBtn');
+    
+    if (!refInput || !resultContainer || !trackBtn) return;
+    
+    const ref = refInput.value.trim();
+    
+    // Validate input
+    if (!ref) {
+      refInput.classList.add('input-error');
+      showToast('Please enter a reference number.', 'warning');
+      setTimeout(() => refInput.classList.remove('input-error'), 1500);
+      return;
+    }
+    
+    refInput.classList.remove('input-error');
+    
+    // Show loading state
+    const originalBtnHTML = trackBtn.innerHTML;
+    trackBtn.innerHTML = '<span class="loading-spinner"></span> Searching...';
+    trackBtn.disabled = true;
+    
+    // Simulate network delay
+    setTimeout(() => {
+      // Search for application
+      const application = applicationsDB.find(
+        app => app.ref.toUpperCase() === ref.toUpperCase()
+      );
+      
+      if (application) {
+        renderTrackingResult(application, resultContainer);
+        showToast('Application found!', 'success');
+      } else {
+        renderNoResult(resultContainer, ref);
+        showToast('No application found with this reference number.', 'warning');
+      }
+      
+      // Restore button
+      trackBtn.innerHTML = originalBtnHTML;
+      trackBtn.disabled = false;
+    }, 1200);
+  }
+
+  /**
+   * Renders the tracking result for a found application
+   */
+  function renderTrackingResult(application, container) {
+    // Determine status class and label
+    let statusClass = '';
+    let statusLabel = '';
+    
+    switch (application.status) {
+      case 'pending':
+        statusClass = 'status-pending';
+        statusLabel = 'Pending';
+        break;
+      case 'review':
+        statusClass = 'status-review';
+        statusLabel = 'Under Review';
+        break;
+      case 'approved':
+        statusClass = 'status-approved';
+        statusLabel = 'Approved';
+        break;
+      case 'rejected':
+        statusClass = 'status-rejected';
+        statusLabel = 'Not Selected';
+        break;
+      default:
+        statusClass = 'status-pending';
+        statusLabel = 'Pending';
+    }
+    
+    // Determine current active stage index
+    let activeStageIndex = application.stage - 1;
+    if (application.status === 'approved' || application.status === 'rejected') {
+      activeStageIndex = 3; // All stages complete
+    }
+    
+    // Build timeline HTML
+    const timelineSteps = application.stages.map((stage, index) => {
+      let stepClass = '';
+      if (index < activeStageIndex) {
+        stepClass = 'completed';
+      } else if (index === activeStageIndex) {
+        stepClass = 'active';
+      }
+      
+      // For rejected, show decision as rejected
+      if (application.status === 'rejected' && index === 3) {
+        stepClass = 'completed';
+      }
+      
+      return `
+        <div class="timeline-step ${stepClass}">
+          <div class="timeline-dot">
+            ${index < activeStageIndex ? '<i class="fas fa-check"></i>' : 
+              (index === activeStageIndex && application.status === 'rejected' ? '<i class="fas fa-times"></i>' :
+              (index === activeStageIndex ? '<i class="fas fa-spinner"></i>' : (index + 1)))}
+          </div>
+          <span class="timeline-label">${stage.name}</span>
+          ${stage.date ? `<span style="font-size:0.7rem;color:var(--text-muted);">${formatDate(stage.date)}</span>` : ''}
+        </div>
+      `;
+    }).join('');
+    
+    container.innerHTML = `
+      <div class="tracking-result">
+        <div class="result-card">
+          <!-- Header with reference and status -->
+          <div class="result-header">
+            <div class="result-header-left">
+              <span class="result-ref" id="resultRef">${application.ref}</span>
+              <button class="copy-ref-btn" id="copyRefBtn" title="Copy reference number">
+                <i class="fas fa-copy"></i> Copy
+              </button>
+            </div>
+            <span class="status-pill ${statusClass}">
+              <i class="fas ${application.status === 'approved' ? 'fa-check-circle' : 
+                            application.status === 'rejected' ? 'fa-times-circle' : 
+                            application.status === 'review' ? 'fa-clock' : 'fa-hourglass-half'}"></i>
+              ${statusLabel}
+            </span>
+          </div>
+          
+          <!-- Timeline -->
+          <div class="timeline-section">
+            <h4><i class="fas fa-route"></i> Application Progress</h4>
+            <div class="timeline stage-${application.stage}">
+              ${timelineSteps}
+            </div>
+          </div>
+          
+          <!-- Details -->
+          <div class="details-section">
+            <h4><i class="fas fa-info-circle"></i> Application Details</h4>
+            <div class="details-grid">
+              <div class="detail-item">
+                <span class="detail-label">Applicant Name</span>
+                <span class="detail-value">${application.name}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Position Applied For</span>
+                <span class="detail-value">${application.position}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Submission Date</span>
+                <span class="detail-value">${formatDate(application.submissionDate)}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Current Stage</span>
+                <span class="detail-value">${application.stages[activeStageIndex]?.name || 'Completed'}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Last Updated</span>
+                <span class="detail-value">${formatDate(application.lastUpdated)}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Reference Number</span>
+                <span class="detail-value" style="font-family: monospace; letter-spacing: 0.5px;">${application.ref}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Additional message based on status -->
+          <div style="padding: 1rem 2rem; background: #f8fafc; border-top: 1px solid var(--border-light);">
+            ${getStatusMessage(application)}
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Scroll to result
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    // Attach copy reference button
+    document.getElementById('copyRefBtn')?.addEventListener('click', () => {
+      copyToClipboard(application.ref);
+    });
+  }
+
+  /**
+   * Renders the "no result found" message
+   */
+  function renderNoResult(container, ref) {
+    container.innerHTML = `
+      <div class="no-result-card">
+        <div class="no-result-icon">
+          <i class="fas fa-search"></i>
+        </div>
+        <h3>No Application Found</h3>
+        <p>No application found with reference number "<strong>${escapeHTML(ref)}</strong>". Please check and try again.</p>
+        <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">
+          <i class="fas fa-question-circle"></i> 
+          Make sure you've entered the correct reference number from your application confirmation.
+        </div>
+      </div>
+    `;
+    
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /**
+   * Returns a contextual message based on application status
+   */
+  function getStatusMessage(application) {
+    switch (application.status) {
+      case 'pending':
+        return `
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            <i class="fas fa-info-circle" style="color: var(--warning);"></i>
+            <strong>Your application has been received and is pending review.</strong> Our team will begin reviewing applications soon. Please check back for updates.
+          </p>
+        `;
+      case 'review':
+        return `
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            <i class="fas fa-clock" style="color: var(--accent);"></i>
+            <strong>Your application is currently under review.</strong> Our hiring team is evaluating your qualifications. You may be contacted for an interview.
+          </p>
+        `;
+      case 'approved':
+        return `
+          <p style="color: var(--success); font-size: 0.9rem;">
+            <i class="fas fa-check-circle"></i>
+            <strong>Congratulations!</strong> Your application has been approved. Our team will contact you with further instructions regarding onboarding.
+          </p>
+        `;
+      case 'rejected':
+        return `
+          <p style="color: var(--danger); font-size: 0.9rem;">
+            <i class="fas fa-info-circle"></i>
+            <strong>Thank you for your interest.</strong> After careful consideration, we have decided to move forward with other candidates. We encourage you to apply for future opportunities.
+          </p>
+        `;
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Formats a date string for display
+   */
+  function formatDate(dateStr) {
+    if (!dateStr) return 'N/A';
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', options);
+  }
+
+  /**
+   * Copies text to clipboard
+   */
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Reference number copied to clipboard!', 'success');
+      }).catch(() => {
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      showToast('Reference number copied to clipboard!', 'success');
+    } catch (err) {
+      showToast('Failed to copy. Please copy manually.', 'error');
+    }
+    document.body.removeChild(textarea);
+  }
+
+  /**
+   * Escapes HTML to prevent XSS
+   */
+  function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
   // ---- Main initialization ----
   updateGlobalBadge(APPLICATION_WINDOW_OPEN);
+  
   if (APPLICATION_WINDOW_OPEN) {
     renderApplicationForm();
   } else {
     renderClosedState();
   }
+
+  // ---- Tracking Button Event Listener ----
+  // Use event delegation on document since header buttons persist
+  document.addEventListener('click', function(e) {
+    const trackingBtn = e.target.closest('#trackingBtn');
+    if (trackingBtn) {
+      // If currently viewing tracking, do nothing
+      if (currentView === 'tracking') return;
+      
+      // If on success page, get the reference number to prefill
+      const submittedRef = document.getElementById('submittedRef');
+      const prefillRef = submittedRef ? submittedRef.textContent.trim() : '';
+      
+      renderTrackingInterface(prefillRef);
+    }
+  });
+
 })();

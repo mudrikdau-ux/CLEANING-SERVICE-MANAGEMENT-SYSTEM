@@ -1731,8 +1731,6 @@ const panelRenderers = {
         <div class="settings-card">
             <h5 class="fw-bold mb-4">Notification Preferences</h5>
             <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="emailNotif" checked><label class="form-check-label fw-medium" for="emailNotif">Email Notifications</label></div>
-            <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="smsNotif"><label class="form-check-label fw-medium" for="smsNotif">SMS Alerts</label></div>
-            <div class="form-check form-switch mb-4"><input class="form-check-input" type="checkbox" id="pushNotif" checked><label class="form-check-label fw-medium" for="pushNotif">Push Notifications</label></div>
             <hr>
             <h5 class="fw-bold mb-3">Language & Region</h5>
             <select class="form-select mb-4" style="max-width: 300px;">
