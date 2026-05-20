@@ -1,3 +1,4 @@
+//login.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,18 +43,43 @@
         <div class="mb-3">
             <label for="emailLogin" class="form-label">Email Address</label>
             <input type="email" class="form-control" id="emailLogin" placeholder="Enter your email" required>
+            <div class="invalid-feedback" id="emailError"></div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="passwordLogin" class="form-label">Password</label>
+            <div class="password-input-wrapper">
+                <input type="password" class="form-control" id="passwordLogin" placeholder="Enter your password" required>
+                <button type="button" class="password-toggle-btn" id="passwordToggle" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <div class="invalid-feedback" id="passwordError"></div>
         </div>
         
         <div class="mb-3" id="otpSection" style="display: none;">
             <label for="otpInput" class="form-label">Enter OTP</label>
-            <input type="text" class="form-control" id="otpInput" placeholder="Enter 6-digit OTP" maxlength="6">
+            <input type="text" class="form-control" id="otpInput" placeholder="Enter 6-digit OTP" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+            <div class="invalid-feedback" id="otpError"></div>
+            <div class="otp-info">
+                <div class="otp-info-content">
+                    <i class="fas fa-info-circle"></i> 
+                    <span id="otpInfoText">A 6-digit OTP has been sent to your email</span>
+                </div>
+                <div class="otp-resend-section">
+                    <span class="otp-timer" id="otpTimer">Resend in 0:30</span>
+                    <button type="button" class="otp-resend-btn" id="otpResendBtn" disabled>
+                        <i class="fas fa-redo-alt"></i> Resend OTP
+                    </button>
+                </div>
+            </div>
         </div>
         
         <input type="hidden" id="redirectAfterLogin" value="">
         <input type="hidden" id="serviceData" value="">
         
         <button type="submit" class="btn btn-primary w-100" id="loginBtn">
-            <i class="fas fa-paper-plane"></i> Send OTP
+            <i class="fas fa-sign-in-alt"></i> <span id="loginBtnText">Login</span>
         </button>
     </form>
     

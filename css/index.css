@@ -516,7 +516,7 @@ a {
     transform: scale(1.08);
 }
 
-/* ===== PREMIUM FEATURES ROW (IDENTICAL TO FOOTER STYLE) ===== */
+/* ===== PREMIUM FEATURES ROW ===== */
 .premium-features-row {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     padding: 55px 0 45px;
@@ -528,7 +528,7 @@ a {
     text-align: center;
     padding: 12px;
     transition: all 0.3s ease;
-    cursor: pointer; /* Make all features visibly clickable */
+    cursor: pointer;
     border-radius: 10px;
     position: relative;
 }
@@ -819,45 +819,511 @@ a {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 991px) {
-    .top-bar { padding: 10px 16px; gap: 10px; }
-    .logo { width: 110px; }
-    .search-container { max-width: 100%; }
-    .carousel-item { height: 300px; }
-    .card-img-wrap { height: 180px; }
-    .feature-icon { width: 70px; height: 70px; }
-    .feature-icon i { font-size: 30px; }
+    .top-bar { 
+        padding: 10px 16px; 
+        gap: 10px; 
+    }
+    
+    .logo { 
+        width: 110px; 
+    }
+    
+    .search-container { 
+        max-width: 100%; 
+    }
+    
+    .carousel-item { 
+        height: 300px; 
+    }
+    
+    .card-img-wrap { 
+        height: 180px; 
+    }
+    
+    .feature-icon { 
+        width: 70px; 
+        height: 70px; 
+    }
+    
+    .feature-icon i { 
+        font-size: 30px; 
+    }
+    
+    .service-card .title {
+        font-size: 1.1rem;
+    }
+    
+    .service-card .description {
+        font-size: 0.85rem;
+    }
+    
+    .service-card .price {
+        font-size: 1.1rem;
+    }
 }
 
 @media (max-width: 767px) {
-    .top-bar { padding: 8px 12px; gap: 8px; flex-wrap: nowrap; }
-    .logo { width: 90px; }
-    .location-select { display: none; }
-    .search-input { padding: 7px 12px; font-size: 13px; }
-    .search-btn .btn-text { display: none; }
-    .search-btn { padding: 8px 12px; }
-    .login-btn .btn-text { display: none; }
-    .login-btn { padding: 8px 12px; }
-    .carousel-item { height: 220px; }
-    .carousel-caption { padding: 10px 14px; bottom: 20px; }
-    .carousel-caption h3 { font-size: 1rem; margin-bottom: 3px; }
-    .carousel-caption p { font-size: 0.82rem; }
-    .feature-icon { width: 65px; height: 65px; }
-    .feature-icon i { font-size: 28px; }
-    .feature-item h4 { font-size: 1rem; }
-    .feature-item p { font-size: 0.8rem; }
-    .premium-features-row { padding: 40px 0 30px; }
-    .newsletter-form { flex-direction: column; gap: 10px; }
-    .newsletter-form input, .newsletter-form button { width: 100%; }
+    .top-bar { 
+        padding: 8px 12px; 
+        gap: 8px; 
+        flex-wrap: wrap;
+    }
+    
+    .logo { 
+        width: 85px; 
+    }
+    
+    .search-container {
+        order: 3;
+        width: 100%;
+        max-width: 100%;
+        flex: none;
+        margin-top: 4px;
+    }
+    
+    /* Location select stays visible but compact on mobile */
+    .location-select {
+        display: block;
+        padding: 7px 10px;
+        font-size: 12px;
+        max-width: 80px;
+        border-radius: 20px;
+    }
+    
+    .search-input { 
+        padding: 7px 12px; 
+        font-size: 13px; 
+    }
+    
+    .search-btn { 
+        padding: 7px 12px; 
+    }
+    
+    .search-btn .btn-text { 
+        display: none; 
+    }
+    
+    .login-btn { 
+        padding: 7px 12px; 
+        font-size: 13px;
+    }
+    
+    .login-btn .btn-text { 
+        display: none; 
+    }
+    
+    .top-bar-actions {
+        gap: 8px;
+    }
+    
+    .carousel-item { 
+        height: 250px; 
+    }
+    
+    .carousel-caption { 
+        padding: 10px 14px; 
+        bottom: 20px; 
+        left: 8%;
+        right: 8%;
+    }
+    
+    .carousel-caption h3 { 
+        font-size: 1.1rem; 
+        margin-bottom: 3px; 
+    }
+    
+    .carousel-caption p { 
+        font-size: 0.85rem; 
+        display: block;
+    }
+    
+    .hero-section {
+        padding: 35px 16px 25px;
+    }
+    
+    .hero-section h1 {
+        font-size: 1.5rem;
+    }
+    
+    .hero-section .lead {
+        font-size: 0.95rem;
+    }
+    
+    .feature-icon { 
+        width: 65px; 
+        height: 65px; 
+    }
+    
+    .feature-icon i { 
+        font-size: 28px; 
+    }
+    
+    .feature-item h4 { 
+        font-size: 1rem; 
+    }
+    
+    .feature-item p { 
+        font-size: 0.8rem; 
+    }
+    
+    .premium-features-row { 
+        padding: 40px 0 30px; 
+    }
+    
+    .newsletter-form { 
+        flex-direction: column; 
+        gap: 10px; 
+    }
+    
+    .newsletter-form input, 
+    .newsletter-form button { 
+        width: 100%; 
+    }
+    
+    .card-img-wrap {
+        height: 200px;
+    }
+    
+    .service-card .title {
+        font-size: 1.15rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .top-bar {
+        padding: 6px 10px;
+        gap: 6px;
+    }
+    
+    .logo {
+        width: 72px;
+    }
+    
+    .location-select {
+        padding: 6px 8px;
+        font-size: 11px;
+        max-width: 70px;
+        border-radius: 15px;
+    }
+    
+    .search-input {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    .search-btn {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    
+    .login-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    .hamburger {
+        font-size: 22px;
+        padding: 3px 5px;
+    }
+    
+    .carousel-item {
+        height: 200px;
+    }
+    
+    .carousel-caption {
+        padding: 8px 10px;
+        bottom: 15px;
+        left: 5%;
+        right: 5%;
+    }
+    
+    .carousel-caption h3 {
+        font-size: 1rem;
+    }
+    
+    .carousel-caption p {
+        font-size: 0.75rem;
+    }
+    
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .hero-section {
+        padding: 30px 12px 20px;
+    }
+    
+    .hero-section h1 {
+        font-size: 1.35rem;
+    }
+    
+    .hero-section .lead {
+        font-size: 0.9rem;
+    }
+    
+    .card-img-wrap {
+        height: 180px;
+    }
+    
+    .service-card .title {
+        font-size: 1.1rem;
+    }
+    
+    .service-card .description {
+        font-size: 0.82rem;
+    }
+    
+    .service-card .price {
+        font-size: 1rem;
+    }
+    
+    .feature-icon {
+        width: 55px;
+        height: 55px;
+    }
+    
+    .feature-icon i {
+        font-size: 24px;
+    }
+    
+    .feature-item h4 {
+        font-size: 0.95rem;
+    }
+    
+    .feature-item p {
+        font-size: 0.75rem;
+    }
+    
+    .section-header h2 {
+        font-size: 1.3rem;
+    }
 }
 
 @media (max-width: 480px) {
-    .logo { width: 76px; }
-    .top-bar { padding: 7px 10px; gap: 6px; }
-    .hamburger { font-size: 22px; }
-    .carousel-item { height: 175px; }
-    .carousel-caption { display: none; }
-    .card-img-wrap { height: 150px; }
-    .service-card .title { font-size: 1rem; }
-    .feature-icon { width: 55px; height: 55px; }
-    .feature-icon i { font-size: 24px; }
+    .top-bar {
+        padding: 5px 8px;
+        gap: 5px;
+    }
+    
+    .logo {
+        width: 65px;
+    }
+    
+    .search-container {
+        gap: 5px;
+    }
+    
+    .location-select {
+        padding: 5px 6px;
+        font-size: 10px;
+        max-width: 62px;
+        border-radius: 12px;
+    }
+    
+    .search-input {
+        padding: 5px 8px;
+        font-size: 11px;
+        border-radius: 20px;
+    }
+    
+    .search-btn {
+        padding: 5px 8px;
+        font-size: 12px;
+        border-radius: 20px;
+    }
+    
+    .login-btn {
+        padding: 5px 8px;
+        font-size: 11px;
+        border-radius: 20px;
+    }
+    
+    .hamburger {
+        font-size: 20px;
+        padding: 2px 4px;
+    }
+    
+    .carousel-item {
+        height: 170px;
+    }
+    
+    .carousel-caption {
+        padding: 6px 8px;
+        bottom: 10px;
+        left: 4%;
+        right: 4%;
+    }
+    
+    .carousel-caption h3 {
+        font-size: 0.9rem;
+    }
+    
+    .carousel-caption p {
+        font-size: 0.7rem;
+    }
+    
+    .carousel-indicators button {
+        width: 7px;
+        height: 7px;
+    }
+    
+    .hero-section {
+        padding: 25px 10px 18px;
+    }
+    
+    .hero-section h1 {
+        font-size: 1.25rem;
+    }
+    
+    .hero-section .lead {
+        font-size: 0.85rem;
+    }
+    
+    .card-img-wrap {
+        height: 160px;
+    }
+    
+    .card-body-inner {
+        padding: 14px;
+    }
+    
+    .service-card .title {
+        font-size: 1rem;
+    }
+    
+    .service-card .description {
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+    }
+    
+    .service-card .price {
+        font-size: 0.95rem;
+        margin-bottom: 10px;
+    }
+    
+    .card-actions .btn {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+    
+    .info-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+    }
+    
+    .feature-icon i {
+        font-size: 22px;
+    }
+    
+    .feature-item h4 {
+        font-size: 0.9rem;
+    }
+    
+    .feature-item p {
+        font-size: 0.7rem;
+    }
+    
+    .premium-features-row {
+        padding: 30px 0 22px;
+    }
+    
+    .feature-item {
+        padding: 8px;
+    }
+    
+    .section-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .section-header .lead {
+        font-size: 0.85rem;
+    }
+    
+    .footer {
+        padding: 30px 0 15px;
+    }
+    
+    .footer h5 {
+        font-size: 1rem;
+    }
+    
+    .alert {
+        min-width: 240px;
+        font-size: 0.85rem;
+    }
+}
+
+/* Fix for very small devices (320px - 380px) */
+@media (max-width: 380px) {
+    .top-bar {
+        padding: 4px 6px;
+        gap: 4px;
+    }
+    
+    .logo {
+        width: 56px;
+    }
+    
+    .location-select {
+        padding: 4px 5px;
+        font-size: 9px;
+        max-width: 56px;
+    }
+    
+    .search-input {
+        padding: 4px 7px;
+        font-size: 10px;
+    }
+    
+    .search-btn,
+    .login-btn {
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+    
+    .hamburger {
+        font-size: 18px;
+    }
+    
+    .carousel-item {
+        height: 145px;
+    }
+    
+    .carousel-caption h3 {
+        font-size: 0.8rem;
+    }
+    
+    .carousel-caption p {
+        font-size: 0.65rem;
+    }
+    
+    .hero-section h1 {
+        font-size: 1.1rem;
+    }
+    
+    .card-img-wrap {
+        height: 140px;
+    }
+    
+    .feature-icon {
+        width: 42px;
+        height: 42px;
+    }
+    
+    .feature-icon i {
+        font-size: 20px;
+    }
+    
+    .feature-item h4 {
+        font-size: 0.85rem;
+    }
 }

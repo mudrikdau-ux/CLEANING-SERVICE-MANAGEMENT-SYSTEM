@@ -1,3 +1,5 @@
+//login.css
+
 /* ========================================================================
    LOGIN PAGE STYLES - COMPLETE
    All styles for login page with no external dependencies
@@ -202,6 +204,80 @@ a {
     outline: none;
 }
 
+/* Password Input Wrapper */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper .form-control {
+    padding-right: 50px;
+    width: 100%;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 8px 12px;
+    font-size: 1.1rem;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    z-index: 2;
+}
+
+.password-toggle-btn:hover {
+    color: var(--primary-color);
+    background: rgba(67, 97, 238, 0.05);
+}
+
+.password-toggle-btn:focus {
+    outline: none;
+    color: var(--primary-color);
+}
+
+.password-toggle-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+/* Validation Styles */
+.form-control.is-invalid {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.1);
+}
+
+.form-control.is-valid {
+    border-color: #4bb543;
+    box-shadow: 0 0 0 3px rgba(75, 181, 67, 0.1);
+}
+
+.invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--danger-color);
+    font-weight: 500;
+    padding: 8px 12px;
+    background: rgba(247, 37, 133, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid var(--danger-color);
+}
+
+.invalid-feedback.show {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
 /* Button Styles */
 .btn {
     padding: 12px 25px;
@@ -224,6 +300,32 @@ a {
 
 .btn-primary:active {
     transform: translateY(0);
+}
+
+.btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Loading State for Button */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.btn-loading .btn-text {
+    visibility: hidden;
+}
+
+.btn-loading .spinner-border-sm {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1.2rem;
+    height: 1.2rem;
 }
 
 /* Social Login */
@@ -259,9 +361,28 @@ a {
     font-size: 1.2rem;
 }
 
-/* OTP Section */
+/* ===== OTP SECTION ===== */
 #otpSection {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeInDown 0.4s ease-out;
+    overflow: hidden;
+    transition: max-height 0.5s ease, opacity 0.4s ease, margin 0.4s ease;
+}
+
+#otpSection.show-section {
+    max-height: 300px;
+    opacity: 1;
+    margin-bottom: 1rem;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes fadeIn {
@@ -273,6 +394,137 @@ a {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* OTP Info Box */
+.otp-info {
+    margin-top: 12px;
+    padding: 12px 15px;
+    background: rgba(67, 97, 238, 0.05);
+    border-radius: 12px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.otp-info-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.otp-info-content i {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.otp-info-content span {
+    line-height: 1.4;
+}
+
+/* OTP Resend Section */
+.otp-resend-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(67, 97, 238, 0.1);
+    flex-wrap: wrap;
+}
+
+.otp-timer {
+    font-size: 0.8rem;
+    color: var(--gray-color);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.otp-timer.warning {
+    color: var(--warning-color);
+    animation: pulse 1s infinite;
+}
+
+.otp-timer.expired {
+    color: var(--danger-color);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.otp-resend-btn {
+    background: transparent;
+    border: 1.5px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.otp-resend-btn:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+}
+
+.otp-resend-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: #ccc;
+    color: #999;
+}
+
+.otp-resend-btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+}
+
+/* Resend button loading state */
+.otp-resend-btn.resending {
+    pointer-events: none;
+}
+
+.otp-resend-btn.resending i {
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* OTP Input specific styles */
+#otpInput {
+    letter-spacing: 8px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+#otpInput::placeholder {
+    letter-spacing: 2px;
+    font-size: 0.9rem;
+    font-weight: 400;
 }
 
 /* Link Styles */
@@ -409,6 +661,30 @@ a {
     .footer .col-md-4 {
         margin-bottom: 30px;
     }
+    
+    .password-toggle-btn {
+        padding: 8px 10px;
+        font-size: 1rem;
+    }
+    
+    .otp-resend-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .otp-timer {
+        text-align: center;
+    }
+    
+    .otp-resend-btn {
+        justify-content: center;
+    }
+    
+    #otpInput {
+        letter-spacing: 6px;
+        font-size: 1.1rem;
+    }
 }
 
 @media (max-width: 576px) {
@@ -436,6 +712,43 @@ a {
     
     .footer .newsletter-form {
         flex-direction: column;
+    }
+    
+    .password-toggle-btn {
+        padding: 6px 8px;
+        font-size: 0.95rem;
+    }
+    
+    .form-control {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .password-input-wrapper .form-control {
+        padding-right: 45px;
+    }
+    
+    .otp-resend-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+    
+    .otp-timer {
+        font-size: 0.75rem;
+        text-align: center;
+    }
+    
+    .otp-resend-btn {
+        font-size: 0.8rem;
+        padding: 8px 12px;
+        justify-content: center;
+    }
+    
+    #otpInput {
+        letter-spacing: 5px;
+        font-size: 1rem;
+        padding: 10px;
     }
 }
 
