@@ -1,17 +1,26 @@
-//login.js
-
 // ===== COMBINED LOGIN & AUTHENTICATION SCRIPT =====
 // Includes all functionality from main.js and script.js
 
 // ===== SIDEBAR FUNCTIONS =====
 function openSidebar() {
-    document.getElementById("sidebar").style.width = "280px";
-    document.body.style.overflow = "hidden";
+    var sidebar = document.getElementById("sidebar");
+    if (sidebar) {
+        // Set sidebar width based on screen size
+        if (window.innerWidth <= 300) {
+            sidebar.style.width = "100%";
+        } else {
+            sidebar.style.width = "280px";
+        }
+        document.body.style.overflow = "hidden";
+    }
 }
 
 function closeSidebar() {
-    document.getElementById("sidebar").style.width = "0";
-    document.body.style.overflow = "auto";
+    var sidebar = document.getElementById("sidebar");
+    if (sidebar) {
+        sidebar.style.width = "0";
+        document.body.style.overflow = "auto";
+    }
 }
 
 // Close sidebar when clicking outside
@@ -20,7 +29,7 @@ document.addEventListener('click', function(event) {
     const hamburger = document.querySelector('.hamburger');
     
     if (sidebar && hamburger) {
-        if (!sidebar.contains(event.target) && !hamburger.contains(event.target) && sidebar.style.width === '280px') {
+        if (!sidebar.contains(event.target) && !hamburger.contains(event.target) && sidebar.style.width !== '0px' && sidebar.style.width !== '0' && sidebar.style.width !== '') {
             closeSidebar();
         }
     }
@@ -54,7 +63,11 @@ function getPendingBooking() {
 }
 
 // Handle login success
-function handleLoginSuccess(email, userData = {}) {
+function handleLoginSuccess(email, userData) {
+    if (!userData) {
+        userData = {};
+    }
+    
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('currentUser', JSON.stringify({ 
         email: email,
@@ -476,7 +489,9 @@ function showServiceModal(service) {
     modal.addEventListener('hidden.bs.modal', function() {
         modal.remove();
         const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(backdrop => backdrop.remove());
+        backdrops.forEach(function(backdrop) {
+            backdrop.remove();
+        });
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
         document.body.style.paddingRight = '';
@@ -498,7 +513,10 @@ function validateEmail(email) {
 }
 
 // Show loading spinner
-function showLoading(show = true) {
+function showLoading(show) {
+    if (show === undefined) {
+        show = true;
+    }
     let spinner = document.getElementById('loading-spinner');
     if (!spinner) {
         spinner = document.createElement('div');
@@ -511,20 +529,29 @@ function showLoading(show = true) {
 }
 
 // Show notification
-function showNotification(message, type = 'info') {
+function showNotification(message, type) {
+    if (!type) {
+        type = 'info';
+    }
+    
     const existingNotification = document.querySelector('.alert');
     if (existingNotification) {
         existingNotification.remove();
     }
     
     const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.className = 'alert alert-' + type + ' alert-dismissible fade show';
     notification.role = 'alert';
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = message +
+        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+    
+    // Responsive positioning and sizing
+    if (window.innerWidth <= 576) {
+        notification.style.cssText = 'position: fixed; top: 10px; left: 10px; right: 10px; z-index: 9999;';
+    } else {
+        notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 90vw;';
+    }
+    
     document.body.appendChild(notification);
     
     setTimeout(() => {
@@ -658,12 +685,12 @@ function clearAllErrors() {
     const errorElements = document.querySelectorAll('.invalid-feedback');
     const formControls = document.querySelectorAll('.form-control');
     
-    errorElements.forEach(el => {
+    errorElements.forEach(function(el) {
         el.textContent = '';
         el.classList.remove('show');
     });
     
-    formControls.forEach(el => {
+    formControls.forEach(function(el) {
         el.classList.remove('is-invalid', 'is-valid');
     });
 }
@@ -704,7 +731,9 @@ function validateCredentials(email, password) {
     console.log('Validating credentials for:', email);
     
     // Find user by email (case-insensitive)
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const user = users.find(function(u) {
+        return u.email.toLowerCase() === email.toLowerCase();
+    });
     
     if (!user) {
         console.log('User not found');
@@ -730,10 +759,8 @@ function setButtonLoading(button, isLoading, text) {
         if (!button.getAttribute('data-original-html')) {
             button.setAttribute('data-original-html', button.innerHTML);
         }
-        button.innerHTML = `
-            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            <span class="btn-text">${text || 'Loading...'}</span>
-        `;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>' +
+            '<span class="btn-text">' + (text || 'Loading...') + '</span>';
     } else {
         button.disabled = false;
         button.classList.remove('btn-loading');
@@ -770,7 +797,7 @@ function startOTPTimer() {
     function updateTimerDisplay() {
         const minutes = Math.floor(otpSecondsRemaining / 60);
         const seconds = otpSecondsRemaining % 60;
-        timerElement.textContent = `Resend in ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        timerElement.textContent = 'Resend in ' + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
         
         // Add warning class when 10 seconds remaining
         if (otpSecondsRemaining <= 10 && otpSecondsRemaining > 0) {
@@ -780,7 +807,7 @@ function startOTPTimer() {
         // Timer expired
         if (otpSecondsRemaining <= 0) {
             stopOTPTimer();
-            timerElement.textContent = 'Didn\'t receive OTP?';
+            timerElement.textContent = "Didn't receive OTP?";
             timerElement.classList.remove('warning');
             timerElement.classList.add('expired');
             resendBtn.disabled = false;
@@ -810,10 +837,10 @@ function resetOTPTimer() {
 
 // ===== SIMULATE SENDING OTP =====
 function simulateSendOTP(email) {
-    return new Promise((resolve, reject) => {
+    return new Promise(function(resolve, reject) {
         console.log('Sending OTP to:', email);
         
-        setTimeout(() => {
+        setTimeout(function() {
             try {
                 // Generate a 6-digit OTP
                 const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -891,10 +918,10 @@ async function resendOTP(email) {
 
 // ===== SIMULATE VERIFYING OTP =====
 function simulateVerifyOTP(enteredOTP) {
-    return new Promise((resolve) => {
+    return new Promise(function(resolve) {
         console.log('Verifying OTP:', enteredOTP);
         
-        setTimeout(() => {
+        setTimeout(function() {
             const storedOTP = localStorage.getItem('currentOTP');
             const otpExpiry = localStorage.getItem('otpExpiry');
             
@@ -947,7 +974,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateUIBasedOnLogin();
     
     // Check for pending booking on login page
-    if (window.location.pathname.includes('login.html')) {
+    if (window.location.pathname.indexOf('login.html') !== -1) {
         const pendingBooking = localStorage.getItem('pendingBooking');
         if (pendingBooking) {
             showNotification('Please login to complete your booking', 'info');
@@ -956,7 +983,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Handle info buttons
     const infoButtons = document.querySelectorAll('.info-btn');
-    infoButtons.forEach(button => {
+    infoButtons.forEach(function(button) {
         button.removeAttribute('onclick');
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -967,22 +994,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const title = card.querySelector('.title').textContent.toLowerCase();
                 let serviceType = 'home';
                 
-                if (title.includes('home')) serviceType = 'home';
-                else if (title.includes('office')) serviceType = 'office';
-                else if (title.includes('carpet')) serviceType = 'carpet';
-                else if (title.includes('window')) serviceType = 'window';
-                else if (title.includes('vehicle') || title.includes('car')) serviceType = 'vehicle';
-                else if (title.includes('pool')) serviceType = 'pool';
-                else if (title.includes('mattress')) serviceType = 'mattress';
-                else if (title.includes('upholstery')) serviceType = 'upholstery';
-                else if (title.includes('construction')) serviceType = 'construction';
-                else if (title.includes('pest')) serviceType = 'pest';
-                else if (title.includes('laundry')) serviceType = 'laundry';
-                else if (title.includes('ac')) serviceType = 'ac';
-                else if (title.includes('water')) serviceType = 'watertank';
-                else if (title.includes('curtain')) serviceType = 'curtain';
-                else if (title.includes('garden')) serviceType = 'garden';
-                else if (title.includes('exterior')) serviceType = 'exterior';
+                if (title.indexOf('home') !== -1) serviceType = 'home';
+                else if (title.indexOf('office') !== -1) serviceType = 'office';
+                else if (title.indexOf('carpet') !== -1) serviceType = 'carpet';
+                else if (title.indexOf('window') !== -1) serviceType = 'window';
+                else if (title.indexOf('vehicle') !== -1 || title.indexOf('car') !== -1) serviceType = 'vehicle';
+                else if (title.indexOf('pool') !== -1) serviceType = 'pool';
+                else if (title.indexOf('mattress') !== -1) serviceType = 'mattress';
+                else if (title.indexOf('upholstery') !== -1) serviceType = 'upholstery';
+                else if (title.indexOf('construction') !== -1) serviceType = 'construction';
+                else if (title.indexOf('pest') !== -1) serviceType = 'pest';
+                else if (title.indexOf('laundry') !== -1) serviceType = 'laundry';
+                else if (title.indexOf('ac') !== -1) serviceType = 'ac';
+                else if (title.indexOf('water') !== -1) serviceType = 'watertank';
+                else if (title.indexOf('curtain') !== -1) serviceType = 'curtain';
+                else if (title.indexOf('garden') !== -1) serviceType = 'garden';
+                else if (title.indexOf('exterior') !== -1) serviceType = 'exterior';
                 else serviceType = 'home';
                 
                 showServiceModal(serviceType);
@@ -992,7 +1019,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Handle book buttons
     const bookButtons = document.querySelectorAll('.book-service-btn');
-    bookButtons.forEach(button => {
+    bookButtons.forEach(function(button) {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1007,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Handle service cards click
     const serviceCards = document.querySelectorAll('.service-card');
-    serviceCards.forEach(card => {
+    serviceCards.forEach(function(card) {
         card.addEventListener('click', function(e) {
             if (e.target.closest('.btn')) {
                 return;
@@ -1098,7 +1125,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setButtonLoading(loginBtn, true, 'Verifying credentials...');
                 
                 // Small delay to show loading state
-                await new Promise(resolve => setTimeout(resolve, 800));
+                await new Promise(function(resolve) { setTimeout(resolve, 800); });
                 
                 // Validate credentials
                 const validationResult = validateCredentials(email, password);
@@ -1130,7 +1157,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Show OTP section with animation
                         if (otpSection) {
                             otpSection.style.display = 'block';
-                            setTimeout(() => {
+                            setTimeout(function() {
                                 otpSection.classList.add('show-section');
                             }, 50);
                         }
@@ -1148,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         loginStep = 'otp';
                         
                         // Focus on OTP input
-                        setTimeout(() => {
+                        setTimeout(function() {
                             if (otpInput) otpInput.focus();
                         }, 500);
                         
@@ -1219,7 +1246,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Get user data
                 const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-                const user = users.find(u => u.email.toLowerCase() === currentEmail.toLowerCase());
+                const user = users.find(function(u) {
+                    return u.email.toLowerCase() === currentEmail.toLowerCase();
+                });
                 
                 handleLoginSuccess(currentEmail, {
                     firstName: user ? user.firstName : '',
@@ -1269,7 +1298,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
             
-            if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+            if (users.find(function(u) { return u.email.toLowerCase() === email.toLowerCase(); })) {
                 showNotification('This email is already registered. Please login.', 'warning');
                 return;
             }
@@ -1296,11 +1325,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const pendingBooking = localStorage.getItem('pendingBooking');
             if (pendingBooking) {
-                setTimeout(() => {
+                setTimeout(function() {
                     window.location.href = 'booking.html';
                 }, 1500);
             } else {
-                setTimeout(() => {
+                setTimeout(function() {
                     window.location.href = 'index.html';
                 }, 1500);
             }
@@ -1366,6 +1395,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function(tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // ===== RESIZE HANDLER FOR SIDEBAR =====
+    window.addEventListener('resize', function() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && sidebar.style.width === '280px' && window.innerWidth <= 300) {
+            sidebar.style.width = '100%';
+        }
     });
     
     // ===== LOG AVAILABLE TEST ACCOUNTS =====
