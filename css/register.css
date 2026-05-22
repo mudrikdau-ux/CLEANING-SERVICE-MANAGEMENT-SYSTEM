@@ -1,5 +1,5 @@
 /* ========================================================================
-   REGISTER PAGE STYLES - COMPLETE
+   REGISTER PAGE STYLES - COMPLETE WITH DARK MODE SUPPORT
    All styles for registration page with no external dependencies
    ======================================================================== */
 
@@ -22,27 +22,205 @@
     --border-radius: 10px;
     --box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     --transition: all 0.3s ease;
+    
+    /* Light Theme Variables */
+    --bg-body: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --bg-topbar: #ffffff;
+    --bg-form: #ffffff;
+    --bg-input: #ffffff;
+    --bg-social-btn: #ffffff;
+    --bg-social-btn-hover: #f8f9fa;
+    --bg-modal-content: #ffffff;
+    --bg-modal-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --bg-sidebar: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --bg-footer: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --bg-service-card: #ffffff;
+    --bg-info-btn: #f0f0f0;
+    
+    --text-primary: #333333;
+    --text-heading: #1e1e2f;
+    --text-form-label: #1e1e2f;
+    --text-social-btn: #333333;
+    --text-form-check: #555;
+    --text-terms-content: #4a5568;
+    --text-sidebar: #ffffff;
+    --text-footer: rgba(255,255,255,0.82);
+    --text-footer-hover: #ffffff;
+    --text-copyright: rgba(255,255,255,0.6);
+    --text-service-description: #6c757d;
+    --text-service-feature: #555;
+    
+    --border-input: #e2e8f0;
+    --border-social-btn: #e2e8f0;
+    --border-modal-footer: #eef2f8;
+    --border-sidebar-link: rgba(255,255,255,0.1);
+    --border-footer-copyright: rgba(255,255,255,0.12);
+    
+    --shadow-topbar: 0 2px 10px rgba(0,0,0,0.08);
+    --shadow-form: 0 20px 40px rgba(0,0,0,0.15);
+    --shadow-sidebar: -5px 0 20px rgba(0,0,0,0.2);
+    --shadow-modal: 0 20px 40px rgba(0,0,0,0.2);
+    --shadow-social-hover: 0 5px 15px rgba(0,0,0,0.1);
+    --shadow-service-card: 0 3px 10px rgba(0,0,0,0.08);
+    --shadow-service-card-hover: 0 10px 25px rgba(0,0,0,0.15);
+    
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-btn-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-footer: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    
+    --footer-social-bg: rgba(255,255,255,0.15);
+    --footer-social-hover-bg: #ffffff;
+    --footer-heading-line: rgba(255,255,255,0.7);
+    
+    --color-valid: #4bb543;
+    --color-google: #4285f4;
+    --color-service-feature-check: #4bb543;
+}
+
+/* Dark Theme Overrides */
+[data-theme="dark"] {
+    --bg-body: linear-gradient(135deg, #1a1a2e 0%, #2a1a3e 100%);
+    --bg-topbar: #1e1e2f;
+    --bg-form: #1e1e2f;
+    --bg-input: #2a2a3e;
+    --bg-social-btn: #2a2a3e;
+    --bg-social-btn-hover: #3a3a4e;
+    --bg-modal-content: #1e1e2f;
+    --bg-modal-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --bg-sidebar: linear-gradient(135deg, #1a1a2e 0%, #2a1a3e 100%);
+    --bg-footer: linear-gradient(135deg, #1a1a2e 0%, #2a1a3e 100%);
+    --bg-service-card: #1e1e2f;
+    --bg-info-btn: #2a2a3e;
+    
+    --text-primary: #e0e0e0;
+    --text-heading: #e0e0e0;
+    --text-form-label: #e0e0e0;
+    --text-social-btn: #e0e0e0;
+    --text-form-check: #b0b0c0;
+    --text-terms-content: #b0b0c0;
+    --text-sidebar: #ffffff;
+    --text-footer: rgba(255,255,255,0.75);
+    --text-footer-hover: #ffffff;
+    --text-copyright: rgba(255,255,255,0.5);
+    --text-service-description: #a0a0b0;
+    --text-service-feature: #b0b0c0;
+    
+    --border-input: #3a3a4e;
+    --border-social-btn: #3a3a4e;
+    --border-modal-footer: #3a3a4e;
+    --border-sidebar-link: rgba(255,255,255,0.08);
+    --border-footer-copyright: rgba(255,255,255,0.08);
+    
+    --shadow-topbar: 0 2px 10px rgba(0,0,0,0.3);
+    --shadow-form: 0 20px 40px rgba(0,0,0,0.4);
+    --shadow-sidebar: -5px 0 20px rgba(0,0,0,0.5);
+    --shadow-modal: 0 20px 40px rgba(0,0,0,0.5);
+    --shadow-social-hover: 0 5px 15px rgba(0,0,0,0.3);
+    --shadow-service-card: 0 3px 10px rgba(0,0,0,0.2);
+    --shadow-service-card-hover: 0 10px 25px rgba(0,0,0,0.4);
+    
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-btn-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-footer: linear-gradient(135deg, #1a1a2e 0%, #2a1a3e 100%);
+    
+    --footer-social-bg: rgba(255,255,255,0.08);
+    --footer-social-hover-bg: var(--primary-color);
+    --footer-heading-line: rgba(255,255,255,0.5);
+    
+    --color-valid: #4bb543;
+    --color-google: #4285f4;
+    --color-service-feature-check: #4bb543;
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow-x: hidden;
-    color: #333;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: var(--text-primary);
+    background: var(--bg-body);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* ===== TYPOGRAPHY ===== */
 h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
-    color: var(--dark-color);
+    color: var(--text-heading);
+    transition: color 0.3s ease;
 }
 
 a {
     text-decoration: none;
     transition: var(--transition);
+}
+
+/* ===== THEME TOGGLE BUTTON ===== */
+.theme-toggle-btn {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--border-input);
+    background: var(--bg-input);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    flex-shrink: 0;
+    outline: none;
+}
+
+.theme-toggle-btn:hover {
+    transform: rotate(15deg) scale(1.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(67, 97, 238, 0.3);
+}
+
+.theme-toggle-btn:active {
+    transform: rotate(15deg) scale(0.95);
+}
+
+.theme-toggle-btn i {
+    position: absolute;
+    font-size: 1.2rem;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: var(--text-heading);
+}
+
+.theme-toggle-btn .fa-sun {
+    opacity: 0;
+    transform: translateY(30px) rotate(-90deg);
+    color: #f8961e;
+}
+
+.theme-toggle-btn .fa-moon {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+    color: #6366f1;
+}
+
+[data-theme="dark"] .theme-toggle-btn .fa-sun {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+}
+
+[data-theme="dark"] .theme-toggle-btn .fa-moon {
+    opacity: 0;
+    transform: translateY(-30px) rotate(90deg);
+}
+
+[data-theme="dark"] .theme-toggle-btn:hover {
+    box-shadow: 0 0 15px rgba(248, 150, 30, 0.3);
+}
+
+/* Top bar actions wrapper */
+.top-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 /* ===== SIDEBAR STYLES ===== */
@@ -53,10 +231,10 @@ a {
     z-index: 1050;
     top: 0;
     right: 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--bg-sidebar);
     overflow-x: hidden;
     transition: 0.3s;
-    box-shadow: -5px 0 20px rgba(0,0,0,0.2);
+    box-shadow: var(--shadow-sidebar);
     padding-top: 70px;
 }
 
@@ -65,9 +243,9 @@ a {
     text-decoration: none;
     font-size: 16px;
     display: block;
-    color: white;
+    color: var(--text-sidebar);
     transition: 0.3s;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid var(--border-sidebar-link);
     font-weight: 400;
     letter-spacing: 0.5px;
 }
@@ -87,7 +265,7 @@ a {
     top: 15px;
     left: 20px;
     font-size: 30px;
-    color: white;
+    color: var(--text-sidebar);
     border-bottom: none;
     padding: 0;
 }
@@ -102,12 +280,13 @@ a {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: white;
+    background: var(--bg-topbar);
     padding: 12px 25px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-topbar);
     position: sticky;
     top: 0;
     z-index: 100;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .top-bar .logo {
@@ -123,9 +302,8 @@ a {
 .hamburger {
     font-size: 28px;
     cursor: pointer;
-    color: var(--dark-color);
+    color: var(--text-heading);
     transition: var(--transition);
-    margin-left: 15px;
 }
 
 .hamburger:hover {
@@ -138,9 +316,10 @@ a {
     margin: 50px auto;
     padding: 40px;
     border-radius: 24px;
-    background: white;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    background: var(--bg-form);
+    box-shadow: var(--shadow-form);
     animation: fadeInUp 0.6s ease-out;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 @keyframes fadeInUp {
@@ -158,9 +337,10 @@ a {
     margin-bottom: 30px;
     font-weight: 700;
     text-align: center;
-    color: var(--dark-color);
+    color: var(--text-heading);
     position: relative;
     padding-bottom: 15px;
+    transition: color 0.3s ease;
 }
 
 .form-container h2 i {
@@ -176,30 +356,39 @@ a {
     transform: translateX(-50%);
     width: 80px;
     height: 3px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--gradient-primary);
     border-radius: 3px;
 }
 
 /* Form Elements */
 .form-label {
     font-weight: 600;
-    color: var(--dark-color);
+    color: var(--text-form-label);
     margin-bottom: 8px;
     font-size: 0.9rem;
+    transition: color 0.3s ease;
 }
 
 .form-control, .form-select {
     padding: 12px 15px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--border-input);
     border-radius: 12px;
-    transition: var(--transition);
+    transition: var(--transition), background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     font-size: 1rem;
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+}
+
+.form-control::placeholder {
+    color: var(--gray-color);
 }
 
 .form-control:focus, .form-select:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
     outline: none;
+    background-color: var(--bg-input);
+    color: var(--text-primary);
 }
 
 .form-control.error, .form-select.error {
@@ -214,6 +403,8 @@ a {
     width: 18px;
     height: 18px;
     cursor: pointer;
+    background-color: var(--bg-input);
+    border-color: var(--border-input);
 }
 
 .form-check-input:checked {
@@ -224,7 +415,8 @@ a {
 .form-check-label {
     cursor: pointer;
     margin-left: 5px;
-    color: #555;
+    color: var(--text-form-check);
+    transition: color 0.3s ease;
 }
 
 .form-check-label a {
@@ -247,7 +439,7 @@ a {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--gradient-btn-primary);
     color: white;
 }
 
@@ -260,22 +452,31 @@ a {
     transform: translateY(0);
 }
 
+.btn-secondary {
+    background-color: var(--gray-color);
+    color: white;
+}
+
+.btn-secondary:hover {
+    opacity: 0.9;
+}
+
 /* Social Login */
 .social-login {
     margin: 25px 0;
 }
 
 .social-login button {
-    background: white;
-    border: 2px solid #e2e8f0;
+    background: var(--bg-social-btn);
+    border: 2px solid var(--border-social-btn);
     padding: 12px 20px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 12px;
-    transition: var(--transition);
-    color: #333;
+    transition: var(--transition), background-color 0.3s ease, border-color 0.3s ease;
+    color: var(--text-social-btn);
     font-weight: 500;
     width: 100%;
     font-size: 1rem;
@@ -283,18 +484,23 @@ a {
 }
 
 .social-login button:hover {
-    background: #f8f9fa;
+    background: var(--bg-social-btn-hover);
     border-color: var(--primary-color);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-social-hover);
 }
 
 .social-login button i {
-    color: #4285f4;
+    color: var(--color-google);
     font-size: 1.2rem;
 }
 
 /* Link Styles */
+.text-center {
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
 .text-center a {
     color: var(--primary-color);
     font-weight: 500;
@@ -325,11 +531,12 @@ a {
 
 /* ===== TERMS AND CONDITIONS MODAL STYLES ===== */
 .terms-content h6 {
-    color: var(--dark-color);
+    color: var(--text-heading);
     font-weight: 700;
     margin-top: 20px;
     margin-bottom: 10px;
     font-size: 1rem;
+    transition: color 0.3s ease;
 }
 
 .terms-content h6:first-child {
@@ -337,10 +544,11 @@ a {
 }
 
 .terms-content p {
-    color: #4a5568;
+    color: var(--text-terms-content);
     line-height: 1.7;
     margin-bottom: 15px;
     font-size: 0.95rem;
+    transition: color 0.3s ease;
 }
 
 /* ===== CELEBRATION CONTAINER ===== */
@@ -356,9 +564,10 @@ a {
 
 /* ===== FOOTER ===== */
 .footer {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--gradient-footer);
     color: white;
     padding: 50px 0 20px;
+    transition: background 0.3s ease;
 }
 
 .footer h5 {
@@ -376,14 +585,15 @@ a {
     left: 0;
     width: 45px;
     height: 2px;
-    background: rgba(255,255,255,0.7);
+    background: var(--footer-heading-line);
     border-radius: 2px;
 }
 
 .footer p {
-    color: rgba(255,255,255,0.82);
+    color: var(--text-footer);
     line-height: 1.6;
     font-size: 0.95rem;
+    transition: color 0.3s ease;
 }
 
 .footer ul {
@@ -397,12 +607,13 @@ a {
 }
 
 .footer ul li a {
-    color: rgba(255,255,255,0.82);
+    color: var(--text-footer);
     font-size: 0.93rem;
+    transition: var(--transition), color 0.3s ease;
 }
 
 .footer ul li a:hover {
-    color: white;
+    color: var(--text-footer-hover);
     padding-left: 5px;
 }
 
@@ -424,15 +635,15 @@ a {
     justify-content: center;
     width: 38px;
     height: 38px;
-    background: rgba(255,255,255,0.15);
+    background: var(--footer-social-bg);
     border-radius: 50%;
     color: white;
     font-size: 0.9rem;
-    transition: var(--transition);
+    transition: var(--transition), background-color 0.3s ease;
 }
 
 .social-links a:hover {
-    background: white;
+    background: var(--footer-social-hover-bg);
     color: var(--primary-color);
     transform: translateY(-3px);
 }
@@ -445,9 +656,10 @@ a {
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    color: rgba(255,255,255,0.82);
+    color: var(--text-footer);
     font-size: 0.93rem;
     margin-bottom: 9px;
+    transition: color 0.3s ease;
 }
 
 .contact-info li i {
@@ -458,13 +670,13 @@ a {
 }
 
 .contact-info li a {
-    color: rgba(255,255,255,0.82);
+    color: var(--text-footer);
     text-decoration: none;
-    transition: var(--transition);
+    transition: var(--transition), color 0.3s ease;
 }
 
 .contact-info li a:hover {
-    color: white;
+    color: var(--text-footer-hover);
     text-decoration: underline;
 }
 
@@ -482,6 +694,12 @@ a {
     border: none;
     outline: none;
     font-size: 14px;
+    background-color: rgba(255,255,255,0.9);
+    color: #333;
+}
+
+.newsletter-form input::placeholder {
+    color: #888;
 }
 
 .newsletter-form button {
@@ -504,9 +722,10 @@ a {
     text-align: center;
     padding-top: 28px;
     margin-top: 28px;
-    border-top: 1px solid rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.6);
+    border-top: 1px solid var(--border-footer-copyright);
+    color: var(--text-copyright);
     font-size: 0.88rem;
+    transition: border-color 0.3s ease, color 0.3s ease;
 }
 
 /* ===== NOTIFICATION STYLES ===== */
@@ -570,12 +789,14 @@ a {
 .modal-content {
     border-radius: 20px;
     border: none;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    box-shadow: var(--shadow-modal);
     overflow: hidden;
+    background-color: var(--bg-modal-content);
+    transition: background-color 0.3s ease;
 }
 
 .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--bg-modal-header);
     color: white;
     padding: 20px 25px;
     border-bottom: none;
@@ -593,22 +814,27 @@ a {
 
 .modal-title {
     font-weight: 700;
+    color: white;
 }
 
 .modal-body {
     padding: 25px;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .modal-footer {
-    border-top: 1px solid #eef2f8;
+    border-top: 1px solid var(--border-modal-footer);
     padding: 20px 25px;
+    transition: border-color 0.3s ease;
 }
 
 .service-detail-title {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--dark-color);
+    color: var(--text-heading);
     margin-bottom: 10px;
+    transition: color 0.3s ease;
 }
 
 .service-detail-price {
@@ -634,11 +860,12 @@ a {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #555;
+    color: var(--text-service-feature);
+    transition: color 0.3s ease;
 }
 
 .service-features li i {
-    color: #4bb543;
+    color: var(--color-service-feature-check);
     font-size: 0.9rem;
 }
 
@@ -661,58 +888,14 @@ a {
     height: 3rem;
 }
 
-/* ===== RESPONSIVE STYLES ===== */
-@media (max-width: 768px) {
-    .top-bar {
-        padding: 10px;
-    }
-    
-    .form-container {
-        margin: 30px 20px;
-        padding: 30px 20px;
-    }
-    
-    .footer .col-md-4 {
-        margin-bottom: 30px;
-    }
-}
-
-@media (max-width: 576px) {
-    .top-bar .logo {
-        width: 100px;
-    }
-    
-    .hamburger {
-        font-size: 24px;
-        margin-left: 8px;
-    }
-    
-    .form-container {
-        margin: 20px;
-        padding: 25px;
-    }
-    
-    .form-container h2 {
-        font-size: 1.5rem;
-    }
-    
-    .btn {
-        padding: 10px 20px;
-    }
-    
-    .footer .newsletter-form {
-        flex-direction: column;
-    }
-}
-
 /* ===== CARD STYLES (for service cards if present) ===== */
 .service-card {
-    background: white;
+    background: var(--bg-service-card);
     border-radius: 15px;
     overflow: hidden;
-    transition: var(--transition);
+    transition: var(--transition), background-color 0.3s ease;
     cursor: pointer;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-service-card);
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -720,7 +903,7 @@ a {
 
 .service-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    box-shadow: var(--shadow-service-card-hover);
 }
 
 .service-card img {
@@ -738,15 +921,17 @@ a {
     padding: 15px 15px 5px;
     font-weight: 600;
     font-size: 1.1rem;
-    color: var(--dark-color);
+    color: var(--text-heading);
+    transition: color 0.3s ease;
 }
 
 .service-card .description {
     padding: 0 15px 10px;
     font-size: 0.9rem;
-    color: var(--gray-color);
+    color: var(--text-service-description);
     line-height: 1.5;
     flex-grow: 1;
+    transition: color 0.3s ease;
 }
 
 .service-card .price {
@@ -775,11 +960,11 @@ a {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f0f0f0;
+    background: var(--bg-info-btn);
     border-radius: 50%;
     color: var(--gray-color);
     font-weight: bold;
-    transition: var(--transition);
+    transition: var(--transition), background-color 0.3s ease;
     border: none;
     cursor: pointer;
 }
@@ -788,4 +973,91 @@ a {
     background: var(--primary-color);
     color: white;
     transform: scale(1.1);
+}
+
+/* ===== RESPONSIVE STYLES ===== */
+@media (max-width: 992px) {
+    .theme-toggle-btn {
+        width: 40px;
+        height: 40px;
+    }
+    .theme-toggle-btn i {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .top-bar {
+        padding: 10px;
+    }
+    
+    .top-bar-actions {
+        gap: 8px;
+    }
+    
+    .form-container {
+        margin: 30px 20px;
+        padding: 30px 20px;
+    }
+    
+    .footer .col-md-4 {
+        margin-bottom: 30px;
+    }
+    
+    .theme-toggle-btn {
+        width: 38px;
+        height: 38px;
+    }
+    .theme-toggle-btn i {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .top-bar .logo {
+        width: 100px;
+    }
+    
+    .top-bar-actions {
+        gap: 6px;
+    }
+    
+    .hamburger {
+        font-size: 24px;
+    }
+    
+    .form-container {
+        margin: 20px;
+        padding: 25px;
+    }
+    
+    .form-container h2 {
+        font-size: 1.5rem;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+    }
+    
+    .footer .newsletter-form {
+        flex-direction: column;
+    }
+    
+    .theme-toggle-btn {
+        width: 34px;
+        height: 34px;
+    }
+    .theme-toggle-btn i {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .theme-toggle-btn {
+        width: 28px;
+        height: 28px;
+    }
+    .theme-toggle-btn i {
+        font-size: 0.8rem;
+    }
 }

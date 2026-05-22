@@ -10,6 +10,128 @@
     --danger-color: #dc3545;
     --gradient-start: #667eea;
     --gradient-end: #764ba2;
+    
+    /* Light Theme Variables */
+    --bg-body: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --bg-white: #ffffff;
+    --bg-card: #ffffff;
+    --bg-input: #ffffff;
+    --bg-section-alt: #f8f9fa;
+    --bg-review: #f8f9fa;
+    --bg-map-box: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    --bg-payment-card: #f8fafc;
+    --bg-payment-card-selected: #e0e7ff;
+    --bg-payment-card-hover: #eff6ff;
+    --bg-progress-step: #ffffff;
+    --bg-progress-step-hover: #f8f9fa;
+    --bg-modal: #ffffff;
+    --bg-modal-header: linear-gradient(135deg, #0d6efd, #0b5ed7);
+    --bg-share-modal: #ffffff;
+    --bg-provider-btn: #ffffff;
+    --bg-provider-btn-hover: #f0f9ff;
+    --bg-provider-btn-selected: #e0e7ff;
+    --bg-share-option: #ffffff;
+    
+    --text-primary: #2d3748;
+    --text-secondary: #4a5568;
+    --text-muted: #6c757d;
+    --text-label: #4a5568;
+    --text-summary-label: #4a5568;
+    --text-summary-value: #2d3748;
+    --text-progress-label: #64748b;
+    --text-progress-icon: #94a3b8;
+    --text-share-option: #4a5568;
+    --text-review: #4a5568;
+    
+    --border-color: #e2e8f0;
+    --border-light: #e2e8f0;
+    --border-dashed: #cbd5e0;
+    --border-summary: #e2e8f0;
+    --border-summary-total: #cbd5e0;
+    --border-review: #e2e8f0;
+    --border-progress-step: #e2e8f0;
+    --border-payment-card: #e2e8f0;
+    --border-payment-card-selected: #0d6efd;
+    --border-share-option: #e2e8f0;
+    --border-provider: #e2e8f0;
+    
+    --shadow-card: 0 20px 40px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 25px 50px rgba(0, 0, 0, 0.15);
+    --shadow-modal: 0 25px 50px rgba(0, 0, 0, 0.25);
+    --shadow-progress: 0 10px 30px rgba(0, 0, 0, 0.08);
+    
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --gradient-receipt-header: linear-gradient(135deg, #0d6efd, #0b5ed7);
+    
+    --progress-bg-line: linear-gradient(90deg, #e2e8f0, #cbd5e0, #e2e8f0);
+    
+    --btn-primary-bg: #0d6efd;
+    --btn-primary-hover: #0b5ed7;
+    --btn-success-bg: #198754;
+    --btn-success-hover: #157347;
+}
+
+/* Dark Theme Overrides */
+[data-theme="dark"] {
+    --bg-body: linear-gradient(135deg, #1a1a2e 0%, #2a1a3e 100%);
+    --bg-white: #1e1e2f;
+    --bg-card: #1e1e2f;
+    --bg-input: #2a2a3e;
+    --bg-section-alt: #2a2a3e;
+    --bg-review: #2a2a3e;
+    --bg-map-box: linear-gradient(135deg, #2a2a3e 0%, #1e1e2f 100%);
+    --bg-payment-card: #2a2a3e;
+    --bg-payment-card-selected: #2a2a4e;
+    --bg-payment-card-hover: #2a2a4e;
+    --bg-progress-step: #1e1e2f;
+    --bg-progress-step-hover: #2a2a3e;
+    --bg-modal: #1e1e2f;
+    --bg-modal-header: linear-gradient(135deg, #0d6efd, #0b5ed7);
+    --bg-share-modal: #1e1e2f;
+    --bg-provider-btn: #1e1e2f;
+    --bg-provider-btn-hover: #2a2a4e;
+    --bg-provider-btn-selected: #2a2a4e;
+    --bg-share-option: #1e1e2f;
+    
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0b0;
+    --text-muted: #8888a0;
+    --text-label: #a0a0b0;
+    --text-summary-label: #a0a0b0;
+    --text-summary-value: #e0e0e0;
+    --text-progress-label: #8888a0;
+    --text-progress-icon: #6a6a7e;
+    --text-share-option: #a0a0b0;
+    --text-review: #a0a0b0;
+    
+    --border-color: #3a3a4e;
+    --border-light: #2a2a3e;
+    --border-dashed: #3a3a4e;
+    --border-summary: #3a3a4e;
+    --border-summary-total: #4a4a5e;
+    --border-review: #3a3a4e;
+    --border-progress-step: #3a3a4e;
+    --border-payment-card: #3a3a4e;
+    --border-payment-card-selected: #0d6efd;
+    --border-share-option: #3a3a4e;
+    --border-provider: #3a3a4e;
+    
+    --shadow-card: 0 20px 40px rgba(0, 0, 0, 0.3);
+    --shadow-card-hover: 0 25px 50px rgba(0, 0, 0, 0.4);
+    --shadow-modal: 0 25px 50px rgba(0, 0, 0, 0.5);
+    --shadow-progress: 0 10px 30px rgba(0, 0, 0, 0.2);
+    
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --gradient-receipt-header: linear-gradient(135deg, #0d6efd, #0b5ed7);
+    
+    --progress-bg-line: linear-gradient(90deg, #3a3a4e, #4a4a5e, #3a3a4e);
+    
+    --btn-primary-bg: #0d6efd;
+    --btn-primary-hover: #0b5ed7;
+    --btn-success-bg: #198754;
+    --btn-success-hover: #157347;
 }
 
 * {
@@ -20,14 +142,137 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--bg-body);
     min-height: 100vh;
     padding: 40px 20px;
+    color: var(--text-primary);
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .container {
     max-width: 1300px;
     margin: 0 auto;
+}
+
+/* ========== BOOKING HEADER BAR ========== */
+.booking-header-bar {
+    background: var(--bg-white);
+    border-radius: 16px;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-card);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.booking-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.booking-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.booking-brand span {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.booking-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.home-link-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.home-link-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+
+/* ========== THEME TOGGLE BUTTON ========== */
+.theme-toggle-btn {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    background: var(--bg-input);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    flex-shrink: 0;
+    outline: none;
+    padding: 0;
+}
+
+.theme-toggle-btn:hover {
+    transform: rotate(15deg) scale(1.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(13, 110, 253, 0.3);
+}
+
+.theme-toggle-btn:active {
+    transform: rotate(15deg) scale(0.95);
+}
+
+.theme-toggle-btn i {
+    position: absolute;
+    font-size: 1rem;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: var(--text-primary);
+}
+
+.theme-toggle-btn .fa-sun {
+    opacity: 0;
+    transform: translateY(30px) rotate(-90deg);
+    color: #f8961e;
+}
+
+.theme-toggle-btn .fa-moon {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+    color: #6366f1;
+}
+
+[data-theme="dark"] .theme-toggle-btn .fa-sun {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+}
+
+[data-theme="dark"] .theme-toggle-btn .fa-moon {
+    opacity: 0;
+    transform: translateY(-30px) rotate(90deg);
+}
+
+[data-theme="dark"] .theme-toggle-btn:hover {
+    box-shadow: 0 0 15px rgba(248, 150, 30, 0.3);
 }
 
 /* ========== CELEBRATION CONTAINER ========== */
@@ -43,27 +288,28 @@ body {
 
 /* ========== SUMMARY CARD ========== */
 .summary-box {
-    background: white;
+    background: var(--bg-card);
     border-radius: 20px;
     padding: 25px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-card);
     position: sticky;
     top: 20px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 }
 
 .summary-box:hover {
     transform: translateY(-5px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-card-hover);
 }
 
 .summary-box h5 {
     font-weight: 700;
     font-size: 1.3rem;
     margin-bottom: 20px;
-    color: #2d3748;
+    color: var(--text-primary);
     border-left: 4px solid var(--primary-color);
     padding-left: 12px;
+    transition: color 0.3s ease;
 }
 
 .summary-box h5 i {
@@ -75,19 +321,22 @@ body {
     display: flex;
     justify-content: space-between;
     padding: 10px 0;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border-summary);
     font-size: 0.9rem;
+    transition: border-color 0.3s ease;
 }
 
 .summary-item .label {
     font-weight: 500;
-    color: #4a5568;
+    color: var(--text-summary-label);
+    transition: color 0.3s ease;
 }
 
 .summary-item .value {
     font-weight: 600;
-    color: #2d3748;
+    color: var(--text-summary-value);
     text-align: right;
+    transition: color 0.3s ease;
 }
 
 .summary-total {
@@ -98,16 +347,18 @@ body {
     font-weight: 800;
     font-size: 1.2rem;
     color: var(--primary-color);
-    border-top: 2px solid #cbd5e0;
+    border-top: 2px solid var(--border-summary-total);
+    transition: border-color 0.3s ease;
 }
 
 /* ========== PHASE PROGRESS ========== */
 .phase-progress-wrapper {
-    background: white;
+    background: var(--bg-card);
     border-radius: 20px;
     padding: 20px 15px;
     margin-bottom: 25px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-progress);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .phase-progress {
@@ -125,7 +376,7 @@ body {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #e2e8f0, #cbd5e0, #e2e8f0);
+    background: var(--progress-bg-line);
     z-index: 0;
 }
 
@@ -141,20 +392,20 @@ body {
 .progress-step .step-icon {
     width: 45px;
     height: 45px;
-    background: white;
-    border: 2px solid #e2e8f0;
+    background: var(--bg-progress-step);
+    border: 2px solid var(--border-progress-step);
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 8px;
-    transition: all 0.3s ease;
+    transition: all 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
     position: relative;
 }
 
 .progress-step .step-icon i {
     font-size: 1.2rem;
-    color: #94a3b8;
+    color: var(--text-progress-icon);
     transition: all 0.3s ease;
 }
 
@@ -164,21 +415,21 @@ body {
     right: -5px;
     width: 20px;
     height: 20px;
-    background: #e2e8f0;
+    background: var(--border-progress-step);
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 0.7rem;
     font-weight: 700;
-    color: #4a5568;
-    transition: all 0.3s ease;
+    color: var(--text-secondary);
+    transition: all 0.3s ease, background-color 0.3s ease;
 }
 
 .progress-step .step-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--text-progress-label);
     margin-top: 5px;
     transition: all 0.3s ease;
     text-transform: uppercase;
@@ -187,7 +438,7 @@ body {
 
 .progress-step.active .step-icon {
     border-color: var(--primary-color);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--gradient-primary);
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
     transform: scale(1.05);
 }
@@ -209,7 +460,7 @@ body {
 
 .progress-step.completed .step-icon {
     border-color: var(--success-color);
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: var(--gradient-success);
 }
 
 .progress-step.completed .step-icon i {
@@ -237,11 +488,11 @@ body {
 
 /* ========== FORM CONTAINER ========== */
 .phase-container {
-    background: white;
+    background: var(--bg-card);
     border-radius: 20px;
     padding: 30px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease, background-color 0.3s ease;
 }
 
 .phase {
@@ -267,12 +518,13 @@ body {
 .phase h4 {
     font-weight: 700;
     margin-bottom: 25px;
-    color: #2d3748;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 10px;
     padding-bottom: 15px;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--border-light);
+    transition: color 0.3s ease, border-color 0.3s ease;
 }
 
 .phase h4 i {
@@ -282,20 +534,29 @@ body {
 
 .form-label {
     font-weight: 600;
-    color: #4a5568;
+    color: var(--text-label);
     margin-bottom: 8px;
+    transition: color 0.3s ease;
 }
 
 .form-control, .form-select {
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--border-color);
     border-radius: 10px;
     padding: 10px 15px;
-    transition: all 0.3s ease;
+    transition: all 0.3s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+}
+
+.form-control::placeholder, .form-select::placeholder {
+    color: var(--text-muted);
 }
 
 .form-control:focus, .form-select:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+    background-color: var(--bg-input);
+    color: var(--text-primary);
 }
 
 textarea.form-control {
@@ -304,13 +565,14 @@ textarea.form-control {
 }
 
 .map-box {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: var(--bg-map-box);
     border-radius: 12px;
     padding: 40px 20px;
     text-align: center;
-    color: #6c757d;
-    border: 2px dashed #cbd5e0;
+    color: var(--text-muted);
+    border: 2px dashed var(--border-dashed);
     margin: 15px 0;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .map-box i {
@@ -321,17 +583,24 @@ textarea.form-control {
 }
 
 #review {
-    background: #f8f9fa;
+    background: var(--bg-review);
     border-radius: 12px;
     padding: 20px;
     margin: 20px 0;
+    transition: background-color 0.3s ease;
+}
+
+.review-box h6 {
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .review-row {
     padding: 10px 0;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border-review);
     display: flex;
     justify-content: space-between;
+    transition: border-color 0.3s ease;
 }
 
 .review-row:last-child {
@@ -340,11 +609,13 @@ textarea.form-control {
 
 .review-row span {
     font-weight: 600;
-    color: #4a5568;
+    color: var(--text-review);
+    transition: color 0.3s ease;
 }
 
 .review-row strong {
-    color: #2d3748;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 /* Payment Method Grid */
@@ -356,24 +627,24 @@ textarea.form-control {
 }
 
 .payment-option-card {
-    background: #f8fafc;
-    border: 2px solid #e2e8f0;
+    background: var(--bg-payment-card);
+    border: 2px solid var(--border-payment-card);
     border-radius: 16px;
     padding: 15px 8px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .payment-option-card:hover {
     border-color: #0d6efd;
-    background: #eff6ff;
+    background: var(--bg-payment-card-hover);
     transform: translateY(-2px);
 }
 
 .payment-option-card.selected {
-    border-color: #0d6efd;
-    background: #e0e7ff;
+    border-color: var(--border-payment-card-selected);
+    background: var(--bg-payment-card-selected);
     box-shadow: 0 4px 12px rgba(13,110,253,0.2);
 }
 
@@ -381,7 +652,13 @@ textarea.form-control {
     font-size: 2rem;
     margin-bottom: 8px;
     display: block;
-    color: #1e293b;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.payment-option-card strong {
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 /* Provider Grid */
@@ -393,23 +670,24 @@ textarea.form-control {
 }
 
 .provider-btn {
-    background: white;
-    border: 2px solid #e2e8f0;
+    background: var(--bg-provider-btn);
+    border: 2px solid var(--border-provider);
     border-radius: 12px;
     padding: 12px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s, background-color 0.3s ease, border-color 0.3s ease;
+    color: var(--text-primary);
 }
 
 .provider-btn:hover {
     border-color: var(--primary-color);
-    background: #f0f9ff;
+    background: var(--bg-provider-btn-hover);
 }
 
 .provider-btn.selected {
     border-color: var(--primary-color);
-    background: #e0e7ff;
+    background: var(--bg-provider-btn-selected);
 }
 
 /* Buttons */
@@ -421,25 +699,60 @@ textarea.form-control {
 }
 
 .btn-primary {
-    background: var(--primary-color);
+    background: var(--btn-primary-bg);
     border: none;
+    color: white;
 }
 
 .btn-primary:hover {
-    background: #0b5ed7;
+    background: var(--btn-primary-hover);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+    color: white;
 }
 
 .btn-success {
-    background: var(--success-color);
+    background: var(--btn-success-bg);
     border: none;
+    color: white;
 }
 
 .btn-success:hover {
-    background: #157347;
+    background: var(--btn-success-hover);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(25, 135, 84, 0.3);
+    color: white;
+}
+
+.btn-outline-secondary {
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+    transition: border-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    background: var(--bg-section-alt);
+    color: var(--text-primary);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-outline-success {
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.btn-outline-success:hover {
+    background: var(--success-color);
+    color: white;
 }
 
 /* Receipt Modal */
@@ -447,11 +760,13 @@ textarea.form-control {
     border-radius: 24px;
     overflow: hidden;
     border: none;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-modal);
+    background-color: var(--bg-modal);
+    transition: background-color 0.3s ease;
 }
 
 .receipt-header {
-    background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+    background: var(--gradient-receipt-header);
     color: white;
     padding: 30px 20px;
     text-align: center;
@@ -464,6 +779,17 @@ textarea.form-control {
 .receipt-header h4 {
     font-weight: 700;
     letter-spacing: -0.5px;
+    color: white;
+}
+
+.modal-body {
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.modal-footer {
+    border-top-color: var(--border-color);
+    transition: border-color 0.3s ease;
 }
 
 .payment-pending-badge {
@@ -488,13 +814,13 @@ textarea.form-control {
     align-items: center;
     justify-content: center;
     padding: 20px 10px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--border-share-option);
     border-radius: 16px;
-    background: white;
+    background: var(--bg-share-option);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
     font-weight: 600;
-    color: #4a5568;
+    color: var(--text-share-option);
     font-size: 0.85rem;
     gap: 8px;
 }
@@ -506,7 +832,7 @@ textarea.form-control {
 
 .share-option-btn:hover {
     border-color: var(--primary-color);
-    background: #eff6ff;
+    background: var(--bg-payment-card-hover);
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(13, 110, 253, 0.15);
 }
@@ -529,6 +855,12 @@ textarea.form-control {
 .share-option-btn:nth-child(6):hover { border-color: #1DA1F2; background: #f0f9ff; }
 .share-option-btn:nth-child(6):hover i { color: #1DA1F2; }
 
+/* Share Modal */
+.share-modal-content {
+    background-color: var(--bg-share-modal);
+    transition: background-color 0.3s ease;
+}
+
 /* Receipt Content Styling */
 #receiptContent {
     position: relative;
@@ -536,11 +868,13 @@ textarea.form-control {
 
 #receiptContent .text-center strong {
     font-size: 1.3rem;
-    color: #2d3748;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 #receiptContent .border-top.border-bottom {
-    border-color: #e2e8f0 !important;
+    border-color: var(--border-color) !important;
+    transition: border-color 0.3s ease;
 }
 
 #receiptContent .d-flex.justify-content-between {
@@ -553,6 +887,19 @@ textarea.form-control {
     letter-spacing: -0.5px;
 }
 
+/* Dark mode Bootstrap overrides */
+[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+[data-theme="dark"] .text-muted {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .bg-primary {
+    background-color: #0d6efd !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     body { padding: 20px 15px; }
@@ -563,11 +910,13 @@ textarea.form-control {
     .review-row { flex-direction: column; gap: 5px; }
     .phase-progress { flex-direction: column; gap: 15px; }
     .phase-progress::before { display: none; }
-    .progress-step { display: flex; align-items: center; justify-content: flex-start; gap: 15px; padding: 10px; background: #f8f9fa; border-radius: 10px; }
+    .progress-step { display: flex; align-items: center; justify-content: flex-start; gap: 15px; padding: 10px; background: var(--bg-section-alt); border-radius: 10px; }
     .progress-step .step-icon { width: 40px; height: 40px; margin-bottom: 0; }
     .progress-step .step-number { position: relative; top: auto; right: auto; margin-left: -15px; margin-top: -20px; }
     .progress-step .step-label { margin-top: 0; font-size: 0.9rem; }
     .share-options { grid-template-columns: repeat(2, 1fr); }
+    .theme-toggle-btn { width: 34px; height: 34px; }
+    .theme-toggle-btn i { font-size: 0.9rem; }
 }
 
 @media (max-width: 576px) {
@@ -576,4 +925,8 @@ textarea.form-control {
     .share-options { grid-template-columns: 1fr 1fr; gap: 8px; }
     .share-option-btn { padding: 15px 8px; font-size: 0.75rem; }
     .share-option-btn i { font-size: 1.4rem; }
+    .theme-toggle-btn { width: 30px; height: 30px; }
+    .theme-toggle-btn i { font-size: 0.8rem; }
+    .booking-header-bar { padding: 10px 14px; }
+    .booking-brand span { font-size: 0.95rem; }
 }
