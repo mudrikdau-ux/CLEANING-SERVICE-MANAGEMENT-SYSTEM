@@ -19,6 +19,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/booking.css">
 </head>
@@ -82,10 +84,12 @@
                             <div class="col-md-6">
                                 <label class="form-label">Number of Cleaners <span class="text-danger">*</span></label>
                                 <input type="number" id="cleaners" class="form-control" min="1" max="10" value="1" required>
+                                <div class="invalid-feedback">Please enter number of cleaners (1-10)</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Hours Needed <span class="text-danger">*</span></label>
                                 <input type="number" id="hours" class="form-control" min="1" max="12" value="2" required>
+                                <div class="invalid-feedback">Please enter hours needed (1-12)</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Service Frequency</label>
@@ -125,6 +129,7 @@
                                 <option value="Shop">Shop</option>
                                 <option value="Other">Other</option>
                             </select>
+                            <div class="invalid-feedback">Please select a property type</div>
                         </div>
                         <div class="d-flex justify-content-between mt-4">
                             <button type="button" class="btn btn-outline-secondary prev" data-prev="phase1"><i class="fas fa-arrow-left me-2"></i> Previous</button>
@@ -139,20 +144,31 @@
                             <div class="col-12">
                                 <label class="form-label">Street Address <span class="text-danger">*</span></label>
                                 <input type="text" id="street" class="form-control" placeholder="House/flat number, street name" required>
+                                <div class="invalid-feedback">Please enter your street address</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">City/Area <span class="text-danger">*</span></label>
                                 <input type="text" id="city" class="form-control" placeholder="e.g., Stone Town" required>
+                                <div class="invalid-feedback">Please enter your city or area</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Landmark (Optional)</label>
                                 <input type="text" id="landmark" class="form-control" placeholder="Nearby landmark">
                             </div>
                             <div class="col-12">
-                                <div class="map-box">
-                                    <i class="fas fa-map-marked-alt"></i>
-                                    <p>Our team will navigate to your location</p>
+                                <label class="form-label">Pin Your Location on Map <span class="text-muted">(Click to place pin)</span></label>
+                                <div class="map-container" id="mapContainer">
+                                    <div id="locationMap"></div>
+                                    <div class="map-overlay-info" id="mapOverlayInfo">
+                                        <i class="fas fa-map-pin"></i> Click on the map to pin your exact location
+                                    </div>
+                                    <div class="map-coordinates" id="mapCoordinates" style="display: none;">
+                                        <i class="fas fa-location-dot"></i>
+                                        <span id="coordinatesText">Lat: —, Lng: —</span>
+                                    </div>
                                 </div>
+                                <input type="hidden" id="latitude" value="">
+                                <input type="hidden" id="longitude" value="">
                             </div>
                         </div>
                         <div class="d-flex justify-content-between mt-4">
@@ -168,10 +184,12 @@
                             <div class="col-md-6">
                                 <label class="form-label">Preferred Date <span class="text-danger">*</span></label>
                                 <input type="date" id="date" class="form-control" required>
+                                <div class="invalid-feedback">Please select a valid future date</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Preferred Time <span class="text-danger">*</span></label>
                                 <input type="time" id="time" class="form-control" required>
+                                <div class="invalid-feedback">Please select a preferred time</div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Special Instructions</label>
@@ -191,18 +209,22 @@
                             <div class="col-md-6">
                                 <label class="form-label">First Name <span class="text-danger">*</span></label>
                                 <input type="text" id="fname" class="form-control" required>
+                                <div class="invalid-feedback">Please enter your first name</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Last Name <span class="text-danger">*</span></label>
                                 <input type="text" id="lname" class="form-control" required>
+                                <div class="invalid-feedback">Please enter your last name</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Email Address <span class="text-danger">*</span></label>
                                 <input type="email" id="email" class="form-control" required>
+                                <div class="invalid-feedback">Please enter a valid email address</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Phone Number</label>
                                 <input type="tel" id="phone" class="form-control" placeholder="+255 XXX XXX XXX">
+                                <div class="invalid-feedback">Please enter a valid phone number</div>
                             </div>
                             <div class="col-12 mt-4">
                                 <div id="review" class="review-box">
@@ -271,6 +293,9 @@
         </div>
     </div>
 </div>
+
+<!-- Validation Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
 
 <!-- Celebration Container -->
 <div id="celebration-container"></div>
@@ -341,6 +366,8 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- html2canvas for receipt download -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- Canvas Confetti Library -->

@@ -2,7 +2,9 @@
    CleanSpark ADMIN PANEL — admin.css
    Complete with Logo Support, Worker Names Field,
    PDF Report Styles, Professional Design,
-   Job Applications Section, and Dark Mode
+   Job Applications Section, Dark Mode,
+   Payment Status Badges, Payments History Modal,
+   and Rejection Modal
    ======================================== */
 
 /* ============================================================
@@ -71,6 +73,7 @@
     --bg-reply-original: #f7fafc;
     --bg-window-open: linear-gradient(135deg, rgba(22,163,74,0.03), white);
     --bg-window-closed: linear-gradient(135deg, rgba(220,38,38,0.03), white);
+    --bg-payment-row: #f0fdf4;
     
     --text-primary: #1a202c;
     --text-secondary: #4a5568;
@@ -150,6 +153,7 @@
     --bg-reply-original: #2a2a3e;
     --bg-window-open: linear-gradient(135deg, rgba(34,197,94,0.08), #1e1e2f);
     --bg-window-closed: linear-gradient(135deg, rgba(239,68,68,0.08), #1e1e2f);
+    --bg-payment-row: rgba(34,197,94,0.08);
     
     --text-primary: #e0e0e0;
     --text-secondary: #a0a0b0;
@@ -252,6 +256,68 @@
 
 [data-theme="dark"] .theme-toggle-btn:hover {
     box-shadow: 0 0 15px rgba(248, 150, 30, 0.4);
+}
+
+/* ========================================
+   PAYMENTS HISTORY MODAL STYLES (NEW)
+   ======================================== */
+.payments-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: var(--bg-section-alt);
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+}
+
+.payment-summary-card {
+    flex: 1;
+    min-width: 150px;
+    padding: 16px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.payment-summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card);
+}
+
+.payment-summary-card .summary-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.payment-summary-card .summary-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.payment-summary-card .summary-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.payment-summary-card.total-paid .summary-icon { color: #16a34a; }
+.payment-summary-card.total-unpaid .summary-icon { color: #dc2626; }
+.payment-summary-card.total-partial .summary-icon { color: #d97706; }
+.payment-summary-card.total-pending .summary-icon { color: #2563eb; }
+
+.payment-history-row {
+    transition: background-color 0.2s;
+}
+
+.payment-history-row:hover {
+    background: var(--bg-payment-row);
 }
 
 /* ============================================================
@@ -803,6 +869,22 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 
 @keyframes pulse {
@@ -2284,286 +2366,362 @@ body {
 }
 
 /* ========================================
-   OLD APPLICATION DETAIL (KEPT FOR LEGACY)
+   PAYMENT STATUS BADGES
    ======================================== */
-.application-detail {
-    font-family: 'Inter', sans-serif;
-}
-
-.app-detail-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid var(--border-color);
-    margin-bottom: 24px;
-    transition: border-color 0.3s ease;
-}
-
-.app-detail-avatar-lg {
-    width: 80px;
-    height: 80px;
+.payment-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
     border-radius: 20px;
-    background: var(--gradient-primary);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.payment-status-badge:hover {
+    transform: scale(1.02);
+    filter: brightness(0.98);
+}
+
+.payment-status-paid {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+    border: 1px solid rgba(22, 163, 74, 0.25);
+}
+
+.payment-status-unpaid {
+    background: rgba(220, 38, 38, 0.12);
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+.payment-status-partial {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.payment-status-pending {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.payment-status-updated {
+    animation: paymentPulse 0.5s ease-out;
+}
+
+@keyframes paymentPulse {
+    0% { transform: scale(1); background: rgba(22, 163, 74, 0.3); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); background: rgba(22, 163, 74, 0.12); }
+}
+
+/* Payment Status Dropdown */
+.payment-dropdown {
+    position: fixed;
+    z-index: 99999;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    border: 1.5px solid var(--border-color);
+    padding: 8px;
+    min-width: 180px;
+    animation: fadeIn 0.2s ease;
+}
+
+.payment-dropdown .progress-dropdown-item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 800;
-    font-size: 28px;
-    flex-shrink: 0;
-    letter-spacing: -1px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
 }
 
-.app-detail-header-info h4 {
-    font-size: 20px;
+.payment-dropdown .progress-dropdown-item:hover {
+    background: var(--bg-section-alt);
+    transform: translateX(2px);
+}
+
+/* ========================================
+   REJECTION REASON MODAL - PROFESSIONAL DESIGN
+   ======================================== */
+
+.rejection-modal-content {
+    border-radius: var(--radius-lg) !important;
+    overflow: hidden;
+    border: none;
+    box-shadow: var(--shadow-modal);
+    background: var(--bg-modal);
+}
+
+.rejection-modal-header {
+    background: var(--gradient-danger);
+    color: white;
+    border-bottom: none;
+    padding: 22px 28px;
+    position: relative;
+    overflow: hidden;
+}
+
+.rejection-modal-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.rejection-modal-header .modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+}
+
+.rejection-modal-header .modal-title i {
+    font-size: 28px;
+}
+
+.rejection-modal-body {
+    padding: 28px;
+    background: var(--bg-modal);
+}
+
+.rejection-warning-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    background: rgba(220, 38, 38, 0.08);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid #dc2626;
+    margin-bottom: 24px;
+}
+
+.rejection-warning-box i {
+    font-size: 22px;
+    color: #dc2626;
+    flex-shrink: 0;
+}
+
+.rejection-warning-box .warning-text {
+    flex: 1;
+}
+
+.rejection-warning-box .warning-text strong {
+    display: block;
+    font-size: 13px;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 4px;
-    transition: color 0.3s ease;
+    margin-bottom: 2px;
 }
 
-.app-detail-header-info .position-title {
+.rejection-warning-box .warning-text p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.rejection-reason-label {
     font-size: 14px;
-    color: var(--grad-start);
     font-weight: 600;
-    margin-bottom: 8px;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
-.app-detail-header-info .app-meta-row {
+.rejection-optional-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    background: rgba(113, 128, 150, 0.15);
+    color: var(--text-muted);
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+}
+
+.rejection-reason-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 14px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--bg-input);
+    resize: vertical;
+    transition: all 0.2s ease;
+}
+
+.rejection-reason-textarea:focus {
+    border-color: var(--grad-start);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+}
+
+.rejection-reason-textarea::placeholder {
+    color: var(--text-light);
+    font-size: 12px;
+}
+
+.rejection-quick-reasons {
+    margin-top: 16px;
+}
+
+.rejection-quick-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+}
+
+.rejection-quick-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
 
-.app-detail-header-info .app-meta-tag {
+.rejection-quick-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1.5px solid var(--border-color);
+    border-radius: 25px;
+    background: var(--bg-filter-btn);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.rejection-quick-btn:hover {
+    border-color: var(--grad-start);
+    color: var(--grad-start);
+    background: var(--bg-filter-btn-hover);
+    transform: translateY(-1px);
+}
+
+.rejection-quick-btn:active {
+    transform: translateY(0);
+}
+
+.rejection-modal-footer {
+    padding: 20px 28px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-card);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-reject-confirm {
+    background: var(--gradient-danger) !important;
+    border: none !important;
+    color: white !important;
+    padding: 10px 24px;
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    background: var(--bg-section-alt);
-    border: 1px solid var(--border-color);
+    gap: 8px;
+}
+
+.btn-reject-confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+}
+
+.btn-reject-confirm:active {
+    transform: translateY(0);
+}
+
+.btn-reject-cancel {
+    background: transparent;
+    border: 1.5px solid var(--border-color);
     color: var(--text-muted);
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-}
-
-.app-detail-header-info .app-meta-tag i {
-    color: var(--grad-start);
-    font-size: 12px;
-}
-
-.app-detail-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
-}
-
-.app-detail-field {
-    padding: 14px 16px;
-    background: var(--bg-section-alt);
+    padding: 10px 22px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.app-detail-field .field-label-mini {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-    transition: color 0.3s ease;
-}
-
-.app-detail-field .field-value {
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-reject-cancel:hover {
+    background: var(--bg-section-alt);
+    border-color: var(--grad-start);
     color: var(--text-primary);
-    transition: color 0.3s ease;
 }
 
-.app-detail-section {
-    margin-bottom: 20px;
+/* Rejection Reason Display in Application Detail */
+.rejection-reason-display {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: rgba(220, 38, 38, 0.06);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid #dc2626;
 }
 
-.app-detail-section h6 {
-    font-size: 13px;
+.rejection-reason-display .label {
+    font-size: 11px;
     font-weight: 700;
-    color: var(--grad-start);
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid rgba(102,126,234,0.15);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-}
-
-.app-documents-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px;
-}
-
-.app-document-card {
-    padding: 16px 12px;
-    background: var(--bg-section-alt);
-    border: 1.5px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s, background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.app-document-card:hover {
-    border-color: var(--grad-start);
-    background: var(--bg-filter-btn-hover);
-    transform: translateY(-2px);
-}
-
-.app-document-card i {
-    font-size: 32px;
-    color: var(--grad-start);
-    display: block;
-    margin-bottom: 8px;
-}
-
-.app-document-card span {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-primary);
-    display: block;
-    word-break: break-word;
-    transition: color 0.3s ease;
-}
-
-/* ========================================
-   APPLICATION PDF STYLES
-   ======================================== */
-.application-pdf-container {
-    width: 800px;
-    background: #ffffff;
-    font-family: 'Inter', 'Helvetica', sans-serif;
-    color: #1a202c;
-    padding: 50px 45px;
-}
-
-.app-pdf-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding-bottom: 25px;
-    border-bottom: 3px solid #667eea;
-    margin-bottom: 30px;
-}
-
-.app-pdf-header-left {
+    color: #dc2626;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 6px;
 }
 
-.app-pdf-logo {
-    width: 55px;
-    height: 55px;
-    object-fit: contain;
-    border-radius: 8px;
-}
-
-.app-pdf-company-info h2 {
-    font-size: 22px;
-    font-weight: 800;
-    color: #667eea;
-    margin: 0 0 2px 0;
-}
-
-.app-pdf-company-info p {
-    font-size: 11px;
-    color: #718096;
-    margin: 1px 0;
-}
-
-.app-pdf-title-section {
-    text-align: right;
-}
-
-.app-pdf-title {
-    font-size: 24px;
-    font-weight: 800;
-    color: #1a202c;
-    margin: 0;
-    letter-spacing: 1px;
-}
-
-.app-pdf-ref {
+.rejection-reason-display .reason-text {
     font-size: 13px;
-    color: #667eea;
-    font-weight: 600;
-    margin-top: 4px;
+    color: var(--text-primary);
+    line-height: 1.5;
 }
 
-.app-pdf-section {
-    margin-bottom: 24px;
+/* Animation for Rejection Modal */
+@keyframes rejectionModalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
-.app-pdf-section h5 {
-    font-size: 13px;
-    font-weight: 700;
-    color: #667eea;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #e2e8f0;
-}
-
-.app-pdf-info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-}
-
-.app-pdf-info-item {
-    padding: 10px 14px;
-    background: #f7fafc;
-    border-radius: 6px;
-    font-size: 13px;
-}
-
-.app-pdf-info-item .label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #718096;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-}
-
-.app-pdf-info-item .value {
-    font-size: 13px;
-    font-weight: 500;
-    color: #1a202c;
-}
-
-.app-pdf-status {
-    display: inline-block;
-    padding: 4px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-.app-pdf-footer {
-    margin-top: 35px;
-    padding-top: 20px;
-    border-top: 1px solid #e2e8f0;
-    text-align: center;
-    font-size: 11px;
-    color: #718096;
+.rejection-modal-content .modal-content {
+    animation: rejectionModalIn 0.3s ease-out;
 }
 
 /* ========================================
@@ -4144,25 +4302,6 @@ textarea.form-control {
 }
 
 /* ========================================
-   ANIMATIONS
-   ======================================== */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideInRight {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-}
-
-/* ========================================
    DARK MODE BOOTSTRAP OVERRIDES
    ======================================== */
 [data-theme="dark"] .btn-close {
@@ -4201,6 +4340,40 @@ textarea.form-control {
     color: #1a202c;
 }
 
+/* Dark mode adjustments for payment status */
+[data-theme="dark"] .payment-status-paid {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+}
+
+[data-theme="dark"] .payment-status-unpaid {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+}
+
+[data-theme="dark"] .payment-status-partial {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .payment-status-pending {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+}
+
+/* Dark mode adjustments for rejection modal */
+[data-theme="dark"] .rejection-warning-box {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+[data-theme="dark"] .rejection-reason-display {
+    background: rgba(239, 68, 68, 0.08);
+}
+
+[data-theme="dark"] .rejection-quick-btn {
+    background: var(--bg-filter-btn);
+}
+
 /* ========================================
    RESPONSIVE
    ======================================== */
@@ -4219,6 +4392,15 @@ textarea.form-control {
     .app-profile-meta-row { justify-content: center; }
     .theme-toggle-btn { width: 34px; height: 34px; }
     .theme-toggle-btn i { font-size: 0.9rem; }
+    
+    .payment-status-badge {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+    
+    .payments-summary {
+        flex-direction: column;
+    }
 }
 
 @media (max-width: 768px) {
@@ -4293,6 +4475,48 @@ textarea.form-control {
     
     .theme-toggle-btn { width: 30px; height: 30px; }
     .theme-toggle-btn i { font-size: 0.85rem; }
+    
+    .payment-status-badge {
+        padding: 3px 8px;
+        font-size: 10px;
+    }
+    
+    .payments-summary {
+        flex-direction: column;
+    }
+    
+    .payment-summary-card {
+        min-width: auto;
+    }
+    
+    .rejection-modal-body {
+        padding: 20px;
+    }
+    
+    .rejection-quick-buttons {
+        gap: 6px;
+    }
+    
+    .rejection-quick-btn {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+    
+    .rejection-warning-box {
+        padding: 12px 14px;
+    }
+    
+    .rejection-warning-box i {
+        font-size: 18px;
+    }
+    
+    .rejection-modal-header {
+        padding: 16px 20px;
+    }
+    
+    .rejection-modal-footer {
+        padding: 16px 20px;
+    }
 }
 
 @media (max-width: 576px) {
@@ -4317,6 +4541,16 @@ textarea.form-control {
     .app-info-grid { grid-template-columns: 1fr; }
     .app-document-actions { flex-direction: column; width: 100%; }
     .app-doc-action-btn { width: 100%; justify-content: center; }
+    
+    .payment-dropdown {
+        min-width: 150px;
+    }
+    
+    .payments-history-table th,
+    .payments-history-table td {
+        font-size: 11px;
+        padding: 8px;
+    }
 }
 
 @media (max-width: 400px) {

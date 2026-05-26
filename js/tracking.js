@@ -1675,42 +1675,6 @@ const panelRenderers = {
         <div id="bookingList" class="booking-box"></div>
     `,
 
-    quotes: () => `
-        <div class="section-header"><h1 class="page-title"><i class="bi bi-file-text-fill text-primary me-2"></i>My Quotes</h1></div>
-        <div class="booking-grid" id="quotesList">
-            ${quotesData.map(q => {
-                const statusBadge = q.status === 'approved' 
-                    ? '<span class="badge bg-success">Approved</span>' 
-                    : '<span class="badge bg-warning text-dark">Pending</span>';
-                return `
-                    <div class="booking-card clickable quote-view-card" data-quote-id="${q.id}" style="cursor: pointer;">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="d-flex gap-3">
-                                <div class="service-icon"><i class="bi bi-file-pdf-fill text-danger fs-4"></i></div>
-                                <div>
-                                    <h5 class="fw-bold mb-2">${escapeHtml(q.service)}</h5>
-                                    <div class="d-flex gap-3 flex-wrap">
-                                        <span><i class="bi bi-hash me-1 text-secondary"></i> ${q.id}</span>
-                                        <span><i class="bi bi-calendar3 me-1 text-secondary"></i> Valid until ${q.validUntil}</span>
-                                        <span><i class="bi bi-cash-stack me-1 text-secondary"></i> ${q.total}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                ${statusBadge}
-                                <i class="bi bi-eye text-primary ms-2"></i>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted-custom"><i class="bi bi-file-text"></i> ${q.items.length} service items</small>
-                            <span class="click-hint"><i class="bi bi-eye"></i> Click to view quote</span>
-                        </div>
-                    </div>
-                `;
-            }).join('')}
-        </div>
-    `,
 
     payments: () => `
         <div class="section-header"><h1 class="page-title"><i class="bi bi-credit-card-2-front text-primary me-2"></i>Payments</h1></div>

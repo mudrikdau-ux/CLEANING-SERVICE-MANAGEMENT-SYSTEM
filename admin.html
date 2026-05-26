@@ -7,7 +7,7 @@
 <meta name="description" content="Administrative dashboard for CleanSpark - Manage services, bookings, staff, contractors, and invoices.">
 <meta name="robots" content="noindex, nofollow">
 
-<!-- Apply saved theme immediately to prevent flash of wrong theme -->
+<!-- Apply saved theme immediately -->
 <script>
     (function() {
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -132,7 +132,6 @@
             <span>CleanSpark Admin</span>
         </div>
         <div class="nav-user">
-            <!-- Theme Toggle Button -->
             <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light mode" title="Toggle dark/light mode">
                 <i class="bi bi-moon-fill"></i>
                 <i class="bi bi-sun-fill"></i>
@@ -663,11 +662,12 @@
             <div id="bookingsSection" class="admin-section">
                 <div class="section-header">
                     <h2><i class="bi bi-calendar-check-fill"></i> All Bookings</h2>
-                    <p>View and manage customer bookings</p>
+                    <p>View and manage customer bookings with payment tracking</p>
                 </div>
                 <div class="table-container">
                     <div class="table-header-bar">
                         <span class="table-title">Booking Records</span>
+                        <span class="badge-currency">Payment Status Available</span>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover" id="bookingsTable">
@@ -679,6 +679,7 @@
                                     <th>Location</th>
                                     <th>Date</th>
                                     <th>Status</th>
+                                    <th>Payment Status</th>
                                     <th style="width:100px; text-align:center;">Actions</th>
                                 </tr>
                             </thead>
@@ -980,6 +981,43 @@
 </div>
 
 <!-- MODALS -->
+
+<!-- PAYMENTS HISTORY MODAL (NEW) -->
+<div class="modal fade" id="paymentsHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-cash-stack me-2"></i>Payments History</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="paymentsHistoryBody">
+                <div class="payments-summary" id="paymentsSummary"></div>
+                <div class="table-responsive mt-3">
+                    <table class="table table-hover" id="paymentsHistoryTable">
+                        <thead>
+                            <tr>
+                                <th>Payment ID</th>
+                                <th>Booking ID</th>
+                                <th>Customer</th>
+                                <th>Service</th>
+                                <th>Amount (TZS)</th>
+                                <th>Payment Date</th>
+                                <th>Status</th>
+                                <th>Method</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsHistoryList"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="exportPaymentsHistory()"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Image Upload Modal -->
 <div class="modal fade" id="imageUploadModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1282,6 +1320,69 @@
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-success" onclick="downloadApplicationPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>Download PDF</button>
                 <button type="button" class="btn btn-primary" onclick="shareApplication()"><i class="bi bi-share-fill me-1"></i>Share</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- REJECTION REASON MODAL -->
+<div class="modal fade" id="rejectionReasonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content modal-styled rejection-modal-content">
+            <div class="modal-header rejection-modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-x-octagon-fill"></i>
+                    Reject Application
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body rejection-modal-body">
+                <div class="rejection-warning-box">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <div class="warning-text">
+                        <strong>Confirm Rejection</strong>
+                        <p>This action will mark the application as rejected. The applicant will be notified.</p>
+                    </div>
+                </div>
+                
+                <label class="rejection-reason-label">
+                    Rejection Reason 
+                    <span class="rejection-optional-badge">
+                        <i class="bi bi-info-circle me-1"></i>Optional
+                    </span>
+                </label>
+                <textarea id="rejectionReasonText" class="rejection-reason-textarea" 
+                    placeholder="Optional: Enter a reason for rejection...
+                    
+Examples:
+• Missing passport-size photo
+• Incomplete documents
+• Missing National ID
+• Insufficient qualifications
+• Position already filled"></textarea>
+                
+                <div class="rejection-quick-reasons">
+                    <div class="rejection-quick-label">
+                        <i class="bi bi-lightning-charge me-1"></i>Quick Options (Click to insert)
+                    </div>
+                    <div class="rejection-quick-buttons">
+                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Missing passport-size photo')">📷 Missing Passport Photo</button>
+                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Incomplete documents - missing required fields')">📄 Incomplete Documents</button>
+                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Missing National ID copy')">🪪 Missing National ID</button>
+                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Missing introduction letter from local government')">✉️ Missing Introduction Letter</button>
+                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Insufficient qualifications for the position')">🎓 Insufficient Qualifications</button>
+                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Position has already been filled')">✅ Position Already Filled</button>
+                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Other: ')">📝 Other Reason</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer rejection-modal-footer">
+                <button type="button" class="btn-reject-cancel" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn-reject-confirm" onclick="confirmRejectApplication()">
+                    <i class="bi bi-check-lg me-1"></i>Confirm Rejection
+                </button>
             </div>
         </div>
     </div>

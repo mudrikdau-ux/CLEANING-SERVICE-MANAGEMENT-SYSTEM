@@ -5,6 +5,9 @@
 //  Worker Names Field | Logo Integration | Job Applications
 //  FIXED: Professional PDF Invoice Download
 //  UPDATED: Application Detail Modal - Professional Redesign
+//  NEW: Payment Status Column with Badges
+//  NEW: Total Payments Stat Card with Payments History Modal
+//  NEW: Rejection Reason Modal with Optional Reason
 // ============================================================
 
 // ========== MISSING ASSIGNMENT FUNCTIONS ==========
@@ -316,6 +319,231 @@ function changeStaffProgress(staffId, progress, dropdownEl) {
     if (activeTab) switchAssignTab(activeTab.dataset.tab, activeTab);
 }
 
+// ========== PAYMENT STATUS FUNCTIONS ==========
+
+function getPaymentStatus(bookingId) {
+    const paymentStatuses = JSON.parse(localStorage.getItem('paymentStatuses')) || {};
+    return paymentStatuses[bookingId] || 'unpaid';
+}
+
+function setPaymentStatus(bookingId, status) {
+    const paymentStatuses = JSON.parse(localStorage.getItem('paymentStatuses')) || {};
+    paymentStatuses[bookingId] = status;
+    localStorage.setItem('paymentStatuses', JSON.stringify(paymentStatuses));
+    
+    // Record payment history when status changes to paid or partially_paid
+    if (status === 'paid' || status === 'partially_paid') {
+        recordPaymentHistory(bookingId, status);
+    }
+}
+
+function recordPaymentHistory(bookingId, status) {
+    const bookings = JSON.parse(localStorage.getItem('customerBookings')) || [];
+    const booking = bookings.find(b => b.id == bookingId);
+    if (!booking) return;
+    
+    const paymentHistory = JSON.parse(localStorage.getItem('paymentHistory')) || [];
+    const services = JSON.parse(localStorage.getItem('adminServices')) || [];
+    const service = services.find(s => s.name === booking.service);
+    const amount = service ? service.price : 0;
+    
+    paymentHistory.push({
+        id: 'PAY-' + Date.now().toString().slice(-8),
+        bookingId: bookingId,
+        customerName: booking.customer,
+        serviceName: booking.service,
+        amount: status === 'partially_paid' ? Math.round(amount * 0.5) : amount,
+        paymentDate: new Date().toISOString(),
+        status: status,
+        method: 'bank_transfer'
+    });
+    
+    localStorage.setItem('paymentHistory', JSON.stringify(paymentHistory));
+}
+
+function updatePaymentStatus(bookingId, newStatus, selectElement) {
+    const oldStatus = getPaymentStatus(bookingId);
+    setPaymentStatus(bookingId, newStatus);
+    
+    // Update the display
+    const statusSpan = selectElement?.closest('td')?.previousElementSibling?.querySelector('.payment-status-badge');
+    if (statusSpan) {
+        const config = getPaymentStatusConfig(newStatus);
+        statusSpan.className = `payment-status-badge ${config.class}`;
+        statusSpan.innerHTML = config.icon + ' ' + config.label;
+        statusSpan.classList.add('payment-status-updated');
+        setTimeout(() => statusSpan.classList.remove('payment-status-updated'), 500);
+    }
+    
+    // Also update the booking in localStorage to refresh
+    const bookings = JSON.parse(localStorage.getItem('customerBookings')) || [];
+    const booking = bookings.find(b => b.id == bookingId);
+    if (booking) {
+        booking.paymentStatus = newStatus;
+        localStorage.setItem('customerBookings', JSON.stringify(bookings));
+    }
+    
+    showNotification(`Payment status updated from ${getPaymentStatusConfig(oldStatus).label} to ${getPaymentStatusConfig(newStatus).label}`, 'success');
+    loadBookings(); // Refresh the table
+    loadDashboardStats(); // Refresh stats to update Total Payments
+}
+
+function getPaymentStatusConfig(status) {
+    const configs = {
+        paid: { class: 'payment-status-paid', icon: '✅', label: 'Paid' },
+        unpaid: { class: 'payment-status-unpaid', icon: '❌', label: 'Unpaid' },
+        partially_paid: { class: 'payment-status-partial', icon: '🟠', label: 'Partially Paid' },
+        pending_verification: { class: 'payment-status-pending', icon: '⏳', label: 'Pending Verification' }
+    };
+    return configs[status] || configs.unpaid;
+}
+
+function togglePaymentStatusDropdown(bookingId, element) {
+    const existing = document.querySelector('.payment-dropdown');
+    if (existing) existing.remove();
+    
+    const options = [
+        { value: 'paid', label: 'Paid', icon: '✅', class: 'payment-status-paid' },
+        { value: 'unpaid', label: 'Unpaid', icon: '❌', class: 'payment-status-unpaid' },
+        { value: 'partially_paid', label: 'Partially Paid', icon: '🟠', class: 'payment-status-partial' },
+        { value: 'pending_verification', label: 'Pending Verification', icon: '⏳', class: 'payment-status-pending' }
+    ];
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'progress-dropdown payment-dropdown';
+    dropdown.style.minWidth = '160px';
+    dropdown.innerHTML = options.map(opt => `
+        <div class="progress-dropdown-item" onclick="updatePaymentStatus(${bookingId}, '${opt.value}', this.closest('.payment-dropdown')); this.closest('.payment-dropdown').remove();">
+            <span class="payment-status-badge ${opt.class}" style="margin-right:10px; padding:2px 8px;">${opt.icon} ${opt.label}</span>
+        </div>
+    `).join('');
+    
+    document.body.appendChild(dropdown);
+    
+    const rect = element.getBoundingClientRect();
+    dropdown.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+    dropdown.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 180) + 'px';
+    
+    setTimeout(() => {
+        const closeDropdown = (e) => {
+            if (!dropdown.contains(e.target) && e.target !== element) {
+                dropdown.remove();
+                document.removeEventListener('click', closeDropdown);
+            }
+        };
+        document.addEventListener('click', closeDropdown);
+    }, 100);
+}
+
+// ========== PAYMENTS HISTORY FUNCTIONS (NEW) ==========
+
+function getTotalPayments() {
+    const paymentHistory = JSON.parse(localStorage.getItem('paymentHistory')) || [];
+    return paymentHistory.reduce((total, payment) => total + (payment.amount || 0), 0);
+}
+
+function getPaymentStats() {
+    const paymentHistory = JSON.parse(localStorage.getItem('paymentHistory')) || [];
+    const totalPaid = paymentHistory.filter(p => p.status === 'paid').reduce((sum, p) => sum + (p.amount || 0), 0);
+    const totalPartial = paymentHistory.filter(p => p.status === 'partially_paid').reduce((sum, p) => sum + (p.amount || 0), 0);
+    const paymentStatuses = JSON.parse(localStorage.getItem('paymentStatuses')) || {};
+    const unpaidCount = Object.values(paymentStatuses).filter(s => s === 'unpaid').length;
+    const pendingCount = Object.values(paymentStatuses).filter(s => s === 'pending_verification').length;
+    
+    return {
+        totalPayments: totalPaid + totalPartial,
+        totalPaid: totalPaid,
+        totalPartial: totalPartial,
+        unpaidCount: unpaidCount,
+        pendingCount: pendingCount,
+        totalTransactions: paymentHistory.length
+    };
+}
+
+function openPaymentsHistory() {
+    const paymentHistory = JSON.parse(localStorage.getItem('paymentHistory')) || [];
+    const stats = getPaymentStats();
+    
+    // Update summary cards
+    document.getElementById('paymentsSummary').innerHTML = `
+        <div class="payment-summary-card total-paid">
+            <div class="summary-icon">✅</div>
+            <div class="summary-value">${formatTZS(stats.totalPaid)}</div>
+            <div class="summary-label">Total Paid</div>
+        </div>
+        <div class="payment-summary-card total-partial">
+            <div class="summary-icon">🟠</div>
+            <div class="summary-value">${formatTZS(stats.totalPartial)}</div>
+            <div class="summary-label">Partially Paid</div>
+        </div>
+        <div class="payment-summary-card total-unpaid">
+            <div class="summary-icon">❌</div>
+            <div class="summary-value">${stats.unpaidCount}</div>
+            <div class="summary-label">Unpaid Bookings</div>
+        </div>
+        <div class="payment-summary-card total-pending">
+            <div class="summary-icon">⏳</div>
+            <div class="summary-value">${stats.pendingCount}</div>
+            <div class="summary-label">Pending Verification</div>
+        </div>
+        <div class="payment-summary-card">
+            <div class="summary-icon">💰</div>
+            <div class="summary-value">${formatTZS(stats.totalPayments)}</div>
+            <div class="summary-label">Total Received</div>
+        </div>
+    `;
+    
+    // Render payment history table
+    let html = '';
+    if (paymentHistory.length === 0) {
+        html = `<tr><td colspan="8" class="text-center text-muted py-4">No payment records found</td></tr>`;
+    } else {
+        [...paymentHistory].reverse().forEach(payment => {
+            const paymentConfig = getPaymentStatusConfig(payment.status);
+            const date = new Date(payment.paymentDate).toLocaleString('en-TZ');
+            html += `
+                <tr class="payment-history-row">
+                    <td><strong>${escapeHtml(payment.id)}</strong></td>
+                    <td>#${escapeHtml(String(payment.bookingId))}</td>
+                    <td>${escapeHtml(payment.customerName)}</td>
+                    <td>${escapeHtml(payment.serviceName)}</td>
+                    <td><strong style="color:var(--primary)">${formatTZS(payment.amount)}</strong></td>
+                    <td>${date}</td>
+                    <td><span class="payment-status-badge ${paymentConfig.class}" style="cursor:default;">${paymentConfig.icon} ${paymentConfig.label}</span></td>
+                    <td><span class="badge bg-info">Bank Transfer</span></td>
+                </tr>
+            `;
+        });
+    }
+    
+    document.getElementById('paymentsHistoryList').innerHTML = html;
+    new bootstrap.Modal(document.getElementById('paymentsHistoryModal')).show();
+}
+
+function exportPaymentsHistory() {
+    const paymentHistory = JSON.parse(localStorage.getItem('paymentHistory')) || [];
+    if (paymentHistory.length === 0) {
+        showNotification('No payment records to export', 'warning');
+        return;
+    }
+    
+    let csvContent = "Payment ID,Booking ID,Customer,Service,Amount (TZS),Payment Date,Status,Method\n";
+    paymentHistory.forEach(payment => {
+        csvContent += `"${payment.id}","${payment.bookingId}","${payment.customerName}","${payment.serviceName}",${payment.amount},"${new Date(payment.paymentDate).toLocaleString()}","${payment.status}","${payment.method}"\n`;
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', `CleanSpark_Payments_History_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showNotification('Payments history exported successfully!', 'success');
+}
+
 // ========== CREDENTIALS & STATE ==========
 const ADMIN_CREDENTIALS = {
     email: "admin@CleanSpark.co.tz",
@@ -344,6 +572,7 @@ let bookingChart = null;
 let revenueChart = null;
 let logoutTimer = null;
 let generatedReportData = null;
+let pendingRejectApplicationId = null;
 
 const MAX_INCLUDED = 6;
 
@@ -542,6 +771,7 @@ function performLogout() {
 function logoutAdmin() {
     initiateLogout();
 }
+
 // ========== NAVIGATION ==========
 function showSection(sectionId) {
     document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
@@ -580,6 +810,7 @@ function setupMenuClickHandlers() {
 function initDashboard() {
     initializeSampleData();
     initializeApplicationSampleData();
+    initializePaymentHistoryData();
     loadDashboardStats();
     loadServices();
     loadBookings();
@@ -597,879 +828,89 @@ function initDashboard() {
     loadAssignmentSection();
 }
 
-// ========== JOB APPLICATIONS MODULE ==========
-
-function getApplications() {
-    return JSON.parse(localStorage.getItem('jobApplications')) || [];
-}
-
-function saveApplications(apps) {
-    localStorage.setItem('jobApplications', JSON.stringify(apps));
-}
-
-function getApplicationWindowStatus() {
-    return JSON.parse(localStorage.getItem('applicationWindowOpen')) || false;
-}
-
-function setApplicationWindowStatus(isOpen) {
-    localStorage.setItem('applicationWindowOpen', JSON.stringify(isOpen));
-}
-
-function loadApplicationWindowStatus() {
-    const isOpen = getApplicationWindowStatus();
-    const toggle = document.getElementById('applicationWindowToggle');
-    const statusCard = document.getElementById('windowStatusCard');
-    const statusText = document.getElementById('windowStatusText');
-    
-    if (toggle) toggle.checked = isOpen;
-    if (statusCard) {
-        statusCard.className = 'window-status-card ' + (isOpen ? 'window-open' : 'window-closed');
-    }
-    if (statusText) {
-        statusText.innerHTML = isOpen 
-            ? '<span class="window-status-badge open">● Applications Open</span> — Users can submit applications'
-            : '<span class="window-status-badge closed">● Applications Closed</span> — Users cannot submit applications';
-    }
-}
-
-function toggleApplicationWindow() {
-    const isOpen = document.getElementById('applicationWindowToggle').checked;
-    setApplicationWindowStatus(isOpen);
-    loadApplicationWindowStatus();
-    showNotification(isOpen ? 'Application window is now OPEN' : 'Application window is now CLOSED', isOpen ? 'success' : 'warning');
-}
-
-function loadApplications() {
-    loadApplicationWindowStatus();
-    loadApplicationsStats();
-    renderApplicationsGrid();
-    renderApplicationsTable();
-}
-
-function loadApplicationsStats() {
-    const apps = getApplications();
-    const total = apps.length;
-    const approved = apps.filter(a => a.status === 'approved').length;
-    const rejected = apps.filter(a => a.status === 'rejected').length;
-    const underReview = apps.filter(a => a.status === 'under_review').length;
-    const pending = apps.filter(a => a.status === 'pending').length;
-
-    const statsGrid = document.getElementById('applicationsStats');
-    if (statsGrid) {
-        statsGrid.innerHTML = `
-            <div class="stat-card" onclick="filterApplicationStatus('all', event.target.closest('.filter-btn'))">
-                <div class="stat-icon"><i class="bi bi-file-earmark-person"></i></div>
-                <div class="stat-value">${total}</div>
-                <div class="stat-label">Total Applications</div>
-            </div>
-            <div class="stat-card" onclick="filterApplicationStatus('approved', event.target.closest('.filter-btn'))">
-                <div class="stat-icon" style="background:rgba(22,163,74,0.1);"><i class="bi bi-check-circle-fill" style="color:#16a34a;"></i></div>
-                <div class="stat-value">${approved}</div>
-                <div class="stat-label">Approved</div>
-            </div>
-            <div class="stat-card" onclick="filterApplicationStatus('rejected', event.target.closest('.filter-btn'))">
-                <div class="stat-icon" style="background:rgba(220,38,38,0.1);"><i class="bi bi-x-circle-fill" style="color:#dc2626;"></i></div>
-                <div class="stat-value">${rejected}</div>
-                <div class="stat-label">Rejected</div>
-            </div>
-            <div class="stat-card" onclick="filterApplicationStatus('under_review', event.target.closest('.filter-btn'))">
-                <div class="stat-icon" style="background:rgba(59,130,246,0.1);"><i class="bi bi-eye-fill" style="color:#2563eb;"></i></div>
-                <div class="stat-value">${underReview}</div>
-                <div class="stat-label">Under Review</div>
-            </div>
-            <div class="stat-card" onclick="filterApplicationStatus('pending', event.target.closest('.filter-btn'))">
-                <div class="stat-icon" style="background:rgba(245,158,11,0.1);"><i class="bi bi-clock-fill" style="color:#d97706;"></i></div>
-                <div class="stat-value">${pending}</div>
-                <div class="stat-label">Pending</div>
-            </div>
-        `;
-    }
-}
-
-function filterApplicationStatus(status, btnEl) {
-    currentApplicationFilter = status;
-    document.querySelectorAll('#applicationsSection .filter-btn').forEach(b => b.classList.remove('active'));
-    if (btnEl) btnEl.classList.add('active');
-    renderApplicationsGrid();
-    renderApplicationsTable();
-}
-
-function filterApplications() {
-    renderApplicationsGrid();
-    renderApplicationsTable();
-}
-
-function renderApplicationsGrid() {
-    let apps = getApplications();
-    
-    if (currentApplicationFilter !== 'all') {
-        apps = apps.filter(a => a.status === currentApplicationFilter);
-    }
-    
-    const searchTerm = document.getElementById('applicationSearch')?.value.trim().toLowerCase();
-    if (searchTerm) {
-        apps = apps.filter(a => 
-            a.fullName.toLowerCase().includes(searchTerm) ||
-            a.email.toLowerCase().includes(searchTerm) ||
-            a.position.toLowerCase().includes(searchTerm) ||
-            (a.phone && a.phone.includes(searchTerm))
-        );
-    }
-
-    const grid = document.getElementById('applicationsGrid');
-    if (!grid) return;
-
-    if (apps.length === 0) {
-        grid.innerHTML = `<div style="grid-column:1/-1;" class="empty-state"><i class="bi bi-inbox"></i><p>No applications found</p></div>`;
-        return;
-    }
-
-    const recentApps = [...apps].reverse().slice(0, 6);
-    
-    grid.innerHTML = recentApps.map(app => {
-        const initials = app.fullName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-        const statusConfig = getApplicationStatusConfig(app.status);
-        const date = app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : '—';
+function initializePaymentHistoryData() {
+    if (!localStorage.getItem('paymentHistory')) {
+        const bookings = JSON.parse(localStorage.getItem('customerBookings')) || [];
+        const samplePayments = [];
         
-        return `
-            <div class="application-card" onclick="viewApplicationDetail(${app.id})">
-                <div class="application-card-header">
-                    <div class="applicant-avatar">${escapeHtml(initials)}</div>
-                    <div class="applicant-info">
-                        <h5>${escapeHtml(app.fullName)}</h5>
-                        <span class="position-badge">${escapeHtml(app.position)}</span>
-                    </div>
-                </div>
-                <div class="application-card-body">
-                    <div class="app-detail-mini"><i class="bi bi-envelope"></i>${escapeHtml(app.email)}</div>
-                    <div class="app-detail-mini"><i class="bi bi-telephone"></i>${escapeHtml(app.phone || '—')}</div>
-                    <div class="app-detail-mini"><i class="bi bi-gender-ambiguous"></i>${escapeHtml(app.gender || '—')}</div>
-                    <div class="app-detail-mini"><i class="bi bi-geo-alt"></i>${escapeHtml((app.address || '').substring(0, 25))}${app.address && app.address.length > 25 ? '…' : ''}</div>
-                </div>
-                <div class="application-card-footer">
-                    <span class="app-date"><i class="bi bi-calendar3 me-1"></i>${date}</span>
-                    <span class="application-status ${statusConfig.class}">${statusConfig.icon} ${statusConfig.label}</span>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    if (apps.length > 6) {
-        grid.innerHTML += `<div style="grid-column:1/-1;text-align:center;padding:12px;color:var(--text-muted);font-size:13px;">Showing 6 of ${apps.length} applications. View all in table below.</div>`;
+        bookings.forEach((booking, index) => {
+            if (index === 0) {
+                samplePayments.push({
+                    id: 'PAY-20240001',
+                    bookingId: booking.id,
+                    customerName: booking.customer,
+                    serviceName: booking.service,
+                    amount: 50000,
+                    paymentDate: new Date(Date.now() - 15 * 86400000).toISOString(),
+                    status: 'paid',
+                    method: 'bank_transfer'
+                });
+            } else if (index === 1) {
+                samplePayments.push({
+                    id: 'PAY-20240002',
+                    bookingId: booking.id,
+                    customerName: booking.customer,
+                    serviceName: booking.service,
+                    amount: 37500,
+                    paymentDate: new Date(Date.now() - 5 * 86400000).toISOString(),
+                    status: 'partially_paid',
+                    method: 'mobile_money'
+                });
+            }
+        });
+        
+        localStorage.setItem('paymentHistory', JSON.stringify(samplePayments));
     }
 }
 
-function renderApplicationsTable() {
-    let apps = getApplications();
-    
-    if (currentApplicationFilter !== 'all') {
-        apps = apps.filter(a => a.status === currentApplicationFilter);
-    }
-    
-    const searchTerm = document.getElementById('applicationSearch')?.value.trim().toLowerCase();
-    if (searchTerm) {
-        apps = apps.filter(a => 
-            a.fullName.toLowerCase().includes(searchTerm) ||
-            a.email.toLowerCase().includes(searchTerm) ||
-            a.position.toLowerCase().includes(searchTerm) ||
-            (a.phone && a.phone.includes(searchTerm))
-        );
-    }
-
-    const tbody = document.getElementById('applicationsTableBody');
-    const countEl = document.getElementById('applicationsCount');
-    if (countEl) countEl.textContent = `${apps.length} Applications`;
-    if (!tbody) return;
-
-    if (apps.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No applications found</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = [...apps].reverse().map(app => {
-        const statusConfig = getApplicationStatusConfig(app.status);
-        const date = app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : '—';
-        
-        return `
-            <tr>
-                <td><strong>${escapeHtml(app.fullName)}</strong></td>
-                <td>${escapeHtml(app.position)}</td>
-                <td>${escapeHtml(app.phone || '—')}</td>
-                <td>${escapeHtml(app.email)}</td>
-                <td>${date}</td>
-                <td><span class="application-status ${statusConfig.class}">${statusConfig.icon} ${statusConfig.label}</span></td>
-                <td style="text-align:center;white-space:nowrap;">
-                    <button class="action-btn action-btn-view" onclick="viewApplicationDetail(${app.id})" title="View Details"><i class="bi bi-eye-fill"></i></button>
-                    <button class="action-btn action-btn-approve" onclick="approveApplication(${app.id})" title="Approve"><i class="bi bi-check-lg"></i></button>
-                    <button class="action-btn action-btn-reject" onclick="rejectApplication(${app.id})" title="Reject"><i class="bi bi-x-lg"></i></button>
-                    <button class="action-btn action-btn-delete" onclick="deleteApplication(${app.id})" title="Delete"><i class="bi bi-trash3-fill"></i></button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
-
-function getApplicationStatusConfig(status) {
-    const configs = {
-        pending: { class: 'app-status-pending', icon: '⏳', label: 'Pending' },
-        under_review: { class: 'app-status-under-review', icon: '👁', label: 'Under Review' },
-        approved: { class: 'app-status-approved', icon: '✅', label: 'Approved' },
-        rejected: { class: 'app-status-rejected', icon: '❌', label: 'Rejected' }
-    };
-    return configs[status] || configs.pending;
-}
-
-// ============================================================
-//  UPDATED: viewApplicationDetail — Professional Redesign
-//  Details displayed in exact requested order with documents section
-// ============================================================
-function viewApplicationDetail(appId) {
-    const apps = getApplications();
-    const app = apps.find(a => a.id == appId);
-    if (!app) return;
-    
-    currentApplicationId = appId;
-    const initials = app.fullName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    const statusConfig = getApplicationStatusConfig(app.status);
-    const date = app.submittedAt ? new Date(app.submittedAt).toLocaleString() : '—';
-    const age = app.dob ? calculateAge(app.dob) : null;
-
-    const body = document.getElementById('applicationDetailBody');
-    if (!body) return;
-
-    body.innerHTML = buildApplicationDetailHTML(app, initials, statusConfig, date, age);
-    
-    new bootstrap.Modal(document.getElementById('applicationDetailModal')).show();
-}
-
-function calculateAge(dobString) {
-    const dob = new Date(dobString);
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-    return age;
-}
-
-function buildApplicationDetailHTML(app, initials, statusConfig, date, age) {
-    const hasPhoto = app.passportPhoto && app.passportPhoto.trim() !== '';
-    const statusBadgeClass = statusConfig.class;
-
-    // Determine document availability
-    const docs = {
-        cv: app.cv && app.cv.trim() !== '',
-        id: app.idDocument && app.idDocument.trim() !== '',
-        letter: app.introductionLetter && app.introductionLetter.trim() !== '',
-        certificates: app.certificates && Array.isArray(app.certificates) && app.certificates.length > 0,
-        photo: hasPhoto,
-        other: app.otherDocuments && Array.isArray(app.otherDocuments) && app.otherDocuments.length > 0
-    };
-
-    return `
-    <div class="application-detail-new">
-        <!-- PROFILE BANNER -->
-        <div class="app-profile-banner">
-            <div class="app-profile-avatar-lg ${hasPhoto ? 'has-photo' : ''}">
-                ${hasPhoto 
-                    ? `<img src="${escapeAttr(app.passportPhoto)}" alt="Passport Photo" onerror="this.style.display='none';this.parentElement.classList.remove('has-photo');this.parentElement.textContent='${escapeHtml(initials)}';">`
-                    : escapeHtml(initials)
-                }
-            </div>
-            <div class="app-profile-info">
-                <h3>${escapeHtml(app.fullName)}</h3>
-                <div class="app-profile-position">
-                    <i class="bi bi-briefcase-fill"></i>
-                    ${escapeHtml(app.position)}
-                </div>
-                <div class="app-profile-meta-row">
-                    <span class="app-profile-meta-tag"><i class="bi bi-calendar3"></i> ${date}</span>
-                    <span class="app-profile-meta-tag"><i class="bi bi-geo-alt"></i> ${escapeHtml(app.address ? app.address.split(',')[0] : '—')}</span>
-                    ${age !== null ? `<span class="app-profile-meta-tag"><i class="bi bi-person"></i> ${age} years</span>` : ''}
-                </div>
-            </div>
-            <span class="app-profile-status-badge application-status ${statusBadgeClass}">${statusConfig.icon} ${statusConfig.label}</span>
-        </div>
-
-        <!-- DETAILS CONTENT -->
-        <div class="app-detail-content-body">
-
-            <!-- SECTION 1: Personal Information -->
-            <div class="app-info-section">
-                <div class="app-info-section-header">
-                    <i class="bi bi-person-vcard"></i>
-                    <h6>Personal Information</h6>
-                </div>
-                <div class="app-info-grid">
-                    <div class="app-info-field">
-                        <div class="field-label-mini"><i class="bi bi-person-fill"></i> Full Name</div>
-                        <div class="field-value">${escapeHtml(app.fullName)}</div>
-                    </div>
-                    <div class="app-info-field">
-                        <div class="field-label-mini"><i class="bi bi-geo-alt-fill"></i> Address</div>
-                        <div class="field-value">${escapeHtml(app.address || '—')}</div>
-                    </div>
-                    <div class="app-info-field">
-                        <div class="field-label-mini"><i class="bi bi-calendar-heart"></i> Age</div>
-                        <div class="field-value">${age !== null ? age + ' years' : '—'}</div>
-                    </div>
-                    <div class="app-info-field">
-                        <div class="field-label-mini"><i class="bi bi-gender-ambiguous"></i> Gender</div>
-                        <div class="field-value">${escapeHtml(app.gender || '—')}</div>
-                    </div>
-                    <div class="app-info-field">
-                        <div class="field-label-mini"><i class="bi bi-telephone-fill"></i> Phone Number</div>
-                        <div class="field-value">${escapeHtml(app.phone || '—')}</div>
-                    </div>
-                    <div class="app-info-field">
-                        <div class="field-label-mini"><i class="bi bi-envelope-fill"></i> Email Address</div>
-                        <div class="field-value">${escapeHtml(app.email)}</div>
-                    </div>
-                    <div class="app-info-field">
-                        <div class="field-label-mini"><i class="bi bi-mortarboard-fill"></i> Education Level</div>
-                        <div class="field-value">${escapeHtml(app.educationLevel || '—')}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECTION 2: Professional Details -->
-            <div class="app-info-section">
-                <div class="app-info-section-header">
-                    <i class="bi bi-stars"></i>
-                    <h6>Professional Details</h6>
-                </div>
-                <div class="app-info-grid">
-                    <div class="app-info-field" style="grid-column: 1 / -1;">
-                        <div class="field-label-mini"><i class="bi bi-tools"></i> Experience & Skills</div>
-                        <div class="field-value">${escapeHtml(app.experience || '—')}</div>
-                    </div>
-                    <div class="app-info-field">
-                        <div class="field-label-mini"><i class="bi bi-briefcase-fill"></i> Position Applying For</div>
-                        <div class="field-value">${escapeHtml(app.position)}</div>
-                    </div>
-                    <div class="app-info-field">
-                        <div class="field-label-mini"><i class="bi bi-clock-fill"></i> Availability</div>
-                        <div class="field-value">${escapeHtml(app.availability || '—')}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECTION 3: Additional Notes -->
-            ${app.additionalNotes ? `
-            <div class="app-info-section">
-                <div class="app-info-section-header">
-                    <i class="bi bi-journal-text"></i>
-                    <h6>Additional Notes</h6>
-                </div>
-                <div class="app-notes-box">
-                    <strong><i class="bi bi-pencil-square me-1"></i>Applicant's Notes:</strong>
-                    ${escapeHtml(app.additionalNotes)}
-                </div>
-            </div>` : ''}
-
-            <!-- SECTION 4: Supporting Documents -->
-            <div class="app-documents-section">
-                <div class="app-documents-section-header">
-                    <i class="bi bi-folder2-open"></i>
-                    <h6>Supporting Documents</h6>
-                </div>
-                <div class="app-documents-list">
-                    ${buildDocumentItem('CV / Resume', 'cv', 'icon-cv', docs.cv, app.cv)}
-                    ${buildDocumentItem('National ID', 'id', 'icon-id', docs.id, app.idDocument)}
-                    ${buildDocumentItem('Introduction Letter / Local Government Letter', 'letter', 'icon-letter', docs.letter, app.introductionLetter)}
-                    ${buildCertificatesItem(docs.certificates, app.certificates)}
-                    ${buildDocumentItem('Passport Size Photo', 'photo', 'icon-photo', docs.photo, app.passportPhoto)}
-                    ${buildOtherDocumentsItem(docs.other, app.otherDocuments)}
-                </div>
-            </div>
-
-            <!-- ACTION BUTTONS -->
-            <div class="app-detail-actions-row">
-                <button class="btn btn-success" onclick="approveApplication(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
-                    <i class="bi bi-check-circle me-1"></i>Approve
-                </button>
-                <button class="btn btn-warning" onclick="markUnderReview(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
-                    <i class="bi bi-eye me-1"></i>Mark Under Review
-                </button>
-                <button class="btn btn-danger" onclick="rejectApplication(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
-                    <i class="bi bi-x-circle me-1"></i>Reject
-                </button>
-                <button class="btn btn-ghost" onclick="deleteApplication(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
-                    <i class="bi bi-trash3 me-1"></i>Delete
-                </button>
-            </div>
-        </div>
-    </div>`;
-}
-
-function buildDocumentItem(name, type, iconClass, hasDoc, docUrl) {
-    const fileSize = getFileSizeInfo(type);
-    const fileName = getFileName(type);
-    
-    return `
-    <div class="app-document-item">
-        <div class="app-document-item-info">
-            <div class="app-document-icon ${hasDoc ? iconClass : 'icon-missing'}">
-                <i class="bi ${hasDoc ? 'bi-file-earmark-check-fill' : 'bi-file-earmark-x'}"></i>
-            </div>
-            <div class="app-document-details">
-                <div class="doc-name">${escapeHtml(name)}</div>
-                <div class="doc-meta">
-                    ${hasDoc 
-                        ? `<span class="doc-status-badge uploaded"><i class="bi bi-check2-circle me-1"></i>Uploaded</span><span>${escapeHtml(fileName)} · ${fileSize}</span>`
-                        : `<span class="doc-status-badge missing"><i class="bi bi-exclamation-circle me-1"></i>Not Provided</span>`
-                    }
-                </div>
-            </div>
-        </div>
-        <div class="app-document-actions">
-            <button class="app-doc-action-btn btn-view" ${hasDoc ? `onclick="viewDocument('${escapeAttr(docUrl)}', '${escapeAttr(name)}')"` : 'disabled'}>
-                <i class="bi bi-eye-fill"></i> View
-            </button>
-            <button class="app-doc-action-btn btn-download" ${hasDoc ? `onclick="downloadDocument('${escapeAttr(docUrl)}', '${escapeAttr(name)}')"` : 'disabled'}>
-                <i class="bi bi-download"></i> Download
-            </button>
-            <button class="app-doc-action-btn btn-open" ${hasDoc ? `onclick="openDocument('${escapeAttr(docUrl)}')"` : 'disabled'}>
-                <i class="bi bi-box-arrow-up-right"></i> Open
-            </button>
-        </div>
-    </div>`;
-}
-
-function buildCertificatesItem(hasCerts, certificates) {
-    const count = hasCerts ? certificates.length : 0;
-    const certUrl = hasCerts ? certificates[0] : '';
-    
-    return `
-    <div class="app-document-item">
-        <div class="app-document-item-info">
-            <div class="app-document-icon ${hasCerts ? 'icon-cert' : 'icon-missing'}">
-                <i class="bi ${hasCerts ? 'bi-patch-check-fill' : 'bi-file-earmark-x'}"></i>
-            </div>
-            <div class="app-document-details">
-                <div class="doc-name">Certificates ${hasCerts && count > 1 ? '(' + count + ' files)' : '(Optional)'}</div>
-                <div class="doc-meta">
-                    ${hasCerts 
-                        ? `<span class="doc-status-badge uploaded"><i class="bi bi-check2-circle me-1"></i>${count} File${count > 1 ? 's' : ''} Uploaded</span>`
-                        : `<span class="doc-status-badge missing"><i class="bi bi-exclamation-circle me-1"></i>Not Provided (Optional)</span>`
-                    }
-                </div>
-            </div>
-        </div>
-        <div class="app-document-actions">
-            <button class="app-doc-action-btn btn-view" ${hasCerts ? `onclick="viewMultipleDocuments(${JSON.stringify(certificates.map(escapeAttr))}, 'Certificates')"` : 'disabled'}>
-                <i class="bi bi-eye-fill"></i> View
-            </button>
-            <button class="app-doc-action-btn btn-download" ${hasCerts ? `onclick="downloadDocument('${escapeAttr(certUrl)}', 'Certificate')"` : 'disabled'}>
-                <i class="bi bi-download"></i> Download
-            </button>
-            <button class="app-doc-action-btn btn-open" ${hasCerts ? `onclick="openDocument('${escapeAttr(certUrl)}')"` : 'disabled'}>
-                <i class="bi bi-box-arrow-up-right"></i> Open
-            </button>
-        </div>
-    </div>`;
-}
-
-function buildOtherDocumentsItem(hasOther, otherDocs) {
-    const count = hasOther ? otherDocs.length : 0;
-    const otherUrl = hasOther ? otherDocs[0] : '';
-    
-    return `
-    <div class="app-document-item">
-        <div class="app-document-item-info">
-            <div class="app-document-icon ${hasOther ? 'icon-other' : 'icon-missing'}">
-                <i class="bi ${hasOther ? 'bi-paperclip' : 'bi-file-earmark-x'}"></i>
-            </div>
-            <div class="app-document-details">
-                <div class="doc-name">Other Documents ${hasOther && count > 1 ? '(' + count + ' files)' : '(Optional)'}</div>
-                <div class="doc-meta">
-                    ${hasOther 
-                        ? `<span class="doc-status-badge uploaded"><i class="bi bi-check2-circle me-1"></i>${count} File${count > 1 ? 's' : ''} Uploaded</span>`
-                        : `<span class="doc-status-badge missing"><i class="bi bi-exclamation-circle me-1"></i>Not Provided (Optional)</span>`
-                    }
-                </div>
-            </div>
-        </div>
-        <div class="app-document-actions">
-            <button class="app-doc-action-btn btn-view" ${hasOther ? `onclick="viewMultipleDocuments(${JSON.stringify(otherDocs.map(escapeAttr))}, 'Other Documents')"` : 'disabled'}>
-                <i class="bi bi-eye-fill"></i> View
-            </button>
-            <button class="app-doc-action-btn btn-download" ${hasOther ? `onclick="downloadDocument('${escapeAttr(otherUrl)}', 'Other_Document')"` : 'disabled'}>
-                <i class="bi bi-download"></i> Download
-            </button>
-            <button class="app-doc-action-btn btn-open" ${hasOther ? `onclick="openDocument('${escapeAttr(otherUrl)}')"` : 'disabled'}>
-                <i class="bi bi-box-arrow-up-right"></i> Open
-            </button>
-        </div>
-    </div>`;
-}
-
-function escapeAttr(str) {
-    if (!str) return '';
-    return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
-
-function getFileSizeInfo(type) {
-    const sizes = {
-        cv: '~120 KB',
-        id: '~85 KB',
-        letter: '~95 KB',
-        photo: '~45 KB'
-    };
-    return sizes[type] || '~100 KB';
-}
-
-function getFileName(type) {
-    const names = {
-        cv: 'CV_Resume.pdf',
-        id: 'National_ID.pdf',
-        letter: 'Introduction_Letter.pdf',
-        photo: 'Passport_Photo.jpg'
-    };
-    return names[type] || 'document.pdf';
-}
-
-function viewDocument(url, name) {
-    if (!url || url === '#') { showNotification('Document not available', 'warning'); return; }
-    window.open(url, '_blank');
-    showNotification(`Viewing: ${name}`, 'info');
-}
-
-function downloadDocument(url, name) {
-    if (!url || url === '#') { showNotification('Document not available for download', 'warning'); return; }
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name.replace(/\s+/g, '_') + '_' + Date.now();
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showNotification(`Downloading: ${name}`, 'success');
-}
-
-function openDocument(url) {
-    if (!url || url === '#') { showNotification('Document not available', 'warning'); return; }
-    window.open(url, '_blank');
-}
-
-function viewMultipleDocuments(urls, category) {
-    if (!urls || urls.length === 0) { showNotification('No documents available', 'warning'); return; }
-    urls.forEach((url, i) => {
-        setTimeout(() => window.open(url, '_blank'), i * 300);
-    });
-    showNotification(`Opening ${urls.length} ${category} file(s)...`, 'info');
-}
-
-function approveApplication(appId) {
-    const apps = getApplications();
-    const index = apps.findIndex(a => a.id == appId);
-    if (index === -1) return;
-    apps[index].status = 'approved';
-    apps[index].updatedAt = new Date().toISOString();
-    saveApplications(apps);
-    loadApplications();
-    showNotification('Application approved!', 'success');
-}
-
-function rejectApplication(appId) {
-    const apps = getApplications();
-    const index = apps.findIndex(a => a.id == appId);
-    if (index === -1) return;
-    apps[index].status = 'rejected';
-    apps[index].updatedAt = new Date().toISOString();
-    saveApplications(apps);
-    loadApplications();
-    showNotification('Application rejected.', 'warning');
-}
-
-function markUnderReview(appId) {
-    const apps = getApplications();
-    const index = apps.findIndex(a => a.id == appId);
-    if (index === -1) return;
-    apps[index].status = 'under_review';
-    apps[index].updatedAt = new Date().toISOString();
-    saveApplications(apps);
-    loadApplications();
-    showNotification('Application marked as Under Review.', 'info');
-}
-
-function deleteApplication(appId) {
-    if (!confirm('Are you sure you want to delete this application? This cannot be undone.')) return;
-    let apps = getApplications();
-    apps = apps.filter(a => a.id != appId);
-    saveApplications(apps);
-    loadApplications();
-    showNotification('Application deleted.', 'success');
-}
-
-// ========== DOWNLOAD APPLICATION AS PDF ==========
-function downloadApplicationPDF() {
-    if (!currentApplicationId) {
-        showNotification('No application selected', 'error');
-        return;
-    }
-    
-    const apps = getApplications();
-    const app = apps.find(a => a.id == currentApplicationId);
-    if (!app) return;
-    
-    const statusConfig = getApplicationStatusConfig(app.status);
-    const date = app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : '—';
-    
-    const pdfHTML = `
-        <div class="application-pdf-container">
-            <div class="app-pdf-header">
-                <div class="app-pdf-header-left">
-                    <img src="image/logo.jpeg" alt="CleanSpark Logo" class="app-pdf-logo" onerror="this.style.display='none';">
-                    <div class="app-pdf-company-info">
-                        <h2>CleanSpark</h2>
-                        <p>Cleaning Service Management System</p>
-                        <p>Zanzibar, Tanzania | info@CleanSpark.co.tz</p>
-                    </div>
-                </div>
-                <div class="app-pdf-title-section">
-                    <h1 class="app-pdf-title">JOB APPLICATION</h1>
-                    <p class="app-pdf-ref">Ref: #${escapeHtml(String(app.id).slice(-6))}</p>
-                    <p class="app-pdf-status" style="color:${statusConfig.class.includes('approved') ? '#16a34a' : statusConfig.class.includes('rejected') ? '#dc2626' : '#2563eb'};">${statusConfig.icon} ${statusConfig.label}</p>
-                </div>
-            </div>
-            
-            <div class="app-pdf-section">
-                <h5>Applicant Information</h5>
-                <div class="app-pdf-info-grid">
-                    <div class="app-pdf-info-item">
-                        <div class="label">Full Name</div>
-                        <div class="value">${escapeHtml(app.fullName)}</div>
-                    </div>
-                    <div class="app-pdf-info-item">
-                        <div class="label">Email</div>
-                        <div class="value">${escapeHtml(app.email)}</div>
-                    </div>
-                    <div class="app-pdf-info-item">
-                        <div class="label">Phone</div>
-                        <div class="value">${escapeHtml(app.phone || '—')}</div>
-                    </div>
-                    <div class="app-pdf-info-item">
-                        <div class="label">Gender</div>
-                        <div class="value">${escapeHtml(app.gender || '—')}</div>
-                    </div>
-                    <div class="app-pdf-info-item">
-                        <div class="label">Date of Birth</div>
-                        <div class="value">${escapeHtml(app.dob || '—')}</div>
-                    </div>
-                    <div class="app-pdf-info-item">
-                        <div class="label">Position Applied</div>
-                        <div class="value">${escapeHtml(app.position)}</div>
-                    </div>
-                    <div class="app-pdf-info-item" style="grid-column:1/-1;">
-                        <div class="label">Address</div>
-                        <div class="value">${escapeHtml(app.address || '—')}</div>
-                    </div>
-                    <div class="app-pdf-info-item">
-                        <div class="label">Date Submitted</div>
-                        <div class="value">${date}</div>
-                    </div>
-                    <div class="app-pdf-info-item">
-                        <div class="label">Status</div>
-                        <div class="value">${statusConfig.label}</div>
-                    </div>
-                </div>
-            </div>
-            
-            ${app.coverLetter ? `
-            <div class="app-pdf-section">
-                <h5>Application Letter</h5>
-                <p style="font-size:13px;line-height:1.7;color:#1a202c;">${escapeHtml(app.coverLetter)}</p>
-            </div>` : ''}
-            
-            <div class="app-pdf-section">
-                <h5>Documents Attached</h5>
-                <p style="font-size:13px;">
-                    📄 CV/Resume: ${app.cv ? '✅ Attached' : '❌ Not provided'}<br>
-                    🪪 ID Document: ${app.idDocument ? '✅ Attached' : '❌ Not provided'}<br>
-                    🏅 Certificates: ${app.certificates && app.certificates.length > 0 ? '✅ ' + app.certificates.length + ' file(s) attached' : '❌ Not provided'}
-                </p>
-            </div>
-            
-            <div class="app-pdf-footer">
-                <p>This is a computer-generated application document from CleanSpark Recruitment System.</p>
-                <p>CleanSpark Cleaning Service Management | Zanzibar, Tanzania</p>
-                <p>Generated on ${new Date().toLocaleString('en-TZ')}</p>
-            </div>
-        </div>
-    `;
-    
-    const template = document.getElementById('applicationPDFTemplate');
-    template.innerHTML = pdfHTML;
-    template.style.left = '0';
-    template.style.position = 'relative';
-    
-    html2canvas(template, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-    }).then(canvas => {
-        template.style.left = '-9999px';
-        template.style.position = 'absolute';
-        
-        const imgData = canvas.toDataURL('image/png');
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = pageWidth - 16;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        let heightLeft = imgHeight;
-        let position = 8;
-        
-        pdf.addImage(imgData, 'PNG', 8, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-        
-        while (heightLeft > 0) {
-            position = heightLeft - imgHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 8, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
-        }
-        
-        const fileName = `CleanSpark_Application_${app.fullName.replace(/\s+/g, '_')}_${date}.pdf`;
-        pdf.save(fileName);
-        showNotification('Application PDF downloaded successfully!', 'success');
-    }).catch(error => {
-        console.error('PDF generation error:', error);
-        template.style.left = '-9999px';
-        template.style.position = 'absolute';
-        showNotification('Error generating PDF. Opening print view instead.', 'warning');
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`<!DOCTYPE html><html><head><title>Application</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/admin.css"></head><body>${pdfHTML}</body></html>`);
-        printWindow.document.close();
-        setTimeout(() => printWindow.print(), 500);
-    });
-}
-
-// ========== SHARE APPLICATION ==========
-function shareApplication() {
-    if (!currentApplicationId) return;
-    
-    const apps = getApplications();
-    const app = apps.find(a => a.id == currentApplicationId);
-    if (!app) return;
-    
-    const shareText = `📋 Job Application - CleanSpark\n\n👤 ${app.fullName}\n📧 ${app.email}\n📞 ${app.phone || 'N/A'}\n💼 ${app.position}\n📅 ${app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : 'N/A'}\n📊 Status: ${getApplicationStatusConfig(app.status).label}\n\n— CleanSpark Recruitment System`;
-    
-    if (navigator.share) {
-        navigator.share({ title: 'Job Application', text: shareText }).catch(() => {});
+// ========== UPDATED LOAD BOOKINGS WITH PAYMENT STATUS ==========
+function loadBookings() {
+    const bookings = JSON.parse(localStorage.getItem('customerBookings')) || [];
+    let html = '';
+    if (bookings.length === 0) {
+        html = `<tr><td colspan="8" class="text-center text-muted py-4" style="font-size:13px;">No bookings found</div></tr>`;
     } else {
-        navigator.clipboard.writeText(shareText).then(() => {
-            showNotification('Application details copied! Share via WhatsApp or Email.', 'success');
-        }).catch(() => {
-            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+        bookings.forEach(b => {
+            const statusMap = {
+                pending: ['bg-warning text-dark', 'Pending'],
+                confirmed: ['bg-success', 'Confirmed'],
+                completed: ['bg-info', 'Completed'],
+                cancelled: ['bg-danger', 'Cancelled']
+            };
+            const [badgeClass, statusLabel] = statusMap[b.status] || ['bg-secondary', b.status || 'Pending'];
+            const locIcon = { Unguja: '🏝', Pemba: '🌿', Both: '🗺' }[b.location] || '📍';
+            
+            const paymentStatus = getPaymentStatus(b.id);
+            const paymentConfig = getPaymentStatusConfig(paymentStatus);
+            
+            html += `
+                <tr>
+                    <td><strong>#${escapeHtml(String(b.id || 'N/A'))}</strong></td>
+                    <td>${escapeHtml(b.customer || 'N/A')}</td>
+                    <td>${escapeHtml(b.service || 'N/A')}</td>
+                    <td>${locIcon} ${escapeHtml(b.location || '—')}</td>
+                    <td>${escapeHtml(b.date || 'TBD')}</td>
+                    <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
+                    <td>
+                        <span class="payment-status-badge ${paymentConfig.class}" 
+                              onclick="togglePaymentStatusDropdown(${b.id}, this)" 
+                              style="cursor:pointer;" 
+                              title="Click to change payment status">
+                            ${paymentConfig.icon} ${paymentConfig.label}
+                        </span>
+                    </div>
+                    <td style="text-align:center;">
+                        <button class="action-btn action-btn-edit" onclick="updateBookingStatus(${b.id})" title="Update Booking Status">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                    </div>
+                <tr>`;
         });
     }
+    document.getElementById('bookingList').innerHTML = html;
 }
 
-// ========== INITIALIZE SAMPLE JOB APPLICATION DATA ==========
-function initializeApplicationSampleData() {
-    if (!localStorage.getItem('jobApplications')) {
-        const sampleApps = [
-            {
-                id: Date.now() - 4,
-                fullName: 'Zainab Omar Mohammed',
-                email: 'zainab.omar@email.com',
-                phone: '+255 777 123 456',
-                gender: 'Female',
-                dob: '1995-03-15',
-                address: 'Mkunazini Street, Stone Town, Zanzibar',
-                position: 'Senior Cleaning Supervisor',
-                educationLevel: 'Bachelor Degree in Hospitality Management',
-                experience: '5+ years in hospitality cleaning management. Led teams of 15+ staff. Expert in deep cleaning protocols and eco-friendly products.',
-                availability: 'Immediate',
-                additionalNotes: 'Willing to work weekends and public holidays. Has valid driver\'s license.',
-                coverLetter: 'I am writing to express my strong interest in the Senior Cleaning Supervisor position at CleanSpark.',
-                cv: null,
-                idDocument: null,
-                introductionLetter: null,
-                certificates: [],
-                passportPhoto: null,
-                otherDocuments: [],
-                status: 'pending',
-                submittedAt: new Date(Date.now() - 4 * 86400000).toISOString()
-            },
-            {
-                id: Date.now() - 3,
-                fullName: 'Abdul Rashid Juma',
-                email: 'abdul.rashid@email.com',
-                phone: '+255 777 234 567',
-                gender: 'Male',
-                dob: '1990-07-22',
-                address: 'Shangani, Stone Town, Zanzibar',
-                position: 'Office Cleaner',
-                educationLevel: 'Certificate in Cleaning Services',
-                experience: '3 years experience in office cleaning. Proficient with industrial cleaning equipment.',
-                availability: '2 weeks notice',
-                additionalNotes: '',
-                coverLetter: 'I am a hardworking and reliable individual seeking the Office Cleaner position.',
-                cv: null,
-                idDocument: null,
-                introductionLetter: null,
-                certificates: [],
-                passportPhoto: null,
-                otherDocuments: [],
-                status: 'under_review',
-                submittedAt: new Date(Date.now() - 3 * 86400000).toISOString()
-            },
-            {
-                id: Date.now() - 2,
-                fullName: 'Maryam Hassan Ali',
-                email: 'maryam.hassan@email.com',
-                phone: '+255 777 345 678',
-                gender: 'Female',
-                dob: '1998-11-08',
-                address: 'Mlandege, Zanzibar',
-                position: 'Deep Cleaning Specialist',
-                educationLevel: 'Diploma in Environmental Health',
-                experience: 'Specialized training in deep cleaning techniques. Experience with hospital-grade sanitation.',
-                availability: 'Immediate',
-                additionalNotes: 'Certified in biohazard cleaning. Fluent in English and Swahili.',
-                coverLetter: 'I am passionate about creating spotless and healthy environments.',
-                cv: null,
-                idDocument: null,
-                introductionLetter: null,
-                certificates: [],
-                passportPhoto: null,
-                otherDocuments: [],
-                status: 'approved',
-                submittedAt: new Date(Date.now() - 2 * 86400000).toISOString()
-            },
-            {
-                id: Date.now() - 1,
-                fullName: 'Khalid Bakari Salum',
-                email: 'khalid.bakari@email.com',
-                phone: '+255 777 456 789',
-                gender: 'Male',
-                dob: '1992-05-30',
-                address: 'Bububu, Zanzibar',
-                position: 'Grounds Maintenance Worker',
-                educationLevel: 'Secondary School Certificate',
-                experience: '3 years in grounds maintenance and landscaping. Physically fit and reliable.',
-                availability: '1 month notice',
-                additionalNotes: '',
-                coverLetter: 'I am physically fit, reliable, and ready to contribute.',
-                cv: null,
-                idDocument: null,
-                introductionLetter: null,
-                certificates: [],
-                passportPhoto: null,
-                otherDocuments: [],
-                status: 'rejected',
-                submittedAt: new Date(Date.now() - 1 * 86400000).toISOString()
-            }
-        ];
-        localStorage.setItem('jobApplications', JSON.stringify(sampleApps));
-    }
-}
-// ========== DASHBOARD STATS (CLICKABLE) ==========
+// ========== DASHBOARD STATS (UPDATED WITH TOTAL PAYMENTS) ==========
 function loadDashboardStats() {
     const services = JSON.parse(localStorage.getItem('adminServices')) || [];
     const staff    = JSON.parse(localStorage.getItem('staffAccounts')) || [];
@@ -1478,6 +919,7 @@ function loadDashboardStats() {
     const supervisorMsgs = JSON.parse(localStorage.getItem('supervisor_messages')) || [];
     const contractors = JSON.parse(localStorage.getItem('contractors')) || [];
     const applications = JSON.parse(localStorage.getItem('jobApplications')) || [];
+    const totalPayments = getTotalPayments();
 
     document.getElementById('dashboardStats').innerHTML = `
         <div class="stat-card" onclick="showDashboardDetail('services')">
@@ -1494,6 +936,11 @@ function loadDashboardStats() {
             <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
             <div class="stat-value">${bookings.length}</div>
             <div class="stat-label">Total Bookings</div>
+        </div>
+        <div class="stat-card" onclick="openPaymentsHistory()">
+            <div class="stat-icon" style="background:rgba(22,163,74,0.1);"><i class="bi bi-cash-stack" style="color:#16a34a;"></i></div>
+            <div class="stat-value">${formatTZS(totalPayments)}</div>
+            <div class="stat-label">Total Payments</div>
         </div>
         <div class="stat-card" onclick="showDashboardDetail('messages')">
             <div class="stat-icon"><i class="bi bi-envelope-fill"></i></div>
@@ -1545,9 +992,9 @@ function showDashboardDetail(type) {
                     <tbody>${services.map(s => `
                         <tr>
                             <td><strong>${escapeHtml(s.name)}</strong></td>
-                            <td>${formatTZS(s.price)}</td>
-                            <td>${escapeHtml(s.duration)}</td>
-                            <td>${escapeHtml(s.location)}</td>
+                            <td>${formatTZS(s.price)}</div></td>
+                            <td>${escapeHtml(s.duration)}</div></td>
+                            <td>${escapeHtml(s.location)}</div></td>
                         </tr>`).join('')}</tbody>
                 </table></div>`;
             break;
@@ -1561,11 +1008,11 @@ function showDashboardDetail(type) {
                     <tbody>${staff.map(s => `
                         <tr>
                             <td><strong>${escapeHtml(s.name)}</strong></td>
-                            <td>${escapeHtml(s.email)}</td>
-                            <td><span class="badge bg-success">Active</span></td>
-                            <td>${escapeHtml(s.staffType || 'normal')}</td>
+                            <td>${escapeHtml(s.email)}</div></td>
+                            <td><span class="badge bg-success">Active</span></div></td>
+                            <td>${escapeHtml(s.staffType || 'normal')}</div></td>
                         </tr>`).join('')}</tbody>
-                </table></div>`;
+                <td></div>`;
             break;
 
         case 'bookings':
@@ -1573,14 +1020,19 @@ function showDashboardDetail(type) {
             body = bookings.length === 0 ?
                 '<p class="text-muted text-center py-4">No bookings found</p>' :
                 `<div class="table-responsive"><table class="table table-sm">
-                    <thead><tr><th>ID</th><th>Customer</th><th>Service</th><th>Status</th></tr></thead>
-                    <tbody>${bookings.map(b => `
+                    <thead><tr><th>ID</th><th>Customer</th><th>Service</th><th>Status</th><th>Payment</th></tr></thead>
+                    <tbody>${bookings.map(b => {
+                        const paymentStatus = getPaymentStatus(b.id);
+                        const paymentConfig = getPaymentStatusConfig(paymentStatus);
+                        return `
                         <tr>
-                            <td>#${escapeHtml(String(b.id || 'N/A'))}</td>
-                            <td>${escapeHtml(b.customer || 'N/A')}</td>
-                            <td>${escapeHtml(b.service || 'N/A')}</td>
-                            <td><span class="badge bg-${b.status === 'confirmed' ? 'success' : b.status === 'pending' ? 'warning' : 'secondary'}">${b.status || 'pending'}</span></td>
-                        </tr>`).join('')}</tbody>
+                            <td>#${escapeHtml(String(b.id || 'N/A'))}</div></td>
+                            <td>${escapeHtml(b.customer || 'N/A')}</div></td>
+                            <td>${escapeHtml(b.service || 'N/A')}</div></td>
+                            <td><span class="badge bg-${b.status === 'confirmed' ? 'success' : b.status === 'pending' ? 'warning' : 'secondary'}">${b.status || 'pending'}</span></div></td>
+                            <td><span class="payment-status-badge ${paymentConfig.class}" style="font-size:10px;">${paymentConfig.icon} ${paymentConfig.label}</span></div></td>
+                        </tr>`;
+                    }).join('')}</tbody>
                 </table></div>`;
             break;
 
@@ -1597,8 +1049,8 @@ function showDashboardDetail(type) {
                         <tr>
                             <td><strong>${escapeHtml(m.name)}</strong></td>
                             <td><span class="message-type-badge message-${m.type}">${m.type}</span></td>
-                            <td>${escapeHtml(m.subject || 'N/A')}</td>
-                            <td>${m.timestamp ? new Date(m.timestamp).toLocaleDateString() : '—'}</td>
+                            <td>${escapeHtml(m.subject || 'N/A')}</div></td>
+                            <td>${m.timestamp ? new Date(m.timestamp).toLocaleDateString() : '—'}</div></td>
                         </tr>`).join('')}</tbody>
                 </table></div>`;
             break;
@@ -1613,9 +1065,9 @@ function showDashboardDetail(type) {
                         <tr>
                             <td><strong>${escapeHtml(c.companyName)}</strong></td>
                             <td><span class="contractor-type-badge contractor-${c.type}">${c.type}</span></td>
-                            <td>${escapeHtml(c.location || '—')}</td>
-                            <td>${c.workersAssigned || 0}</td>
-                            <td>${escapeHtml(c.contractStart || '—')} — ${escapeHtml(c.contractEnd || '—')}</td>
+                            <td>${escapeHtml(c.location || '—')}</div></td>
+                            <td>${c.workersAssigned || 0}</div></td>
+                            <td>${escapeHtml(c.contractStart || '—')} — ${escapeHtml(c.contractEnd || '—')}</div></td>
                         </tr>`).join('')}</tbody>
                 </table></div>`;
             break;
@@ -1911,7 +1363,7 @@ function renderContractorsTable(contractors) {
         : contractors.filter(c => c.type === currentContractorFilter);
 
     if (filtered.length === 0) {
-        html = `<tr><td colspan="7" class="text-center text-muted py-4" style="font-size:13px;">No contractors found</td></tr>`;
+        html = `<tr><td colspan="7" class="text-center text-muted py-4" style="font-size:13px;">No contractors found</div></tr>`;
     } else {
         filtered.forEach(contractor => {
             const typeBadge = contractor.type === 'private'
@@ -1927,22 +1379,22 @@ function renderContractorsTable(contractors) {
                     <td>
                         <strong>${escapeHtml(contractor.companyName)}</strong>
                         <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(contractor.contactPerson || '')}</div>
-                    </td>
-                    <td>${typeBadge}</td>
-                    <td>${escapeHtml(contractor.location || '—')}</td>
+                    </div></td>
+                    <td>${typeBadge}</div></td>
+                    <td>${escapeHtml(contractor.location || '—')}</div></td>
                     <td>
                         <span class="badge bg-primary" style="font-size:12px;">${contractor.workersAssigned || 0} workers</span>
                         <div style="margin-top:4px;">${workerNamesDisplay}</div>
-                    </td>
+                    </div></td>
                     <td style="font-size:12px;">
                         <i class="bi bi-calendar3 me-1"></i>${escapeHtml(contractor.contractStart || '—')} 
                         — ${escapeHtml(contractor.contractEnd || '—')}
-                    </td>
-                    <td><span class="badge ${contractor.status === 'active' ? 'bg-success' : 'bg-secondary'}">${contractor.status || 'active'}</span></td>
+                    </div></td>
+                    <td><span class="badge ${contractor.status === 'active' ? 'bg-success' : 'bg-secondary'}">${contractor.status || 'active'}</span></div></td>
                     <td style="text-align:center;">
                         <button class="action-btn action-btn-view" onclick="viewContractorDetails('${contractor.id}')" title="View Details"><i class="bi bi-eye-fill"></i></button>
                         <button class="action-btn action-btn-edit" onclick="generateInvoiceForContractor('${contractor.id}')" title="Generate Invoice"><i class="bi bi-receipt"></i></button>
-                    </td>
+                    </div></td>
                 </tr>`;
         });
     }
@@ -2174,10 +1626,10 @@ function showInvoicePreview(invoiceData) {
             <table class="invoice-table">
                 <thead><tr><th>Description</th><th style="text-align:right;">Amount (TZS)</th></tr></thead>
                 <tbody>
-                    <tr><td>Work Done — ${escapeHtml(invoiceData.workDesc)}</td><td style="text-align:right;">${Number(invoiceData.workCost).toLocaleString('en-TZ')}</td></tr>
-                    <tr><td>Workers (${invoiceData.workersCount} staff)</td><td style="text-align:right;">${Number(invoiceData.workersCost).toLocaleString('en-TZ')}</td></tr>
-                    <tr><td>Equipment Used</td><td style="text-align:right;">${Number(invoiceData.equipmentCost).toLocaleString('en-TZ')}</td></tr>
-                    <tr class="invoice-total-row"><td style="font-size:14px;">TOTAL</td><td style="text-align:right;font-size:18px;">TZS ${Number(invoiceData.total).toLocaleString('en-TZ')}</td></tr>
+                    <tr><td>Work Done — ${escapeHtml(invoiceData.workDesc)}</div><td style="text-align:right;">${Number(invoiceData.workCost).toLocaleString('en-TZ')}</div></tr>
+                    <tr><td>Workers (${invoiceData.workersCount} staff)</div><td style="text-align:right;">${Number(invoiceData.workersCost).toLocaleString('en-TZ')}</div></tr>
+                    <tr><td>Equipment Used</div><td style="text-align:right;">${Number(invoiceData.equipmentCost).toLocaleString('en-TZ')}</div></tr>
+                    <tr class="invoice-total-row"><td style="font-size:14px;">TOTAL</div><td style="text-align:right;font-size:18px;">TZS ${Number(invoiceData.total).toLocaleString('en-TZ')}</div></tr>
                 </tbody>
             </table>
             <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid var(--border);">
@@ -2188,9 +1640,9 @@ function showInvoicePreview(invoiceData) {
 
     new bootstrap.Modal(document.getElementById('invoicePreviewModal')).show();
 }
+
 // ============================================================
 //  PROFESSIONAL PDF INVOICE DOWNLOAD (FIXED)
-//  Uses jsPDF + html2canvas to generate a properly formatted PDF
 // ============================================================
 function downloadInvoicePDF() {
     if (!currentInvoiceData) {
@@ -2238,23 +1690,23 @@ function downloadInvoicePDF() {
                 </thead>
                 <tbody>
                     <tr>
-                        <td><strong>Work / Service</strong></td>
-                        <td>${escapeHtml(inv.workDesc)}</td>
-                        <td>TZS ${Number(inv.workCost).toLocaleString('en-TZ')}</td>
+                        <td><strong>Work / Service</strong></div>
+                        <td>${escapeHtml(inv.workDesc)}</div>
+                        <td>TZS ${Number(inv.workCost).toLocaleString('en-TZ')}</div>
                     </tr>
                     <tr>
-                        <td><strong>Staff Cost</strong></td>
-                        <td>${inv.workersCount || 5} Workers</td>
-                        <td>TZS ${Number(inv.workersCost).toLocaleString('en-TZ')}</td>
+                        <td><strong>Staff Cost</strong></div>
+                        <td>${inv.workersCount || 5} Workers</div>
+                        <td>TZS ${Number(inv.workersCost).toLocaleString('en-TZ')}</div>
                     </tr>
                     <tr>
-                        <td><strong>Equipment Cost</strong></td>
-                        <td>Cleaning Equipment &amp; Supplies</td>
-                        <td>TZS ${Number(inv.equipmentCost).toLocaleString('en-TZ')}</td>
+                        <td><strong>Equipment Cost</strong></div>
+                        <td>Cleaning Equipment &amp; Supplies</div>
+                        <td>TZS ${Number(inv.equipmentCost).toLocaleString('en-TZ')}</div>
                     </tr>
                     <tr class="invoice-pdf-total-row">
-                        <td colspan="2">TOTAL AMOUNT</td>
-                        <td>TZS ${Number(inv.total).toLocaleString('en-TZ')}</td>
+                        <td colspan="2">TOTAL AMOUNT</div>
+                        <td>TZS ${Number(inv.total).toLocaleString('en-TZ')}</div>
                     </tr>
                 </tbody>
             </table>
@@ -2347,21 +1799,21 @@ function loadInvoices() {
     const invoices = JSON.parse(localStorage.getItem('invoices')) || [];
     let html = '';
     if (invoices.length === 0) {
-        html = `<tr><td colspan="6" class="text-center text-muted py-4" style="font-size:13px;">No invoices generated yet</td></tr>`;
+        html = `<tr><td colspan="6" class="text-center text-muted py-4" style="font-size:13px;">No invoices generated yet</div></tr>`;
     } else {
         [...invoices].reverse().forEach(inv => {
             html += `
                 <tr>
-                    <td><strong>#${escapeHtml(inv.id)}</strong></td>
-                    <td>${escapeHtml(inv.contractorName)}</td>
-                    <td>${escapeHtml(inv.invoiceDate)}</td>
-                    <td><strong style="color:var(--primary)">${formatTZS(inv.total)}</strong></td>
-                    <td><span class="badge bg-info">Generated</span></td>
+                    <td><strong>#${escapeHtml(inv.id)}</strong></div></td>
+                    <td>${escapeHtml(inv.contractorName)}</div></td>
+                    <td>${escapeHtml(inv.invoiceDate)}</div></td>
+                    <td><strong style="color:var(--primary)">${formatTZS(inv.total)}</strong></div></td>
+                    <td><span class="badge bg-info">Generated</span></div></td>
                     <td style="text-align:center;">
                         <button class="action-btn action-btn-view" onclick='currentInvoiceData=${JSON.stringify(inv).replace(/'/g, "&#39;")};showInvoicePreview(currentInvoiceData)' title="View"><i class="bi bi-eye-fill"></i></button>
                         <button class="action-btn action-btn-edit" onclick='currentInvoiceData=${JSON.stringify(inv).replace(/'/g, "&#39;")};downloadInvoicePDF()' title="Download PDF"><i class="bi bi-file-earmark-pdf"></i></button>
                         <button class="action-btn action-btn-reply" onclick='currentInvoiceData=${JSON.stringify(inv).replace(/'/g, "&#39;")};shareInvoice()' title="Share"><i class="bi bi-share-fill"></i></button>
-                    </td>
+                    </div></td>
                 </tr>`;
         });
     }
@@ -2418,7 +1870,7 @@ function loadServices() {
     const services = JSON.parse(localStorage.getItem('adminServices')) || [];
     let html = '';
     if (services.length === 0) {
-        html = `<tr><td colspan="6" class="text-center text-muted py-4" style="font-size:13px;">No services added yet</td></tr>`;
+        html = `<tr><td colspan="6" class="text-center text-muted py-4" style="font-size:13px;">No services added yet</div></tr>`;
     } else {
         services.forEach((service, index) => {
             const imgHtml = service.image
@@ -2429,18 +1881,18 @@ function loadServices() {
 
             html += `
                 <tr>
-                    <td>${imgHtml}</td>
+                    <td>${imgHtml}</div></td>
                     <td>
                         <strong>${escapeHtml(service.name)}</strong>
                         ${service.description ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${escapeHtml(service.description.substring(0, 60))}${service.description.length > 60 ? '…' : ''}</div>` : ''}
-                    </td>
-                    <td><strong style="color:var(--primary)">${formatTZS(service.price)}</strong></td>
-                    <td>${escapeHtml(service.duration)}</td>
-                    <td><span class="location-badge ${locClass}">${locIcon} ${escapeHtml(service.location)}</span></td>
+                    </div></td>
+                    <td><strong style="color:var(--primary)">${formatTZS(service.price)}</strong></div></td>
+                    <td>${escapeHtml(service.duration)}</div></td>
+                    <td><span class="location-badge ${locClass}">${locIcon} ${escapeHtml(service.location)}</span></div></td>
                     <td style="text-align:center; white-space:nowrap;">
                         <button class="action-btn action-btn-edit" onclick="openEditServiceModal(${index})" title="Edit"><i class="bi bi-pencil-fill"></i></button>
                         <button class="action-btn action-btn-delete" onclick="deleteService(${index})" title="Delete"><i class="bi bi-trash3-fill"></i></button>
-                    </td>
+                    </div></td>
                 </tr>`;
         });
     }
@@ -2513,39 +1965,7 @@ function saveEditedService() {
     showNotification('Service updated successfully!', 'success');
 }
 
-// ========== BOOKINGS ==========
-function loadBookings() {
-    const bookings = JSON.parse(localStorage.getItem('customerBookings')) || [];
-    let html = '';
-    if (bookings.length === 0) {
-        html = `<tr><td colspan="7" class="text-center text-muted py-4" style="font-size:13px;">No bookings found</td></tr>`;
-    } else {
-        bookings.forEach(b => {
-            const statusMap = {
-                pending: ['bg-warning text-dark', 'Pending'],
-                confirmed: ['bg-success', 'Confirmed'],
-                completed: ['bg-info', 'Completed'],
-                cancelled: ['bg-danger', 'Cancelled']
-            };
-            const [badgeClass, statusLabel] = statusMap[b.status] || ['bg-secondary', b.status || 'Pending'];
-            const locIcon = { Unguja: '🏝', Pemba: '🌿', Both: '🗺' }[b.location] || '📍';
-            html += `
-                <tr>
-                    <td><strong>#${escapeHtml(String(b.id || 'N/A'))}</strong></td>
-                    <td>${escapeHtml(b.customer || 'N/A')}</td>
-                    <td>${escapeHtml(b.service || 'N/A')}</td>
-                    <td>${locIcon} ${escapeHtml(b.location || '—')}</td>
-                    <td>${escapeHtml(b.date || 'TBD')}</td>
-                    <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
-                    <td style="text-align:center;">
-                        <button class="action-btn action-btn-edit" onclick="updateBookingStatus(${b.id})" title="Update"><i class="bi bi-pencil-fill"></i></button>
-                    </td>
-                </tr>`;
-        });
-    }
-    document.getElementById('bookingList').innerHTML = html;
-}
-
+// ========== BOOKINGS (Updated status function) ==========
 function updateBookingStatus(id) {
     showNotification('Booking status update coming soon', 'info');
 }
@@ -2592,7 +2012,7 @@ function loadStaff() {
     const staff = JSON.parse(localStorage.getItem('staffAccounts')) || [];
     let html = '';
     if (staff.length === 0) {
-        html = `<tr><td colspan="6" class="text-center text-muted py-4" style="font-size:13px;">No staff members added yet</td></tr>`;
+        html = `<tr><td colspan="6" class="text-center text-muted py-4" style="font-size:13px;">No staff members added yet</div></tr>`;
     } else {
         staff.forEach((member, index) => {
             const initials = member.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -2607,15 +2027,15 @@ function loadStaff() {
             const cfg = statusConfig[member.staffType] || statusConfig['normal'];
             html += `
                 <tr>
-                    <td>${avatarHtml}</td>
-                    <td><strong>${escapeHtml(member.name)}</strong></td>
-                    <td>${escapeHtml(member.email)}</td>
-                    <td><span class="badge bg-success">Active</span></td>
-                    <td><span class="staff-status-badge ${cfg.class}">${cfg.label}</span></td>
+                    <td>${avatarHtml}</div></td>
+                    <td><strong>${escapeHtml(member.name)}</strong></div></td>
+                    <td>${escapeHtml(member.email)}</div></td>
+                    <td><span class="badge bg-success">Active</span></div></td>
+                    <td><span class="staff-status-badge ${cfg.class}">${cfg.label}</span></div></td>
                     <td style="text-align:center; white-space:nowrap;">
                         <button class="action-btn action-btn-edit" onclick="openEditStaffModal(${index})" title="Edit"><i class="bi bi-pencil-fill"></i></button>
                         <button class="action-btn action-btn-delete" onclick="deleteStaff(${index})" title="Remove"><i class="bi bi-trash3-fill"></i></button>
-                    </td>
+                    </div></td>
                 </tr>`;
         });
     }
@@ -2770,7 +2190,7 @@ function renderAllStaffTab() {
     const assignments = getAssignmentData();
     let html = '';
     if (staff.length === 0) {
-        html = `<tr><td colspan="6" class="text-center text-muted py-4">No staff members found</td></tr>`;
+        html = `<tr><td colspan="6" class="text-center text-muted py-4">No staff members found</div></tr>`;
     } else {
         staff.forEach(member => {
             const count = countAssignedServicesForStaff(member.id);
@@ -2783,12 +2203,12 @@ function renderAllStaffTab() {
             else if (member.staffType === 'contractor') typeIndicator = '<span class="staff-type-indicator staff-type-contractor">Contractor</span>';
             html += `
                 <tr>
-                    <td>${avatarHtml}</td>
-                    <td><strong>${escapeHtml(member.name)}</strong>${typeIndicator}</td>
-                    <td style="font-size:13px;">${escapeHtml(member.email)}</td>
-                    <td>${isAssigned ? '<span class="assign-status-badge assigned">Assigned</span>' : '<span class="assign-status-badge not-assigned">Not Assigned</span>'}</td>
-                    <td>${isAssigned ? `<span class="progress-badge ${cfg.badgeClass}">${cfg.label}</span>` : '—'}</td>
-                    <td style="text-align:center;">${isAssigned ? `<span class="services-count-badge">${count || '∞'}</span>` : '0'}</td>
+                    <td>${avatarHtml}</div></td>
+                    <td><strong>${escapeHtml(member.name)}</strong>${typeIndicator}</div></td>
+                    <td style="font-size:13px;">${escapeHtml(member.email)}</div></td>
+                    <td>${isAssigned ? '<span class="assign-status-badge assigned">Assigned</span>' : '<span class="assign-status-badge not-assigned">Not Assigned</span>'}</div></td>
+                    <td>${isAssigned ? `<span class="progress-badge ${cfg.badgeClass}">${cfg.label}</span>` : '—'}</div></td>
+                    <td style="text-align:center;">${isAssigned ? `<span class="services-count-badge">${count || '∞'}</span>` : '0'}</div></td>
                 </tr>`;
         });
     }
@@ -2800,7 +2220,7 @@ function renderAssignedStaffTab() {
     const assignedStaff = staff.filter(m => countAssignedServicesForStaff(m.id) > 0 || m.staffType === 'supervisor' || m.staffType === 'contractor');
     let html = '';
     if (assignedStaff.length === 0) {
-        html = `<tr><td colspan="6" class="text-center text-muted py-4">No assigned staff</td></tr>`;
+        html = `<tr><td colspan="6" class="text-center text-muted py-4">No assigned staff</div></td>`;
     } else {
         assignedStaff.forEach(member => {
             const count = countAssignedServicesForStaff(member.id);
@@ -2813,15 +2233,15 @@ function renderAssignedStaffTab() {
             const isPermanent = member.staffType === 'supervisor' || member.staffType === 'contractor';
             html += `
                 <tr>
-                    <td>${avatarHtml}</td>
-                    <td><strong>${escapeHtml(member.name)}</strong>${typeIndicator}</td>
-                    <td>${escapeHtml(member.email)}</td>
-                    <td><span class="progress-badge ${cfg.badgeClass}">${cfg.label}</span></td>
-                    <td style="text-align:center;"><span class="services-count-badge">${count || '∞'}</span></td>
+                    <td>${avatarHtml}</div></td>
+                    <td><strong>${escapeHtml(member.name)}</strong>${typeIndicator}</div></td>
+                    <td>${escapeHtml(member.email)}</div></td>
+                    <td><span class="progress-badge ${cfg.badgeClass}">${cfg.label}</span></div></td>
+                    <td style="text-align:center;"><span class="services-count-badge">${count || '∞'}</span></div></td>
                     <td style="text-align:center;">
                         <button class="action-btn action-btn-view" onclick="openViewStaffServices(${member.id})"><i class="bi bi-eye-fill"></i></button>
                         ${!isPermanent ? `<button class="action-btn action-btn-delete" onclick="unassignAllFromStaff(${member.id})"><i class="bi bi-trash3-fill"></i></button>` : '<span style="font-size:10px;">Permanent</span>'}
-                    </td>
+                    </div></td>
                 </tr>`;
         });
     }
@@ -2833,20 +2253,932 @@ function renderUnassignedStaffTab() {
     const unassignedStaff = staff.filter(m => countAssignedServicesForStaff(m.id) === 0 && m.staffType !== 'supervisor' && m.staffType !== 'contractor');
     let html = '';
     if (unassignedStaff.length === 0) {
-        html = `<tr><td colspan="5" class="text-center text-muted py-4">All staff assigned</td></tr>`;
+        html = `<tr><td colspan="5" class="text-center text-muted py-4">All staff assigned</div></tr>`;
     } else {
         unassignedStaff.forEach(member => {
             html += `
                 <tr>
-                    <td>${getStaffAvatarHtml(member)}</td>
-                    <td><strong>${escapeHtml(member.name)}</strong></td>
-                    <td>${escapeHtml(member.email)}</td>
-                    <td>${escapeHtml(member.phone || '—')}</td>
-                    <td style="text-align:center;"><button class="action-btn action-btn-edit" onclick="switchAssignTab('unassignedServices')"><i class="bi bi-plus-circle-fill"></i></button></td>
+                    <td>${getStaffAvatarHtml(member)}</div></td>
+                    <td><strong>${escapeHtml(member.name)}</strong></div></td>
+                    <td>${escapeHtml(member.email)}</div></td>
+                    <td>${escapeHtml(member.phone || '—')}</div></td>
+                    <td style="text-align:center;"><button class="action-btn action-btn-edit" onclick="switchAssignTab('unassignedServices')"><i class="bi bi-plus-circle-fill"></i></button></div></td>
                 </tr>`;
         });
     }
     document.getElementById('unassignedStaffList').innerHTML = html;
+}
+
+// ========== JOB APPLICATIONS MODULE ==========
+
+function getApplications() {
+    return JSON.parse(localStorage.getItem('jobApplications')) || [];
+}
+
+function saveApplications(apps) {
+    localStorage.setItem('jobApplications', JSON.stringify(apps));
+}
+
+function getApplicationWindowStatus() {
+    return JSON.parse(localStorage.getItem('applicationWindowOpen')) || false;
+}
+
+function setApplicationWindowStatus(isOpen) {
+    localStorage.setItem('applicationWindowOpen', JSON.stringify(isOpen));
+}
+
+function loadApplicationWindowStatus() {
+    const isOpen = getApplicationWindowStatus();
+    const toggle = document.getElementById('applicationWindowToggle');
+    const statusCard = document.getElementById('windowStatusCard');
+    const statusText = document.getElementById('windowStatusText');
+    
+    if (toggle) toggle.checked = isOpen;
+    if (statusCard) {
+        statusCard.className = 'window-status-card ' + (isOpen ? 'window-open' : 'window-closed');
+    }
+    if (statusText) {
+        statusText.innerHTML = isOpen 
+            ? '<span class="window-status-badge open">● Applications Open</span> — Users can submit applications'
+            : '<span class="window-status-badge closed">● Applications Closed</span> — Users cannot submit applications';
+    }
+}
+
+function toggleApplicationWindow() {
+    const isOpen = document.getElementById('applicationWindowToggle').checked;
+    setApplicationWindowStatus(isOpen);
+    loadApplicationWindowStatus();
+    showNotification(isOpen ? 'Application window is now OPEN' : 'Application window is now CLOSED', isOpen ? 'success' : 'warning');
+}
+
+function loadApplications() {
+    loadApplicationWindowStatus();
+    loadApplicationsStats();
+    renderApplicationsGrid();
+    renderApplicationsTable();
+}
+
+function loadApplicationsStats() {
+    const apps = getApplications();
+    const total = apps.length;
+    const approved = apps.filter(a => a.status === 'approved').length;
+    const rejected = apps.filter(a => a.status === 'rejected').length;
+    const underReview = apps.filter(a => a.status === 'under_review').length;
+    const pending = apps.filter(a => a.status === 'pending').length;
+
+    const statsGrid = document.getElementById('applicationsStats');
+    if (statsGrid) {
+        statsGrid.innerHTML = `
+            <div class="stat-card" onclick="filterApplicationStatus('all', event.target.closest('.filter-btn'))">
+                <div class="stat-icon"><i class="bi bi-file-earmark-person"></i></div>
+                <div class="stat-value">${total}</div>
+                <div class="stat-label">Total Applications</div>
+            </div>
+            <div class="stat-card" onclick="filterApplicationStatus('approved', event.target.closest('.filter-btn'))">
+                <div class="stat-icon" style="background:rgba(22,163,74,0.1);"><i class="bi bi-check-circle-fill" style="color:#16a34a;"></i></div>
+                <div class="stat-value">${approved}</div>
+                <div class="stat-label">Approved</div>
+            </div>
+            <div class="stat-card" onclick="filterApplicationStatus('rejected', event.target.closest('.filter-btn'))">
+                <div class="stat-icon" style="background:rgba(220,38,38,0.1);"><i class="bi bi-x-circle-fill" style="color:#dc2626;"></i></div>
+                <div class="stat-value">${rejected}</div>
+                <div class="stat-label">Rejected</div>
+            </div>
+            <div class="stat-card" onclick="filterApplicationStatus('under_review', event.target.closest('.filter-btn'))">
+                <div class="stat-icon" style="background:rgba(59,130,246,0.1);"><i class="bi bi-eye-fill" style="color:#2563eb;"></i></div>
+                <div class="stat-value">${underReview}</div>
+                <div class="stat-label">Under Review</div>
+            </div>
+            <div class="stat-card" onclick="filterApplicationStatus('pending', event.target.closest('.filter-btn'))">
+                <div class="stat-icon" style="background:rgba(245,158,11,0.1);"><i class="bi bi-clock-fill" style="color:#d97706;"></i></div>
+                <div class="stat-value">${pending}</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        `;
+    }
+}
+
+function filterApplicationStatus(status, btnEl) {
+    currentApplicationFilter = status;
+    document.querySelectorAll('#applicationsSection .filter-btn').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    renderApplicationsGrid();
+    renderApplicationsTable();
+}
+
+function filterApplications() {
+    renderApplicationsGrid();
+    renderApplicationsTable();
+}
+
+function renderApplicationsGrid() {
+    let apps = getApplications();
+    
+    if (currentApplicationFilter !== 'all') {
+        apps = apps.filter(a => a.status === currentApplicationFilter);
+    }
+    
+    const searchTerm = document.getElementById('applicationSearch')?.value.trim().toLowerCase();
+    if (searchTerm) {
+        apps = apps.filter(a => 
+            a.fullName.toLowerCase().includes(searchTerm) ||
+            a.email.toLowerCase().includes(searchTerm) ||
+            a.position.toLowerCase().includes(searchTerm) ||
+            (a.phone && a.phone.includes(searchTerm))
+        );
+    }
+
+    const grid = document.getElementById('applicationsGrid');
+    if (!grid) return;
+
+    if (apps.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;" class="empty-state"><i class="bi bi-inbox"></i><p>No applications found</p></div>`;
+        return;
+    }
+
+    const recentApps = [...apps].reverse().slice(0, 6);
+    
+    grid.innerHTML = recentApps.map(app => {
+        const initials = app.fullName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        const statusConfig = getApplicationStatusConfig(app.status);
+        const date = app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : '—';
+        
+        return `
+            <div class="application-card" onclick="viewApplicationDetail(${app.id})">
+                <div class="application-card-header">
+                    <div class="applicant-avatar">${escapeHtml(initials)}</div>
+                    <div class="applicant-info">
+                        <h5>${escapeHtml(app.fullName)}</h5>
+                        <span class="position-badge">${escapeHtml(app.position)}</span>
+                    </div>
+                </div>
+                <div class="application-card-body">
+                    <div class="app-detail-mini"><i class="bi bi-envelope"></i>${escapeHtml(app.email)}</div>
+                    <div class="app-detail-mini"><i class="bi bi-telephone"></i>${escapeHtml(app.phone || '—')}</div>
+                    <div class="app-detail-mini"><i class="bi bi-gender-ambiguous"></i>${escapeHtml(app.gender || '—')}</div>
+                    <div class="app-detail-mini"><i class="bi bi-geo-alt"></i>${escapeHtml((app.address || '').substring(0, 25))}${app.address && app.address.length > 25 ? '…' : ''}</div>
+                </div>
+                <div class="application-card-footer">
+                    <span class="app-date"><i class="bi bi-calendar3 me-1"></i>${date}</span>
+                    <span class="application-status ${statusConfig.class}">${statusConfig.icon} ${statusConfig.label}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    if (apps.length > 6) {
+        grid.innerHTML += `<div style="grid-column:1/-1;text-align:center;padding:12px;color:var(--text-muted);font-size:13px;">Showing 6 of ${apps.length} applications. View all in table below.</div>`;
+    }
+}
+
+function renderApplicationsTable() {
+    let apps = getApplications();
+    
+    if (currentApplicationFilter !== 'all') {
+        apps = apps.filter(a => a.status === currentApplicationFilter);
+    }
+    
+    const searchTerm = document.getElementById('applicationSearch')?.value.trim().toLowerCase();
+    if (searchTerm) {
+        apps = apps.filter(a => 
+            a.fullName.toLowerCase().includes(searchTerm) ||
+            a.email.toLowerCase().includes(searchTerm) ||
+            a.position.toLowerCase().includes(searchTerm) ||
+            (a.phone && a.phone.includes(searchTerm))
+        );
+    }
+
+    const tbody = document.getElementById('applicationsTableBody');
+    const countEl = document.getElementById('applicationsCount');
+    if (countEl) countEl.textContent = `${apps.length} Applications`;
+    if (!tbody) return;
+
+    if (apps.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No applications found</div></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = [...apps].reverse().map(app => {
+        const statusConfig = getApplicationStatusConfig(app.status);
+        const date = app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : '—';
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(app.fullName)}</strong></td>
+                <td>${escapeHtml(app.position)}</div></td>
+                <td>${escapeHtml(app.phone || '—')}</div></td>
+                <td>${escapeHtml(app.email)}</div></td>
+                <td>${date}</div></td>
+                <td><span class="application-status ${statusConfig.class}">${statusConfig.icon} ${statusConfig.label}</span></div></td>
+                <td style="text-align:center;white-space:nowrap;">
+                    <button class="action-btn action-btn-view" onclick="viewApplicationDetail(${app.id})" title="View Details"><i class="bi bi-eye-fill"></i></button>
+                    <button class="action-btn action-btn-approve" onclick="approveApplication(${app.id})" title="Approve"><i class="bi bi-check-lg"></i></button>
+                    <button class="action-btn action-btn-reject" onclick="rejectApplicationWithModal(${app.id})" title="Reject"><i class="bi bi-x-lg"></i></button>
+                    <button class="action-btn action-btn-delete" onclick="deleteApplication(${app.id})" title="Delete"><i class="bi bi-trash3-fill"></i></button>
+                </div></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function getApplicationStatusConfig(status) {
+    const configs = {
+        pending: { class: 'app-status-pending', icon: '⏳', label: 'Pending' },
+        under_review: { class: 'app-status-under-review', icon: '👁', label: 'Under Review' },
+        approved: { class: 'app-status-approved', icon: '✅', label: 'Approved' },
+        rejected: { class: 'app-status-rejected', icon: '❌', label: 'Rejected' }
+    };
+    return configs[status] || configs.pending;
+}
+
+// ========== REJECTION REASON FUNCTIONS ==========
+
+function rejectApplicationWithModal(appId) {
+    pendingRejectApplicationId = appId;
+    document.getElementById('rejectionReasonText').value = '';
+    new bootstrap.Modal(document.getElementById('rejectionReasonModal')).show();
+}
+
+function insertRejectionReason(reason) {
+    const textarea = document.getElementById('rejectionReasonText');
+    const currentValue = textarea.value;
+    const prefix = currentValue ? (currentValue.endsWith('\n') ? '' : '\n') : '';
+    textarea.value = currentValue + prefix + reason;
+    textarea.focus();
+}
+
+function confirmRejectApplication() {
+    if (!pendingRejectApplicationId) return;
+    
+    const rejectionReason = document.getElementById('rejectionReasonText').value.trim();
+    
+    const apps = getApplications();
+    const index = apps.findIndex(a => a.id == pendingRejectApplicationId);
+    
+    if (index !== -1) {
+        apps[index].status = 'rejected';
+        apps[index].updatedAt = new Date().toISOString();
+        if (rejectionReason) {
+            apps[index].rejectionReason = rejectionReason;
+            apps[index].rejectedAt = new Date().toISOString();
+        }
+        saveApplications(apps);
+        
+        const message = rejectionReason 
+            ? `Application rejected with reason: ${rejectionReason.substring(0, 100)}${rejectionReason.length > 100 ? '...' : ''}`
+            : 'Application rejected without a reason.';
+        showNotification(message, 'warning');
+    }
+    
+    bootstrap.Modal.getInstance(document.getElementById('rejectionReasonModal')).hide();
+    pendingRejectApplicationId = null;
+    loadApplications();
+}
+
+function rejectApplication(appId) {
+    rejectApplicationWithModal(appId);
+}
+
+function viewApplicationDetail(appId) {
+    const apps = getApplications();
+    const app = apps.find(a => a.id == appId);
+    if (!app) return;
+    
+    currentApplicationId = appId;
+    const initials = app.fullName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const statusConfig = getApplicationStatusConfig(app.status);
+    const date = app.submittedAt ? new Date(app.submittedAt).toLocaleString() : '—';
+    const age = app.dob ? calculateAge(app.dob) : null;
+
+    const body = document.getElementById('applicationDetailBody');
+    if (!body) return;
+
+    const rejectionHtml = app.rejectionReason ? `
+        <div class="rejection-reason-display">
+            <div class="label">
+                <i class="bi bi-exclamation-octagon-fill"></i> Rejection Reason
+            </div>
+            <div class="reason-text">
+                ${escapeHtml(app.rejectionReason)}
+                ${app.rejectedAt ? `<br><span style="font-size:10px; color:var(--text-muted); margin-top:4px; display:block;">Rejected on: ${new Date(app.rejectedAt).toLocaleString()}</span>` : ''}
+            </div>
+        </div>
+    ` : '';
+
+    body.innerHTML = buildApplicationDetailHTML(app, initials, statusConfig, date, age, rejectionHtml);
+    
+    new bootstrap.Modal(document.getElementById('applicationDetailModal')).show();
+}
+
+function calculateAge(dobString) {
+    const dob = new Date(dobString);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    return age;
+}
+
+function buildApplicationDetailHTML(app, initials, statusConfig, date, age, rejectionHtml = '') {
+    const hasPhoto = app.passportPhoto && app.passportPhoto.trim() !== '';
+    const statusBadgeClass = statusConfig.class;
+
+    return `
+    <div class="application-detail-new">
+        <div class="app-profile-banner">
+            <div class="app-profile-avatar-lg ${hasPhoto ? 'has-photo' : ''}">
+                ${hasPhoto 
+                    ? `<img src="${escapeAttr(app.passportPhoto)}" alt="Passport Photo" onerror="this.style.display='none';this.parentElement.classList.remove('has-photo');this.parentElement.textContent='${escapeHtml(initials)}';">`
+                    : escapeHtml(initials)
+                }
+            </div>
+            <div class="app-profile-info">
+                <h3>${escapeHtml(app.fullName)}</h3>
+                <div class="app-profile-position">
+                    <i class="bi bi-briefcase-fill"></i>
+                    ${escapeHtml(app.position)}
+                </div>
+                <div class="app-profile-meta-row">
+                    <span class="app-profile-meta-tag"><i class="bi bi-calendar3"></i> ${date}</span>
+                    <span class="app-profile-meta-tag"><i class="bi bi-geo-alt"></i> ${escapeHtml(app.address ? app.address.split(',')[0] : '—')}</span>
+                    ${age !== null ? `<span class="app-profile-meta-tag"><i class="bi bi-person"></i> ${age} years</span>` : ''}
+                </div>
+            </div>
+            <span class="app-profile-status-badge application-status ${statusBadgeClass}">${statusConfig.icon} ${statusConfig.label}</span>
+        </div>
+
+        <div class="app-detail-content-body">
+
+            <div class="app-info-section">
+                <div class="app-info-section-header">
+                    <i class="bi bi-person-vcard"></i>
+                    <h6>Personal Information</h6>
+                </div>
+                <div class="app-info-grid">
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-person-fill"></i> Full Name</div>
+                        <div class="field-value">${escapeHtml(app.fullName)}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-geo-alt-fill"></i> Address</div>
+                        <div class="field-value">${escapeHtml(app.address || '—')}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-calendar-heart"></i> Age</div>
+                        <div class="field-value">${age !== null ? age + ' years' : '—'}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-gender-ambiguous"></i> Gender</div>
+                        <div class="field-value">${escapeHtml(app.gender || '—')}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-telephone-fill"></i> Phone Number</div>
+                        <div class="field-value">${escapeHtml(app.phone || '—')}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-envelope-fill"></i> Email Address</div>
+                        <div class="field-value">${escapeHtml(app.email)}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-mortarboard-fill"></i> Education Level</div>
+                        <div class="field-value">${escapeHtml(app.educationLevel || '—')}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-info-section">
+                <div class="app-info-section-header">
+                    <i class="bi bi-stars"></i>
+                    <h6>Professional Details</h6>
+                </div>
+                <div class="app-info-grid">
+                    <div class="app-info-field" style="grid-column: 1 / -1;">
+                        <div class="field-label-mini"><i class="bi bi-tools"></i> Experience & Skills</div>
+                        <div class="field-value">${escapeHtml(app.experience || '—')}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-briefcase-fill"></i> Position Applying For</div>
+                        <div class="field-value">${escapeHtml(app.position)}</div>
+                    </div>
+                    <div class="app-info-field">
+                        <div class="field-label-mini"><i class="bi bi-clock-fill"></i> Availability</div>
+                        <div class="field-value">${escapeHtml(app.availability || '—')}</div>
+                    </div>
+                </div>
+            </div>
+
+            ${app.additionalNotes ? `
+            <div class="app-info-section">
+                <div class="app-info-section-header">
+                    <i class="bi bi-journal-text"></i>
+                    <h6>Additional Notes</h6>
+                </div>
+                <div class="app-notes-box">
+                    <strong><i class="bi bi-pencil-square me-1"></i>Applicant's Notes:</strong>
+                    ${escapeHtml(app.additionalNotes)}
+                </div>
+            </div>` : ''}
+            
+            ${rejectionHtml}
+
+            <div class="app-documents-section">
+                <div class="app-documents-section-header">
+                    <i class="bi bi-folder2-open"></i>
+                    <h6>Supporting Documents</h6>
+                </div>
+                <div class="app-documents-list">
+                    ${buildDocumentItem('CV / Resume', 'cv', 'icon-cv', app.cv && app.cv.trim() !== '', app.cv)}
+                    ${buildDocumentItem('National ID', 'id', 'icon-id', app.idDocument && app.idDocument.trim() !== '', app.idDocument)}
+                    ${buildDocumentItem('Introduction Letter / Local Government Letter', 'letter', 'icon-letter', app.introductionLetter && app.introductionLetter.trim() !== '', app.introductionLetter)}
+                    ${buildCertificatesItem(app.certificates && app.certificates.length > 0, app.certificates)}
+                    ${buildDocumentItem('Passport Size Photo', 'photo', 'icon-photo', hasPhoto, app.passportPhoto)}
+                    ${buildOtherDocumentsItem(app.otherDocuments && app.otherDocuments.length > 0, app.otherDocuments)}
+                </div>
+            </div>
+
+            <div class="app-detail-actions-row">
+                <button class="btn btn-success" onclick="approveApplication(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
+                    <i class="bi bi-check-circle me-1"></i>Approve
+                </button>
+                <button class="btn btn-warning" onclick="markUnderReview(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
+                    <i class="bi bi-eye me-1"></i>Mark Under Review
+                </button>
+                <button class="btn btn-danger" onclick="rejectApplicationWithModal(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
+                    <i class="bi bi-x-circle me-1"></i>Reject
+                </button>
+                <button class="btn btn-ghost" onclick="deleteApplication(${app.id});bootstrap.Modal.getInstance(document.getElementById('applicationDetailModal')).hide();">
+                    <i class="bi bi-trash3 me-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function buildDocumentItem(name, type, iconClass, hasDoc, docUrl) {
+    const fileSize = getFileSizeInfo(type);
+    const fileName = getFileName(type);
+    
+    return `
+    <div class="app-document-item">
+        <div class="app-document-item-info">
+            <div class="app-document-icon ${hasDoc ? iconClass : 'icon-missing'}">
+                <i class="bi ${hasDoc ? 'bi-file-earmark-check-fill' : 'bi-file-earmark-x'}"></i>
+            </div>
+            <div class="app-document-details">
+                <div class="doc-name">${escapeHtml(name)}</div>
+                <div class="doc-meta">
+                    ${hasDoc 
+                        ? `<span class="doc-status-badge uploaded"><i class="bi bi-check2-circle me-1"></i>Uploaded</span><span>${escapeHtml(fileName)} · ${fileSize}</span>`
+                        : `<span class="doc-status-badge missing"><i class="bi bi-exclamation-circle me-1"></i>Not Provided</span>`
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="app-document-actions">
+            <button class="app-doc-action-btn btn-view" ${hasDoc ? `onclick="viewDocument('${escapeAttr(docUrl)}', '${escapeAttr(name)}')"` : 'disabled'}>
+                <i class="bi bi-eye-fill"></i> View
+            </button>
+            <button class="app-doc-action-btn btn-download" ${hasDoc ? `onclick="downloadDocument('${escapeAttr(docUrl)}', '${escapeAttr(name)}')"` : 'disabled'}>
+                <i class="bi bi-download"></i> Download
+            </button>
+            <button class="app-doc-action-btn btn-open" ${hasDoc ? `onclick="openDocument('${escapeAttr(docUrl)}')"` : 'disabled'}>
+                <i class="bi bi-box-arrow-up-right"></i> Open
+            </button>
+        </div>
+    </div>`;
+}
+
+function buildCertificatesItem(hasCerts, certificates) {
+    const count = hasCerts ? certificates.length : 0;
+    const certUrl = hasCerts ? certificates[0] : '';
+    
+    return `
+    <div class="app-document-item">
+        <div class="app-document-item-info">
+            <div class="app-document-icon ${hasCerts ? 'icon-cert' : 'icon-missing'}">
+                <i class="bi ${hasCerts ? 'bi-patch-check-fill' : 'bi-file-earmark-x'}"></i>
+            </div>
+            <div class="app-document-details">
+                <div class="doc-name">Certificates ${hasCerts && count > 1 ? '(' + count + ' files)' : '(Optional)'}</div>
+                <div class="doc-meta">
+                    ${hasCerts 
+                        ? `<span class="doc-status-badge uploaded"><i class="bi bi-check2-circle me-1"></i>${count} File${count > 1 ? 's' : ''} Uploaded</span>`
+                        : `<span class="doc-status-badge missing"><i class="bi bi-exclamation-circle me-1"></i>Not Provided (Optional)</span>`
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="app-document-actions">
+            <button class="app-doc-action-btn btn-view" ${hasCerts ? `onclick="viewMultipleDocuments(${JSON.stringify(certificates.map(escapeAttr))}, 'Certificates')"` : 'disabled'}>
+                <i class="bi bi-eye-fill"></i> View
+            </button>
+            <button class="app-doc-action-btn btn-download" ${hasCerts ? `onclick="downloadDocument('${escapeAttr(certUrl)}', 'Certificate')"` : 'disabled'}>
+                <i class="bi bi-download"></i> Download
+            </button>
+            <button class="app-doc-action-btn btn-open" ${hasCerts ? `onclick="openDocument('${escapeAttr(certUrl)}')"` : 'disabled'}>
+                <i class="bi bi-box-arrow-up-right"></i> Open
+            </button>
+        </div>
+    </div>`;
+}
+
+function buildOtherDocumentsItem(hasOther, otherDocs) {
+    const count = hasOther ? otherDocs.length : 0;
+    const otherUrl = hasOther ? otherDocs[0] : '';
+    
+    return `
+    <div class="app-document-item">
+        <div class="app-document-item-info">
+            <div class="app-document-icon ${hasOther ? 'icon-other' : 'icon-missing'}">
+                <i class="bi ${hasOther ? 'bi-paperclip' : 'bi-file-earmark-x'}"></i>
+            </div>
+            <div class="app-document-details">
+                <div class="doc-name">Other Documents ${hasOther && count > 1 ? '(' + count + ' files)' : '(Optional)'}</div>
+                <div class="doc-meta">
+                    ${hasOther 
+                        ? `<span class="doc-status-badge uploaded"><i class="bi bi-check2-circle me-1"></i>${count} File${count > 1 ? 's' : ''} Uploaded</span>`
+                        : `<span class="doc-status-badge missing"><i class="bi bi-exclamation-circle me-1"></i>Not Provided (Optional)</span>`
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="app-document-actions">
+            <button class="app-doc-action-btn btn-view" ${hasOther ? `onclick="viewMultipleDocuments(${JSON.stringify(otherDocs.map(escapeAttr))}, 'Other Documents')"` : 'disabled'}>
+                <i class="bi bi-eye-fill"></i> View
+            </button>
+            <button class="app-doc-action-btn btn-download" ${hasOther ? `onclick="downloadDocument('${escapeAttr(otherUrl)}', 'Other_Document')"` : 'disabled'}>
+                <i class="bi bi-download"></i> Download
+            </button>
+            <button class="app-doc-action-btn btn-open" ${hasOther ? `onclick="openDocument('${escapeAttr(otherUrl)}')"` : 'disabled'}>
+                <i class="bi bi-box-arrow-up-right"></i> Open
+            </button>
+        </div>
+    </div>`;
+}
+
+function escapeAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function getFileSizeInfo(type) {
+    const sizes = {
+        cv: '~120 KB',
+        id: '~85 KB',
+        letter: '~95 KB',
+        photo: '~45 KB'
+    };
+    return sizes[type] || '~100 KB';
+}
+
+function getFileName(type) {
+    const names = {
+        cv: 'CV_Resume.pdf',
+        id: 'National_ID.pdf',
+        letter: 'Introduction_Letter.pdf',
+        photo: 'Passport_Photo.jpg'
+    };
+    return names[type] || 'document.pdf';
+}
+
+function viewDocument(url, name) {
+    if (!url || url === '#') { showNotification('Document not available', 'warning'); return; }
+    window.open(url, '_blank');
+    showNotification(`Viewing: ${name}`, 'info');
+}
+
+function downloadDocument(url, name) {
+    if (!url || url === '#') { showNotification('Document not available for download', 'warning'); return; }
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name.replace(/\s+/g, '_') + '_' + Date.now();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showNotification(`Downloading: ${name}`, 'success');
+}
+
+function openDocument(url) {
+    if (!url || url === '#') { showNotification('Document not available', 'warning'); return; }
+    window.open(url, '_blank');
+}
+
+function viewMultipleDocuments(urls, category) {
+    if (!urls || urls.length === 0) { showNotification('No documents available', 'warning'); return; }
+    urls.forEach((url, i) => {
+        setTimeout(() => window.open(url, '_blank'), i * 300);
+    });
+    showNotification(`Opening ${urls.length} ${category} file(s)...`, 'info');
+}
+
+function approveApplication(appId) {
+    const apps = getApplications();
+    const index = apps.findIndex(a => a.id == appId);
+    if (index === -1) return;
+    apps[index].status = 'approved';
+    apps[index].updatedAt = new Date().toISOString();
+    saveApplications(apps);
+    loadApplications();
+    showNotification('Application approved!', 'success');
+}
+
+function markUnderReview(appId) {
+    const apps = getApplications();
+    const index = apps.findIndex(a => a.id == appId);
+    if (index === -1) return;
+    apps[index].status = 'under_review';
+    apps[index].updatedAt = new Date().toISOString();
+    saveApplications(apps);
+    loadApplications();
+    showNotification('Application marked as Under Review.', 'info');
+}
+
+function deleteApplication(appId) {
+    if (!confirm('Are you sure you want to delete this application? This cannot be undone.')) return;
+    let apps = getApplications();
+    apps = apps.filter(a => a.id != appId);
+    saveApplications(apps);
+    loadApplications();
+    showNotification('Application deleted.', 'success');
+}
+
+// ========== DOWNLOAD APPLICATION AS PDF ==========
+function downloadApplicationPDF() {
+    if (!currentApplicationId) {
+        showNotification('No application selected', 'error');
+        return;
+    }
+    
+    const apps = getApplications();
+    const app = apps.find(a => a.id == currentApplicationId);
+    if (!app) return;
+    
+    const statusConfig = getApplicationStatusConfig(app.status);
+    const date = app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : '—';
+    
+    const pdfHTML = `
+        <div class="application-pdf-container">
+            <div class="app-pdf-header">
+                <div class="app-pdf-header-left">
+                    <img src="image/logo.jpeg" alt="CleanSpark Logo" class="app-pdf-logo" onerror="this.style.display='none';">
+                    <div class="app-pdf-company-info">
+                        <h2>CleanSpark</h2>
+                        <p>Cleaning Service Management System</p>
+                        <p>Zanzibar, Tanzania | info@CleanSpark.co.tz</p>
+                    </div>
+                </div>
+                <div class="app-pdf-title-section">
+                    <h1 class="app-pdf-title">JOB APPLICATION</h1>
+                    <p class="app-pdf-ref">Ref: #${escapeHtml(String(app.id).slice(-6))}</p>
+                    <p class="app-pdf-status" style="color:${statusConfig.class.includes('approved') ? '#16a34a' : statusConfig.class.includes('rejected') ? '#dc2626' : '#2563eb'};">${statusConfig.icon} ${statusConfig.label}</p>
+                </div>
+            </div>
+            
+            <div class="app-pdf-section">
+                <h5>Applicant Information</h5>
+                <div class="app-pdf-info-grid">
+                    <div class="app-pdf-info-item">
+                        <div class="label">Full Name</div>
+                        <div class="value">${escapeHtml(app.fullName)}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Email</div>
+                        <div class="value">${escapeHtml(app.email)}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Phone</div>
+                        <div class="value">${escapeHtml(app.phone || '—')}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Gender</div>
+                        <div class="value">${escapeHtml(app.gender || '—')}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Date of Birth</div>
+                        <div class="value">${escapeHtml(app.dob || '—')}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Position Applied</div>
+                        <div class="value">${escapeHtml(app.position)}</div>
+                    </div>
+                    <div class="app-pdf-info-item" style="grid-column:1/-1;">
+                        <div class="label">Address</div>
+                        <div class="value">${escapeHtml(app.address || '—')}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Date Submitted</div>
+                        <div class="value">${date}</div>
+                    </div>
+                    <div class="app-pdf-info-item">
+                        <div class="label">Status</div>
+                        <div class="value">${statusConfig.label}</div>
+                    </div>
+                </div>
+            </div>
+            
+            ${app.rejectionReason ? `
+            <div class="app-pdf-section">
+                <h5>Rejection Reason</h5>
+                <div class="app-notes-box" style="background:#fee2e2; border-color:#fecaca; color:#991b1b;">
+                    <strong><i class="bi bi-exclamation-triangle me-1"></i>Reason for Rejection:</strong>
+                    ${escapeHtml(app.rejectionReason)}
+                    ${app.rejectedAt ? `<br><small>Rejected on: ${new Date(app.rejectedAt).toLocaleString()}</small>` : ''}
+                </div>
+            </div>` : ''}
+            
+            ${app.coverLetter ? `
+            <div class="app-pdf-section">
+                <h5>Application Letter</h5>
+                <p style="font-size:13px;line-height:1.7;color:#1a202c;">${escapeHtml(app.coverLetter)}</p>
+            </div>` : ''}
+            
+            <div class="app-pdf-section">
+                <h5>Documents Attached</h5>
+                <p style="font-size:13px;">
+                    📄 CV/Resume: ${app.cv ? '✅ Attached' : '❌ Not provided'}<br>
+                    🪪 ID Document: ${app.idDocument ? '✅ Attached' : '❌ Not provided'}<br>
+                    🏅 Certificates: ${app.certificates && app.certificates.length > 0 ? '✅ ' + app.certificates.length + ' file(s) attached' : '❌ Not provided'}
+                </p>
+            </div>
+            
+            <div class="app-pdf-footer">
+                <p>This is a computer-generated application document from CleanSpark Recruitment System.</p>
+                <p>CleanSpark Cleaning Service Management | Zanzibar, Tanzania</p>
+                <p>Generated on ${new Date().toLocaleString('en-TZ')}</p>
+            </div>
+        </div>
+    `;
+    
+    const template = document.getElementById('applicationPDFTemplate');
+    template.innerHTML = pdfHTML;
+    template.style.left = '0';
+    template.style.position = 'relative';
+    
+    html2canvas(template, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+    }).then(canvas => {
+        template.style.left = '-9999px';
+        template.style.position = 'absolute';
+        
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth - 16;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        let heightLeft = imgHeight;
+        let position = 8;
+        
+        pdf.addImage(imgData, 'PNG', 8, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 8, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+        
+        const fileName = `CleanSpark_Application_${app.fullName.replace(/\s+/g, '_')}_${date}.pdf`;
+        pdf.save(fileName);
+        showNotification('Application PDF downloaded successfully!', 'success');
+    }).catch(error => {
+        console.error('PDF generation error:', error);
+        template.style.left = '-9999px';
+        template.style.position = 'absolute';
+        showNotification('Error generating PDF. Opening print view instead.', 'warning');
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`<!DOCTYPE html><html><head><title>Application</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/admin.css"></head><body>${pdfHTML}</body></html>`);
+        printWindow.document.close();
+        setTimeout(() => printWindow.print(), 500);
+    });
+}
+
+function shareApplication() {
+    if (!currentApplicationId) return;
+    
+    const apps = getApplications();
+    const app = apps.find(a => a.id == currentApplicationId);
+    if (!app) return;
+    
+    const shareText = `📋 Job Application - CleanSpark\n\n👤 ${app.fullName}\n📧 ${app.email}\n📞 ${app.phone || 'N/A'}\n💼 ${app.position}\n📅 ${app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : 'N/A'}\n📊 Status: ${getApplicationStatusConfig(app.status).label}`;
+    
+    if (navigator.share) {
+        navigator.share({ title: 'Job Application', text: shareText }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(shareText).then(() => {
+            showNotification('Application details copied! Share via WhatsApp or Email.', 'success');
+        }).catch(() => {
+            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+        });
+    }
+}
+
+// ========== INITIALIZE SAMPLE JOB APPLICATION DATA ==========
+function initializeApplicationSampleData() {
+    if (!localStorage.getItem('jobApplications')) {
+        const sampleApps = [
+            {
+                id: Date.now() - 4,
+                fullName: 'Zainab Omar Mohammed',
+                email: 'zainab.omar@email.com',
+                phone: '+255 777 123 456',
+                gender: 'Female',
+                dob: '1995-03-15',
+                address: 'Mkunazini Street, Stone Town, Zanzibar',
+                position: 'Senior Cleaning Supervisor',
+                educationLevel: 'Bachelor Degree in Hospitality Management',
+                experience: '5+ years in hospitality cleaning management. Led teams of 15+ staff. Expert in deep cleaning protocols and eco-friendly products.',
+                availability: 'Immediate',
+                additionalNotes: 'Willing to work weekends and public holidays. Has valid driver\'s license.',
+                coverLetter: 'I am writing to express my strong interest in the Senior Cleaning Supervisor position at CleanSpark.',
+                cv: null,
+                idDocument: null,
+                introductionLetter: null,
+                certificates: [],
+                passportPhoto: null,
+                otherDocuments: [],
+                status: 'pending',
+                submittedAt: new Date(Date.now() - 4 * 86400000).toISOString()
+            },
+            {
+                id: Date.now() - 3,
+                fullName: 'Abdul Rashid Juma',
+                email: 'abdul.rashid@email.com',
+                phone: '+255 777 234 567',
+                gender: 'Male',
+                dob: '1990-07-22',
+                address: 'Shangani, Stone Town, Zanzibar',
+                position: 'Office Cleaner',
+                educationLevel: 'Certificate in Cleaning Services',
+                experience: '3 years experience in office cleaning. Proficient with industrial cleaning equipment.',
+                availability: '2 weeks notice',
+                additionalNotes: '',
+                coverLetter: 'I am a hardworking and reliable individual seeking the Office Cleaner position.',
+                cv: null,
+                idDocument: null,
+                introductionLetter: null,
+                certificates: [],
+                passportPhoto: null,
+                otherDocuments: [],
+                status: 'under_review',
+                submittedAt: new Date(Date.now() - 3 * 86400000).toISOString()
+            },
+            {
+                id: Date.now() - 2,
+                fullName: 'Maryam Hassan Ali',
+                email: 'maryam.hassan@email.com',
+                phone: '+255 777 345 678',
+                gender: 'Female',
+                dob: '1998-11-08',
+                address: 'Mlandege, Zanzibar',
+                position: 'Deep Cleaning Specialist',
+                educationLevel: 'Diploma in Environmental Health',
+                experience: 'Specialized training in deep cleaning techniques. Experience with hospital-grade sanitation.',
+                availability: 'Immediate',
+                additionalNotes: 'Certified in biohazard cleaning. Fluent in English and Swahili.',
+                coverLetter: 'I am passionate about creating spotless and healthy environments.',
+                cv: null,
+                idDocument: null,
+                introductionLetter: null,
+                certificates: [],
+                passportPhoto: null,
+                otherDocuments: [],
+                status: 'approved',
+                submittedAt: new Date(Date.now() - 2 * 86400000).toISOString()
+            },
+            {
+                id: Date.now() - 1,
+                fullName: 'Khalid Bakari Salum',
+                email: 'khalid.bakari@email.com',
+                phone: '+255 777 456 789',
+                gender: 'Male',
+                dob: '1992-05-30',
+                address: 'Bububu, Zanzibar',
+                position: 'Grounds Maintenance Worker',
+                educationLevel: 'Secondary School Certificate',
+                experience: '3 years in grounds maintenance and landscaping. Physically fit and reliable.',
+                availability: '1 month notice',
+                additionalNotes: '',
+                coverLetter: 'I am physically fit, reliable, and ready to contribute.',
+                cv: null,
+                idDocument: null,
+                introductionLetter: null,
+                certificates: [],
+                passportPhoto: null,
+                otherDocuments: [],
+                status: 'rejected',
+                submittedAt: new Date(Date.now() - 1 * 86400000).toISOString()
+            }
+        ];
+        localStorage.setItem('jobApplications', JSON.stringify(sampleApps));
+    }
 }
 
 // ========== PROFESSIONAL PDF REPORT GENERATION ==========
@@ -2869,9 +3201,11 @@ function generateProfessionalReport() {
     const messages = JSON.parse(localStorage.getItem('contact_messages')) || [];
     const supervisorMsgs = JSON.parse(localStorage.getItem('supervisor_messages')) || [];
     const assignments = JSON.parse(localStorage.getItem('serviceAssignments')) || {};
+    const paymentHistory = JSON.parse(localStorage.getItem('paymentHistory')) || [];
 
     const filteredInvoices = invoices.filter(inv => inv.invoiceDate >= fromDate && inv.invoiceDate <= toDate);
     const totalRevenue = filteredInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+    const totalPayments = paymentHistory.reduce((sum, p) => sum + (p.amount || 0), 0);
 
     generatedReportData = {
         title: 'CleanSpark Professional Report',
@@ -2887,6 +3221,7 @@ function generateProfessionalReport() {
             totalContractors: contractors.length,
             totalInvoices: filteredInvoices.length,
             totalRevenue: totalRevenue,
+            totalPayments: totalPayments,
             totalMessages: messages.length + supervisorMsgs.length,
             assignedServices: Object.keys(assignments).length
         },
@@ -2940,8 +3275,8 @@ function generateProfessionalReport() {
                     </div>
                     <div class="report-summary-card">
                         <div class="summary-icon"><i class="bi bi-cash-stack"></i></div>
-                        <div class="summary-value">${formatTZS(totalRevenue)}</div>
-                        <div class="summary-label">Total Revenue</div>
+                        <div class="summary-value">${formatTZS(totalPayments)}</div>
+                        <div class="summary-label">Total Payments</div>
                     </div>
                     <div class="report-summary-card">
                         <div class="summary-icon"><i class="bi bi-receipt"></i></div>
@@ -2965,11 +3300,11 @@ function generateProfessionalReport() {
                     <tbody>${staff.map(s => {
                         const count = Object.values(assignments).filter(a => a == s.id).length;
                         return `<tr>
-                            <td><strong>${escapeHtml(s.name)}</strong></td>
-                            <td>${escapeHtml(s.email)}</td>
-                            <td><span class="badge bg-success">Active</span></td>
-                            <td>${escapeHtml(s.staffType || 'normal')}</td>
-                            <td>${count}</td>
+                            <td><strong>${escapeHtml(s.name)}</strong></div></td>
+                            <td>${escapeHtml(s.email)}</div></td>
+                            <td><span class="badge bg-success">Active</span></div></td>
+                            <td>${escapeHtml(s.staffType || 'normal')}</div></td>
+                            <td>${count}</div></td>
                         </tr>`;
                     }).join('')}</tbody>
                 </table>
@@ -2984,12 +3319,12 @@ function generateProfessionalReport() {
                     <thead><tr><th>Company</th><th>Type</th><th>Location</th><th>Workers</th><th>Contract Period</th><th>Value (TZS)</th></tr></thead>
                     <tbody>${contractors.map(c => `
                         <tr>
-                            <td><strong>${escapeHtml(c.companyName)}</strong></td>
-                            <td>${c.type}</td>
-                            <td>${escapeHtml(c.location || '—')}</td>
-                            <td>${c.workersAssigned || 0}</td>
-                            <td>${escapeHtml(c.contractStart || '—')} — ${escapeHtml(c.contractEnd || '—')}</td>
-                            <td>${formatTZS(c.contractValue)}</td>
+                            <td><strong>${escapeHtml(c.companyName)}</strong></div></td>
+                            <td>${c.type}</div></td>
+                            <td>${escapeHtml(c.location || '—')}</div></td>
+                            <td>${c.workersAssigned || 0}</div></td>
+                            <td>${escapeHtml(c.contractStart || '—')} — ${escapeHtml(c.contractEnd || '—')}</div></td>
+                            <td>${formatTZS(c.contractValue)}</div></td>
                         </tr>`).join('')}</tbody>
                 </table>
             </div>`;
@@ -3003,13 +3338,13 @@ function generateProfessionalReport() {
                     <thead><tr><th>Invoice #</th><th>Contractor</th><th>Date</th><th>Work Cost</th><th>Workers Cost</th><th>Equipment Cost</th><th>Total</th></tr></thead>
                     <tbody>${filteredInvoices.map(inv => `
                         <tr>
-                            <td>#${escapeHtml(inv.id)}</td>
-                            <td>${escapeHtml(inv.contractorName)}</td>
-                            <td>${escapeHtml(inv.invoiceDate)}</td>
-                            <td>${formatTZS(inv.workCost)}</td>
-                            <td>${formatTZS(inv.workersCost)}</td>
-                            <td>${formatTZS(inv.equipmentCost)}</td>
-                            <td><strong>${formatTZS(inv.total)}</strong></td>
+                            <td>#${escapeHtml(inv.id)}</div></td>
+                            <td>${escapeHtml(inv.contractorName)}</div></td>
+                            <td>${escapeHtml(inv.invoiceDate)}</div></td>
+                            <td>${formatTZS(inv.workCost)}</div></td>
+                            <td>${formatTZS(inv.workersCost)}</div></td>
+                            <td>${formatTZS(inv.equipmentCost)}</div></td>
+                            <td><strong>${formatTZS(inv.total)}</strong></div></td>
                         </tr>`).join('')}</tbody>
                 </table>
                 ${filteredInvoices.length > 0 ? `<div style="text-align:right; margin-top:10px; font-size:16px; font-weight:700; color:var(--grad-start);">Total Revenue: ${formatTZS(totalRevenue)}</div>` : '<p class="text-muted">No invoices in this period</p>'}
@@ -3131,22 +3466,22 @@ function loadMessages() {
     else if (currentMessageFilter === 'supervisor') allMessages = supervisorMessages;
     let html = '';
     if (allMessages.length === 0) {
-        html = `<tr><td colspan="6" class="text-center text-muted py-4">No messages</td></tr>`;
+        html = `<tr><td colspan="6" class="text-center text-muted py-4">No messages</div></tr>`;
     } else {
         [...allMessages].reverse().forEach((msg, i) => {
             const date = msg.timestamp ? new Date(msg.timestamp).toLocaleDateString() : '—';
             const preview = (msg.message || '').substring(0, 80);
             html += `
                 <tr>
-                    <td><strong>${escapeHtml(msg.name)}</strong><div style="font-size:11px;">${escapeHtml(msg.email)}</div></td>
-                    <td><span class="message-type-badge message-${msg.type}">${msg.type}</span></td>
-                    <td>${escapeHtml(msg.subject || '—')}</td>
-                    <td>${escapeHtml(preview)}</td>
-                    <td>${date}</td>
+                    <td><strong>${escapeHtml(msg.name)}</strong><div style="font-size:11px;">${escapeHtml(msg.email)}</div></div></td>
+                    <td><span class="message-type-badge message-${msg.type}">${msg.type}</span></div></td>
+                    <td>${escapeHtml(msg.subject || '—')}</div></td>
+                    <td>${escapeHtml(preview)}</div></td>
+                    <td>${date}</div></td>
                     <td style="text-align:center;">
                         <button class="action-btn action-btn-view" onclick="viewMessage(${i}, '${msg.type}')"><i class="bi bi-eye-fill"></i></button>
                         <button class="action-btn action-btn-reply" onclick="openReplyModal(${i}, '${msg.type}')"><i class="bi bi-reply-fill"></i></button>
-                    </td>
+                    </div></td>
                 </tr>`;
         });
     }
@@ -3283,7 +3618,6 @@ function saveSettings() {
     showNotification('Settings saved!', 'success');
 }
 
-// ========== EXPORT ==========
 function exportData() {
     const data = {
         services: JSON.parse(localStorage.getItem('adminServices')) || [],
@@ -3292,6 +3626,8 @@ function exportData() {
         contractors: JSON.parse(localStorage.getItem('contractors')) || [],
         invoices: JSON.parse(localStorage.getItem('invoices')) || [],
         applications: JSON.parse(localStorage.getItem('jobApplications')) || [],
+        paymentStatuses: JSON.parse(localStorage.getItem('paymentStatuses')) || {},
+        paymentHistory: JSON.parse(localStorage.getItem('paymentHistory')) || [],
         exportDate: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -3342,6 +3678,12 @@ function initializeSampleData() {
             { id: 4002, name: 'Hassan Juma', email: 'hassan@staff.com', phone: '+255 777 222222', password: 'staff123', staffType: 'contractor', photo: null, status: 'active' },
             { id: 4003, name: 'Amina Salum', email: 'amina@staff.com', phone: '+255 777 333333', password: 'staff123', staffType: 'normal', photo: null, status: 'active' }
         ]));
+    }
+    if (!localStorage.getItem('paymentStatuses')) {
+        localStorage.setItem('paymentStatuses', JSON.stringify({
+            2001: 'paid',
+            2002: 'unpaid'
+        }));
     }
 }
 
