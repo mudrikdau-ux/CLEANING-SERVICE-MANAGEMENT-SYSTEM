@@ -1,4 +1,11 @@
-// ===== FORGOT PASSWORD FUNCTIONALITY =====
+/**
+ * CleanSpark Forgot Password Page - Backend Integrated
+ * Fully integrated with the backend API endpoints:
+ * - POST /api/auth/forgot-password - sends reset OTP
+ * - POST /api/auth/verify-reset-otp - verifies OTP
+ * - POST /api/auth/reset-password - resets password
+ * - POST /api/auth/resend-reset-otp - resends OTP
+ */
 
 // ===== SIDEBAR FUNCTIONS =====
 function openSidebar() {
@@ -44,9 +51,7 @@ function validateEmail(email) {
 
 // Show notification
 function showNotification(message, type) {
-    if (!type) {
-        type = 'info';
-    }
+    type = type || 'info';
     
     const existingNotification = document.querySelector('.alert');
     if (existingNotification) {
@@ -125,8 +130,7 @@ function setButtonLoading(button, isLoading, text) {
         if (!button.getAttribute('data-original-html')) {
             button.setAttribute('data-original-html', button.innerHTML);
         }
-        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>' +
-            '<span class="btn-text">' + (text || 'Loading...') + '</span>';
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' + (text || 'Loading...');
     } else {
         button.disabled = false;
         button.classList.remove('btn-loading');
@@ -169,11 +173,9 @@ function updatePasswordStrength(password) {
     strengthContainer.classList.add('show');
     const result = checkPasswordStrength(password);
     
-    // Reset classes
     strengthBar.classList.remove('weak', 'medium', 'strong');
     strengthText.classList.remove('weak', 'medium', 'strong');
     
-    // Add appropriate classes
     strengthBar.classList.add(result.class);
     strengthText.classList.add(result.class);
     strengthText.textContent = result.text;
@@ -208,8 +210,8 @@ function launchCelebration() {
 
 // ===== OTP TIMER =====
 let resetOtpTimerInterval = null;
-let resetOtpSecondsRemaining = 30;
-const RESET_OTP_COOLDOWN = 30;
+let resetOtpSecondsRemaining = 60; // 60 seconds cooldown
+const RESET_OTP_COOLDOWN = 60;
 
 function startResetOTPTimer() {
     stopResetOTPTimer();
@@ -255,94 +257,9 @@ function stopResetOTPTimer() {
     }
 }
 
-// ===== SIMULATE SENDING RESET OTP =====
-function simulateSendResetOTP(email) {
-    return new Promise(function(resolve, reject) {
-        console.log('Sending password reset OTP to:', email);
-        
-        setTimeout(function() {
-            try {
-                const otp = Math.floor(100000 + Math.random() * 900000).toString();
-                
-                // Store reset-specific OTP
-                localStorage.setItem('resetOTP', otp);
-                localStorage.setItem('resetOtpEmail', email);
-                localStorage.setItem('resetOtpExpiry', Date.now() + (5 * 60 * 1000));
-                
-                console.log('Reset OTP generated:', otp);
-                
-                startResetOTPTimer();
-                
-                resolve({ 
-                    success: true, 
-                    message: 'Reset code sent successfully',
-                    otp: otp
-                });
-            } catch (error) {
-                console.error('Error generating reset OTP:', error);
-                reject(new Error('Failed to send reset code'));
-            }
-        }, 1500);
-    });
-}
-
-// ===== SIMULATE VERIFYING RESET OTP =====
-function simulateVerifyResetOTP(enteredOTP) {
-    return new Promise(function(resolve) {
-        console.log('Verifying reset OTP:', enteredOTP);
-        
-        setTimeout(function() {
-            const storedOTP = localStorage.getItem('resetOTP');
-            const otpExpiry = localStorage.getItem('resetOtpExpiry');
-            
-            if (otpExpiry && Date.now() > parseInt(otpExpiry)) {
-                resolve({ success: false, error: 'otp_expired' });
-                return;
-            }
-            
-            if (enteredOTP === storedOTP) {
-                // Don't clear OTP yet - we still need to reset password
-                console.log('Reset OTP verified successfully');
-                resolve({ success: true });
-            } else {
-                resolve({ success: false, error: 'invalid_otp' });
-            }
-        }, 800);
-    });
-}
-
-// ===== UPDATE USER PASSWORD =====
-function updateUserPassword(email, newPassword) {
-    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    
-    const userIndex = users.findIndex(function(u) {
-        return u.email.toLowerCase() === email.toLowerCase();
-    });
-    
-    if (userIndex !== -1) {
-        users[userIndex].password = newPassword;
-        localStorage.setItem('registeredUsers', JSON.stringify(users));
-        console.log('Password updated for:', email);
-        return true;
-    }
-    
-    return false;
-}
-
-// ===== SHOW SUCCESS MODAL =====
-function showSuccessModal() {
-    const modalElement = document.getElementById('successModal');
-    if (!modalElement) return;
-    
-    const modal = new bootstrap.Modal(modalElement, {
-        backdrop: 'static',
-        keyboard: false
-    });
-    
-    modal.show();
-    
-    launchCelebration();
-}
+// ===== VARIABLES =====
+let currentResetEmail = '';
+let currentResetToken = '';
 
 // ===== SWITCH STEP =====
 function switchStep(fromStep, toStep) {
@@ -359,6 +276,21 @@ function switchStep(fromStep, toStep) {
     if (formContainer) {
         formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+}
+
+// ===== SHOW SUCCESS MODAL =====
+function showSuccessModal() {
+    const modalElement = document.getElementById('successModal');
+    if (!modalElement) return;
+    
+    const modal = new bootstrap.Modal(modalElement, {
+        backdrop: 'static',
+        keyboard: false
+    });
+    
+    modal.show();
+    
+    launchCelebration();
 }
 
 // ===== SETUP PASSWORD TOGGLES =====
@@ -399,7 +331,7 @@ function setupPasswordToggles() {
 // ===== DOM CONTENT LOADED =====
 document.addEventListener('DOMContentLoaded', function() {
     
-    // ===== STEP 1: EMAIL FORM =====
+    // ===== STEP 1: EMAIL FORM (Forgot Password) =====
     const emailForm = document.getElementById('emailForm');
     const resetEmailInput = document.getElementById('resetEmail');
     
@@ -429,27 +361,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (hasError) return;
             
-            // Check if email exists in registered users
-            const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-            const userExists = users.find(function(u) {
-                return u.email.toLowerCase() === email.toLowerCase();
-            });
-            
-            if (!userExists) {
-                showFieldError('resetEmail', 'emailError', 'No account found with this email address');
-                showNotification('No account found. Please check your email or register.', 'danger');
-                return;
-            }
-            
-            // Send OTP
+            // Send reset OTP to backend
             const sendCodeBtn = document.getElementById('sendCodeBtn');
             setButtonLoading(sendCodeBtn, true, 'Sending code...');
             
             try {
-                const result = await simulateSendResetOTP(email);
+                // Call backend forgot-password endpoint
+                const response = await API.auth.forgotPassword(email);
                 
-                if (result.success) {
-                    setButtonLoading(sendCodeBtn, false);
+                setButtonLoading(sendCodeBtn, false);
+                
+                if (response.success !== false) {
+                    // Store email for later use
+                    currentResetEmail = email;
                     
                     // Update display email
                     const verifyEmailDisplay = document.getElementById('verifyEmailDisplay');
@@ -466,17 +390,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (otpInput) otpInput.focus();
                     }, 500);
                     
-                    showNotification('Reset code sent to ' + email + ' (Test code: ' + result.otp + ')', 'success');
-                    console.log('========================================');
-                    console.log('PASSWORD RESET CODE: ' + result.otp);
-                    console.log('========================================');
+                    // Start OTP timer
+                    startResetOTPTimer();
+                    
+                    showNotification(response.message || 'Reset code sent to your email', 'success');
                 } else {
-                    throw new Error('Failed to send code');
+                    showNotification(response.message || 'Failed to send reset code', 'danger');
                 }
             } catch (error) {
-                console.error('Send code error:', error);
+                console.error('Send reset code error:', error);
                 setButtonLoading(sendCodeBtn, false);
-                showNotification('Failed to send reset code. Please try again.', 'danger');
+                showNotification(error.message || 'Failed to send reset code. Please try again.', 'danger');
             }
         });
     }
@@ -517,29 +441,41 @@ document.addEventListener('DOMContentLoaded', function() {
             const verifyCodeBtn = document.getElementById('verifyCodeBtn');
             setButtonLoading(verifyCodeBtn, true, 'Verifying...');
             
-            const result = await simulateVerifyResetOTP(otp);
-            
-            if (!result.success) {
+            try {
+                // Call backend verify-reset-otp endpoint
+                const response = await API.auth.verifyResetOTP(currentResetEmail, otp);
+                
                 setButtonLoading(verifyCodeBtn, false);
                 
-                if (result.error === 'otp_expired') {
+                if (response.success && response.resetToken) {
+                    // Store reset token for password reset
+                    currentResetToken = response.resetToken;
+                    
+                    // Stop OTP timer
+                    stopResetOTPTimer();
+                    
+                    // Switch to reset step
+                    switchStep('stepVerify', 'stepReset');
+                    
+                    showNotification('Identity verified. Create your new password.', 'success');
+                } else {
+                    showFieldError('resetOTP', 'otpError', response.message || 'Invalid or expired code');
+                    showNotification(response.message || 'Invalid verification code. Please try again.', 'danger');
+                }
+            } catch (error) {
+                console.error('Verify OTP error:', error);
+                setButtonLoading(verifyCodeBtn, false);
+                
+                const errorMessage = error.message || 'Verification failed';
+                
+                if (errorMessage.toLowerCase().includes('expired')) {
                     showFieldError('resetOTP', 'otpError', 'Code has expired. Please request a new one');
                     showNotification('Verification code expired. Please request a new code.', 'warning');
                 } else {
-                    showFieldError('resetOTP', 'otpError', 'Invalid code. Please check and try again');
-                    showNotification('Invalid verification code. Please try again.', 'danger');
+                    showFieldError('resetOTP', 'otpError', errorMessage);
+                    showNotification(errorMessage, 'danger');
                 }
-                return;
             }
-            
-            // OTP verified
-            setButtonLoading(verifyCodeBtn, false);
-            stopResetOTPTimer();
-            
-            // Switch to reset step
-            switchStep('stepVerify', 'stepReset');
-            
-            showNotification('Identity verified. Create your new password.', 'success');
         });
     }
     
@@ -549,22 +485,22 @@ document.addEventListener('DOMContentLoaded', function() {
         resendBtn.addEventListener('click', async function(e) {
             e.preventDefault();
             
-            const email = localStorage.getItem('resetOtpEmail');
-            if (!email) {
+            if (!currentResetEmail) {
                 showNotification('Please go back and enter your email again.', 'warning');
                 return;
             }
             
-            // Show loading
+            // Show loading state
             this.classList.add('resending');
             this.disabled = true;
             const originalHTML = this.innerHTML;
             this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resending...';
             
             try {
-                const result = await simulateSendResetOTP(email);
+                // Call backend resend-reset-otp endpoint
+                const response = await API.auth.resendResetOTP(currentResetEmail);
                 
-                if (result.success) {
+                if (response.success !== false) {
                     // Clear OTP input
                     const otpInput = document.getElementById('resetOTP');
                     if (otpInput) {
@@ -573,16 +509,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     clearFieldError('resetOTP', 'otpError');
-                    showNotification('New code sent to ' + email + ' (Test code: ' + result.otp + ')', 'success');
-                    console.log('========================================');
-                    console.log('NEW PASSWORD RESET CODE: ' + result.otp);
-                    console.log('========================================');
+                    
+                    // Reset timer
+                    stopResetOTPTimer();
+                    startResetOTPTimer();
+                    
+                    showNotification(response.message || 'New code sent to your email', 'success');
                 } else {
-                    throw new Error('Failed to resend code');
+                    throw new Error(response.message || 'Failed to resend code');
                 }
             } catch (error) {
                 console.error('Resend error:', error);
-                showNotification('Failed to resend code. Please try again.', 'danger');
+                showNotification(error.message || 'Failed to resend code. Please try again.', 'danger');
                 this.disabled = false;
             } finally {
                 this.classList.remove('resending');
@@ -597,6 +535,7 @@ document.addEventListener('DOMContentLoaded', function() {
         backToEmailBtn.addEventListener('click', function(e) {
             e.preventDefault();
             stopResetOTPTimer();
+            currentResetToken = '';
             switchStep('stepVerify', 'stepEmail');
         });
     }
@@ -652,17 +591,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (hasError) return;
             
-            // Update password
-            const resetPasswordBtn = document.getElementById('resetPasswordBtn');
-            setButtonLoading(resetPasswordBtn, true, 'Resetting password...');
-            
-            // Small delay for UX
-            await new Promise(function(resolve) { setTimeout(resolve, 1000); });
-            
-            const email = localStorage.getItem('resetOtpEmail');
-            
-            if (!email) {
-                setButtonLoading(resetPasswordBtn, false);
+            // Check if we have a reset token
+            if (!currentResetToken) {
                 showNotification('Session expired. Please start over.', 'danger');
                 setTimeout(function() {
                     window.location.href = 'forgetpassword.html';
@@ -670,27 +600,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            const success = updateUserPassword(email, newPassword);
+            // Reset password via backend
+            const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+            setButtonLoading(resetPasswordBtn, true, 'Resetting password...');
             
-            if (success) {
-                // Clear all reset data
-                localStorage.removeItem('resetOTP');
-                localStorage.removeItem('resetOtpEmail');
-                localStorage.removeItem('resetOtpExpiry');
-                stopResetOTPTimer();
+            try {
+                // Call backend reset-password endpoint
+                const response = await API.auth.resetPassword(currentResetToken, newPassword, confirmPassword);
                 
                 setButtonLoading(resetPasswordBtn, false);
                 
-                // Show success modal
-                showSuccessModal();
-                
-                console.log('========================================');
-                console.log('Password reset successful for:', email);
-                console.log('New password:', newPassword);
-                console.log('========================================');
-            } else {
+                if (response.success) {
+                    // Clear all reset data
+                    currentResetEmail = '';
+                    currentResetToken = '';
+                    stopResetOTPTimer();
+                    
+                    // Show success modal
+                    showSuccessModal();
+                    
+                    console.log('Password reset successful');
+                } else {
+                    showNotification(response.message || 'Failed to reset password. Please try again.', 'danger');
+                }
+            } catch (error) {
+                console.error('Reset password error:', error);
                 setButtonLoading(resetPasswordBtn, false);
-                showNotification('Failed to reset password. Please try again.', 'danger');
+                showNotification(error.message || 'Failed to reset password. Please try again.', 'danger');
             }
         });
     }
@@ -723,13 +659,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // ===== LOG TEST ACCOUNTS =====
+    // ===== LOG BACKEND INFO =====
     console.log('========================================');
     console.log('CleanSpark - Forgot Password Page');
-    console.log('Test accounts available for password reset:');
+    console.log('Backend API Integration:');
     console.log('----------------------------------------');
-    console.log('demo@cleanspark.com');
-    console.log('test@test.com');
-    console.log('admin@cleanspark.com');
+    console.log('POST /api/auth/forgot-password');
+    console.log('POST /api/auth/verify-reset-otp');
+    console.log('POST /api/auth/reset-password');
+    console.log('POST /api/auth/resend-reset-otp');
     console.log('========================================');
 });
