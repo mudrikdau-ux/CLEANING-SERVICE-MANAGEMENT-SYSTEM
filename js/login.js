@@ -1,7 +1,12 @@
 /**
- * CleanSpark Login Page - Backend Integrated
+ * CleanSpark Login Page - Backend Integrated with Google OAuth
  * Fully integrated with the backend API endpoints
  */
+
+// ===== GOOGLE CLIENT CONFIGURATION =====
+// IMPORTANT: Replace this with your actual Google Client ID from Google Cloud Console
+// Get it from: https://console.cloud.google.com/apis/credentials
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com';
 
 // ===== SIDEBAR FUNCTIONS =====
 function openSidebar() {
@@ -42,11 +47,6 @@ document.addEventListener('click', function(event) {
 function validateEmail(email) {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
-}
-
-// Format currency
-function formatCurrency(amount) {
-    return 'TZS ' + amount.toLocaleString();
 }
 
 // Show notification
@@ -281,37 +281,74 @@ function setupPasswordToggle() {
     }
 }
 
-// ===== GOOGLE LOGIN HANDLER =====
-async function handleGoogleLogin() {
-    // For now, simulate Google login
-    // In production, this would use Google's OAuth library
-    showNotification('Google login successful!', 'success');
+// ===== GOOGLE LOGIN HANDLER (REAL IMPLEMENTATION) =====
+function initializeGoogleLogin() {
+    if (typeof google === 'undefined') {
+        console.log('Google API not loaded yet, waiting...');
+        // Wait for Google API to load
+        setTimeout(initializeGoogleLogin, 500);
+        return;
+    }
     
-    const user = {
-        id: 999,
-        email: 'user@gmail.com',
-        first_name: 'Google',
-        last_name: 'User',
-        role: 'user'
-    };
+    console.log('Initializing Google Login...');
     
-    // Store fake token for demo
-    const fakeToken = 'google_demo_token_' + Date.now();
-    API.setAuthToken(fakeToken, true);
-    localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('currentUser', JSON.stringify(user));
+    google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+    });
     
-    launchCelebration();
+    // Render the Google button
+    google.accounts.id.renderButton(
+        document.getElementById('googleButton'),
+        { 
+            theme: 'outline', 
+            size: 'large', 
+            width: '100%',
+            text: 'signin_with',
+            shape: 'rectangular',
+            logo_alignment: 'left'
+        }
+    );
     
-    const pendingBooking = getPendingBooking();
-    if (pendingBooking) {
-        setTimeout(() => {
-            window.location.href = 'booking.html';
-        }, 1500);
-    } else {
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1500);
+    // Also prompt one-tap login (optional)
+    // google.accounts.id.prompt(); // Uncomment to enable one-tap
+}
+
+async function handleGoogleCredentialResponse(response) {
+    const googleToken = response.credential;
+    
+    console.log('Google credential received, sending to backend...');
+    showLoading(true);
+    
+    try {
+        // Send Google token to your backend for verification
+        const result = await API.auth.googleLogin(googleToken);
+        
+        showLoading(false);
+        
+        if (result.token && result.user) {
+            // Store token and user data
+            API.setAuthToken(result.token, true);
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('currentUser', JSON.stringify(result.user));
+            
+            launchCelebration();
+            showNotification(`Welcome ${result.user.first_name}! Login successful.`, 'success');
+            
+            // Check for pending booking
+            const pendingBooking = getPendingBooking();
+            setTimeout(() => {
+                window.location.href = pendingBooking ? 'booking.html' : 'index.html';
+            }, 1500);
+        } else {
+            throw new Error(result.message || 'Google login failed');
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Google login error:', error);
+        showNotification(error.message || 'Google login failed. Please try again.', 'danger');
     }
 }
 
@@ -327,7 +364,7 @@ async function resendOTP(email) {
     resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resending...';
     
     try {
-        // Call backend resend OTP endpoint
+        // Call backend resend OTP endpoint (for forgot password flow)
         const result = await API.auth.resendResetOTP(email);
         
         if (result.success || result.message) {
@@ -556,6 +593,9 @@ function checkAdminLoginStatus() {
 
 // ===== DOM CONTENT LOADED =====
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Google Login
+    initializeGoogleLogin();
+    
     // Check admin login status
     checkAdminLoginStatus();
     
@@ -657,16 +697,24 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('========================================');
     console.log('CleanSpark Login - Backend Integrated');
     console.log('========================================');
-    console.log('The login flow uses the backend API:');
+    console.log('Email/Password Login Flow:');
     console.log('1. POST /api/auth/login - sends OTP to email');
     console.log('2. POST /api/auth/verify-otp - verifies OTP and returns token');
     console.log('');
-    console.log('IMPORTANT: For testing, you need to have a user in the database.');
-    console.log('Check your database users table for registered emails.');
+    console.log('Google Login Flow:');
+    console.log('1. User clicks Google button');
+    console.log('2. Google prompts for account selection');
+    console.log('3. Google returns ID token');
+    console.log('4. POST /api/auth/google-login - verifies token with Google');
+    console.log('5. Backend creates/finds user and returns JWT');
+    console.log('');
+    console.log('IMPORTANT:');
+    console.log('1. Set your GOOGLE_CLIENT_ID in login.js');
+    console.log('2. Add your GOOGLE_CLIENT_ID to backend .env file');
+    console.log('3. Make sure your backend has GOOGLE_CLIENT_ID configured');
     console.log('========================================');
 });
 
 // Export functions for global use
 window.openSidebar = openSidebar;
 window.closeSidebar = closeSidebar;
-window.handleGoogleLogin = handleGoogleLogin;

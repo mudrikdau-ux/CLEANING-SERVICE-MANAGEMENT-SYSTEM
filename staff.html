@@ -61,258 +61,433 @@
 
 <!-- DASHBOARD SECTION -->
 <div id="dashboard" class="dashboard-container" style="display:none;">
-  <!-- Top Navigation Bar -->
-  <nav class="dashboard-nav">
-    <div class="nav-brand">
-      <img src="image/logo.jpeg" alt="CleanSpark Logo" class="nav-logo">
-      <span>CleanSpark Staff Portal</span>
+  
+  <!-- MOBILE HEADER -->
+  <div class="mobile-header">
+    <button id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="Toggle menu">
+      <i class="bi bi-list"></i>
+    </button>
+    <div class="mobile-brand">
+      <img src="image/logo.jpeg" alt="CleanSpark Logo" class="mobile-logo">
+      <span>CleanSpark</span>
     </div>
-    <div class="nav-menu">
-      <button class="nav-btn active" data-view="jobs">
-        <i class="bi bi-briefcase-fill"></i> Assigned Jobs
+    <button class="theme-toggle-btn mobile-theme-toggle" id="themeToggleMobile" aria-label="Toggle theme">
+      <i class="bi bi-moon-fill"></i>
+      <i class="bi bi-sun-fill"></i>
+    </button>
+  </div>
+  
+  <!-- SIDEBAR OVERLAY (Mobile) -->
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+  
+  <!-- SIDEBAR NAVIGATION -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <img src="image/logo.jpeg" alt="CleanSpark Logo" class="sidebar-logo">
+        <span>CleanSpark</span>
+      </div>
+      <button id="sidebarCloseBtn" class="sidebar-close-btn" aria-label="Close sidebar">
+        <i class="bi bi-x-lg"></i>
       </button>
-      <button class="nav-btn" data-view="history">
-        <i class="bi bi-clock-history"></i> Job History
+    </div>
+    
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" id="sidebarAvatar">MD</div>
+      <div class="sidebar-user-info">
+        <span class="sidebar-user-name" id="sidebarUserName">Staff Member</span>
+        <span class="sidebar-user-role" id="sidebarUserRole">Staff</span>
+      </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <button class="sidebar-nav-btn active" data-view="jobs">
+        <i class="bi bi-briefcase-fill"></i>
+        <span>Assigned Jobs</span>
       </button>
-      <button class="nav-btn" data-view="stats">
-        <i class="bi bi-graph-up"></i> My Stats
+      <button class="sidebar-nav-btn" data-view="history">
+        <i class="bi bi-clock-history"></i>
+        <span>Job History</span>
       </button>
-      <button class="nav-btn" data-view="profile">
-        <i class="bi bi-person-circle"></i> Profile
+      <button class="sidebar-nav-btn" data-view="stats">
+        <i class="bi bi-graph-up"></i>
+        <span>My Stats</span>
       </button>
-      <button class="nav-btn" data-view="payment">
-        <i class="bi bi-cash-stack"></i> Cash Payment
+      <button class="sidebar-nav-btn" data-view="profile">
+        <i class="bi bi-person-circle"></i>
+        <span>Profile</span>
       </button>
+      <button class="sidebar-nav-btn" data-view="settings">
+        <i class="bi bi-gear-fill"></i>
+        <span>Settings</span>
+      </button>
+      <button class="sidebar-nav-btn" data-view="payment">
+        <i class="bi bi-cash-stack"></i>
+        <span>Cash Payment</span>
+      </button>
+      
+      <div class="sidebar-divider">
+        <span>Management</span>
+      </div>
+      
       <!-- Supervisor Menu - Dynamically Shown -->
-      <button class="nav-btn" id="supervisorNavBtn" data-view="supervisor" style="display: none;">
-        <i class="bi bi-person-badge"></i> Supervisor
+      <button class="sidebar-nav-btn" id="supervisorSidebarBtn" data-view="supervisor" style="display: none;">
+        <i class="bi bi-person-badge"></i>
+        <span>Supervisor</span>
       </button>
-    </div>
-    <div class="nav-user">
-      <!-- Theme Toggle Button -->
-      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light mode" title="Toggle dark/light mode">
+      
+      <!-- General Supervisor Menu - Dynamically Shown -->
+      <button class="sidebar-nav-btn" id="generalSupervisorSidebarBtn" data-view="generalSupervisor" style="display: none;">
+        <i class="bi bi-person-workspace"></i>
+        <span>General Supervisor</span>
+      </button>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <button class="theme-toggle-btn sidebar-theme-toggle" id="themeToggle" aria-label="Toggle theme">
         <i class="bi bi-moon-fill"></i>
         <i class="bi bi-sun-fill"></i>
       </button>
-      <div class="user-info">
-        <span id="staffName">Staff Member</span>
-        <i class="bi bi-chevron-down"></i>
-      </div>
-      <button id="logoutBtn" class="logout-btn">
+      <button id="sidebarLogoutBtn" class="sidebar-logout-btn">
         <i class="bi bi-box-arrow-right"></i>
+        <span>Logout</span>
       </button>
     </div>
-  </nav>
-
-  <!-- Main Content Area -->
-  <div class="dashboard-content">
-    <!-- ASSIGNED JOBS VIEW -->
-    <div id="jobsView" class="content-view active">
-      <div class="view-header">
-        <h2><i class="bi bi-briefcase-fill"></i> Assigned Jobs</h2>
-        <p>View and manage your current cleaning assignments</p>
-      </div>
-      <div id="jobsContainer" class="jobs-grid">
-        <!-- Jobs will be dynamically loaded here -->
-      </div>
-    </div>
-
-    <!-- JOB HISTORY VIEW -->
-    <div id="historyView" class="content-view">
-      <div class="view-header">
-        <h2><i class="bi bi-clock-history"></i> Job History</h2>
-        <p>View your completed and past assignments</p>
-      </div>
-      <div id="historyContainer" class="jobs-grid">
-        <!-- History will be dynamically loaded here -->
+  </aside>
+  
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <h1 class="top-bar-title" id="topBarTitle">Assigned Jobs</h1>
+      <div class="top-bar-actions">
+        <span class="current-date" id="currentDate"></span>
+        <div class="top-bar-user">
+          <span id="topBarUserName">Staff Member</span>
+        </div>
       </div>
     </div>
+    
+    <!-- Dashboard Content Area -->
+    <div class="dashboard-content">
+      <!-- ASSIGNED JOBS VIEW -->
+      <div id="jobsView" class="content-view active">
+        <div class="view-header">
+          <h2><i class="bi bi-briefcase-fill"></i> Assigned Jobs</h2>
+          <p>View your current cleaning assignments and take action</p>
+        </div>
+        <div id="jobsContainer" class="jobs-grid">
+          <!-- Jobs will be dynamically loaded here -->
+        </div>
+      </div>
 
-    <!-- STATS VIEW -->
-    <div id="statsView" class="content-view">
-      <div class="view-header">
-        <h2><i class="bi bi-graph-up"></i> My Performance Stats</h2>
-        <p>Track your work performance and achievements</p>
+      <!-- JOB HISTORY VIEW -->
+      <div id="historyView" class="content-view">
+        <div class="view-header">
+          <h2><i class="bi bi-clock-history"></i> Job History</h2>
+          <p>View your completed and past assignments</p>
+        </div>
+        <div id="historyContainer" class="jobs-grid">
+          <!-- History will be dynamically loaded here -->
+        </div>
       </div>
-      <div class="stats-grid" id="statsContainer">
-        <!-- Stats will be dynamically loaded here -->
-      </div>
-    </div>
 
-    <!-- PROFILE VIEW -->
-    <div id="profileView" class="content-view">
-      <div class="view-header">
-        <h2><i class="bi bi-person-circle"></i> Staff Profile</h2>
-        <p>Manage your personal information and security settings</p>
+      <!-- STATS VIEW -->
+      <div id="statsView" class="content-view">
+        <div class="view-header">
+          <h2><i class="bi bi-graph-up"></i> My Performance Stats</h2>
+          <p>Track your work performance and achievements</p>
+        </div>
+        <div class="stats-grid" id="statsContainer">
+          <!-- Stats will be dynamically loaded here -->
+        </div>
       </div>
-      <div class="profile-card" id="profileContainer">
-        <!-- Profile will be dynamically loaded here -->
-      </div>
-    </div>
 
-    <!-- CASH PAYMENT VALIDATION VIEW -->
-    <div id="paymentView" class="content-view">
-      <div class="view-header">
-        <h2><i class="bi bi-cash-stack"></i> Cash Payment Validation</h2>
-        <p>Validate customer cash payments and generate receipts</p>
+      <!-- PROFILE VIEW -->
+      <div id="profileView" class="content-view">
+        <div class="view-header">
+          <h2><i class="bi bi-person-circle"></i> Staff Profile</h2>
+          <p>Manage your personal information and security settings</p>
+        </div>
+        <div class="profile-card" id="profileContainer">
+          <!-- Profile will be dynamically loaded here -->
+        </div>
       </div>
-      
-      <!-- Payment Stats Summary -->
-      <div class="payment-stats-grid" id="paymentStatsGrid">
-        <!-- Dynamic payment stats will be loaded here -->
+
+      <!-- SETTINGS VIEW -->
+      <div id="settingsView" class="content-view">
+        <div class="view-header">
+          <h2><i class="bi bi-gear-fill"></i> Settings</h2>
+          <p>Customize your experience and preferences</p>
+        </div>
+        <div class="settings-container" id="settingsContainer">
+          <!-- Settings dynamically loaded here -->
+        </div>
       </div>
-      
-      <!-- Payment Validation Form -->
-      <div class="payment-validation-card">
-        <h3><i class="bi bi-receipt"></i> Validate Payment</h3>
-        <form id="paymentValidationForm">
-          <div class="form-group">
-            <label for="jobSelect"><i class="bi bi-briefcase"></i> Select Job</label>
-            <select id="jobSelect" class="form-control" required>
-              <option value="">-- Select a completed job --</option>
+
+      <!-- CASH PAYMENT VALIDATION VIEW -->
+      <div id="paymentView" class="content-view">
+        <div class="view-header">
+          <h2><i class="bi bi-cash-stack"></i> Cash Payment Validation</h2>
+          <p>Validate customer cash payments and generate receipts</p>
+        </div>
+        
+        <!-- Payment Stats Summary -->
+        <div class="payment-stats-grid" id="paymentStatsGrid">
+          <!-- Dynamic payment stats will be loaded here -->
+        </div>
+        
+        <!-- Payment Validation Form -->
+        <div class="payment-validation-card">
+          <h3><i class="bi bi-receipt"></i> Validate Payment</h3>
+          <form id="paymentValidationForm">
+            <div class="form-group">
+              <label for="jobSelect"><i class="bi bi-briefcase"></i> Select Job</label>
+              <select id="jobSelect" class="form-control" required>
+                <option value="">-- Select a completed job --</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="customerName"><i class="bi bi-person"></i> Customer Name</label>
+              <input type="text" id="customerName" class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label for="serviceAmount"><i class="bi bi-cash"></i> Service Amount</label>
+              <input type="text" id="serviceAmount" class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label for="cashReceived"><i class="bi bi-cash-stack"></i> Cash Received (TZS)</label>
+              <input type="number" id="cashReceived" class="form-control" step="1000" placeholder="Enter amount received">
+              <small class="text-muted">Enter the exact amount received from customer in Tanzanian Shillings (TZS)</small>
+            </div>
+            
+            <div class="form-group">
+              <label for="paymentNote"><i class="bi bi-pencil"></i> Payment Note (Optional)</label>
+              <textarea id="paymentNote" class="form-control" rows="3" placeholder="Any additional notes about the payment..."></textarea>
+            </div>
+            
+            <button type="button" id="validatePaymentBtn" class="btn-validate-payment">
+              <i class="bi bi-check-circle"></i> Validate Payment & Generate Receipt
+            </button>
+          </form>
+        </div>
+        
+        <!-- Recent Payment Validations -->
+        <div class="recent-payments-card">
+          <h3><i class="bi bi-clock-history"></i> Recent Payment Validations</h3>
+          <div id="recentPaymentsContainer" class="recent-payments-list">
+            <!-- Recent payments will be loaded here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- SUPERVISOR VIEW (UNCHANGED - Original Supervisor functionality) -->
+      <div id="supervisorView" class="content-view">
+        <div class="view-header">
+          <h2><i class="bi bi-person-badge"></i> Supervisor Control Panel</h2>
+          <p>Manage field operations, attendance, and reports</p>
+        </div>
+        
+        <div class="supervisor-dashboard">
+          <!-- Location Selection -->
+          <div class="supervisor-card">
+            <h3><i class="bi bi-building"></i> Select Field Location</h3>
+            <select id="locationSelect" class="form-control supervisor-select">
+              <option value="">-- Choose Location --</option>
+              <option value="ZSSF">ZSSF Headquarters</option>
+              <option value="Michenzani Mall">Michenzani Mall</option>
+              <option value="Zanzibar University">Zanzibar University</option>
             </select>
+            <button id="loadLocationDataBtn" class="btn-supervisor-primary mt-3">
+              <i class="bi bi-arrow-repeat"></i> Load Location Data
+            </button>
           </div>
           
-          <div class="form-group">
-            <label for="customerName"><i class="bi bi-person"></i> Customer Name</label>
-            <input type="text" id="customerName" class="form-control" readonly>
+          <!-- Attendance Management -->
+          <div class="supervisor-card" id="attendanceCard" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3><i class="bi bi-check2-square"></i> Attendance Management</h3>
+              <span class="badge bg-primary" id="selectedLocationDisplay"></span>
+            </div>
+            <p class="text-muted small mb-3">Mark daily attendance for staff. Each present day = 10,000 TZS added to weekly payroll.</p>
+            <div id="attendanceTableContainer" class="attendance-table-wrapper">
+              <!-- Attendance table will be loaded here -->
+            </div>
+            <button id="saveAttendanceBtn" class="btn-supervisor-success mt-3">
+              <i class="bi bi-save"></i> Save Attendance & Update Payroll
+            </button>
           </div>
           
-          <div class="form-group">
-            <label for="serviceAmount"><i class="bi bi-cash"></i> Service Amount</label>
-            <input type="text" id="serviceAmount" class="form-control" readonly>
+          <!-- Weekly Report Writing -->
+          <div class="supervisor-card">
+            <h3><i class="bi bi-file-text"></i> Weekly Report</h3>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Week Ending Date</label>
+                  <input type="date" id="reportWeekEnding" class="form-control">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Location</label>
+                  <input type="text" id="reportLocation" class="form-control" readonly placeholder="Select location above first">
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Work Progress & Observations</label>
+              <textarea id="reportProgress" class="form-control" rows="3" placeholder="Describe the work completed, challenges faced, and overall progress..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Worker Performance</label>
+              <textarea id="reportPerformance" class="form-control" rows="3" placeholder="Mention staff who performed well or need improvement..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Equipment Status & Requests</label>
+              <textarea id="reportEquipment" class="form-control" rows="2" placeholder="Equipment condition, missing items, or repair needs..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Additional Requests / Comments</label>
+              <textarea id="reportRequests" class="form-control" rows="2" placeholder="Request additional manpower, report underperforming staff, etc..."></textarea>
+            </div>
+            
+            <div class="report-actions">
+              <button id="generateReportBtn" class="btn-supervisor-primary">
+                <i class="bi bi-file-earmark-text"></i> Generate Report
+              </button>
+              <button id="downloadReportBtn" class="btn-supervisor-secondary" disabled>
+                <i class="bi bi-download"></i> Download Report
+              </button>
+              <button id="sendReportToAdminBtn" class="btn-supervisor-info" disabled>
+                <i class="bi bi-send"></i> Send to Admin
+              </button>
+            </div>
           </div>
           
-          <div class="form-group">
-            <label for="cashReceived"><i class="bi bi-cash-stack"></i> Cash Received (TZS)</label>
-            <input type="number" id="cashReceived" class="form-control" step="1000" placeholder="Enter amount received">
-            <small class="text-muted">Enter the exact amount received from customer in Tanzanian Shillings (TZS)</small>
+          <!-- Communication with Admin (Chat) -->
+          <div class="supervisor-card communication-card">
+            <h3><i class="bi bi-chat-dots"></i> Communicate with Admin</h3>
+            <div class="chat-messages" id="chatMessagesContainer">
+              <!-- Chat history will appear here -->
+              <div class="chat-placeholder">No messages yet. Start a conversation or send a report.</div>
+            </div>
+            <div class="chat-input-group">
+              <textarea id="chatMessageInput" class="form-control" rows="2" placeholder="Type your message here..."></textarea>
+              <button id="sendChatMessageBtn" class="btn-supervisor-primary mt-2">
+                <i class="bi bi-send"></i> Send Message
+              </button>
+            </div>
+            <div class="mt-2 text-end">
+              <button id="attachReportToChatBtn" class="btn-attach-report" disabled>
+                <i class="bi bi-paperclip"></i> Attach Last Report
+              </button>
+            </div>
           </div>
-          
-          <div class="form-group">
-            <label for="paymentNote"><i class="bi bi-pencil"></i> Payment Note (Optional)</label>
-            <textarea id="paymentNote" class="form-control" rows="3" placeholder="Any additional notes about the payment..."></textarea>
-          </div>
-          
-          <button type="button" id="validatePaymentBtn" class="btn-validate-payment">
-            <i class="bi bi-check-circle"></i> Validate Payment & Generate Receipt
-          </button>
-        </form>
+        </div>
       </div>
-      
-      <!-- Recent Payment Validations -->
-      <div class="recent-payments-card">
-        <h3><i class="bi bi-clock-history"></i> Recent Payment Validations</h3>
-        <div id="recentPaymentsContainer" class="recent-payments-list">
-          <!-- Recent payments will be loaded here -->
+
+      <!-- GENERAL SUPERVISOR VIEW (NEW SEPARATE MENU) -->
+      <div id="generalSupervisorView" class="content-view">
+        <div class="view-header">
+          <h2><i class="bi bi-person-workspace"></i> General Supervisor Dashboard</h2>
+          <p>Manage assigned workers, job statuses, and team performance</p>
+        </div>
+        
+        <div class="general-supervisor-dashboard">
+          <!-- Team Overview -->
+          <div class="gs-card">
+            <h3><i class="bi bi-people-fill"></i> My Team</h3>
+            <div id="gsTeamContainer" class="gs-team-grid">
+              <!-- Team members loaded dynamically -->
+            </div>
+          </div>
+          
+          <!-- Assigned Jobs Management -->
+          <div class="gs-card">
+            <h3><i class="bi bi-briefcase-fill"></i> Team Jobs Management</h3>
+            <div class="gs-filters">
+              <select id="gsStatusFilter" class="form-control gs-select">
+                <option value="all">All Jobs</option>
+                <option value="pending">Pending</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+              <select id="gsWorkerFilter" class="form-control gs-select">
+                <option value="all">All Workers</option>
+              </select>
+            </div>
+            <div id="gsJobsContainer" class="gs-jobs-list">
+              <!-- Jobs loaded dynamically -->
+            </div>
+          </div>
+          
+          <!-- Job Status Control -->
+          <div class="gs-card">
+            <h3><i class="bi bi-toggle2-on"></i> Job Status Control</h3>
+            <p class="text-muted small">Select a job and update its status.</p>
+            <div class="gs-status-control">
+              <select id="gsJobSelect" class="form-control gs-select mb-3">
+                <option value="">-- Select Job to Update --</option>
+              </select>
+              <div class="gs-status-actions">
+                <button id="gsMarkStartedBtn" class="btn-gs-start" disabled>
+                  <i class="bi bi-play-fill"></i> Mark Job Started
+                </button>
+                <button id="gsMarkCompletedBtn" class="btn-gs-complete" disabled>
+                  <i class="bi bi-check-circle-fill"></i> Mark Job Completed
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+  </main>
+</div>
 
-    <!-- SUPERVISOR VIEW -->
-    <div id="supervisorView" class="content-view">
-      <div class="view-header">
-        <h2><i class="bi bi-person-badge"></i> Supervisor Control Panel</h2>
-        <p>Manage field operations, attendance, and reports</p>
+<!-- ACTION MODAL (Staff Report Issues) -->
+<div id="actionModal" class="detail-modal" style="display:none;">
+  <div class="detail-modal-content" style="max-width: 550px;">
+    <div class="detail-modal-header">
+      <div class="detail-modal-title">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <h2>Report Issue / Action</h2>
       </div>
-      
-      <div class="supervisor-dashboard">
-        <!-- Location Selection -->
-        <div class="supervisor-card">
-          <h3><i class="bi bi-building"></i> Select Field Location</h3>
-          <select id="locationSelect" class="form-control supervisor-select">
-            <option value="">-- Choose Location --</option>
-            <option value="ZSSF">ZSSF Headquarters</option>
-            <option value="Michenzani Mall">Michenzani Mall</option>
-            <option value="Zanzibar University">Zanzibar University</option>
-          </select>
-          <button id="loadLocationDataBtn" class="btn-supervisor-primary mt-3">
-            <i class="bi bi-arrow-repeat"></i> Load Location Data
-          </button>
-        </div>
-        
-        <!-- Attendance Management -->
-        <div class="supervisor-card" id="attendanceCard" style="display: none;">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3><i class="bi bi-check2-square"></i> Attendance Management</h3>
-            <span class="badge bg-primary" id="selectedLocationDisplay"></span>
-          </div>
-          <p class="text-muted small mb-3">Mark daily attendance for staff. Each present day = 10,000 TZS added to weekly payroll.</p>
-          <div id="attendanceTableContainer" class="attendance-table-wrapper">
-            <!-- Attendance table will be loaded here -->
-          </div>
-          <button id="saveAttendanceBtn" class="btn-supervisor-success mt-3">
-            <i class="bi bi-save"></i> Save Attendance & Update Payroll
-          </button>
-        </div>
-        
-        <!-- Weekly Report Writing -->
-        <div class="supervisor-card">
-          <h3><i class="bi bi-file-text"></i> Weekly Report</h3>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label>Week Ending Date</label>
-                <input type="date" id="reportWeekEnding" class="form-control">
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                <label>Location</label>
-                <input type="text" id="reportLocation" class="form-control" readonly placeholder="Select location above first">
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Work Progress & Observations</label>
-            <textarea id="reportProgress" class="form-control" rows="3" placeholder="Describe the work completed, challenges faced, and overall progress..."></textarea>
-          </div>
-          <div class="form-group">
-            <label>Worker Performance</label>
-            <textarea id="reportPerformance" class="form-control" rows="3" placeholder="Mention staff who performed well or need improvement..."></textarea>
-          </div>
-          <div class="form-group">
-            <label>Equipment Status & Requests</label>
-            <textarea id="reportEquipment" class="form-control" rows="2" placeholder="Equipment condition, missing items, or repair needs..."></textarea>
-          </div>
-          <div class="form-group">
-            <label>Additional Requests / Comments (e.g., request more staff, replace workers)</label>
-            <textarea id="reportRequests" class="form-control" rows="2" placeholder="Request additional manpower, report underperforming staff, etc..."></textarea>
-          </div>
-          
-          <div class="report-actions">
-            <button id="generateReportBtn" class="btn-supervisor-primary">
-              <i class="bi bi-file-earmark-text"></i> Generate Report
-            </button>
-            <button id="downloadReportBtn" class="btn-supervisor-secondary" disabled>
-              <i class="bi bi-download"></i> Download Report
-            </button>
-            <button id="sendReportToAdminBtn" class="btn-supervisor-info" disabled>
-              <i class="bi bi-send"></i> Send to Admin
-            </button>
-          </div>
-        </div>
-        
-        <!-- Communication with Admin (Chat) -->
-        <div class="supervisor-card communication-card">
-          <h3><i class="bi bi-chat-dots"></i> Communicate with Admin</h3>
-          <div class="chat-messages" id="chatMessagesContainer">
-            <!-- Chat history will appear here -->
-            <div class="chat-placeholder">No messages yet. Start a conversation or send a report.</div>
-          </div>
-          <div class="chat-input-group">
-            <textarea id="chatMessageInput" class="form-control" rows="2" placeholder="Type your message here..."></textarea>
-            <button id="sendChatMessageBtn" class="btn-supervisor-primary mt-2">
-              <i class="bi bi-send"></i> Send Message
-            </button>
-          </div>
-          <div class="mt-2 text-end">
-            <button id="attachReportToChatBtn" class="btn-attach-report" disabled>
-              <i class="bi bi-paperclip"></i> Attach Last Report
-            </button>
-          </div>
-        </div>
+      <button id="closeActionModal" class="close-modal-btn">&times;</button>
+    </div>
+    <div class="detail-modal-body">
+      <div class="form-group">
+        <label><i class="bi bi-flag-fill"></i> Issue Type</label>
+        <select id="actionType" class="form-control">
+          <option value="">-- Select Issue Type --</option>
+          <option value="sick">Feeling Sick</option>
+          <option value="unable">Unable to Attend</option>
+          <option value="late">Running Late</option>
+          <option value="emergency">Emergency Situation</option>
+          <option value="replacement">Need Replacement</option>
+          <option value="other">Other Work-Related Notes</option>
+        </select>
       </div>
+      <div class="form-group">
+        <label><i class="bi bi-pencil-fill"></i> Description</label>
+        <textarea id="actionDescription" class="form-control" rows="4" placeholder="Describe your situation in detail..."></textarea>
+      </div>
+      <div class="form-group">
+        <label><i class="bi bi-calendar"></i> Expected Return / Resolution Date</label>
+        <input type="date" id="actionReturnDate" class="form-control">
+      </div>
+    </div>
+    <div class="detail-modal-footer">
+      <button id="cancelActionBtn" class="btn-close-detail">
+        <i class="bi bi-x-circle"></i> Cancel
+      </button>
+      <button id="submitActionBtn" class="btn-validate-payment" style="width: auto;">
+        <i class="bi bi-send-fill"></i> Submit Report
+      </button>
     </div>
   </div>
 </div>
@@ -460,27 +635,6 @@
   </div>
 </div>
 
-<!-- Chat Message Action Modal -->
-<div id="chatActionModal" class="chat-action-modal" style="display:none;">
-  <div class="chat-action-content">
-    <button class="chat-action-btn" data-action="copy">
-      <i class="bi bi-clipboard"></i> Copy Message
-    </button>
-    <button class="chat-action-btn" data-action="edit">
-      <i class="bi bi-pencil"></i> Edit Message
-    </button>
-    <button class="chat-action-btn" data-action="delete-for-me">
-      <i class="bi bi-eye-slash"></i> Delete for Me
-    </button>
-    <button class="chat-action-btn" data-action="delete-for-all">
-      <i class="bi bi-trash"></i> Delete for Everyone
-    </button>
-    <button class="chat-action-btn chat-action-cancel" data-action="cancel">
-      <i class="bi bi-x"></i> Cancel
-    </button>
-  </div>
-</div>
-
 <!-- Edit Message Modal -->
 <div id="editMessageModal" class="detail-modal" style="display:none;">
   <div class="detail-modal-content" style="max-width: 500px;">
@@ -511,8 +665,6 @@
 <!-- Toast Notification Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-<!-- Theme JS -->
-<script src="js/theme.js"></script>
 <!-- Custom JavaScript -->
 <script src="js/staff.js"></script>
 </body>

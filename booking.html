@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CleanSpark - Book Cleaning Service | Zanzibar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>CleanSpark - Professional Booking System | Zanzibar</title>
     
-    <!-- Apply saved theme immediately to prevent flash of wrong theme -->
     <script>
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
@@ -13,368 +12,367 @@
         })();
     </script>
     
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-    <!-- Leaflet CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="css/booking.css">
 </head>
 <body>
 
-<div class="container">
-    <!-- Theme Toggle & Header -->
-    <div class="booking-header-bar">
-        <div class="booking-brand">
-            <img src="image/logo.jpeg" alt="CleanSpark Logo" class="booking-logo" onerror="this.style.display='none'">
-            <span>CleanSpark Booking</span>
-        </div>
-        <div class="booking-header-actions">
-            <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light mode" title="Toggle dark/light mode">
-                <i class="fas fa-moon"></i>
-                <i class="fas fa-sun"></i>
-            </button>
-            <a href="index.html" class="home-link-btn"><i class="fas fa-home"></i></a>
+<div class="booking-wrapper">
+    <!-- Header -->
+    <div class="booking-header">
+        <div class="booking-header-content">
+            <div class="booking-logo-section">
+                <img src="image/logo.jpeg" alt="CleanSpark" class="booking-logo" onerror="this.style.display='none'">
+                <h1>Book Cleaning Service</h1>
+            </div>
+            <div class="booking-header-actions">
+                <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
+                </button>
+                <a href="service.html" class="back-to-services">
+                    <i class="fas fa-arrow-left"></i> Back to Services
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Phase Progress -->
-    <div class="phase-progress-wrapper">
-        <div class="phase-progress">
-            <div class="progress-step completed" data-phase="phase1">
-                <div class="step-icon"><i class="fas fa-broom"></i><span class="step-number">1</span></div>
-                <div class="step-label">Service</div>
+    <!-- Selected Service Display -->
+    <div class="selected-service-banner" id="selectedServiceBanner" style="display: none;">
+        <div class="service-info">
+            <i class="fas fa-check-circle"></i>
+            <span>Selected Service: <strong id="selectedServiceName"></strong></span>
+        </div>
+        <div class="estimated-price" id="estimatedPriceDisplay">
+            <i class="fas fa-calculator"></i>
+            <span>Estimated: <strong id="estimatedPrice">TZS 0</strong></span>
+        </div>
+    </div>
+
+    <!-- Multi-Step Progress -->
+    <div class="booking-progress">
+        <div class="progress-steps" id="progressSteps">
+            <div class="step active" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label" id="step1Label">Service Details</div>
             </div>
-            <div class="progress-step" data-phase="phase2">
-                <div class="step-icon"><i class="fas fa-home"></i><span class="step-number">2</span></div>
-                <div class="step-label">Property</div>
-            </div>
-            <div class="progress-step" data-phase="phase3">
-                <div class="step-icon"><i class="fas fa-map-marker-alt"></i><span class="step-number">3</span></div>
-                <div class="step-label">Location</div>
-            </div>
-            <div class="progress-step" data-phase="phase4">
-                <div class="step-icon"><i class="fas fa-calendar-alt"></i><span class="step-number">4</span></div>
+            <div class="step" data-step="2">
+                <div class="step-circle">2</div>
                 <div class="step-label">Schedule</div>
             </div>
-            <div class="progress-step" data-phase="phase5">
-                <div class="step-icon"><i class="fas fa-user"></i><span class="step-number">5</span></div>
-                <div class="step-label">Details</div>
+            <div class="step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Customer Info</div>
             </div>
-            <div class="progress-step" data-phase="phase6">
-                <div class="step-icon"><i class="fas fa-credit-card"></i><span class="step-number">6</span></div>
-                <div class="step-label">Payment</div>
+            <div class="step" data-step="4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Location</div>
             </div>
+            <div class="step" data-step="5">
+                <div class="step-circle">5</div>
+                <div class="step-label">Review & Submit</div>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 20%"></div>
         </div>
     </div>
 
-    <div class="row">
-        <!-- Main Form -->
-        <div class="col-lg-8">
-            <div class="phase-container">
-                <form id="bookingForm">
-                    <!-- Phase 1: Service Details -->
-                    <div id="phase1" class="phase active">
-                        <h4><i class="fas fa-broom"></i> Service Details</h4>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Number of Cleaners <span class="text-danger">*</span></label>
-                                <input type="number" id="cleaners" class="form-control" min="1" max="10" value="1" required>
-                                <div class="invalid-feedback">Please enter number of cleaners (1-10)</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Hours Needed <span class="text-danger">*</span></label>
-                                <input type="number" id="hours" class="form-control" min="1" max="12" value="2" required>
-                                <div class="invalid-feedback">Please enter hours needed (1-12)</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Service Frequency</label>
-                                <select id="frequency" class="form-select">
-                                    <option value="One-time">One-time</option>
-                                    <option value="Weekly">Weekly (5% off)</option>
-                                    <option value="Bi-weekly">Bi-weekly</option>
-                                    <option value="Monthly">Monthly</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Bring Cleaning Materials?</label>
-                                <select id="materials" class="form-select">
-                                    <option value="No">No (I have materials)</option>
-                                    <option value="Yes">Yes (+TZS 10,000)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-end mt-4">
-                            <button type="button" class="btn btn-primary next" data-next="phase2">Next <i class="fas fa-arrow-right ms-2"></i></button>
-                        </div>
-                    </div>
+    <div class="booking-container">
+        <div class="booking-main">
+            <!-- Phase 1: Dynamic Service Details (loaded based on service type) -->
+            <div class="booking-phase active" id="phase1">
+                <div class="phase-header">
+                    <h2><i class="fas fa-clipboard-list"></i> <span id="phase1Title">Service Details</span></h2>
+                    <p id="phase1Description">Please provide details about your cleaning requirements</p>
+                </div>
+                
+                <div class="phase-content">
+                    <div id="dynamicServiceForm"></div>
+                </div>
 
-                    <!-- Phase 2: Property Type -->
-                    <div id="phase2" class="phase">
-                        <h4><i class="fas fa-home"></i> Property Type</h4>
-                        <div class="mb-4">
-                            <label class="form-label">Select Property Type <span class="text-danger">*</span></label>
-                            <select id="propertyType" class="form-select">
-                                <option value="">-- Select --</option>
-                                <option value="Apartment">Apartment</option>
-                                <option value="House">House</option>
-                                <option value="Office">Office</option>
-                                <option value="Villa">Villa</option>
-                                <option value="Hotel">Hotel</option>
-                                <option value="Restaurant">Restaurant</option>
-                                <option value="Shop">Shop</option>
-                                <option value="Other">Other</option>
+                <div class="phase-actions">
+                    <button class="btn-next" id="nextPhase1Btn">Continue to Schedule <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Phase 2: Schedule Booking -->
+            <div class="booking-phase" id="phase2">
+                <div class="phase-header">
+                    <h2><i class="fas fa-calendar-alt"></i> Schedule Your Service</h2>
+                    <p>Select your preferred date and time for the cleaning service</p>
+                </div>
+                
+                <div class="phase-content">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Preferred Date <span class="required">*</span></label>
+                            <input type="text" id="preferredDate" class="form-control date-picker" placeholder="Select a date">
+                            <div id="dateValidation" class="validation-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Preferred Time <span class="required">*</span></label>
+                            <select id="preferredTime" class="form-control">
+                                <option value="">Select time</option>
+                                <option value="08:00">08:00 - 12:00 (Morning)</option>
+                                <option value="12:00">12:00 - 16:00 (Afternoon)</option>
+                                <option value="16:00">16:00 - 20:00 (Evening)</option>
                             </select>
-                            <div class="invalid-feedback">Please select a property type</div>
-                        </div>
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-outline-secondary prev" data-prev="phase1"><i class="fas fa-arrow-left me-2"></i> Previous</button>
-                            <button type="button" class="btn btn-primary next" data-next="phase3">Next <i class="fas fa-arrow-right ms-2"></i></button>
                         </div>
                     </div>
 
-                    <!-- Phase 3: Location -->
-                    <div id="phase3" class="phase">
-                        <h4><i class="fas fa-map-marker-alt"></i> Location Details</h4>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">Street Address <span class="text-danger">*</span></label>
-                                <input type="text" id="street" class="form-control" placeholder="House/flat number, street name" required>
-                                <div class="invalid-feedback">Please enter your street address</div>
+                    <div class="availability-info" id="availabilityInfo">
+                        <div class="info-box">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <strong>Availability Notice</strong>
+                                <p>Dates with <span class="unavailable-dot"></span> are fully booked. Please select an available date.</p>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">City/Area <span class="text-danger">*</span></label>
-                                <input type="text" id="city" class="form-control" placeholder="e.g., Stone Town" required>
-                                <div class="invalid-feedback">Please enter your city or area</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Landmark (Optional)</label>
-                                <input type="text" id="landmark" class="form-control" placeholder="Nearby landmark">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Pin Your Location on Map <span class="text-muted">(Click to place pin)</span></label>
-                                <div class="map-container" id="mapContainer">
-                                    <div id="locationMap"></div>
-                                    <div class="map-overlay-info" id="mapOverlayInfo">
-                                        <i class="fas fa-map-pin"></i> Click on the map to pin your exact location
-                                    </div>
-                                    <div class="map-coordinates" id="mapCoordinates" style="display: none;">
-                                        <i class="fas fa-location-dot"></i>
-                                        <span id="coordinatesText">Lat: —, Lng: —</span>
-                                    </div>
-                                </div>
-                                <input type="hidden" id="latitude" value="">
-                                <input type="hidden" id="longitude" value="">
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-outline-secondary prev" data-prev="phase2"><i class="fas fa-arrow-left me-2"></i> Previous</button>
-                            <button type="button" class="btn btn-primary next" data-next="phase4">Next <i class="fas fa-arrow-right ms-2"></i></button>
                         </div>
                     </div>
 
-                    <!-- Phase 4: Schedule -->
-                    <div id="phase4" class="phase">
-                        <h4><i class="fas fa-calendar-alt"></i> Schedule Service</h4>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Preferred Date <span class="text-danger">*</span></label>
-                                <input type="date" id="date" class="form-control" required>
-                                <div class="invalid-feedback">Please select a valid future date</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Preferred Time <span class="text-danger">*</span></label>
-                                <input type="time" id="time" class="form-control" required>
-                                <div class="invalid-feedback">Please select a preferred time</div>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Special Instructions</label>
-                                <textarea id="instructions" class="form-control" rows="3" placeholder="Any specific areas to focus on or special requirements?"></textarea>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-outline-secondary prev" data-prev="phase3"><i class="fas fa-arrow-left me-2"></i> Previous</button>
-                            <button type="button" class="btn btn-primary next" data-next="phase5">Next <i class="fas fa-arrow-right ms-2"></i></button>
+                    <div class="form-group">
+                        <label class="form-label">Estimated Duration Needed</label>
+                        <div class="duration-estimate" id="durationEstimate">
+                            <span><i class="fas fa-clock"></i> Based on your requirements: <strong id="estimatedHours">2-3 hours</strong></span>
                         </div>
                     </div>
 
-                    <!-- Phase 5: Personal Details -->
-                    <div id="phase5" class="phase">
-                        <h4><i class="fas fa-user"></i> Your Details</h4>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">First Name <span class="text-danger">*</span></label>
-                                <input type="text" id="fname" class="form-control" required>
-                                <div class="invalid-feedback">Please enter your first name</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                                <input type="text" id="lname" class="form-control" required>
-                                <div class="invalid-feedback">Please enter your last name</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Email Address <span class="text-danger">*</span></label>
-                                <input type="email" id="email" class="form-control" required>
-                                <div class="invalid-feedback">Please enter a valid email address</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Phone Number</label>
-                                <input type="tel" id="phone" class="form-control" placeholder="+255 XXX XXX XXX">
-                                <div class="invalid-feedback">Please enter a valid phone number</div>
-                            </div>
-                            <div class="col-12 mt-4">
-                                <div id="review" class="review-box">
-                                    <h6 class="mb-3"><i class="fas fa-clipboard-check text-primary me-2"></i>Booking Summary</h6>
-                                </div>
-                            </div>
+                    <div class="form-group">
+                        <label class="form-label">Special Instructions for Cleaners</label>
+                        <textarea id="scheduleInstructions" class="form-control" rows="3" placeholder="Access instructions, parking information, security codes, etc..."></textarea>
+                    </div>
+                </div>
+
+                <div class="phase-actions">
+                    <button class="btn-prev" id="prevPhase2Btn"><i class="fas fa-arrow-left"></i> Back</button>
+                    <button class="btn-next" id="nextPhase2Btn">Continue to Customer Info <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Phase 3: Customer Details -->
+            <div class="booking-phase" id="phase3">
+                <div class="phase-header">
+                    <h2><i class="fas fa-user"></i> Your Information</h2>
+                    <p>Please provide your contact details for confirmation</p>
+                </div>
+                
+                <div class="phase-content">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">First Name <span class="required">*</span></label>
+                            <input type="text" id="firstName" class="form-control" placeholder="Enter your first name">
                         </div>
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-outline-secondary prev" data-prev="phase4"><i class="fas fa-arrow-left me-2"></i> Previous</button>
-                            <button type="button" class="btn btn-primary next" data-next="phase6">Next <i class="fas fa-arrow-right ms-2"></i></button>
+                        <div class="form-group">
+                            <label class="form-label">Last Name <span class="required">*</span></label>
+                            <input type="text" id="lastName" class="form-control" placeholder="Enter your last name">
                         </div>
                     </div>
 
-                    <!-- Phase 6: Payment -->
-                    <div id="phase6" class="phase">
-                        <h4><i class="fas fa-credit-card"></i> Payment Method</h4>
-                        <p class="text-muted mb-4">Select your preferred payment method</p>
-                        
-                        <div class="payment-method-grid">
-                            <div class="payment-option-card" data-method="mobile_money">
-                                <i class="fas fa-mobile-alt"></i>
-                                <strong>Mobile Money</strong>
-                                <small class="d-block text-muted">M-PESA, Tigo, Airtel</small>
-                            </div>
-                            <div class="payment-option-card" data-method="bank_transfer">
-                                <i class="fas fa-university"></i>
-                                <strong>Bank Transfer</strong>
-                                <small class="d-block text-muted">CRDB, NMB, NBC</small>
-                            </div>
-                            <div class="payment-option-card" data-method="card">
-                                <i class="fas fa-credit-card"></i>
-                                <strong>Card</strong>
-                                <small class="d-block text-muted">Visa, Mastercard</small>
-                            </div>
-                            <div class="payment-option-card" data-method="cash">
-                                <i class="fas fa-money-bill-wave"></i>
-                                <strong>Cash</strong>
-                                <small class="d-block text-muted">+TZS 5,000 fee</small>
-                            </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Email Address <span class="required">*</span></label>
+                            <input type="email" id="email" class="form-control" placeholder="your@email.com">
                         </div>
-
-                        <div id="paymentDetailsContainer" class="mt-4"></div>
-
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-outline-secondary prev" data-prev="phase5"><i class="fas fa-arrow-left me-2"></i> Previous</button>
+                        <div class="form-group">
+                            <label class="form-label">Phone Number <span class="required">*</span></label>
+                            <input type="tel" id="phone" class="form-control" placeholder="+255 XXX XXX XXX">
                         </div>
                     </div>
-                </form>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Alternative Phone (Optional)</label>
+                            <input type="tel" id="altPhone" class="form-control" placeholder="Alternative contact number">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Preferred Communication</label>
+                            <select id="prefComm" class="form-control">
+                                <option value="email">Email</option>
+                                <option value="phone">Phone Call</option>
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="sms">SMS</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="phase-actions">
+                    <button class="btn-prev" id="prevPhase3Btn"><i class="fas fa-arrow-left"></i> Back</button>
+                    <button class="btn-next" id="nextPhase3Btn">Continue to Location <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Phase 4: Location Details with Map -->
+            <div class="booking-phase" id="phase4">
+                <div class="phase-header">
+                    <h2><i class="fas fa-map-marker-alt"></i> Location Details</h2>
+                    <p>Help our cleaners find you easily</p>
+                </div>
+                
+                <div class="phase-content">
+                    <div class="form-group">
+                        <label class="form-label">Street Address <span class="required">*</span></label>
+                        <input type="text" id="streetAddress" class="form-control" placeholder="House/Flat number, street name">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Area/District <span class="required">*</span></label>
+                            <input type="text" id="area" class="form-control" placeholder="e.g., Stone Town, Mbweni">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">City <span class="required">*</span></label>
+                            <input type="text" id="city" class="form-control" placeholder="e.g., Zanzibar City">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Region</label>
+                            <select id="region" class="form-control">
+                                <option value="unguja_north">Unguja North</option>
+                                <option value="unguja_south">Unguja South</option>
+                                <option value="unguja_west">Unguja West</option>
+                                <option value="pemba_north">Pemba North</option>
+                                <option value="pemba_south">Pemba South</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Landmark (Optional)</label>
+                            <input type="text" id="landmark" class="form-control" placeholder="Nearby landmark for reference">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Building Name (Optional)</label>
+                            <input type="text" id="buildingName" class="form-control" placeholder="Building/complex name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Floor Number</label>
+                            <input type="text" id="floorNumber" class="form-control" placeholder="e.g., 3rd floor, Unit 5">
+                        </div>
+                    </div>
+
+                    <div class="form-group map-section">
+                        <label class="form-label">Pin Your Exact Location on Map <span class="required">*</span></label>
+                        <div class="map-container">
+                            <div id="locationMap" style="height: 350px; width: 100%;"></div>
+                            <div class="map-instructions">
+                                <i class="fas fa-map-pin"></i> Click anywhere on the map to pin your exact location
+                            </div>
+                            <div class="coordinates-info" id="coordinatesInfo" style="display: none;">
+                                <i class="fas fa-check-circle" style="color: #4bb543;"></i>
+                                Location pinned! <span id="coordsDisplay"></span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="latitude" value="">
+                        <input type="hidden" id="longitude" value="">
+                    </div>
+                </div>
+
+                <div class="phase-actions">
+                    <button class="btn-prev" id="prevPhase4Btn"><i class="fas fa-arrow-left"></i> Back</button>
+                    <button class="btn-next" id="nextPhase4Btn">Continue to Review <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Phase 5: Review & Submit -->
+            <div class="booking-phase" id="phase5">
+                <div class="phase-header">
+                    <h2><i class="fas fa-clipboard-list"></i> Review Your Booking</h2>
+                    <p>Please review all details before submitting</p>
+                </div>
+                
+                <div class="phase-content">
+                    <div class="review-section" id="reviewContent"></div>
+                </div>
+
+                <div class="phase-actions">
+                    <button class="btn-prev" id="prevPhase5Btn"><i class="fas fa-arrow-left"></i> Back</button>
+                    <button class="btn-submit" id="submitBookingBtn">
+                        <i class="fas fa-paper-plane"></i> Submit Booking
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Summary Sidebar -->
-        <div class="col-lg-4">
-            <div class="summary-box">
-                <h5><i class="fas fa-receipt"></i> Booking Summary</h5>
-                <div class="summary-item"><span class="label">Cleaners:</span><span class="value" id="sumCleaners">1</span></div>
-                <div class="summary-item"><span class="label">Hours:</span><span class="value" id="sumHours">2</span></div>
-                <div class="summary-item"><span class="label">Frequency:</span><span class="value" id="sumFreq">One-time</span></div>
-                <div class="summary-item"><span class="label">Materials:</span><span class="value" id="sumMaterials">No</span></div>
-                <div class="summary-item"><span class="label">Property:</span><span class="value" id="sumProperty">—</span></div>
-                <div class="summary-item"><span class="label">Date:</span><span class="value" id="sumDate">—</span></div>
-                <div class="summary-item"><span class="label">Time:</span><span class="value" id="sumTime">—</span></div>
-                <div class="summary-item"><span class="label">Customer:</span><span class="value" id="sumName">—</span></div>
-                <div class="summary-total"><span>Total:</span><span id="sumTotal">TZS 40,000</span></div>
+        <!-- Price Summary Sidebar -->
+        <div class="booking-sidebar">
+            <div class="price-summary-card">
+                <h3><i class="fas fa-receipt"></i> Price Summary</h3>
+                <div class="price-breakdown">
+                    <div class="price-item">
+                        <span>Base Price:</span>
+                        <span id="basePrice">TZS 0</span>
+                    </div>
+                    <div class="price-item">
+                        <span>Size Adjustment:</span>
+                        <span id="sizeAdjustment">TZS 0</span>
+                    </div>
+                    <div class="price-item">
+                        <span>Condition Adjustment:</span>
+                        <span id="conditionAdjustment">TZS 0</span>
+                    </div>
+                    <div class="price-item">
+                        <span>Extras:</span>
+                        <span id="extrasAdjustment">TZS 0</span>
+                    </div>
+                    <div class="price-item">
+                        <span>Frequency Discount:</span>
+                        <span id="frequencyDiscount">-TZS 0</span>
+                    </div>
+                    <div class="price-item total">
+                        <span>Estimated Total:</span>
+                        <span id="totalPrice">TZS 0</span>
+                    </div>
+                </div>
+                <div class="price-note">
+                    <i class="fas fa-info-circle"></i> Final invoice will be sent after admin review
+                </div>
+            </div>
+            
+            <div class="help-card">
+                <h4><i class="fas fa-headset"></i> Need Help?</h4>
+                <p>Call us for assistance:</p>
+                <a href="tel:+0621662883" class="help-phone">
+                    <i class="fas fa-phone"></i> +062 166 2883
+                </a>
+                <p class="small">Available 24/7</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Validation Toast Container -->
-<div class="toast-container" id="toastContainer"></div>
-
-<!-- Celebration Container -->
-<div id="celebration-container"></div>
-
-<!-- Receipt Modal -->
-<div class="modal fade receipt-modal" id="receiptModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="receipt-header">
-                <i class="fas fa-check-circle fa-3x mb-2"></i>
-                <h4 class="mb-0">Booking Confirmed!</h4>
-                <p class="mb-0 opacity-75">Your cleaning service has been booked successfully</p>
-            </div>
-            <div class="modal-body p-4">
-                <div id="receiptContent"></div>
-            </div>
-            <div class="modal-footer justify-content-center gap-2 p-4 border-top-0">
-                <button type="button" class="btn btn-outline-primary" id="downloadReceiptBtn">
-                    <i class="fas fa-download me-2"></i> Download Receipt
-                </button>
-                <button type="button" class="btn btn-outline-success" id="shareReceiptBtn">
-                    <i class="fas fa-share-alt me-2"></i> Share Receipt
-                </button>
-                <button type="button" class="btn btn-primary" id="closeReceiptBtn">
-                    <i class="fas fa-home me-2"></i> Go to Home
-                </button>
-                <button type="button" class="btn btn-success" id="moreBookingBtn">
-                    <i class="fas fa-plus-circle me-2"></i> Book Another
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Share Modal -->
-<div class="modal fade" id="shareModal" tabindex="-1" aria-hidden="true">
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content share-modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-share-alt me-2"></i> Share Receipt</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="share-options">
-                    <button class="share-option-btn" onclick="shareVia('whatsapp')">
-                        <i class="fab fa-whatsapp"></i> WhatsApp
-                    </button>
-                    <button class="share-option-btn" onclick="shareVia('email')">
-                        <i class="fas fa-envelope"></i> Email
-                    </button>
-                    <button class="share-option-btn" onclick="shareVia('sms')">
-                        <i class="fas fa-sms"></i> SMS
-                    </button>
-                    <button class="share-option-btn" onclick="shareVia('copy')">
-                        <i class="fas fa-copy"></i> Copy Link
-                    </button>
-                    <button class="share-option-btn" onclick="shareVia('facebook')">
-                        <i class="fab fa-facebook"></i> Facebook
-                    </button>
-                    <button class="share-option-btn" onclick="shareVia('twitter')">
-                        <i class="fab fa-twitter"></i> Twitter
-                    </button>
+        <div class="modal-content success-modal">
+            <div class="modal-body text-center">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Booking Submitted Successfully!</h3>
+                <p>Your booking request has been received. You will receive an invoice in your <strong>My Track</strong> page after admin review.</p>
+                <p class="booking-id" id="bookingIdDisplay"></p>
+                <div class="modal-buttons">
+                    <a href="tracking.html" class="btn btn-primary">Go to My Track</a>
+                    <a href="service.html" class="btn btn-outline">Book Another Service</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Leaflet JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- html2canvas for receipt download -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<!-- Canvas Confetti Library -->
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<!-- Theme JS -->
 <script src="js/theme.js"></script>
-<!-- Custom JS -->
 <script src="js/booking.js"></script>
 </body>
 </html>

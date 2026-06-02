@@ -1,5 +1,4 @@
-// staff.js
-
+// staff.js - Complete Staff Page System
 // ========== STAFF ACCOUNT DATA ==========
 const staffAccount = {
   id: 1,
@@ -11,15 +10,28 @@ const staffAccount = {
   joinDate: "2024-01-15",
   avatar: "MD",
   isSupervisor: true,
-  supervisorLocation: "Zanzibar University"
+  isGeneralSupervisor: true,
+  supervisorLocation: "Zanzibar University",
+  assignedWorkers: [5, 6, 9] // IDs of workers under this general supervisor
 };
 
 // Additional supervisor accounts for demo
 const supervisorAccounts = [
-  { id: 2, email: "zssf.supervisor@CleanSpark.com", password: "1234", name: "Ali Hassan", role: "Site Supervisor", phone: "+255 777 111 222", joinDate: "2024-02-01", isSupervisor: true, supervisorLocation: "ZSSF" },
-  { id: 3, email: "mall.supervisor@CleanSpark.com", password: "1234", name: "Fatma Omar", role: "Site Supervisor", phone: "+255 777 333 444", joinDate: "2024-02-15", isSupervisor: true, supervisorLocation: "Michenzani Mall" },
-  { id: 4, email: "uni.supervisor@CleanSpark.com", password: "1234", name: "Said Juma", role: "Site Supervisor", phone: "+255 777 555 666", joinDate: "2024-01-20", isSupervisor: true, supervisorLocation: "Zanzibar University" }
+  { id: 2, email: "zssf.supervisor@CleanSpark.com", password: "1234", name: "Ali Hassan", role: "Site Supervisor", phone: "+255 777 111 222", joinDate: "2024-02-01", isSupervisor: true, isGeneralSupervisor: false, supervisorLocation: "ZSSF", assignedWorkers: [7] },
+  { id: 3, email: "mall.supervisor@CleanSpark.com", password: "1234", name: "Fatma Omar", role: "Site Supervisor", phone: "+255 777 333 444", joinDate: "2024-02-15", isSupervisor: true, isGeneralSupervisor: true, supervisorLocation: "Michenzani Mall", assignedWorkers: [8, 10] },
+  { id: 4, email: "uni.supervisor@CleanSpark.com", password: "1234", name: "Said Juma", role: "Site Supervisor", phone: "+255 777 555 666", joinDate: "2024-01-20", isSupervisor: true, isGeneralSupervisor: false, supervisorLocation: "Zanzibar University", assignedWorkers: [] }
 ];
+
+// Staff worker accounts (non-supervisor)
+const workerAccounts = [
+  { id: 5, email: "john@CleanSpark.com", password: "1234", name: "John Mwinyi", role: "Cleaning Technician", phone: "+255 777 111 333", joinDate: "2024-03-01", isSupervisor: false, isGeneralSupervisor: false, supervisorLocation: "Zanzibar University", generalSupervisorId: 1 },
+  { id: 6, email: "aisha@CleanSpark.com", password: "1234", name: "Aisha Abdallah", role: "Cleaning Technician", phone: "+255 777 222 444", joinDate: "2024-03-15", isSupervisor: false, isGeneralSupervisor: false, supervisorLocation: "Zanzibar University", generalSupervisorId: 1 },
+  { id: 8, email: "sophia@CleanSpark.com", password: "1234", name: "Sophia Mohamed", role: "Cleaning Technician", phone: "+255 777 444 555", joinDate: "2024-04-01", isSupervisor: false, isGeneralSupervisor: false, supervisorLocation: "Michenzani Mall", generalSupervisorId: 3 },
+  { id: 9, email: "hamza@CleanSpark.com", password: "1234", name: "Hamza Rashid", role: "Cleaning Assistant", phone: "+255 777 555 666", joinDate: "2024-04-15", isSupervisor: false, isGeneralSupervisor: false, supervisorLocation: "Zanzibar University", generalSupervisorId: 1 }
+];
+
+// All accounts combined for login lookup
+const allAccounts = [staffAccount, ...supervisorAccounts, ...workerAccounts];
 
 // ========== JOBS DATABASE ==========
 let jobs = [
@@ -29,10 +41,13 @@ let jobs = [
     location: "Stone Town, Unguja", 
     status: "pending",
     client: "Aly Hassan",
+    assignedWorkerId: 5,
+    generalSupervisorId: 1,
     scheduledDate: "2026-04-05",
     timeSlot: "09:00 - 12:00",
     duration: "3 hours",
     price: 230000,
+    supervisorPhone: "+255 777 123 456",
     description: "Complete deep cleaning of a 3-bedroom house including kitchen, bathrooms, and living areas.",
     requirements: "Bring heavy-duty cleaning equipment and eco-friendly products"
   },
@@ -42,10 +57,13 @@ let jobs = [
     location: "Vikokotoni Business Hub", 
     status: "pending",
     client: "Zainab Mwinyi",
+    assignedWorkerId: 6,
+    generalSupervisorId: 1,
     scheduledDate: "2026-04-06",
     timeSlot: "14:00 - 17:00",
     duration: "3 hours",
     price: 525000,
+    supervisorPhone: "+255 777 123 456",
     description: "Steam cleaning of 500 sqm office carpet area across 3 floors.",
     requirements: "Professional steam cleaner machine required"
   },
@@ -55,10 +73,13 @@ let jobs = [
     location: "Shangani District", 
     status: "in-progress",
     client: "Fatma Said",
+    assignedWorkerId: 5,
+    generalSupervisorId: 1,
     scheduledDate: "2026-03-25",
     timeSlot: "10:00 - 12:00",
     duration: "2 hours",
     price: 187500,
+    supervisorPhone: "+255 777 123 456",
     description: "Complete kitchen sanitization including appliances, countertops, and storage areas.",
     requirements: "Food-grade sanitizers only"
   },
@@ -68,11 +89,14 @@ let jobs = [
     location: "Mbweni Residence", 
     status: "completed",
     client: "Omar Juma",
+    assignedWorkerId: 8,
+    generalSupervisorId: 3,
     scheduledDate: "2026-03-20",
     timeSlot: "13:00 - 15:00",
     duration: "2 hours",
     price: 300000,
     completedDate: "2026-03-20",
+    supervisorPhone: "+255 777 333 444",
     description: "Maintenance and filter replacement for 4 AC units.",
     requirements: "Bring replacement filters and cleaning solution"
   },
@@ -82,11 +106,14 @@ let jobs = [
     location: "Fumba Town", 
     status: "completed",
     client: "Salma Khamis",
+    assignedWorkerId: 9,
+    generalSupervisorId: 1,
     scheduledDate: "2026-03-18",
     timeSlot: "08:00 - 12:00",
     duration: "4 hours",
     price: 850000,
     completedDate: "2026-03-18",
+    supervisorPhone: "+255 777 123 456",
     description: "Complete villa cleaning including 5 bedrooms, pool area, and garden maintenance.",
     requirements: "Team of 4 cleaners recommended"
   }
@@ -94,25 +121,43 @@ let jobs = [
 
 // ========== STAFF DATABASE FOR ATTENDANCE ==========
 const staffMembers = [
-  { id: 1, name: "Mudrik Dau", role: "Senior Cleaning Specialist", isSupervisor: true, location: "Zanzibar University", basePayPerDay: 10000 },
-  { id: 2, name: "Ali Hassan", role: "Site Supervisor", isSupervisor: true, location: "ZSSF", basePayPerDay: 10000 },
-  { id: 3, name: "Fatma Omar", role: "Site Supervisor", isSupervisor: true, location: "Michenzani Mall", basePayPerDay: 10000 },
-  { id: 4, name: "Said Juma", role: "Site Supervisor", isSupervisor: true, location: "Zanzibar University", basePayPerDay: 10000 },
-  { id: 5, name: "John Mwinyi", role: "Cleaning Technician", isSupervisor: false, location: "Zanzibar University", basePayPerDay: 10000 },
-  { id: 6, name: "Aisha Abdallah", role: "Cleaning Technician", isSupervisor: false, location: "Zanzibar University", basePayPerDay: 10000 },
-  { id: 7, name: "James Mrema", role: "Cleaning Technician", isSupervisor: false, location: "ZSSF", basePayPerDay: 10000 },
-  { id: 8, name: "Sophia Mohamed", role: "Cleaning Technician", isSupervisor: false, location: "Michenzani Mall", basePayPerDay: 10000 },
-  { id: 9, name: "Hamza Rashid", role: "Cleaning Assistant", isSupervisor: false, location: "Zanzibar University", basePayPerDay: 10000 },
-  { id: 10, name: "Zainabu Salim", role: "Cleaning Assistant", isSupervisor: false, location: "Michenzani Mall", basePayPerDay: 10000 }
+  { id: 1, name: "Mudrik Dau", role: "Senior Cleaning Specialist", isSupervisor: true, isGeneralSupervisor: true, location: "Zanzibar University", basePayPerDay: 10000 },
+  { id: 2, name: "Ali Hassan", role: "Site Supervisor", isSupervisor: true, isGeneralSupervisor: false, location: "ZSSF", basePayPerDay: 10000 },
+  { id: 3, name: "Fatma Omar", role: "Site Supervisor", isSupervisor: true, isGeneralSupervisor: true, location: "Michenzani Mall", basePayPerDay: 10000 },
+  { id: 4, name: "Said Juma", role: "Site Supervisor", isSupervisor: true, isGeneralSupervisor: false, location: "Zanzibar University", basePayPerDay: 10000 },
+  { id: 5, name: "John Mwinyi", role: "Cleaning Technician", isSupervisor: false, isGeneralSupervisor: false, location: "Zanzibar University", basePayPerDay: 10000 },
+  { id: 6, name: "Aisha Abdallah", role: "Cleaning Technician", isSupervisor: false, isGeneralSupervisor: false, location: "Zanzibar University", basePayPerDay: 10000 },
+  { id: 7, name: "James Mrema", role: "Cleaning Technician", isSupervisor: false, isGeneralSupervisor: false, location: "ZSSF", basePayPerDay: 10000 },
+  { id: 8, name: "Sophia Mohamed", role: "Cleaning Technician", isSupervisor: false, isGeneralSupervisor: false, location: "Michenzani Mall", basePayPerDay: 10000 },
+  { id: 9, name: "Hamza Rashid", role: "Cleaning Assistant", isSupervisor: false, isGeneralSupervisor: false, location: "Zanzibar University", basePayPerDay: 10000 },
+  { id: 10, name: "Zainabu Salim", role: "Cleaning Assistant", isSupervisor: false, isGeneralSupervisor: false, location: "Michenzani Mall", basePayPerDay: 10000 }
 ];
 
 // ========== SUPERVISOR DATA STORAGE ==========
 let attendanceRecords = [];
 let weeklyReports = [];
 let chatMessages = [];
-let deletedMessagesForMe = []; // Track messages deleted for current user
+let deletedMessagesForMe = [];
 let currentEditingMessageId = null;
 let currentActionMessageId = null;
+let currentGeneratedReport = null;
+
+// ========== SETTINGS STORAGE ==========
+function getSettings() {
+  const stored = localStorage.getItem('CleanSpark_settings');
+  if (stored) return JSON.parse(stored);
+  return {
+    notifications: true,
+    darkMode: localStorage.getItem('theme') === 'dark',
+    notificationSound: false,
+    availabilityStatus: 'available',
+    language: 'en'
+  };
+}
+
+function saveSettings(settings) {
+  localStorage.setItem('CleanSpark_settings', JSON.stringify(settings));
+}
 
 // Load supervisor data from localStorage
 function loadSupervisorData() {
@@ -168,826 +213,6 @@ function saveDeletedForMe() {
   localStorage.setItem('CleanSpark_deletedForMe', JSON.stringify(deletedMessagesForMe));
 }
 
-// ========== SUPERVISOR FUNCTIONS ==========
-function toggleSupervisorMenu() {
-  const supervisorNavBtn = document.getElementById('supervisorNavBtn');
-  if (currentStaff && currentStaff.isSupervisor) {
-    supervisorNavBtn.style.display = 'flex';
-  } else {
-    supervisorNavBtn.style.display = 'none';
-    const activeView = document.querySelector('.content-view.active');
-    if (activeView && activeView.id === 'supervisorView') {
-      document.querySelector('[data-view="jobs"]').click();
-    }
-  }
-}
-
-function loadStaffForLocation(location) {
-  const staffAtLocation = staffMembers.filter(staff => staff.location === location);
-  const selectedLocationDisplay = document.getElementById('selectedLocationDisplay');
-  const reportLocationField = document.getElementById('reportLocation');
-  
-  if (selectedLocationDisplay) selectedLocationDisplay.textContent = location;
-  if (reportLocationField) reportLocationField.value = location;
-  
-  const today = new Date().toISOString().split('T')[0];
-  
-  let html = `
-    <table class="attendance-table">
-      <thead>
-        <tr><th>Staff Name</th><th>Role</th><th>Present Today (10,000 TZS)</th></tr>
-      </thead>
-      <tbody>
-  `;
-  
-  staffAtLocation.forEach(staff => {
-    const attendance = attendanceRecords.find(rec => rec.staffId === staff.id && rec.date === today);
-    const isPresent = attendance ? attendance.present : true;
-    const supervisorMark = staff.isSupervisor ? '<span class="supervisor-badge ms-2">Supervisor</span>' : '';
-    
-    html += `
-      <tr>
-        <td>${escapeHtml(staff.name)}${supervisorMark}</td>
-        <td>${escapeHtml(staff.role)}</td>
-        <td>
-          <input type="checkbox" class="attendance-checkbox" data-staff-id="${staff.id}" ${isPresent ? 'checked' : ''}>
-        </td>
-      </tr>
-    `;
-  });
-  
-  html += `</tbody></table>`;
-  
-  const attendanceContainer = document.getElementById('attendanceTableContainer');
-  if (attendanceContainer) {
-    attendanceContainer.innerHTML = html;
-    
-    document.querySelectorAll('.attendance-checkbox').forEach(cb => {
-      cb.addEventListener('change', function() {
-        const staffId = parseInt(this.dataset.staffId);
-        updateAttendance(staffId, this.checked);
-      });
-    });
-  }
-  
-  const attendanceCard = document.getElementById('attendanceCard');
-  if (attendanceCard) attendanceCard.style.display = 'block';
-}
-
-function updateAttendance(staffId, isPresent) {
-  const today = new Date().toISOString().split('T')[0];
-  const existingIndex = attendanceRecords.findIndex(rec => rec.staffId === staffId && rec.date === today);
-  
-  if (existingIndex !== -1) {
-    attendanceRecords[existingIndex].present = isPresent;
-  } else {
-    const staff = staffMembers.find(s => s.id === staffId);
-    if (staff) {
-      attendanceRecords.push({
-        staffId: staffId,
-        staffName: staff.name,
-        location: staff.location,
-        date: today,
-        present: isPresent
-      });
-    }
-  }
-  
-  saveAttendanceRecords();
-  showNotification(`Attendance updated for ${staffMembers.find(s => s.id === staffId)?.name}`, 'success');
-}
-
-function saveAttendanceAndUpdatePayroll() {
-  const selectedLocation = document.getElementById('locationSelect').value;
-  if (!selectedLocation) {
-    showNotification('Please select a location first', 'error');
-    return;
-  }
-  
-  const today = new Date().toISOString().split('T')[0];
-  const staffAtLocation = staffMembers.filter(staff => staff.location === selectedLocation);
-  let totalPayroll = 0;
-  
-  staffAtLocation.forEach(staff => {
-    const attendance = attendanceRecords.find(rec => rec.staffId === staff.id && rec.date === today);
-    if (attendance && attendance.present) {
-      totalPayroll += staff.basePayPerDay;
-    }
-  });
-  
-  showNotification(`Attendance saved! Total payroll for ${selectedLocation} today: TZS ${formatNumber(totalPayroll)}`, 'success');
-  console.log(`Payroll for ${selectedLocation} on ${today}: TZS ${totalPayroll}`);
-}
-
-// Report Generation Functions
-let currentGeneratedReport = null;
-
-function generateWeeklyReport() {
-  const location = document.getElementById('reportLocation').value;
-  const weekEnding = document.getElementById('reportWeekEnding').value;
-  const progress = document.getElementById('reportProgress').value;
-  const performance = document.getElementById('reportPerformance').value;
-  const equipment = document.getElementById('reportEquipment').value;
-  const requests = document.getElementById('reportRequests').value;
-  
-  if (!location) {
-    showNotification('Please select a location first', 'error');
-    return;
-  }
-  
-  if (!weekEnding) {
-    showNotification('Please select the week ending date', 'error');
-    return;
-  }
-  
-  const report = {
-    id: Date.now(),
-    location: location,
-    weekEnding: weekEnding,
-    progress: progress || 'No progress report provided.',
-    performance: performance || 'No performance report provided.',
-    equipment: equipment || 'No equipment report provided.',
-    requests: requests || 'No additional requests.',
-    generatedBy: currentStaff.name,
-    generatedDate: new Date().toISOString(),
-    reportNumber: `WR-${new Date().getFullYear()}${(new Date().getMonth()+1).toString().padStart(2,'0')}${Math.floor(Math.random()*1000)}`
-  };
-  
-  currentGeneratedReport = report;
-  
-  // Professional report preview
-  const previewContent = `
-    <div class="professional-report">
-      <div class="report-header-section">
-        <div class="report-title-main">WEEKLY SUPERVISOR REPORT</div>
-        <div class="report-subtitle">CleanSpark Cleaning Services</div>
-      </div>
-      
-      <div class="report-meta-grid">
-        <div class="meta-item">
-          <span class="meta-label">Report Number</span>
-          <span class="meta-value">${report.reportNumber}</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Location</span>
-          <span class="meta-value">${escapeHtml(report.location)}</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Week Ending</span>
-          <span class="meta-value">${report.weekEnding}</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Generated By</span>
-          <span class="meta-value">${escapeHtml(report.generatedBy)}</span>
-        </div>
-      </div>
-      
-      <div class="report-section-block">
-        <div class="section-title">
-          <i class="bi bi-clipboard-check"></i> Work Progress & Observations
-        </div>
-        <div class="section-content">${escapeHtml(report.progress)}</div>
-      </div>
-      
-      <div class="report-section-block">
-        <div class="section-title">
-          <i class="bi bi-people-fill"></i> Worker Performance
-        </div>
-        <div class="section-content">${escapeHtml(report.performance)}</div>
-      </div>
-      
-      <div class="report-section-block">
-        <div class="section-title">
-          <i class="bi bi-tools"></i> Equipment Status
-        </div>
-        <div class="section-content">${escapeHtml(report.equipment)}</div>
-      </div>
-      
-      <div class="report-section-block">
-        <div class="section-title">
-          <i class="bi bi-chat-square-text"></i> Additional Requests / Comments
-        </div>
-        <div class="section-content">${escapeHtml(report.requests)}</div>
-      </div>
-      
-      <div class="report-footer-section">
-        <div class="signature-block">
-          <div class="signature-line"></div>
-          <div class="signature-name">${escapeHtml(report.generatedBy)}</div>
-          <div class="signature-role">Site Supervisor</div>
-        </div>
-        <div style="text-align: right; font-size: 12px; color: #718096;">
-          <div>Generated: ${new Date(report.generatedDate).toLocaleString()}</div>
-          <div>CleanSpark Cleaning Services © ${new Date().getFullYear()}</div>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  const previewContainer = document.getElementById('reportPreviewContent');
-  if (previewContainer) previewContainer.innerHTML = previewContent;
-  
-  const reportModal = document.getElementById('reportPreviewModal');
-  if (reportModal) reportModal.style.display = 'flex';
-  
-  document.getElementById('downloadReportBtn').disabled = false;
-  document.getElementById('sendReportToAdminBtn').disabled = false;
-  document.getElementById('attachReportToChatBtn').disabled = false;
-  
-  showNotification('Report generated successfully!', 'success');
-}
-
-function downloadReport() {
-  if (!currentGeneratedReport) {
-    showNotification('No report to download.', 'error');
-    return;
-  }
-  
-  const report = currentGeneratedReport;
-  
-  // Create professional HTML content for PDF
-  const reportHTML = `
-    <div class="professional-report">
-      <div class="report-header-section" style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #667eea;">
-        <div class="report-title-main" style="font-size: 24px; font-weight: 800; color: #1a202c; margin-bottom: 8px;">WEEKLY SUPERVISOR REPORT</div>
-        <div class="report-subtitle" style="font-size: 14px; color: #667eea; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;">CleanSpark Cleaning Services</div>
-      </div>
-      
-      <div class="report-meta-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 24px 0; padding: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0;">
-        <div><span style="font-weight: 700; color: #667eea;">Report Number:</span> ${report.reportNumber}</div>
-        <div><span style="font-weight: 700; color: #667eea;">Location:</span> ${escapeHtml(report.location)}</div>
-        <div><span style="font-weight: 700; color: #667eea;">Week Ending:</span> ${report.weekEnding}</div>
-        <div><span style="font-weight: 700; color: #667eea;">Generated By:</span> ${escapeHtml(report.generatedBy)}</div>
-      </div>
-      
-      <div style="margin-bottom: 24px; padding: 20px; background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
-        <h4 style="color: #667eea; font-size: 16px; margin-bottom: 12px;">Work Progress & Observations</h4>
-        <p style="line-height: 1.8;">${escapeHtml(report.progress)}</p>
-      </div>
-      
-      <div style="margin-bottom: 24px; padding: 20px; background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
-        <h4 style="color: #667eea; font-size: 16px; margin-bottom: 12px;">Worker Performance</h4>
-        <p style="line-height: 1.8;">${escapeHtml(report.performance)}</p>
-      </div>
-      
-      <div style="margin-bottom: 24px; padding: 20px; background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
-        <h4 style="color: #667eea; font-size: 16px; margin-bottom: 12px;">Equipment Status</h4>
-        <p style="line-height: 1.8;">${escapeHtml(report.equipment)}</p>
-      </div>
-      
-      <div style="margin-bottom: 24px; padding: 20px; background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
-        <h4 style="color: #667eea; font-size: 16px; margin-bottom: 12px;">Additional Requests / Comments</h4>
-        <p style="line-height: 1.8;">${escapeHtml(report.requests)}</p>
-      </div>
-      
-      <div style="margin-top: 32px; padding-top: 20px; border-top: 2px solid #e2e8f0; display: flex; justify-content: space-between;">
-        <div style="text-align: center;">
-          <div style="border-bottom: 1px solid #4a5568; width: 200px; margin: 8px auto;"></div>
-          <div style="font-weight: 600;">${escapeHtml(report.generatedBy)}</div>
-          <div style="font-size: 12px; color: #718096;">Site Supervisor</div>
-        </div>
-        <div style="text-align: right; font-size: 12px; color: #718096;">
-          <div>Generated: ${new Date(report.generatedDate).toLocaleString()}</div>
-          <div>CleanSpark © ${new Date().getFullYear()}</div>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  // Open in new window and trigger print to PDF
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(`
-    <html>
-    <head>
-      <title>CleanSpark Weekly Report - ${report.reportNumber}</title>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-      <style>
-        body {
-          font-family: 'Inter', 'Segoe UI', sans-serif;
-          max-width: 800px;
-          margin: 40px auto;
-          padding: 20px;
-          color: #1a202c;
-        }
-        @media print {
-          body { margin: 0; padding: 20px; }
-          @page { size: A4; margin: 2cm; }
-        }
-      </style>
-    </head>
-    <body>
-      ${reportHTML}
-      <div style="text-align: center; margin-top: 30px;">
-        <button onclick="window.print()" style="padding: 12px 30px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-right: 10px;">
-          🖨️ Print / Save as PDF
-        </button>
-        <button onclick="window.close()" style="padding: 12px 30px; background: #e2e8f0; color: #4a5568; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
-          Close
-        </button>
-      </div>
-      <script>
-        window.onload = function() {
-          // Auto-trigger print dialog for PDF saving
-          setTimeout(function() {
-            window.print();
-          }, 500);
-        }
-      </script>
-    </body>
-    </html>
-  `);
-  printWindow.document.close();
-  
-  weeklyReports.push(report);
-  saveReports();
-  
-  showNotification('Report opened for printing! Use Save as PDF option.', 'success');
-  closeReportModal();
-}
-
-function sendReportToAdmin() {
-  if (!currentGeneratedReport) {
-    showNotification('No report to send.', 'error');
-    return;
-  }
-  
-  const report = currentGeneratedReport;
-  const messageContent = `📋 **WEEKLY REPORT SUBMITTED**\n\nLocation: ${report.location}\nWeek Ending: ${report.weekEnding}\nReport #: ${report.reportNumber}\nGenerated by: ${report.generatedBy}\n\nProgress Summary: ${report.progress.substring(0, 100)}${report.progress.length > 100 ? '...' : ''}\n\nRequests: ${report.requests.substring(0, 100)}${report.requests.length > 100 ? '...' : ''}`;
-  
-  sendMessageToChat(messageContent, true);
-  
-  report.sentToAdmin = true;
-  report.sentDate = new Date().toISOString();
-  weeklyReports.push(report);
-  saveReports();
-  
-  showNotification('Report sent to Admin successfully!', 'success');
-  closeReportModal();
-}
-
-function closeReportModal() {
-  const reportModal = document.getElementById('reportPreviewModal');
-  if (reportModal) reportModal.style.display = 'none';
-}
-
-// ========== CHAT FUNCTIONS ==========
-function sendMessageToChat(message, isReport = false) {
-  if (!message.trim() && !isReport) return;
-  
-  const newMessage = {
-    id: Date.now(),
-    sender: currentStaff.name,
-    senderEmail: currentStaff.email,
-    message: message,
-    timestamp: new Date().toISOString(),
-    type: "sent",
-    isReport: isReport,
-    edited: false
-  };
-  
-  chatMessages.unshift(newMessage);
-  saveChatMessages();
-  displayChatMessages();
-  
-  if (!isReport) {
-    showNotification('Message sent!', 'success');
-    const chatInput = document.getElementById('chatMessageInput');
-    if (chatInput) chatInput.value = '';
-  }
-  
-  if (isReport) {
-    showNotification('Report attached and sent!', 'success');
-    setTimeout(() => {
-      const adminResponse = {
-        id: Date.now() + 1,
-        sender: "Admin",
-        senderEmail: "admin@cleanspark.com",
-        message: "Thank you for submitting the weekly report. I will review it shortly.",
-        timestamp: new Date().toISOString(),
-        type: "received",
-        edited: false
-      };
-      chatMessages.unshift(adminResponse);
-      saveChatMessages();
-      displayChatMessages();
-      showNotification('New message from Admin', 'info');
-    }, 2000);
-  }
-}
-
-function attachLastReportToChat() {
-  if (!currentGeneratedReport) {
-    showNotification('No report generated yet.', 'error');
-    return;
-  }
-  
-  const report = currentGeneratedReport;
-  const messageWithReport = `📋 **WEEKLY REPORT - ${report.location}**\nReport #: ${report.reportNumber}\nWeek Ending: ${report.weekEnding}\n\nWork Progress: ${report.progress.substring(0, 80)}...\n\nRequests: ${report.requests}`;
-  
-  sendMessageToChat(messageWithReport, true);
-}
-
-function displayChatMessages() {
-  const container = document.getElementById('chatMessagesContainer');
-  if (!container) return;
-  
-  // Filter out messages deleted for current user
-  const visibleMessages = chatMessages.filter(msg => !deletedMessagesForMe.includes(msg.id));
-  
-  if (visibleMessages.length === 0) {
-    container.innerHTML = '<div class="chat-placeholder">No messages yet. Send a message to the Admin.</div>';
-    return;
-  }
-  
-  let html = '';
-  visibleMessages.slice().reverse().forEach(msg => {
-    const date = new Date(msg.timestamp);
-    const formattedTime = date.toLocaleString();
-    const messageClass = msg.type === 'sent' ? 'sent' : 'received';
-    const senderName = msg.type === 'sent' ? 'You' : msg.sender;
-    const isReportMsg = msg.isReport || false;
-    
-    html += `
-      <div class="chat-message-wrapper ${messageClass}" data-message-id="${msg.id}">
-        ${msg.type === 'sent' ? `
-        <div class="message-actions">
-          <button class="message-action-btn" onclick="copyMessage(${msg.id})" title="Copy">
-            <i class="bi bi-clipboard"></i> Copy
-          </button>
-          ${!isReportMsg ? `
-          <button class="message-action-btn" onclick="editMessage(${msg.id})" title="Edit">
-            <i class="bi bi-pencil"></i> Edit
-          </button>
-          ` : ''}
-          <button class="message-action-btn" onclick="deleteMessageForMe(${msg.id})" title="Delete for me">
-            <i class="bi bi-eye-slash"></i> Hide
-          </button>
-          <button class="message-action-btn" onclick="deleteMessageForAll(${msg.id})" title="Delete for everyone">
-            <i class="bi bi-trash"></i> Delete
-          </button>
-        </div>
-        ` : `
-        <div class="message-actions">
-          <button class="message-action-btn" onclick="copyMessage(${msg.id})" title="Copy">
-            <i class="bi bi-clipboard"></i> Copy
-          </button>
-        </div>
-        `}
-        <div class="chat-message ${messageClass}">
-          <div style="font-weight: 600; margin-bottom: 4px; font-size: 13px;">
-            ${escapeHtml(senderName)}${isReportMsg ? ' 📋' : ''}
-          </div>
-          <div class="message-text">${escapeHtml(msg.message)}</div>
-          <div class="message-meta">
-            ${msg.edited ? '<span class="edited-badge">(edited)</span>' : ''}
-            <span>${formattedTime}</span>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-  container.scrollTop = container.scrollHeight;
-}
-
-function copyMessage(messageId) {
-  const message = chatMessages.find(msg => msg.id === messageId);
-  if (!message) return;
-  
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(message.message).then(() => {
-      showNotification('Message copied to clipboard!', 'success');
-    }).catch(() => {
-      fallbackCopy(message.message);
-    });
-  } else {
-    fallbackCopy(message.message);
-  }
-}
-
-function fallbackCopy(text) {
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.style.position = 'fixed';
-  textarea.style.opacity = '0';
-  document.body.appendChild(textarea);
-  textarea.select();
-  try {
-    document.execCommand('copy');
-    showNotification('Message copied to clipboard!', 'success');
-  } catch (err) {
-    showNotification('Failed to copy message', 'error');
-  }
-  document.body.removeChild(textarea);
-}
-
-function editMessage(messageId) {
-  const message = chatMessages.find(msg => msg.id === messageId);
-  if (!message) return;
-  
-  if (message.isReport) {
-    showNotification('Report messages cannot be edited', 'warning');
-    return;
-  }
-  
-  currentEditingMessageId = messageId;
-  
-  const editInput = document.getElementById('editMessageInput');
-  const editModal = document.getElementById('editMessageModal');
-  
-  if (editInput) editInput.value = message.message;
-  if (editModal) editModal.style.display = 'flex';
-}
-
-function saveEditedMessage() {
-  const editInput = document.getElementById('editMessageInput');
-  const editModal = document.getElementById('editMessageModal');
-  
-  if (!editInput || !currentEditingMessageId) return;
-  
-  const newText = editInput.value.trim();
-  if (!newText) {
-    showNotification('Message cannot be empty', 'error');
-    return;
-  }
-  
-  const messageIndex = chatMessages.findIndex(msg => msg.id === currentEditingMessageId);
-  if (messageIndex !== -1) {
-    chatMessages[messageIndex].message = newText;
-    chatMessages[messageIndex].edited = true;
-    chatMessages[messageIndex].timestamp = new Date().toISOString();
-    saveChatMessages();
-    displayChatMessages();
-    showNotification('Message updated!', 'success');
-  }
-  
-  currentEditingMessageId = null;
-  if (editModal) editModal.style.display = 'none';
-  if (editInput) editInput.value = '';
-}
-
-function cancelEditMessage() {
-  currentEditingMessageId = null;
-  const editModal = document.getElementById('editMessageModal');
-  const editInput = document.getElementById('editMessageInput');
-  
-  if (editModal) editModal.style.display = 'none';
-  if (editInput) editInput.value = '';
-}
-
-function deleteMessageForMe(messageId) {
-  if (!deletedMessagesForMe.includes(messageId)) {
-    deletedMessagesForMe.push(messageId);
-    saveDeletedForMe();
-    displayChatMessages();
-    showNotification('Message hidden from your view', 'success');
-  }
-}
-
-function deleteMessageForAll(messageId) {
-  const messageIndex = chatMessages.findIndex(msg => msg.id === messageId);
-  if (messageIndex !== -1) {
-    chatMessages.splice(messageIndex, 1);
-    saveChatMessages();
-    displayChatMessages();
-    showNotification('Message deleted for everyone', 'success');
-  }
-}
-
-// ========== PAYMENT STATS DETAIL MODAL ==========
-function showPaymentStatsDetail(statType) {
-  const modal = document.getElementById('paymentStatsDetailModal');
-  const icon = document.getElementById('paymentStatsDetailIcon');
-  const title = document.getElementById('paymentStatsDetailTitle');
-  const content = document.getElementById('paymentStatsDetailContent');
-  
-  if (!modal || !content) return;
-  
-  const totalPayments = paymentValidations.length;
-  const totalAmount = paymentValidations.reduce((sum, p) => sum + p.amount, 0);
-  const today = new Date().toISOString().split('T')[0];
-  const todayPayments = paymentValidations.filter(p => p.paymentDate === today);
-  const todayAmount = todayPayments.reduce((sum, p) => sum + p.amount, 0);
-  const thisWeekPayments = paymentValidations.filter(p => {
-    const paymentDate = new Date(p.paymentDate);
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return paymentDate >= weekAgo;
-  });
-  const thisWeekAmount = thisWeekPayments.reduce((sum, p) => sum + p.amount, 0);
-  
-  let contentHtml = '';
-  
-  switch(statType) {
-    case 'totalPayments':
-      if (icon) icon.className = 'bi bi-receipt';
-      if (title) title.textContent = 'Total Validated Payments';
-      
-      contentHtml = `
-        <div class="detail-group">
-          <div class="detail-group-header">
-            <i class="bi bi-receipt"></i>
-            <h4>Payment Statistics</h4>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-receipt-cutoff"></i> Total Payments</span>
-            <span class="detail-value" style="font-size: 24px; font-weight: 700; color: #667eea;">${totalPayments}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-calendar-week"></i> This Week</span>
-            <span class="detail-value">${thisWeekPayments.length} payments</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-calendar-day"></i> Today</span>
-            <span class="detail-value">${todayPayments.length} payments</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-check-circle"></i> Average Per Day</span>
-            <span class="detail-value">${(totalPayments / Math.max(1, Math.ceil((new Date() - new Date('2026-03-01')) / (1000 * 60 * 60 * 24)))).toFixed(1)}</span>
-          </div>
-        </div>
-        
-        <div class="detail-group">
-          <div class="detail-group-header">
-            <i class="bi bi-list-check"></i>
-            <h4>Recent Validated Payments</h4>
-          </div>
-          <ul class="people-list">
-            ${paymentValidations.slice(-5).reverse().map(p => `
-              <li class="people-list-item">
-                <div class="people-avatar">${p.customerName.charAt(0)}</div>
-                <div class="people-info">
-                  <div class="people-name">${escapeHtml(p.customerName)}</div>
-                  <div class="people-detail">${escapeHtml(p.jobService)}</div>
-                </div>
-                <div style="text-align: right;">
-                  <div style="font-weight: 700; color: #28a745;">TZS ${formatNumber(p.amount)}</div>
-                  <div style="font-size: 11px; color: #a0aec0;">${p.paymentDate}</div>
-                </div>
-              </li>
-            `).join('')}
-          </ul>
-        </div>
-      `;
-      break;
-      
-    case 'totalRevenue':
-      if (icon) icon.className = 'bi bi-cash-stack';
-      if (title) title.textContent = 'Total Revenue Details';
-      
-      contentHtml = `
-        <div class="detail-group">
-          <div class="detail-group-header">
-            <i class="bi bi-cash"></i>
-            <h4>Revenue Overview</h4>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-cash-stack"></i> Total Revenue</span>
-            <span class="detail-value" style="font-size: 24px; font-weight: 700; color: #28a745;">TZS ${formatNumber(totalAmount)}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-calendar-week"></i> This Week</span>
-            <span class="detail-value">TZS ${formatNumber(thisWeekAmount)}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-calendar-day"></i> Today</span>
-            <span class="detail-value">TZS ${formatNumber(todayAmount)}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-calculator"></i> Average Per Transaction</span>
-            <span class="detail-value">TZS ${formatNumber(totalPayments > 0 ? Math.round(totalAmount / totalPayments) : 0)}</span>
-          </div>
-        </div>
-        
-        <div class="detail-group">
-          <div class="detail-group-header">
-            <i class="bi bi-graph-up"></i>
-            <h4>Revenue by Service</h4>
-          </div>
-          ${getRevenueByService().map(item => `
-            <div class="detail-item">
-              <span class="detail-label">${escapeHtml(item.service)}</span>
-              <span class="detail-value">TZS ${formatNumber(item.amount)} (${item.count}x)</span>
-            </div>
-          `).join('') || '<p style="color: #718096; text-align: center;">No revenue data available</p>'}
-        </div>
-      `;
-      break;
-      
-    case 'todayPayments':
-      if (icon) icon.className = 'bi bi-calendar-today';
-      if (title) title.textContent = 'Today\'s Payments';
-      
-      contentHtml = `
-        <div class="detail-group">
-          <div class="detail-group-header">
-            <i class="bi bi-calendar-day"></i>
-            <h4>Today's Summary (${today})</h4>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-receipt"></i> Payments Today</span>
-            <span class="detail-value" style="font-size: 24px; font-weight: 700; color: #667eea;">${todayPayments.length}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-cash"></i> Amount Collected</span>
-            <span class="detail-value" style="font-size: 20px; font-weight: 700; color: #28a745;">TZS ${formatNumber(todayAmount)}</span>
-          </div>
-        </div>
-        
-        ${todayPayments.length > 0 ? `
-        <div class="detail-group">
-          <div class="detail-group-header">
-            <i class="bi bi-people"></i>
-            <h4>Today's Customers</h4>
-          </div>
-          <ul class="people-list">
-            ${todayPayments.map(p => `
-              <li class="people-list-item">
-                <div class="people-avatar">${p.customerName.charAt(0)}</div>
-                <div class="people-info">
-                  <div class="people-name">${escapeHtml(p.customerName)}</div>
-                  <div class="people-detail">${escapeHtml(p.jobService)}</div>
-                </div>
-                <div style="text-align: right;">
-                  <div style="font-weight: 700; color: #28a745;">TZS ${formatNumber(p.amount)}</div>
-                  <div style="font-size: 11px; color: #a0aec0;">${p.paymentTime}</div>
-                </div>
-              </li>
-            `).join('')}
-          </ul>
-        </div>
-        ` : '<p style="color: #718096; text-align: center; padding: 20px;">No payments recorded today</p>'}
-      `;
-      break;
-      
-    case 'todayRevenue':
-      if (icon) icon.className = 'bi bi-graph-up';
-      if (title) title.textContent = 'Today\'s Revenue';
-      
-      contentHtml = `
-        <div class="detail-group">
-          <div class="detail-group-header">
-            <i class="bi bi-cash-stack"></i>
-            <h4>Today's Revenue (${today})</h4>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-cash"></i> Total Revenue Today</span>
-            <span class="detail-value" style="font-size: 24px; font-weight: 700; color: #28a745;">TZS ${formatNumber(todayAmount)}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-receipt"></i> Number of Transactions</span>
-            <span class="detail-value">${todayPayments.length}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label"><i class="bi bi-calculator"></i> Average Transaction</span>
-            <span class="detail-value">TZS ${formatNumber(todayPayments.length > 0 ? Math.round(todayAmount / todayPayments.length) : 0)}</span>
-          </div>
-        </div>
-        
-        ${todayPayments.length > 0 ? `
-        <div class="detail-group">
-          <div class="detail-group-header">
-            <i class="bi bi-list-check"></i>
-            <h4>Transaction Details</h4>
-          </div>
-          ${todayPayments.map(p => `
-            <div class="detail-item">
-              <span class="detail-label"><i class="bi bi-person"></i> ${escapeHtml(p.customerName)}</span>
-              <span class="detail-value">TZS ${formatNumber(p.amount)}</span>
-            </div>
-          `).join('')}
-        </div>
-        ` : '<p style="color: #718096; text-align: center; padding: 20px;">No revenue recorded today</p>'}
-      `;
-      break;
-  }
-  
-  content.innerHTML = contentHtml;
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function closePaymentStatsDetailModal() {
-  const modal = document.getElementById('paymentStatsDetailModal');
-  if (modal) {
-    modal.style.display = 'none';
-    document.body.style.overflow = '';
-  }
-}
-
-function getRevenueByService() {
-  const serviceMap = {};
-  paymentValidations.forEach(p => {
-    if (!serviceMap[p.jobService]) {
-      serviceMap[p.jobService] = { service: p.jobService, amount: 0, count: 0 };
-    }
-    serviceMap[p.jobService].amount += p.amount;
-    serviceMap[p.jobService].count++;
-  });
-  return Object.values(serviceMap);
-}
-
 // ========== GLOBAL VARIABLES ==========
 let currentStaff = null;
 let completedJobsCount = 0;
@@ -996,44 +221,102 @@ let paymentValidations = [];
 
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM loaded - initializing event listeners');
+  console.log('DOM loaded - initializing Staff Page');
   
   loadSupervisorData();
   setupEventListeners();
-  setupNavButtons();
+  setupSidebarNav();
+  setupMobileMenu();
+  updateCurrentDate();
+  initThemeToggle();
   
   // Check if already logged in
   if (sessionStorage.getItem('staffLoggedIn') === 'true') {
     const savedEmail = sessionStorage.getItem('staffEmail');
     if (savedEmail) {
-      if (savedEmail === staffAccount.email) {
-        currentStaff = staffAccount;
-      } else {
-        const found = supervisorAccounts.find(acc => acc.email === savedEmail);
-        if (found) currentStaff = found;
-      }
-      
-      if (currentStaff) {
-        document.getElementById('loginSection').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        loadStaffData();
-        loadJobs();
-        loadJobHistory();
-        loadStats();
-        loadProfile();
-        initPaymentModule();
-        toggleSupervisorMenu();
-        
-        if (currentStaff.isSupervisor && currentStaff.supervisorLocation) {
-          const locationSelect = document.getElementById('locationSelect');
-          if (locationSelect) {
-            locationSelect.value = currentStaff.supervisorLocation;
-          }
-        }
+      const found = allAccounts.find(acc => acc.email === savedEmail);
+      if (found) {
+        currentStaff = found;
+        showDashboard();
       }
     }
   }
 });
+
+function updateCurrentDate() {
+  const dateEl = document.getElementById('currentDate');
+  if (dateEl) {
+    const now = new Date();
+    dateEl.textContent = now.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
+}
+
+function initThemeToggle() {
+  const currentTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  
+  // Sync settings
+  const settings = getSettings();
+  settings.darkMode = currentTheme === 'dark';
+  saveSettings(settings);
+}
+
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  
+  const settings = getSettings();
+  settings.darkMode = newTheme === 'dark';
+  saveSettings(settings);
+}
+
+// ========== MOBILE MENU ==========
+function setupMobileMenu() {
+  const menuToggle = document.getElementById('mobileMenuToggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const closeBtn = document.getElementById('sidebarCloseBtn');
+  
+  if (menuToggle) {
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.add('open');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+  }
+  
+  if (overlay) {
+    overlay.addEventListener('click', closeSidebar);
+  }
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeSidebar);
+  }
+  
+  // Close sidebar when a nav button is clicked on mobile
+  document.querySelectorAll('.sidebar-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        closeSidebar();
+      }
+    });
+  });
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
 
 // ========== SETUP EVENT LISTENERS ==========
 function setupEventListeners() {
@@ -1070,63 +353,47 @@ function setupEventListeners() {
     });
   }
   
-  // Logout button
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', showLogoutConfirmation);
-  }
+  // Theme toggles
+  const themeToggle = document.getElementById('themeToggle');
+  if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
   
-  // Logout modal buttons
+  const themeToggleMobile = document.getElementById('themeToggleMobile');
+  if (themeToggleMobile) themeToggleMobile.addEventListener('click', toggleTheme);
+  
+  const sidebarThemeToggle = document.querySelector('.sidebar-theme-toggle');
+  if (sidebarThemeToggle) sidebarThemeToggle.addEventListener('click', toggleTheme);
+  
+  // Logout buttons
+  const logoutBtn = document.getElementById('sidebarLogoutBtn');
+  if (logoutBtn) logoutBtn.addEventListener('click', showLogoutConfirmation);
+  
+  // Logout modal
   const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
-  if (cancelLogoutBtn) {
-    cancelLogoutBtn.addEventListener('click', hideLogoutConfirmation);
-  }
+  if (cancelLogoutBtn) cancelLogoutBtn.addEventListener('click', hideLogoutConfirmation);
   
   const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
-  if (confirmLogoutBtn) {
-    confirmLogoutBtn.addEventListener('click', performLogout);
-  }
+  if (confirmLogoutBtn) confirmLogoutBtn.addEventListener('click', performLogout);
   
-  // Job detail modal close buttons
+  // Job detail modal
   const closeJobDetailModal = document.getElementById('closeJobDetailModal');
-  if (closeJobDetailModal) {
-    closeJobDetailModal.addEventListener('click', closeJobDetailModalFn);
-  }
+  if (closeJobDetailModal) closeJobDetailModal.addEventListener('click', closeJobDetailModalFn);
   
   const closeJobDetailFooter = document.getElementById('closeJobDetailFooter');
-  if (closeJobDetailFooter) {
-    closeJobDetailFooter.addEventListener('click', closeJobDetailModalFn);
-  }
+  if (closeJobDetailFooter) closeJobDetailFooter.addEventListener('click', closeJobDetailModalFn);
   
-  // Stats detail modal close buttons
-  const closeStatsDetailModal = document.getElementById('closeStatsDetailModal');
-  if (closeStatsDetailModal) {
-    closeStatsDetailModal.addEventListener('click', closeStatsDetailModalFn);
-  }
-  
-  const closeStatsDetailFooter = document.getElementById('closeStatsDetailFooter');
-  if (closeStatsDetailFooter) {
-    closeStatsDetailFooter.addEventListener('click', closeStatsDetailModalFn);
-  }
-  
-  // Payment stats detail modal close buttons
-  const closePaymentStatsDetailModalBtn = document.getElementById('closePaymentStatsDetailModal');
-  if (closePaymentStatsDetailModalBtn) {
-    closePaymentStatsDetailModalBtn.addEventListener('click', closePaymentStatsDetailModal);
-  }
-  
-  const closePaymentStatsDetailFooter = document.getElementById('closePaymentStatsDetailFooter');
-  if (closePaymentStatsDetailFooter) {
-    closePaymentStatsDetailFooter.addEventListener('click', closePaymentStatsDetailModal);
-  }
-  
-  // Close modals on overlay click
   const jobDetailModal = document.getElementById('jobDetailModal');
   if (jobDetailModal) {
     jobDetailModal.addEventListener('click', function(e) {
       if (e.target === this) closeJobDetailModalFn();
     });
   }
+  
+  // Stats detail modal
+  const closeStatsDetailModal = document.getElementById('closeStatsDetailModal');
+  if (closeStatsDetailModal) closeStatsDetailModal.addEventListener('click', closeStatsDetailModalFn);
+  
+  const closeStatsDetailFooter = document.getElementById('closeStatsDetailFooter');
+  if (closeStatsDetailFooter) closeStatsDetailFooter.addEventListener('click', closeStatsDetailModalFn);
   
   const statsDetailModal = document.getElementById('statsDetailModal');
   if (statsDetailModal) {
@@ -1135,6 +402,13 @@ function setupEventListeners() {
     });
   }
   
+  // Payment stats detail modal
+  const closePaymentStatsDetailModalBtn = document.getElementById('closePaymentStatsDetailModal');
+  if (closePaymentStatsDetailModalBtn) closePaymentStatsDetailModalBtn.addEventListener('click', closePaymentStatsDetailModal);
+  
+  const closePaymentStatsDetailFooter = document.getElementById('closePaymentStatsDetailFooter');
+  if (closePaymentStatsDetailFooter) closePaymentStatsDetailFooter.addEventListener('click', closePaymentStatsDetailModal);
+  
   const paymentStatsDetailModal = document.getElementById('paymentStatsDetailModal');
   if (paymentStatsDetailModal) {
     paymentStatsDetailModal.addEventListener('click', function(e) {
@@ -1142,6 +416,7 @@ function setupEventListeners() {
     });
   }
   
+  // Logout confirmation modal overlay
   const logoutConfirmModal = document.getElementById('logoutConfirmModal');
   if (logoutConfirmModal) {
     logoutConfirmModal.addEventListener('click', function(e) {
@@ -1149,26 +424,42 @@ function setupEventListeners() {
     });
   }
   
+  // Action modal
+  const closeActionModal = document.getElementById('closeActionModal');
+  if (closeActionModal) closeActionModal.addEventListener('click', closeActionModalFn);
+  
+  const cancelActionBtn = document.getElementById('cancelActionBtn');
+  if (cancelActionBtn) cancelActionBtn.addEventListener('click', closeActionModalFn);
+  
+  const submitActionBtn = document.getElementById('submitActionBtn');
+  if (submitActionBtn) submitActionBtn.addEventListener('click', submitActionReport);
+  
+  const actionModal = document.getElementById('actionModal');
+  if (actionModal) {
+    actionModal.addEventListener('click', function(e) {
+      if (e.target === this) closeActionModalFn();
+    });
+  }
+  
   // Payment validation
   const validateBtn = document.getElementById('validatePaymentBtn');
-  if (validateBtn) {
-    validateBtn.addEventListener('click', validateCashPayment);
-  }
+  if (validateBtn) validateBtn.addEventListener('click', validateCashPayment);
   
   // Receipt modal
   const closeModalBtn = document.getElementById('closeReceiptModalBtn');
-  if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', closeReceiptModal);
-  }
+  if (closeModalBtn) closeModalBtn.addEventListener('click', closeReceiptModal);
   
   const closeReceiptBtn = document.getElementById('closeReceiptBtn');
-  if (closeReceiptBtn) {
-    closeReceiptBtn.addEventListener('click', closeReceiptModal);
-  }
+  if (closeReceiptBtn) closeReceiptBtn.addEventListener('click', closeReceiptModal);
   
   const printReceiptBtn = document.getElementById('printReceiptBtn');
-  if (printReceiptBtn) {
-    printReceiptBtn.addEventListener('click', printReceipt);
+  if (printReceiptBtn) printReceiptBtn.addEventListener('click', printReceipt);
+  
+  const receiptModal = document.getElementById('receiptModal');
+  if (receiptModal) {
+    receiptModal.addEventListener('click', function(e) {
+      if (e.target === this) closeReceiptModal();
+    });
   }
   
   // Supervisor event listeners
@@ -1176,49 +467,40 @@ function setupEventListeners() {
   if (loadLocationBtn) {
     loadLocationBtn.addEventListener('click', () => {
       const location = document.getElementById('locationSelect').value;
-      if (location) {
-        loadStaffForLocation(location);
-      } else {
-        showNotification('Please select a location first', 'error');
-      }
+      if (location) loadStaffForLocation(location);
+      else showNotification('Please select a location first', 'error');
     });
   }
   
   const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
-  if (saveAttendanceBtn) {
-    saveAttendanceBtn.addEventListener('click', saveAttendanceAndUpdatePayroll);
-  }
+  if (saveAttendanceBtn) saveAttendanceBtn.addEventListener('click', saveAttendanceAndUpdatePayroll);
   
   const generateReportBtn = document.getElementById('generateReportBtn');
-  if (generateReportBtn) {
-    generateReportBtn.addEventListener('click', generateWeeklyReport);
-  }
+  if (generateReportBtn) generateReportBtn.addEventListener('click', generateWeeklyReport);
   
   const downloadReportBtn = document.getElementById('downloadReportBtn');
-  if (downloadReportBtn) {
-    downloadReportBtn.addEventListener('click', downloadReport);
-  }
+  if (downloadReportBtn) downloadReportBtn.addEventListener('click', downloadReport);
   
   const sendReportToAdminBtn = document.getElementById('sendReportToAdminBtn');
-  if (sendReportToAdminBtn) {
-    sendReportToAdminBtn.addEventListener('click', sendReportToAdmin);
-  }
+  if (sendReportToAdminBtn) sendReportToAdminBtn.addEventListener('click', sendReportToAdmin);
   
   const closeReportModalBtn = document.getElementById('closeReportModalBtn');
-  if (closeReportModalBtn) {
-    closeReportModalBtn.addEventListener('click', closeReportModal);
-  }
+  if (closeReportModalBtn) closeReportModalBtn.addEventListener('click', closeReportModal);
   
   const closeReportPreviewBtn = document.getElementById('closeReportPreviewBtn');
-  if (closeReportPreviewBtn) {
-    closeReportPreviewBtn.addEventListener('click', closeReportModal);
-  }
+  if (closeReportPreviewBtn) closeReportPreviewBtn.addEventListener('click', closeReportModal);
   
   const confirmDownloadBtn = document.getElementById('confirmDownloadReportBtn');
-  if (confirmDownloadBtn) {
-    confirmDownloadBtn.addEventListener('click', downloadReport);
+  if (confirmDownloadBtn) confirmDownloadBtn.addEventListener('click', downloadReport);
+  
+  const reportPreviewModal = document.getElementById('reportPreviewModal');
+  if (reportPreviewModal) {
+    reportPreviewModal.addEventListener('click', function(e) {
+      if (e.target === this) closeReportModal();
+    });
   }
   
+  // Chat
   const sendChatMsgBtn = document.getElementById('sendChatMessageBtn');
   if (sendChatMsgBtn) {
     sendChatMsgBtn.addEventListener('click', () => {
@@ -1228,27 +510,19 @@ function setupEventListeners() {
   }
   
   const attachReportBtn = document.getElementById('attachReportToChatBtn');
-  if (attachReportBtn) {
-    attachReportBtn.addEventListener('click', attachLastReportToChat);
-  }
+  if (attachReportBtn) attachReportBtn.addEventListener('click', attachLastReportToChat);
   
   // Edit message modal
   const saveEditBtn = document.getElementById('saveEditMessage');
-  if (saveEditBtn) {
-    saveEditBtn.addEventListener('click', saveEditedMessage);
-  }
+  if (saveEditBtn) saveEditBtn.addEventListener('click', saveEditedMessage);
   
   const cancelEditBtn = document.getElementById('cancelEditMessage');
-  if (cancelEditBtn) {
-    cancelEditBtn.addEventListener('click', cancelEditMessage);
-  }
+  if (cancelEditBtn) cancelEditBtn.addEventListener('click', cancelEditMessage);
   
   const closeEditModal = document.getElementById('closeEditMessageModal');
-  if (closeEditModal) {
-    closeEditModal.addEventListener('click', cancelEditMessage);
-  }
+  if (closeEditModal) closeEditModal.addEventListener('click', cancelEditMessage);
   
-  // Chat enter key
+  // Chat input enter key
   const chatInput = document.getElementById('chatMessageInput');
   if (chatInput) {
     chatInput.addEventListener('keypress', (e) => {
@@ -1270,6 +544,49 @@ function setupEventListeners() {
     });
   });
   
+  // General Supervisor event listeners
+  const gsStatusFilter = document.getElementById('gsStatusFilter');
+  if (gsStatusFilter) gsStatusFilter.addEventListener('change', filterGSJobs);
+  
+  const gsWorkerFilter = document.getElementById('gsWorkerFilter');
+  if (gsWorkerFilter) gsWorkerFilter.addEventListener('change', filterGSJobs);
+  
+  const gsJobSelect = document.getElementById('gsJobSelect');
+  if (gsJobSelect) {
+    gsJobSelect.addEventListener('change', function() {
+      const jobId = this.value;
+      const gsMarkStartedBtn = document.getElementById('gsMarkStartedBtn');
+      const gsMarkCompletedBtn = document.getElementById('gsMarkCompletedBtn');
+      
+      if (jobId && gsMarkStartedBtn && gsMarkCompletedBtn) {
+        const job = jobs.find(j => j.id === parseInt(jobId));
+        if (job) {
+          gsMarkStartedBtn.disabled = job.status !== 'pending';
+          gsMarkCompletedBtn.disabled = job.status !== 'in-progress';
+        }
+      } else {
+        if (gsMarkStartedBtn) gsMarkStartedBtn.disabled = true;
+        if (gsMarkCompletedBtn) gsMarkCompletedBtn.disabled = true;
+      }
+    });
+  }
+  
+  const gsMarkStartedBtn = document.getElementById('gsMarkStartedBtn');
+  if (gsMarkStartedBtn) {
+    gsMarkStartedBtn.addEventListener('click', () => {
+      const jobId = document.getElementById('gsJobSelect').value;
+      if (jobId) updateJobStatusGS(parseInt(jobId), 'in-progress');
+    });
+  }
+  
+  const gsMarkCompletedBtn = document.getElementById('gsMarkCompletedBtn');
+  if (gsMarkCompletedBtn) {
+    gsMarkCompletedBtn.addEventListener('click', () => {
+      const jobId = document.getElementById('gsJobSelect').value;
+      if (jobId) updateJobStatusGS(parseInt(jobId), 'completed');
+    });
+  }
+  
   // Escape key to close modals
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -1280,10 +597,44 @@ function setupEventListeners() {
       closeReportModal();
       hideLogoutConfirmation();
       cancelEditMessage();
+      closeActionModalFn();
+    }
+  });
+  
+  // Window resize handler
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+      closeSidebar();
     }
   });
 }
 
+// ========== SHOW DASHBOARD ==========
+function showDashboard() {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'flex';
+  
+  loadStaffData();
+  loadJobs();
+  loadJobHistory();
+  loadStats();
+  loadProfile();
+  loadSettings();
+  initPaymentModule();
+  toggleSupervisorMenu();
+  toggleGeneralSupervisorMenu();
+  
+  if (currentStaff.isSupervisor && currentStaff.supervisorLocation) {
+    const locationSelect = document.getElementById('locationSelect');
+    if (locationSelect) locationSelect.value = currentStaff.supervisorLocation;
+  }
+  
+  showNotification(`Welcome back, ${currentStaff.name}!`, 'success');
+  
+  sessionStorage.setItem('staffLoggedIn', 'true');
+  sessionStorage.setItem('staffName', currentStaff.name);
+  sessionStorage.setItem('staffEmail', currentStaff.email);
+}
 // ========== LOGOUT FUNCTIONS ==========
 function showLogoutConfirmation() {
   const modal = document.getElementById('logoutConfirmModal');
@@ -1305,9 +656,7 @@ function performLogout() {
   hideLogoutConfirmation();
   
   const loadingOverlay = document.getElementById('logoutLoadingOverlay');
-  if (loadingOverlay) {
-    loadingOverlay.style.display = 'flex';
-  }
+  if (loadingOverlay) loadingOverlay.style.display = 'flex';
   
   setTimeout(() => {
     sessionStorage.clear();
@@ -1334,10 +683,7 @@ function loginStaff() {
   const emailInput = document.getElementById('email');
   const passwordInput = document.getElementById('password');
   
-  if (!emailInput || !passwordInput) {
-    console.error('Email or password input not found');
-    return;
-  }
+  if (!emailInput || !passwordInput) return;
   
   const email = emailInput.value.trim();
   const password = passwordInput.value;
@@ -1347,53 +693,19 @@ function loginStaff() {
     return;
   }
   
-  if (email === staffAccount.email && password === staffAccount.password) {
-    currentStaff = staffAccount;
-  } else {
-    const foundSupervisor = supervisorAccounts.find(acc => acc.email === email && acc.password === password);
-    if (foundSupervisor) {
-      currentStaff = foundSupervisor;
-    }
-  }
+  const found = allAccounts.find(acc => acc.email === email && acc.password === password);
   
-  if (currentStaff) {
-    document.getElementById('loginSection').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    
-    loadStaffData();
-    loadJobs();
-    loadJobHistory();
-    loadStats();
-    loadProfile();
-    initPaymentModule();
-    toggleSupervisorMenu();
-    
-    if (currentStaff.isSupervisor && currentStaff.supervisorLocation) {
-      const locationSelect = document.getElementById('locationSelect');
-      if (locationSelect) {
-        locationSelect.value = currentStaff.supervisorLocation;
-      }
-    }
-    
-    showNotification(`Welcome back, ${currentStaff.name}!`, 'success');
-    
-    sessionStorage.setItem('staffLoggedIn', 'true');
-    sessionStorage.setItem('staffName', currentStaff.name);
-    sessionStorage.setItem('staffEmail', currentStaff.email);
+  if (found) {
+    currentStaff = found;
+    showDashboard();
   } else {
     showNotification('Invalid email or password!', 'error');
     const loginCard = document.querySelector('.login-card');
     if (loginCard) {
       loginCard.style.animation = 'shake 0.5s';
-      setTimeout(() => {
-        loginCard.style.animation = '';
-      }, 500);
+      setTimeout(() => { loginCard.style.animation = ''; }, 500);
     }
   }
-}
-
-function logoutStaff() {
-  showLogoutConfirmation();
 }
 
 function showForgotPassword() {
@@ -1401,10 +713,10 @@ function showForgotPassword() {
 }
 
 function showDemoCredentials() {
-  showNotification('Demo Credentials:\nStaff: mudrikdau@gmail.com / 1234\nSupervisor (ZSSF): zssf.supervisor@CleanSpark.com / 1234\nSupervisor (Mall): mall.supervisor@CleanSpark.com / 1234\nSupervisor (Uni): uni.supervisor@CleanSpark.com / 1234', 'info');
+  showNotification('Demo Credentials:\nStaff/GS: mudrikdau@gmail.com / 1234\nGS (Mall): mall.supervisor@CleanSpark.com / 1234\nWorker: john@CleanSpark.com / 1234\nWorker: aisha@CleanSpark.com / 1234', 'info');
 }
 
-// ========== CHANGE PASSWORD FEATURE ==========
+// ========== CHANGE PASSWORD ==========
 function changeStaffPassword() {
   const oldPass = document.getElementById('oldPassword')?.value;
   const newPass = document.getElementById('newPassword')?.value;
@@ -1441,13 +753,41 @@ function changeStaffPassword() {
 // ========== LOAD FUNCTIONS ==========
 function loadStaffData() {
   const staffNameEl = document.getElementById('staffName');
-  if (staffNameEl && currentStaff) {
-    staffNameEl.textContent = currentStaff.name;
+  if (staffNameEl && currentStaff) staffNameEl.textContent = currentStaff.name;
+  
+  const sidebarUserName = document.getElementById('sidebarUserName');
+  if (sidebarUserName && currentStaff) sidebarUserName.textContent = currentStaff.name;
+  
+  const sidebarUserRole = document.getElementById('sidebarUserRole');
+  if (sidebarUserRole && currentStaff) {
+    let role = currentStaff.role;
+    if (currentStaff.isGeneralSupervisor) role += ' (GS)';
+    else if (currentStaff.isSupervisor) role += ' (Supervisor)';
+    sidebarUserRole.textContent = role;
   }
+  
+  const sidebarAvatar = document.getElementById('sidebarAvatar');
+  if (sidebarAvatar && currentStaff) {
+    const nameParts = currentStaff.name.split(' ');
+    sidebarAvatar.textContent = nameParts.map(p => p[0]).join('').substring(0, 2).toUpperCase();
+  }
+  
+  const topBarUserName = document.getElementById('topBarUserName');
+  if (topBarUserName && currentStaff) topBarUserName.textContent = currentStaff.name;
 }
 
 function loadJobs() {
-  const pendingJobs = jobs.filter(job => job.status === 'pending' || job.status === 'in-progress');
+  let staffJobs;
+  
+  // For regular staff: show jobs assigned to them
+  // For general supervisors: show all jobs under their supervision
+  if (currentStaff.isGeneralSupervisor) {
+    staffJobs = jobs.filter(job => job.generalSupervisorId === currentStaff.id);
+  } else {
+    staffJobs = jobs.filter(job => job.assignedWorkerId === currentStaff.id);
+  }
+  
+  const pendingJobs = staffJobs.filter(job => job.status === 'pending' || job.status === 'in-progress');
   const container = document.getElementById('jobsContainer');
   
   if (!container) return;
@@ -1467,6 +807,8 @@ function loadJobs() {
   pendingJobs.forEach(job => {
     const statusClass = job.status === 'pending' ? 'status-pending' : 'status-in-progress';
     const statusText = job.status === 'pending' ? 'Pending' : 'In Progress';
+    const supervisor = staffMembers.find(s => s.id === job.generalSupervisorId);
+    const supervisorPhone = job.supervisorPhone || (supervisor ? getSupervisorPhone(supervisor.id) : '+255 777 000 000');
     
     html += `
       <div class="job-card clickable-indicator" data-id="${job.id}" onclick="showJobDetailModal(${job.id})">
@@ -1488,26 +830,22 @@ function loadJobs() {
           </div>
           <div class="job-detail-item">
             <i class="bi bi-calendar3"></i>
-            <span>${job.scheduledDate} | ${job.timeSlot}</span>
+            <span>Date: ${job.scheduledDate}</span>
           </div>
           <div class="job-detail-item">
             <i class="bi bi-clock"></i>
-            <span>Duration: ${job.duration}</span>
+            <span>Time: ${job.timeSlot}</span>
           </div>
           <div class="job-detail-item">
-            <i class="bi bi-cash-stack"></i>
-            <span>TZS ${formatNumber(job.price)}</span>
+            <i class="bi bi-telephone-fill"></i>
+            <a href="tel:${supervisorPhone}">${supervisorPhone}</a>
+            <span style="font-size: 11px; color: var(--text-muted);">(Supervisor)</span>
           </div>
         </div>
         <div class="job-actions" onclick="event.stopPropagation()">
-          ${job.status === 'pending' ? 
-            `<button class="btn-action btn-start" onclick="updateJobStatus(${job.id}, 'in-progress')">
-              <i class="bi bi-play-fill"></i> Start Job
-            </button>` : 
-            `<button class="btn-action btn-complete" onclick="updateJobStatus(${job.id}, 'completed')">
-              <i class="bi bi-check-circle-fill"></i> Mark Complete
-            </button>`
-          }
+          <button class="btn-action btn-action-report" onclick="openActionModal(${job.id})">
+            <i class="bi bi-exclamation-triangle-fill"></i> Action
+          </button>
           <button class="btn-action btn-view" onclick="showJobDetailModal(${job.id})">
             <i class="bi bi-eye"></i> Details
           </button>
@@ -1519,8 +857,24 @@ function loadJobs() {
   container.innerHTML = html;
 }
 
+function getSupervisorPhone(supervisorId) {
+  const supervisor = staffMembers.find(s => s.id === supervisorId);
+  if (supervisor) {
+    const account = allAccounts.find(a => a.id === supervisorId);
+    if (account) return account.phone;
+  }
+  return '+255 777 000 000';
+}
+
 function loadJobHistory() {
-  const completedJobs = jobs.filter(job => job.status === 'completed');
+  let staffJobs;
+  if (currentStaff.isGeneralSupervisor) {
+    staffJobs = jobs.filter(job => job.generalSupervisorId === currentStaff.id);
+  } else {
+    staffJobs = jobs.filter(job => job.assignedWorkerId === currentStaff.id);
+  }
+  
+  const completedJobs = staffJobs.filter(job => job.status === 'completed');
   const container = document.getElementById('historyContainer');
   
   if (!container) return;
@@ -1553,12 +907,12 @@ function loadJobHistory() {
             <span>${escapeHtml(job.location)}</span>
           </div>
           <div class="job-detail-item">
-            <i class="bi bi-calendar-check"></i>
-            <span>Completed: ${job.completedDate}</span>
+            <i class="bi bi-person-fill"></i>
+            <span>Client: ${escapeHtml(job.client)}</span>
           </div>
           <div class="job-detail-item">
-            <i class="bi bi-cash-stack"></i>
-            <span>TZS ${formatNumber(job.price)}</span>
+            <i class="bi bi-calendar-check"></i>
+            <span>Completed: ${job.completedDate}</span>
           </div>
         </div>
         <div class="job-actions" onclick="event.stopPropagation()">
@@ -1574,11 +928,18 @@ function loadJobHistory() {
 }
 
 function loadStats() {
-  const completedJobs = jobs.filter(job => job.status === 'completed');
-  const pendingJobs = jobs.filter(job => job.status === 'pending');
-  const inProgressJobs = jobs.filter(job => job.status === 'in-progress');
+  let staffJobs;
+  if (currentStaff.isGeneralSupervisor) {
+    staffJobs = jobs.filter(job => job.generalSupervisorId === currentStaff.id);
+  } else {
+    staffJobs = jobs.filter(job => job.assignedWorkerId === currentStaff.id);
+  }
   
-  const totalJobs = jobs.length;
+  const completedJobs = staffJobs.filter(job => job.status === 'completed');
+  const pendingJobs = staffJobs.filter(job => job.status === 'pending');
+  const inProgressJobs = staffJobs.filter(job => job.status === 'in-progress');
+  
+  const totalJobs = staffJobs.length;
   const totalCompleted = completedJobs.length;
   const totalEarnings = completedJobs.reduce((sum, job) => sum + job.price, 0);
   const completionRate = totalJobs > 0 ? ((totalCompleted / totalJobs) * 100).toFixed(0) : 0;
@@ -1587,51 +948,19 @@ function loadStats() {
   if (!container) return;
   
   const statCardsData = [
-    {
-      icon: 'bi-briefcase-fill',
-      value: totalJobs,
-      label: 'Total Jobs Assigned',
-      id: 'totalJobs'
-    },
-    {
-      icon: 'bi-check-circle-fill',
-      value: totalCompleted,
-      label: 'Jobs Completed',
-      id: 'completedJobs'
-    },
-    {
-      icon: 'bi-play-fill',
-      value: inProgressJobs.length,
-      label: 'In Progress',
-      id: 'inProgressJobs'
-    },
-    {
-      icon: 'bi-hourglass-split',
-      value: pendingJobs.length,
-      label: 'Pending Jobs',
-      id: 'pendingJobs'
-    },
-    {
-      icon: 'bi-cash-stack',
-      value: `TZS ${formatNumber(totalEarnings)}`,
-      label: 'Total Earnings',
-      id: 'totalEarnings'
-    },
-    {
-      icon: 'bi-graph-up',
-      value: `${completionRate}%`,
-      label: 'Completion Rate',
-      id: 'completionRate'
-    }
+    { icon: 'bi-briefcase-fill', value: totalJobs, label: 'Total Jobs', id: 'totalJobs' },
+    { icon: 'bi-check-circle-fill', value: totalCompleted, label: 'Completed', id: 'completedJobs' },
+    { icon: 'bi-play-fill', value: inProgressJobs.length, label: 'In Progress', id: 'inProgressJobs' },
+    { icon: 'bi-hourglass-split', value: pendingJobs.length, label: 'Pending', id: 'pendingJobs' },
+    { icon: 'bi-cash-stack', value: `TZS ${formatNumber(totalEarnings)}`, label: 'Earnings', id: 'totalEarnings' },
+    { icon: 'bi-graph-up', value: `${completionRate}%`, label: 'Completion Rate', id: 'completionRate' }
   ];
   
   let html = '';
   statCardsData.forEach(stat => {
     html += `
       <div class="stat-card clickable-indicator" onclick="showStatsDetail('${stat.id}')">
-        <div class="stat-icon">
-          <i class="bi ${stat.icon}"></i>
-        </div>
+        <div class="stat-icon"><i class="bi ${stat.icon}"></i></div>
         <div class="stat-value">${stat.value}</div>
         <div class="stat-label">${stat.label}</div>
       </div>
@@ -1647,35 +976,29 @@ function loadProfile() {
   
   container.innerHTML = `
     <div class="profile-header">
-      <div class="profile-avatar">
-        <i class="bi bi-person-fill"></i>
-      </div>
-      <h3>${currentStaff.name}</h3>
-      <p>${currentStaff.role}${currentStaff.isSupervisor ? ' (Supervisor)' : ''}</p>
+      <div class="profile-avatar"><i class="bi bi-person-fill"></i></div>
+      <h3>${escapeHtml(currentStaff.name)}</h3>
+      <p>${escapeHtml(currentStaff.role)}${currentStaff.isGeneralSupervisor ? ' (General Supervisor)' : currentStaff.isSupervisor ? ' (Supervisor)' : ''}</p>
     </div>
     <div class="profile-info">
       <div class="info-row">
         <span class="info-label"><i class="bi bi-envelope"></i> Email</span>
-        <span class="info-value">${currentStaff.email}</span>
+        <span class="info-value">${escapeHtml(currentStaff.email)}</span>
       </div>
       <div class="info-row">
         <span class="info-label"><i class="bi bi-phone"></i> Phone</span>
-        <span class="info-value">${currentStaff.phone}</span>
+        <span class="info-value">${escapeHtml(currentStaff.phone)}</span>
       </div>
       <div class="info-row">
         <span class="info-label"><i class="bi bi-calendar-plus"></i> Joined</span>
-        <span class="info-value">${currentStaff.joinDate}</span>
+        <span class="info-value">${escapeHtml(currentStaff.joinDate)}</span>
       </div>
-      ${currentStaff.isSupervisor ? `
+      ${currentStaff.supervisorLocation ? `
       <div class="info-row">
-        <span class="info-label"><i class="bi bi-building"></i> Assigned Location</span>
-        <span class="info-value">${currentStaff.supervisorLocation || 'Not assigned'}</span>
+        <span class="info-label"><i class="bi bi-building"></i> Location</span>
+        <span class="info-value">${escapeHtml(currentStaff.supervisorLocation)}</span>
       </div>
       ` : ''}
-      <div class="info-row">
-        <span class="info-label"><i class="bi bi-trophy"></i> Rating</span>
-        <span class="info-value">⭐ 4.8 (24 reviews)</span>
-      </div>
     </div>
     
     <div class="password-change-section">
@@ -1713,9 +1036,188 @@ function loadProfile() {
   `;
   
   const changePwdBtn = document.getElementById('changePasswordBtn');
-  if (changePwdBtn) {
-    changePwdBtn.addEventListener('click', changeStaffPassword);
+  if (changePwdBtn) changePwdBtn.addEventListener('click', changeStaffPassword);
+}
+
+function loadSettings() {
+  const container = document.getElementById('settingsContainer');
+  if (!container) return;
+  
+  const settings = getSettings();
+  
+  container.innerHTML = `
+    <div class="settings-card">
+      <h3><i class="bi bi-bell-fill"></i> Notifications</h3>
+      <div class="settings-item">
+        <div>
+          <div class="settings-item-label">
+            <i class="bi bi-bell"></i> Allow Notifications
+          </div>
+          <div class="settings-item-desc">Receive job updates and alerts</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="settingsNotifications" ${settings.notifications ? 'checked' : ''} onchange="updateSetting('notifications', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-item">
+        <div>
+          <div class="settings-item-label">
+            <i class="bi bi-volume-up"></i> Notification Sound
+          </div>
+          <div class="settings-item-desc">Play sound for new notifications</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="settingsNotificationSound" ${settings.notificationSound ? 'checked' : ''} onchange="updateSetting('notificationSound', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+    
+    <div class="settings-card">
+      <h3><i class="bi bi-palette-fill"></i> Appearance</h3>
+      <div class="settings-item">
+        <div>
+          <div class="settings-item-label">
+            <i class="bi bi-moon-stars"></i> Dark Mode
+          </div>
+          <div class="settings-item-desc">Switch between light and dark theme</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="settingsDarkMode" ${settings.darkMode ? 'checked' : ''} onchange="toggleThemeFromSettings(this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+    
+    <div class="settings-card">
+      <h3><i class="bi bi-person-check-fill"></i> Availability</h3>
+      <div class="settings-item">
+        <div>
+          <div class="settings-item-label">
+            <i class="bi bi-circle-fill ${settings.availabilityStatus === 'available' ? 'text-success' : settings.availabilityStatus === 'busy' ? 'text-danger' : 'text-warning'}"></i> Status
+          </div>
+          <div class="settings-item-desc">Set your current availability</div>
+        </div>
+        <select class="form-control" style="width: 140px;" id="settingsAvailability" onchange="updateSetting('availabilityStatus', this.value)">
+          <option value="available" ${settings.availabilityStatus === 'available' ? 'selected' : ''}>Available</option>
+          <option value="busy" ${settings.availabilityStatus === 'busy' ? 'selected' : ''}>Busy</option>
+          <option value="away" ${settings.availabilityStatus === 'away' ? 'selected' : ''}>Away</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="settings-card">
+      <h3><i class="bi bi-globe"></i> Language</h3>
+      <div class="settings-item">
+        <div>
+          <div class="settings-item-label">
+            <i class="bi bi-translate"></i> Display Language
+          </div>
+          <div class="settings-item-desc">Choose your preferred language</div>
+        </div>
+        <select class="form-control" style="width: 140px;" id="settingsLanguage" onchange="updateSetting('language', this.value)">
+          <option value="en" ${settings.language === 'en' ? 'selected' : ''}>English</option>
+          <option value="sw" ${settings.language === 'sw' ? 'selected' : ''}>Kiswahili</option>
+        </select>
+      </div>
+    </div>
+  `;
+}
+
+function updateSetting(key, value) {
+  const settings = getSettings();
+  settings[key] = value;
+  saveSettings(settings);
+  
+  if (key === 'notifications') {
+    showNotification(value ? 'Notifications enabled' : 'Notifications disabled', 'info');
+  } else if (key === 'notificationSound') {
+    showNotification(value ? 'Notification sound enabled' : 'Notification sound disabled', 'info');
+  } else if (key === 'availabilityStatus') {
+    showNotification(`Status updated to: ${value}`, 'success');
+  } else if (key === 'language') {
+    showNotification(`Language set to: ${value === 'en' ? 'English' : 'Kiswahili'}`, 'success');
   }
+  
+  // Reload settings to reflect changes
+  if (key === 'availabilityStatus') loadSettings();
+}
+
+function toggleThemeFromSettings(enableDark) {
+  const newTheme = enableDark ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  
+  const settings = getSettings();
+  settings.darkMode = enableDark;
+  saveSettings(settings);
+  
+  // Update the sidebar theme toggle icons
+  showNotification(`Theme switched to ${newTheme} mode`, 'success');
+}
+
+// ========== ACTION MODAL ==========
+function openActionModal(jobId) {
+  const modal = document.getElementById('actionModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.setAttribute('data-job-id', jobId);
+    document.body.style.overflow = 'hidden';
+    
+    document.getElementById('actionType').value = '';
+    document.getElementById('actionDescription').value = '';
+    document.getElementById('actionReturnDate').value = '';
+  }
+}
+
+function closeActionModalFn() {
+  const modal = document.getElementById('actionModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+function submitActionReport() {
+  const jobId = document.getElementById('actionModal').getAttribute('data-job-id');
+  const actionType = document.getElementById('actionType').value;
+  const description = document.getElementById('actionDescription').value;
+  const returnDate = document.getElementById('actionReturnDate').value;
+  
+  if (!actionType) {
+    showNotification('Please select an issue type', 'error');
+    return;
+  }
+  
+  if (!description.trim()) {
+    showNotification('Please provide a description', 'error');
+    return;
+  }
+  
+  const job = jobs.find(j => j.id === parseInt(jobId));
+  const actionReport = {
+    id: Date.now(),
+    staffId: currentStaff.id,
+    staffName: currentStaff.name,
+    jobId: parseInt(jobId),
+    jobService: job ? job.service : 'Unknown',
+    actionType: actionType,
+    description: description,
+    returnDate: returnDate || 'Not specified',
+    timestamp: new Date().toISOString(),
+    status: 'submitted'
+  };
+  
+  // Store action reports
+  const actionReports = JSON.parse(localStorage.getItem('CleanSpark_actionReports') || '[]');
+  actionReports.push(actionReport);
+  localStorage.setItem('CleanSpark_actionReports', JSON.stringify(actionReports));
+  
+  closeActionModalFn();
+  showNotification('Action report submitted successfully! Your supervisor will be notified.', 'success');
+  
+  console.log('Action Report:', actionReport);
 }
 
 // ========== JOB DETAIL MODAL ==========
@@ -1732,27 +1234,20 @@ function showJobDetailModal(jobId) {
   
   if (icon) {
     switch(job.status) {
-      case 'completed':
-        icon.className = 'bi bi-check-circle-fill';
-        break;
-      case 'in-progress':
-        icon.className = 'bi bi-play-circle-fill';
-        break;
-      default:
-        icon.className = 'bi bi-brush-fill';
+      case 'completed': icon.className = 'bi bi-check-circle-fill'; break;
+      case 'in-progress': icon.className = 'bi bi-play-circle-fill'; break;
+      default: icon.className = 'bi bi-brush-fill';
     }
   }
   
-  if (title) {
-    title.textContent = job.service;
-  }
+  if (title) title.textContent = job.service;
   
-  const statusClass = job.status === 'pending' ? 'pending' : 
-                      job.status === 'in-progress' ? 'in-progress' : 'completed';
-  const statusIcon = job.status === 'pending' ? 'bi-clock' : 
-                     job.status === 'in-progress' ? 'bi-play-circle' : 'bi-check-circle';
+  const statusClass = job.status === 'pending' ? 'pending' : job.status === 'in-progress' ? 'in-progress' : 'completed';
+  const statusIcon = job.status === 'pending' ? 'bi-clock' : job.status === 'in-progress' ? 'bi-play-circle' : 'bi-check-circle';
+  const supervisorPhone = job.supervisorPhone || getSupervisorPhone(job.generalSupervisorId);
   
-  content.innerHTML = `
+  // Build content - for staff/non-GS users, hide price and duration
+  let html = `
     <div class="detail-group">
       <div class="detail-group-header">
         <i class="bi bi-info-circle-fill"></i>
@@ -1768,9 +1263,7 @@ function showJobDetailModal(jobId) {
       </div>
       <div class="detail-item">
         <span class="detail-label"><i class="${statusIcon}"></i> Status</span>
-        <span class="detail-value">
-          <span class="status-badge-large ${statusClass}">${job.status.toUpperCase()}</span>
-        </span>
+        <span class="detail-value"><span class="status-badge-large ${statusClass}">${job.status.toUpperCase()}</span></span>
       </div>
     </div>
     
@@ -1802,54 +1295,64 @@ function showJobDetailModal(jobId) {
         <span class="detail-label"><i class="bi bi-clock"></i> Time Slot</span>
         <span class="detail-value">${job.timeSlot}</span>
       </div>
-      <div class="detail-item">
-        <span class="detail-label"><i class="bi bi-hourglass"></i> Duration</span>
-        <span class="detail-value">${job.duration}</span>
-      </div>
       ${job.completedDate ? `
       <div class="detail-item">
         <span class="detail-label"><i class="bi bi-calendar-check"></i> Completed Date</span>
         <span class="detail-value">${job.completedDate}</span>
       </div>
       ` : ''}
+      <div class="detail-item">
+        <span class="detail-label"><i class="bi bi-telephone"></i> Supervisor Phone</span>
+        <span class="detail-value"><a href="tel:${supervisorPhone}" style="color: #667eea; font-weight: 600;">${supervisorPhone}</a></span>
+      </div>
     </div>
-    
+  `;
+  
+  // Only show price and duration for General Supervisors or Supervisors
+  if (currentStaff.isGeneralSupervisor || currentStaff.isSupervisor) {
+    html += `
     <div class="detail-group">
       <div class="detail-group-header">
         <i class="bi bi-cash-stack"></i>
-        <h4>Payment Information</h4>
+        <h4>Financial Information</h4>
       </div>
       <div class="detail-item">
         <span class="detail-label"><i class="bi bi-cash"></i> Service Price</span>
-        <span class="detail-value" style="color: #28a745; font-size: 18px; font-weight: 700;">TZS ${formatNumber(job.price)}</span>
+        <span class="detail-value" style="color: #28a745; font-size: 16px; font-weight: 700;">TZS ${formatNumber(job.price)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="bi bi-hourglass-split"></i> Duration</span>
+        <span class="detail-value">${job.duration}</span>
       </div>
     </div>
-    
-    ${job.description ? `
+    `;
+  }
+  
+  if (job.description) {
+    html += `
     <div class="detail-group">
       <div class="detail-group-header">
         <i class="bi bi-file-text"></i>
         <h4>Description</h4>
       </div>
-      <p style="color: #4a5568; line-height: 1.6; padding: 12px; background: #f8fafc; border-radius: 12px;">
-        ${escapeHtml(job.description)}
-      </p>
+      <p style="color: var(--text-secondary); line-height: 1.6; padding: 12px; background: var(--bg-section-alt); border-radius: 10px;">${escapeHtml(job.description)}</p>
     </div>
-    ` : ''}
-    
-    ${job.requirements ? `
+    `;
+  }
+  
+  if (job.requirements) {
+    html += `
     <div class="detail-group">
       <div class="detail-group-header">
         <i class="bi bi-list-check"></i>
         <h4>Requirements</h4>
       </div>
-      <p style="color: #4a5568; line-height: 1.6; padding: 12px; background: #fff8f0; border-radius: 12px;">
-        ${escapeHtml(job.requirements)}
-      </p>
+      <p style="color: var(--text-secondary); line-height: 1.6; padding: 12px; background: #fff8f0; border-radius: 10px;">${escapeHtml(job.requirements)}</p>
     </div>
-    ` : ''}
-  `;
+    `;
+  }
   
+  content.innerHTML = html;
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
@@ -1861,7 +1364,6 @@ function closeJobDetailModalFn() {
     document.body.style.overflow = '';
   }
 }
-
 // ========== STATS DETAIL MODAL ==========
 function showStatsDetail(statId) {
   const modal = document.getElementById('statsDetailModal');
@@ -1871,10 +1373,17 @@ function showStatsDetail(statId) {
   
   if (!modal || !content) return;
   
-  const completedJobs = jobs.filter(job => job.status === 'completed');
-  const pendingJobs = jobs.filter(job => job.status === 'pending');
-  const inProgressJobs = jobs.filter(job => job.status === 'in-progress');
-  const totalJobs = jobs.length;
+  let staffJobs;
+  if (currentStaff.isGeneralSupervisor) {
+    staffJobs = jobs.filter(job => job.generalSupervisorId === currentStaff.id);
+  } else {
+    staffJobs = jobs.filter(job => job.assignedWorkerId === currentStaff.id);
+  }
+  
+  const completedJobs = staffJobs.filter(job => job.status === 'completed');
+  const pendingJobs = staffJobs.filter(job => job.status === 'pending');
+  const inProgressJobs = staffJobs.filter(job => job.status === 'in-progress');
+  const totalJobs = staffJobs.length;
   const totalCompleted = completedJobs.length;
   const totalEarnings = completedJobs.reduce((sum, job) => sum + job.price, 0);
   const completionRate = totalJobs > 0 ? ((totalCompleted / totalJobs) * 100).toFixed(0) : 0;
@@ -1888,142 +1397,56 @@ function showStatsDetail(statId) {
       contentHtml = `
         <div class="stats-detail-section">
           <h4>Jobs Overview</h4>
-          <div class="stats-breakdown-item">
-            <div class="stats-breakdown-icon"><i class="bi bi-briefcase"></i></div>
-            <div class="stats-breakdown-info">
-              <div class="stats-breakdown-label">Total Jobs Assigned</div>
-              <div class="stats-breakdown-value">${totalJobs}</div>
-            </div>
-          </div>
-          <div class="stats-breakdown-item">
-            <div class="stats-breakdown-icon"><i class="bi bi-check-circle"></i></div>
-            <div class="stats-breakdown-info">
-              <div class="stats-breakdown-label">Completed Jobs</div>
-              <div class="stats-breakdown-value">${totalCompleted}</div>
-            </div>
-          </div>
-          <div class="stats-breakdown-item">
-            <div class="stats-breakdown-icon"><i class="bi bi-play-circle"></i></div>
-            <div class="stats-breakdown-info">
-              <div class="stats-breakdown-label">In Progress</div>
-              <div class="stats-breakdown-value">${inProgressJobs.length}</div>
-            </div>
-          </div>
-          <div class="stats-breakdown-item">
-            <div class="stats-breakdown-icon"><i class="bi bi-clock"></i></div>
-            <div class="stats-breakdown-info">
-              <div class="stats-breakdown-label">Pending</div>
-              <div class="stats-breakdown-value">${pendingJobs.length}</div>
-            </div>
-          </div>
-        </div>
-      `;
+          <div class="stats-breakdown-item"><div class="stats-breakdown-icon"><i class="bi bi-briefcase"></i></div><div class="stats-breakdown-info"><div class="stats-breakdown-label">Total Jobs</div><div class="stats-breakdown-value">${totalJobs}</div></div></div>
+          <div class="stats-breakdown-item"><div class="stats-breakdown-icon"><i class="bi bi-check-circle"></i></div><div class="stats-breakdown-info"><div class="stats-breakdown-label">Completed</div><div class="stats-breakdown-value">${totalCompleted}</div></div></div>
+          <div class="stats-breakdown-item"><div class="stats-breakdown-icon"><i class="bi bi-play-circle"></i></div><div class="stats-breakdown-info"><div class="stats-breakdown-label">In Progress</div><div class="stats-breakdown-value">${inProgressJobs.length}</div></div></div>
+          <div class="stats-breakdown-item"><div class="stats-breakdown-icon"><i class="bi bi-clock"></i></div><div class="stats-breakdown-info"><div class="stats-breakdown-label">Pending</div><div class="stats-breakdown-value">${pendingJobs.length}</div></div></div>
+        </div>`;
       break;
       
     case 'completedJobs':
       if (icon) icon.className = 'bi bi-check-circle-fill';
-      if (title) title.textContent = 'Completed Jobs Details';
+      if (title) title.textContent = 'Completed Jobs';
       contentHtml = `
-        <div class="stats-detail-section">
-          <h4>Completed Jobs (${totalCompleted})</h4>
-          ${completedJobs.map(job => `
-            <div class="stats-breakdown-item">
-              <div class="stats-breakdown-icon"><i class="bi bi-check-circle"></i></div>
-              <div class="stats-breakdown-info">
-                <div class="stats-breakdown-label">${escapeHtml(job.service)}</div>
-                <div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div>
-                <small style="color: #718096;">Completed: ${job.completedDate}</small>
-              </div>
-            </div>
-          `).join('') || '<p style="color: #718096; text-align: center;">No completed jobs yet.</p>'}
-        </div>
-      `;
+        <div class="stats-detail-section"><h4>Completed (${totalCompleted})</h4>
+        ${completedJobs.map(job => `<div class="stats-breakdown-item"><div class="stats-breakdown-icon"><i class="bi bi-check-circle"></i></div><div class="stats-breakdown-info"><div class="stats-breakdown-label">${escapeHtml(job.service)}</div><div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div><small style="color: #718096;">Completed: ${job.completedDate}</small></div></div>`).join('') || '<p style="color: #718096; text-align: center;">No completed jobs yet.</p>'}
+        </div>`;
       break;
       
     case 'inProgressJobs':
       if (icon) icon.className = 'bi bi-play-fill';
       if (title) title.textContent = 'In Progress Jobs';
       contentHtml = `
-        <div class="stats-detail-section">
-          <h4>Jobs In Progress (${inProgressJobs.length})</h4>
-          ${inProgressJobs.map(job => `
-            <div class="stats-breakdown-item">
-              <div class="stats-breakdown-icon"><i class="bi bi-play-circle"></i></div>
-              <div class="stats-breakdown-info">
-                <div class="stats-breakdown-label">${escapeHtml(job.service)}</div>
-                <div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div>
-                <small style="color: #718096;">Scheduled: ${job.scheduledDate}</small>
-              </div>
-            </div>
-          `).join('') || '<p style="color: #718096; text-align: center;">No jobs in progress.</p>'}
-        </div>
-      `;
+        <div class="stats-detail-section"><h4>In Progress (${inProgressJobs.length})</h4>
+        ${inProgressJobs.map(job => `<div class="stats-breakdown-item"><div class="stats-breakdown-icon"><i class="bi bi-play-circle"></i></div><div class="stats-breakdown-info"><div class="stats-breakdown-label">${escapeHtml(job.service)}</div><div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div><small style="color: #718096;">Scheduled: ${job.scheduledDate}</small></div></div>`).join('') || '<p style="color: #718096; text-align: center;">No jobs in progress.</p>'}
+        </div>`;
       break;
       
     case 'pendingJobs':
       if (icon) icon.className = 'bi bi-hourglass-split';
       if (title) title.textContent = 'Pending Jobs';
       contentHtml = `
-        <div class="stats-detail-section">
-          <h4>Pending Jobs (${pendingJobs.length})</h4>
-          ${pendingJobs.map(job => `
-            <div class="stats-breakdown-item">
-              <div class="stats-breakdown-icon"><i class="bi bi-clock"></i></div>
-              <div class="stats-breakdown-info">
-                <div class="stats-breakdown-label">${escapeHtml(job.service)}</div>
-                <div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div>
-                <small style="color: #718096;">Scheduled: ${job.scheduledDate}</small>
-              </div>
-            </div>
-          `).join('') || '<p style="color: #718096; text-align: center;">No pending jobs.</p>'}
-        </div>
-      `;
+        <div class="stats-detail-section"><h4>Pending (${pendingJobs.length})</h4>
+        ${pendingJobs.map(job => `<div class="stats-breakdown-item"><div class="stats-breakdown-icon"><i class="bi bi-clock"></i></div><div class="stats-breakdown-info"><div class="stats-breakdown-label">${escapeHtml(job.service)}</div><div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div><small style="color: #718096;">Scheduled: ${job.scheduledDate}</small></div></div>`).join('') || '<p style="color: #718096; text-align: center;">No pending jobs.</p>'}
+        </div>`;
       break;
       
     case 'totalEarnings':
       if (icon) icon.className = 'bi bi-cash-stack';
       if (title) title.textContent = 'Earnings Breakdown';
       contentHtml = `
-        <div class="stats-detail-section">
-          <h4>Total Earnings: TZS ${formatNumber(totalEarnings)}</h4>
-          ${completedJobs.map(job => `
-            <div class="stats-breakdown-item">
-              <div class="stats-breakdown-icon"><i class="bi bi-cash"></i></div>
-              <div class="stats-breakdown-info">
-                <div class="stats-breakdown-label">${escapeHtml(job.service)}</div>
-                <div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div>
-                <small style="color: #718096;">Completed: ${job.completedDate}</small>
-              </div>
-            </div>
-          `).join('') || '<p style="color: #718096; text-align: center;">No earnings yet.</p>'}
-        </div>
-      `;
+        <div class="stats-detail-section"><h4>Total: TZS ${formatNumber(totalEarnings)}</h4>
+        ${completedJobs.map(job => `<div class="stats-breakdown-item"><div class="stats-breakdown-icon"><i class="bi bi-cash"></i></div><div class="stats-breakdown-info"><div class="stats-breakdown-label">${escapeHtml(job.service)}</div><div class="stats-breakdown-value">TZS ${formatNumber(job.price)}</div></div></div>`).join('') || '<p style="color: #718096; text-align: center;">No earnings yet.</p>'}
+        </div>`;
       break;
       
     case 'completionRate':
       if (icon) icon.className = 'bi bi-graph-up';
       if (title) title.textContent = 'Completion Rate';
       contentHtml = `
-        <div class="stats-detail-section">
-          <h4>Performance Metrics</h4>
-          <div style="text-align: center; margin: 24px 0;">
-            <div style="font-size: 64px; font-weight: 800; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-              ${completionRate}%
-            </div>
-            <p style="color: #718096;">Completion Rate</p>
-          </div>
-          <div class="progress-bar-container">
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill ${completionRate >= 80 ? 'green' : completionRate >= 50 ? 'blue' : 'orange'}" style="width: ${completionRate}%;"></div>
-            </div>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px;">
-            <span style="color: #718096;">0%</span>
-            <span style="color: #718096;">50%</span>
-            <span style="color: #718096;">100%</span>
-          </div>
-        </div>
-      `;
+        <div class="stats-detail-section"><h4>Performance Metrics</h4>
+        <div style="text-align: center; margin: 20px 0;"><div style="font-size: 56px; font-weight: 800; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${completionRate}%</div><p style="color: #718096;">Completion Rate</p></div>
+        <div class="progress-bar-container"><div class="progress-bar-bg"><div class="progress-bar-fill ${completionRate >= 80 ? 'green' : completionRate >= 50 ? 'blue' : 'orange'}" style="width: ${completionRate}%;"></div></div></div></div>`;
       break;
   }
   
@@ -2034,40 +1457,91 @@ function showStatsDetail(statId) {
 
 function closeStatsDetailModalFn() {
   const modal = document.getElementById('statsDetailModal');
-  if (modal) {
-    modal.style.display = 'none';
-    document.body.style.overflow = '';
-  }
+  if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
 }
 
-// ========== JOB MANAGEMENT ==========
-function updateJobStatus(jobId, newStatus) {
-  const jobIndex = jobs.findIndex(j => j.id === jobId);
-  if (jobIndex !== -1) {
-    jobs[jobIndex].status = newStatus;
-    
-    if (newStatus === 'completed') {
-      jobs[jobIndex].completedDate = new Date().toISOString().split('T')[0];
-      showNotification(`Job completed successfully! You can now process payment.`, 'success');
-    } else if (newStatus === 'in-progress') {
-      showNotification(`Job started! Good luck!`, 'success');
-    }
-    
-    loadJobs();
-    loadJobHistory();
-    loadStats();
-    loadCompletedJobsForPayment();
+// ========== PAYMENT STATS DETAIL MODAL ==========
+function showPaymentStatsDetail(statType) {
+  const modal = document.getElementById('paymentStatsDetailModal');
+  const icon = document.getElementById('paymentStatsDetailIcon');
+  const title = document.getElementById('paymentStatsDetailTitle');
+  const content = document.getElementById('paymentStatsDetailContent');
+  if (!modal || !content) return;
+  
+  const totalPayments = paymentValidations.length;
+  const totalAmount = paymentValidations.reduce((sum, p) => sum + p.amount, 0);
+  const today = new Date().toISOString().split('T')[0];
+  const todayPayments = paymentValidations.filter(p => p.paymentDate === today);
+  const todayAmount = todayPayments.reduce((sum, p) => sum + p.amount, 0);
+  
+  let contentHtml = '';
+  
+  switch(statType) {
+    case 'totalPayments':
+      if (icon) icon.className = 'bi bi-receipt';
+      if (title) title.textContent = 'Total Validated Payments';
+      contentHtml = `
+        <div class="detail-group"><div class="detail-group-header"><i class="bi bi-receipt"></i><h4>Payment Statistics</h4></div>
+        <div class="detail-item"><span class="detail-label"><i class="bi bi-receipt-cutoff"></i> Total</span><span class="detail-value" style="font-size: 22px; font-weight: 700; color: #667eea;">${totalPayments}</span></div>
+        </div>
+        <div class="detail-group"><div class="detail-group-header"><i class="bi bi-list-check"></i><h4>Recent Payments</h4></div>
+        <ul class="people-list">${paymentValidations.slice(-5).reverse().map(p => `<li class="people-list-item"><div class="people-avatar">${p.customerName.charAt(0)}</div><div class="people-info"><div class="people-name">${escapeHtml(p.customerName)}</div><div class="people-detail">${escapeHtml(p.jobService)}</div></div><div style="text-align: right;"><div style="font-weight: 700; color: #28a745;">TZS ${formatNumber(p.amount)}</div><div style="font-size: 11px; color: #a0aec0;">${p.paymentDate}</div></div></li>`).join('')}</ul></div>`;
+      break;
+      
+    case 'totalRevenue':
+      if (icon) icon.className = 'bi bi-cash-stack';
+      if (title) title.textContent = 'Total Revenue';
+      contentHtml = `
+        <div class="detail-group"><div class="detail-group-header"><i class="bi bi-cash"></i><h4>Revenue</h4></div>
+        <div class="detail-item"><span class="detail-label">Total Revenue</span><span class="detail-value" style="font-size: 22px; font-weight: 700; color: #28a745;">TZS ${formatNumber(totalAmount)}</span></div>
+        <div class="detail-item"><span class="detail-label">Today</span><span class="detail-value">TZS ${formatNumber(todayAmount)}</span></div>
+        </div>`;
+      break;
+      
+    case 'todayPayments':
+      if (icon) icon.className = 'bi bi-calendar-today';
+      if (title) title.textContent = "Today's Payments";
+      contentHtml = `
+        <div class="detail-group"><div class="detail-group-header"><i class="bi bi-calendar-day"></i><h4>Today (${today})</h4></div>
+        <div class="detail-item"><span class="detail-label">Payments</span><span class="detail-value" style="font-size: 22px; color: #667eea;">${todayPayments.length}</span></div>
+        <div class="detail-item"><span class="detail-label">Amount</span><span class="detail-value" style="color: #28a745;">TZS ${formatNumber(todayAmount)}</span></div>
+        </div>`;
+      break;
+      
+    case 'todayRevenue':
+      if (icon) icon.className = 'bi bi-graph-up';
+      if (title) title.textContent = "Today's Revenue";
+      contentHtml = `
+        <div class="detail-group"><div class="detail-group-header"><i class="bi bi-cash-stack"></i><h4>Revenue Today</h4></div>
+        <div class="detail-item"><span class="detail-label">Total</span><span class="detail-value" style="font-size: 22px; font-weight: 700; color: #28a745;">TZS ${formatNumber(todayAmount)}</span></div>
+        </div>`;
+      break;
   }
+  
+  content.innerHTML = contentHtml;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 }
 
-function viewJobDetails(jobId) {
-  showJobDetailModal(jobId);
+function closePaymentStatsDetailModal() {
+  const modal = document.getElementById('paymentStatsDetailModal');
+  if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
 }
 
 // ========== NAVIGATION ==========
-function setupNavButtons() {
-  const navButtons = document.querySelectorAll('.nav-btn');
-  const views = ['jobs', 'history', 'stats', 'profile', 'payment', 'supervisor'];
+function setupSidebarNav() {
+  const navButtons = document.querySelectorAll('.sidebar-nav-btn');
+  const views = ['jobs', 'history', 'stats', 'profile', 'settings', 'payment', 'supervisor', 'generalSupervisor'];
+  const viewTitles = {
+    jobs: 'Assigned Jobs',
+    history: 'Job History',
+    stats: 'My Stats',
+    profile: 'My Profile',
+    settings: 'Settings',
+    payment: 'Cash Payment',
+    supervisor: 'Supervisor Panel',
+    generalSupervisor: 'General Supervisor'
+  };
   
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -2078,14 +1552,16 @@ function setupNavButtons() {
       
       views.forEach(v => {
         const viewElement = document.getElementById(`${v}View`);
-        if (viewElement) {
-          viewElement.classList.remove('active');
-        }
+        if (viewElement) viewElement.classList.remove('active');
       });
       
       const activeView = document.getElementById(`${view}View`);
       if (activeView) {
         activeView.classList.add('active');
+        
+        // Update top bar title
+        const topBarTitle = document.getElementById('topBarTitle');
+        if (topBarTitle) topBarTitle.textContent = viewTitles[view] || view;
         
         if (view === 'payment') {
           loadCompletedJobsForPayment();
@@ -2096,53 +1572,524 @@ function setupNavButtons() {
           const today = new Date();
           const daysUntilFriday = (5 - today.getDay() + 7) % 7;
           const friday = new Date(today);
-          friday.setDate(today.getDate() + daysUntilFriday);
+          friday.setDate(today.getDate() + (daysUntilFriday || 7));
           const weekEndingInput = document.getElementById('reportWeekEnding');
-          if (weekEndingInput) {
-            weekEndingInput.value = friday.toISOString().split('T')[0];
-          }
+          if (weekEndingInput) weekEndingInput.value = friday.toISOString().split('T')[0];
+        } else if (view === 'generalSupervisor') {
+          loadGeneralSupervisorData();
+        } else if (view === 'settings') {
+          loadSettings();
+        } else if (view === 'jobs') {
+          loadJobs();
+        } else if (view === 'history') {
+          loadJobHistory();
+        } else if (view === 'stats') {
+          loadStats();
+        } else if (view === 'profile') {
+          loadProfile();
         }
       }
     });
   });
 }
 
-// ========== CASH PAYMENT MODULE FUNCTIONS ==========
+// ========== SUPERVISOR MENU TOGGLES ==========
+function toggleSupervisorMenu() {
+  const supervisorBtn = document.getElementById('supervisorSidebarBtn');
+  if (currentStaff && currentStaff.isSupervisor) {
+    if (supervisorBtn) supervisorBtn.style.display = 'flex';
+  } else {
+    if (supervisorBtn) supervisorBtn.style.display = 'none';
+  }
+}
+
+function toggleGeneralSupervisorMenu() {
+  const gsBtn = document.getElementById('generalSupervisorSidebarBtn');
+  if (currentStaff && currentStaff.isGeneralSupervisor) {
+    if (gsBtn) gsBtn.style.display = 'flex';
+  } else {
+    if (gsBtn) gsBtn.style.display = 'none';
+  }
+}
+
+// ========== GENERAL SUPERVISOR FUNCTIONS ==========
+function loadGeneralSupervisorData() {
+  if (!currentStaff || !currentStaff.isGeneralSupervisor) return;
+  
+  loadGSTeam();
+  loadGSJobs();
+  loadGSJobSelect();
+}
+
+function loadGSTeam() {
+  const container = document.getElementById('gsTeamContainer');
+  if (!container) return;
+  
+  // Get workers assigned to this general supervisor
+  const assignedWorkerIds = currentStaff.assignedWorkers || [];
+  const workers = staffMembers.filter(s => assignedWorkerIds.includes(s.id) && !s.isSupervisor);
+  
+  if (workers.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No workers assigned to you yet.</p>';
+    return;
+  }
+  
+  let html = '';
+  workers.forEach(worker => {
+    const workerJobs = jobs.filter(j => j.assignedWorkerId === worker.id);
+    const completedCount = workerJobs.filter(j => j.status === 'completed').length;
+    
+    html += `
+      <div class="gs-team-member">
+        <div class="gs-team-avatar">${worker.name.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()}</div>
+        <div class="gs-team-info">
+          <div class="gs-team-name">${escapeHtml(worker.name)}</div>
+          <div class="gs-team-role">${escapeHtml(worker.role)}</div>
+          <div class="gs-team-stats">
+            <span><i class="bi bi-briefcase"></i> ${workerJobs.length} jobs</span>
+            <span><i class="bi bi-check-circle"></i> ${completedCount} completed</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+  
+  // Update worker filter
+  const workerFilter = document.getElementById('gsWorkerFilter');
+  if (workerFilter) {
+    let options = '<option value="all">All Workers</option>';
+    workers.forEach(w => {
+      options += `<option value="${w.id}">${escapeHtml(w.name)}</option>`;
+    });
+    workerFilter.innerHTML = options;
+  }
+}
+
+function loadGSJobs() {
+  const container = document.getElementById('gsJobsContainer');
+  if (!container) return;
+  
+  const statusFilter = document.getElementById('gsStatusFilter')?.value || 'all';
+  const workerFilter = document.getElementById('gsWorkerFilter')?.value || 'all';
+  
+  // Get jobs under this general supervisor
+  let gsJobs = jobs.filter(j => j.generalSupervisorId === currentStaff.id);
+  
+  // Apply filters
+  if (statusFilter !== 'all') {
+    gsJobs = gsJobs.filter(j => j.status === statusFilter);
+  }
+  if (workerFilter !== 'all') {
+    gsJobs = gsJobs.filter(j => j.assignedWorkerId === parseInt(workerFilter));
+  }
+  
+  if (gsJobs.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No jobs found matching filters.</p>';
+    return;
+  }
+  
+  let html = '';
+  gsJobs.forEach(job => {
+    const worker = staffMembers.find(s => s.id === job.assignedWorkerId);
+    const workerName = worker ? worker.name : 'Unassigned';
+    const statusClass = job.status === 'pending' ? 'status-pending' : job.status === 'in-progress' ? 'status-in-progress' : 'status-completed';
+    
+    html += `
+      <div class="gs-job-item">
+        <div class="gs-job-info">
+          <div class="gs-job-service">${escapeHtml(job.service)}</div>
+          <div class="gs-job-meta">
+            <span><i class="bi bi-person"></i> ${escapeHtml(workerName)}</span> · 
+            <span><i class="bi bi-geo-alt"></i> ${escapeHtml(job.location)}</span> · 
+            <span><i class="bi bi-calendar"></i> ${job.scheduledDate}</span>
+          </div>
+        </div>
+        <div>
+          <span class="status-badge ${statusClass}">${job.status.replace('-', ' ').toUpperCase()}</span>
+          ${currentStaff.isGeneralSupervisor ? `<span style="margin-left: 8px; font-weight: 600; color: #28a745;">TZS ${formatNumber(job.price)}</span>` : ''}
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+function loadGSJobSelect() {
+  const select = document.getElementById('gsJobSelect');
+  if (!select) return;
+  
+  const gsJobs = jobs.filter(j => j.generalSupervisorId === currentStaff.id && j.status !== 'completed');
+  
+  let options = '<option value="">-- Select Job to Update --</option>';
+  gsJobs.forEach(job => {
+    const worker = staffMembers.find(s => s.id === job.assignedWorkerId);
+    options += `<option value="${job.id}">#${job.id} - ${escapeHtml(job.service)} (${job.status}) - ${worker ? worker.name : 'Unassigned'}</option>`;
+  });
+  
+  select.innerHTML = options;
+  
+  // Reset action buttons
+  const gsMarkStartedBtn = document.getElementById('gsMarkStartedBtn');
+  const gsMarkCompletedBtn = document.getElementById('gsMarkCompletedBtn');
+  if (gsMarkStartedBtn) gsMarkStartedBtn.disabled = true;
+  if (gsMarkCompletedBtn) gsMarkCompletedBtn.disabled = true;
+}
+
+function filterGSJobs() {
+  loadGSJobs();
+}
+
+function updateJobStatusGS(jobId, newStatus) {
+  const jobIndex = jobs.findIndex(j => j.id === jobId);
+  if (jobIndex !== -1) {
+    jobs[jobIndex].status = newStatus;
+    
+    if (newStatus === 'completed') {
+      jobs[jobIndex].completedDate = new Date().toISOString().split('T')[0];
+      showNotification('Job marked as completed!', 'success');
+    } else if (newStatus === 'in-progress') {
+      showNotification('Job marked as started!', 'success');
+    }
+    
+    loadGSJobs();
+    loadGSJobSelect();
+    loadJobs();
+    loadJobHistory();
+    loadStats();
+    
+    // Reset buttons
+    const gsMarkStartedBtn = document.getElementById('gsMarkStartedBtn');
+    const gsMarkCompletedBtn = document.getElementById('gsMarkCompletedBtn');
+    const gsJobSelect = document.getElementById('gsJobSelect');
+    if (gsMarkStartedBtn) gsMarkStartedBtn.disabled = true;
+    if (gsMarkCompletedBtn) gsMarkCompletedBtn.disabled = true;
+    if (gsJobSelect) gsJobSelect.value = '';
+  }
+}
+
+// ========== SUPERVISOR FUNCTIONS (Site Supervisor) ==========
+function loadStaffForLocation(location) {
+  const staffAtLocation = staffMembers.filter(staff => staff.location === location);
+  const selectedLocationDisplay = document.getElementById('selectedLocationDisplay');
+  const reportLocationField = document.getElementById('reportLocation');
+  
+  if (selectedLocationDisplay) selectedLocationDisplay.textContent = location;
+  if (reportLocationField) reportLocationField.value = location;
+  
+  const today = new Date().toISOString().split('T')[0];
+  
+  let html = `
+    <table class="attendance-table">
+      <thead><tr><th>Staff Name</th><th>Role</th><th>Present Today (10,000 TZS)</th></tr></thead>
+      <tbody>`;
+  
+  staffAtLocation.forEach(staff => {
+    const attendance = attendanceRecords.find(rec => rec.staffId === staff.id && rec.date === today);
+    const isPresent = attendance ? attendance.present : true;
+    const supervisorMark = staff.isSupervisor ? '<span class="supervisor-badge ms-2">Supervisor</span>' : '';
+    
+    html += `<tr>
+      <td>${escapeHtml(staff.name)}${supervisorMark}</td>
+      <td>${escapeHtml(staff.role)}</td>
+      <td><input type="checkbox" class="attendance-checkbox" data-staff-id="${staff.id}" ${isPresent ? 'checked' : ''}></td>
+    </tr>`;
+  });
+  
+  html += `</tbody></table>`;
+  
+  const attendanceContainer = document.getElementById('attendanceTableContainer');
+  if (attendanceContainer) {
+    attendanceContainer.innerHTML = html;
+    document.querySelectorAll('.attendance-checkbox').forEach(cb => {
+      cb.addEventListener('change', function() {
+        updateAttendance(parseInt(this.dataset.staffId), this.checked);
+      });
+    });
+  }
+  
+  const attendanceCard = document.getElementById('attendanceCard');
+  if (attendanceCard) attendanceCard.style.display = 'block';
+}
+
+function updateAttendance(staffId, isPresent) {
+  const today = new Date().toISOString().split('T')[0];
+  const existingIndex = attendanceRecords.findIndex(rec => rec.staffId === staffId && rec.date === today);
+  
+  if (existingIndex !== -1) {
+    attendanceRecords[existingIndex].present = isPresent;
+  } else {
+    const staff = staffMembers.find(s => s.id === staffId);
+    if (staff) {
+      attendanceRecords.push({ staffId, staffName: staff.name, location: staff.location, date: today, present: isPresent });
+    }
+  }
+  saveAttendanceRecords();
+}
+
+function saveAttendanceAndUpdatePayroll() {
+  const selectedLocation = document.getElementById('locationSelect').value;
+  if (!selectedLocation) { showNotification('Please select a location first', 'error'); return; }
+  
+  const today = new Date().toISOString().split('T')[0];
+  const staffAtLocation = staffMembers.filter(staff => staff.location === selectedLocation);
+  let totalPayroll = 0;
+  
+  staffAtLocation.forEach(staff => {
+    const attendance = attendanceRecords.find(rec => rec.staffId === staff.id && rec.date === today);
+    if (attendance && attendance.present) totalPayroll += staff.basePayPerDay;
+  });
+  
+  showNotification(`Attendance saved! Total payroll for ${selectedLocation} today: TZS ${formatNumber(totalPayroll)}`, 'success');
+}
+
+function generateWeeklyReport() {
+  const location = document.getElementById('reportLocation').value;
+  const weekEnding = document.getElementById('reportWeekEnding').value;
+  const progress = document.getElementById('reportProgress').value;
+  const performance = document.getElementById('reportPerformance').value;
+  const equipment = document.getElementById('reportEquipment').value;
+  const requests = document.getElementById('reportRequests').value;
+  
+  if (!location) { showNotification('Please select a location first', 'error'); return; }
+  if (!weekEnding) { showNotification('Please select the week ending date', 'error'); return; }
+  
+  const report = {
+    id: Date.now(), location, weekEnding,
+    progress: progress || 'No progress report provided.',
+    performance: performance || 'No performance report provided.',
+    equipment: equipment || 'No equipment report provided.',
+    requests: requests || 'No additional requests.',
+    generatedBy: currentStaff.name,
+    generatedDate: new Date().toISOString(),
+    reportNumber: `WR-${new Date().getFullYear()}${(new Date().getMonth()+1).toString().padStart(2,'0')}${Math.floor(Math.random()*1000)}`
+  };
+  
+  currentGeneratedReport = report;
+  
+  const previewContent = `
+    <div class="professional-report">
+      <div class="report-header-section"><div class="report-title-main">WEEKLY SUPERVISOR REPORT</div><div class="report-subtitle">CleanSpark Cleaning Services</div></div>
+      <div class="report-meta-grid">
+        <div class="meta-item"><span class="meta-label">Report Number</span><span class="meta-value">${report.reportNumber}</span></div>
+        <div class="meta-item"><span class="meta-label">Location</span><span class="meta-value">${escapeHtml(report.location)}</span></div>
+        <div class="meta-item"><span class="meta-label">Week Ending</span><span class="meta-value">${report.weekEnding}</span></div>
+        <div class="meta-item"><span class="meta-label">Generated By</span><span class="meta-value">${escapeHtml(report.generatedBy)}</span></div>
+      </div>
+      <div class="report-section-block"><div class="section-title"><i class="bi bi-clipboard-check"></i> Work Progress</div><div class="section-content">${escapeHtml(report.progress)}</div></div>
+      <div class="report-section-block"><div class="section-title"><i class="bi bi-people-fill"></i> Worker Performance</div><div class="section-content">${escapeHtml(report.performance)}</div></div>
+      <div class="report-section-block"><div class="section-title"><i class="bi bi-tools"></i> Equipment Status</div><div class="section-content">${escapeHtml(report.equipment)}</div></div>
+      <div class="report-section-block"><div class="section-title"><i class="bi bi-chat-square-text"></i> Requests</div><div class="section-content">${escapeHtml(report.requests)}</div></div>
+    </div>`;
+  
+  document.getElementById('reportPreviewContent').innerHTML = previewContent;
+  document.getElementById('reportPreviewModal').style.display = 'flex';
+  document.getElementById('downloadReportBtn').disabled = false;
+  document.getElementById('sendReportToAdminBtn').disabled = false;
+  document.getElementById('attachReportToChatBtn').disabled = false;
+  
+  showNotification('Report generated!', 'success');
+}
+
+function downloadReport() {
+  if (!currentGeneratedReport) { showNotification('No report to download.', 'error'); return; }
+  
+  const report = currentGeneratedReport;
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html><head><title>CleanSpark Weekly Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>body{font-family:'Inter',sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#1a202c;}@media print{body{margin:0;padding:20px;}@page{size:A4;margin:2cm;}}</style></head>
+    <body>
+      <div style="text-align:center;margin-bottom:30px;"><h1 style="font-size:24px;">WEEKLY SUPERVISOR REPORT</h1><p style="color:#667eea;">CleanSpark Cleaning Services</p></div>
+      <table style="width:100%;border-collapse:collapse;margin:20px 0;"><tr><td><strong>Report #:</strong> ${report.reportNumber}</td><td><strong>Location:</strong> ${escapeHtml(report.location)}</td></tr><tr><td><strong>Week Ending:</strong> ${report.weekEnding}</td><td><strong>By:</strong> ${escapeHtml(report.generatedBy)}</td></tr></table>
+      <div style="margin:20px 0;"><h3>Work Progress</h3><p>${escapeHtml(report.progress)}</p></div>
+      <div style="margin:20px 0;"><h3>Worker Performance</h3><p>${escapeHtml(report.performance)}</p></div>
+      <div style="margin:20px 0;"><h3>Equipment Status</h3><p>${escapeHtml(report.equipment)}</p></div>
+      <div style="margin:20px 0;"><h3>Requests</h3><p>${escapeHtml(report.requests)}</p></div>
+      <div style="text-align:center;margin-top:30px;">
+        <button onclick="window.print()" style="padding:12px 30px;background:#667eea;color:white;border:none;border-radius:10px;cursor:pointer;">Print / Save as PDF</button>
+      </div>
+      <script>setTimeout(function(){window.print();},500);</script>
+    </body></html>`);
+  printWindow.document.close();
+  
+  weeklyReports.push(report);
+  saveReports();
+  showNotification('Report opened for printing!', 'success');
+  closeReportModal();
+}
+
+function sendReportToAdmin() {
+  if (!currentGeneratedReport) { showNotification('No report to send.', 'error'); return; }
+  
+  const report = currentGeneratedReport;
+  sendMessageToChat(`📋 **WEEKLY REPORT**\nLocation: ${report.location}\nWeek: ${report.weekEnding}\nReport #: ${report.reportNumber}\nBy: ${report.generatedBy}\n\nProgress: ${report.progress.substring(0, 100)}...\nRequests: ${report.requests}`, true);
+  
+  report.sentToAdmin = true;
+  report.sentDate = new Date().toISOString();
+  weeklyReports.push(report);
+  saveReports();
+  
+  showNotification('Report sent to Admin!', 'success');
+  closeReportModal();
+}
+
+function closeReportModal() {
+  document.getElementById('reportPreviewModal').style.display = 'none';
+}
+
+// ========== CHAT FUNCTIONS ==========
+function sendMessageToChat(message, isReport = false) {
+  if (!message.trim() && !isReport) return;
+  
+  const newMessage = {
+    id: Date.now(),
+    sender: currentStaff.name,
+    senderEmail: currentStaff.email,
+    message: message,
+    timestamp: new Date().toISOString(),
+    type: "sent",
+    isReport: isReport,
+    edited: false
+  };
+  
+  chatMessages.unshift(newMessage);
+  saveChatMessages();
+  displayChatMessages();
+  
+  if (!isReport) {
+    showNotification('Message sent!', 'success');
+    document.getElementById('chatMessageInput').value = '';
+  }
+}
+
+function attachLastReportToChat() {
+  if (!currentGeneratedReport) { showNotification('No report generated yet.', 'error'); return; }
+  const report = currentGeneratedReport;
+  sendMessageToChat(`📋 **WEEKLY REPORT - ${report.location}**\nReport #: ${report.reportNumber}\nWeek: ${report.weekEnding}\n\nProgress: ${report.progress.substring(0, 80)}...\n\nRequests: ${report.requests}`, true);
+}
+
+function displayChatMessages() {
+  const container = document.getElementById('chatMessagesContainer');
+  if (!container) return;
+  
+  const visibleMessages = chatMessages.filter(msg => !deletedMessagesForMe.includes(msg.id));
+  
+  if (visibleMessages.length === 0) {
+    container.innerHTML = '<div class="chat-placeholder">No messages yet.</div>';
+    return;
+  }
+  
+  let html = '';
+  visibleMessages.slice().reverse().forEach(msg => {
+    const date = new Date(msg.timestamp);
+    const messageClass = msg.type === 'sent' ? 'sent' : 'received';
+    const senderName = msg.type === 'sent' ? 'You' : msg.sender;
+    const isReportMsg = msg.isReport || false;
+    
+    html += `
+      <div class="chat-message-wrapper ${messageClass}" data-message-id="${msg.id}">
+        <div class="chat-message ${messageClass}">
+          <div style="font-weight: 600; margin-bottom: 4px; font-size: 12px;">${escapeHtml(senderName)}${isReportMsg ? ' 📋' : ''}</div>
+          <div class="message-text">${escapeHtml(msg.message)}</div>
+          <div class="message-meta">
+            ${msg.edited ? '<span class="edited-badge">(edited)</span>' : ''}
+            <span>${date.toLocaleString()}</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 4px; margin-top: 2px; padding: 0 4px;">
+          <button onclick="copyMessage(${msg.id})" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);" title="Copy"><i class="bi bi-clipboard"></i></button>
+          ${msg.type === 'sent' && !isReportMsg ? `<button onclick="editMessage(${msg.id})" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);" title="Edit"><i class="bi bi-pencil"></i></button>` : ''}
+          <button onclick="deleteMessageForMe(${msg.id})" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);" title="Hide"><i class="bi bi-eye-slash"></i></button>
+          ${msg.type === 'sent' ? `<button onclick="deleteMessageForAll(${msg.id})" style="background:none;border:none;cursor:pointer;font-size:11px;color:#dc3545;" title="Delete"><i class="bi bi-trash"></i></button>` : ''}
+        </div>
+      </div>`;
+  });
+  
+  container.innerHTML = html;
+}
+
+function copyMessage(messageId) {
+  const message = chatMessages.find(msg => msg.id === messageId);
+  if (!message) return;
+  
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(message.message).then(() => showNotification('Copied!', 'success'));
+  } else {
+    const textarea = document.createElement('textarea');
+    textarea.value = message.message;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showNotification('Copied!', 'success');
+  }
+}
+
+function editMessage(messageId) {
+  const message = chatMessages.find(msg => msg.id === messageId);
+  if (!message || message.isReport) { showNotification('Cannot edit report messages', 'warning'); return; }
+  
+  currentEditingMessageId = messageId;
+  document.getElementById('editMessageInput').value = message.message;
+  document.getElementById('editMessageModal').style.display = 'flex';
+}
+
+function saveEditedMessage() {
+  const newText = document.getElementById('editMessageInput').value.trim();
+  if (!newText || !currentEditingMessageId) { showNotification('Message cannot be empty', 'error'); return; }
+  
+  const msgIndex = chatMessages.findIndex(msg => msg.id === currentEditingMessageId);
+  if (msgIndex !== -1) {
+    chatMessages[msgIndex].message = newText;
+    chatMessages[msgIndex].edited = true;
+    chatMessages[msgIndex].timestamp = new Date().toISOString();
+    saveChatMessages();
+    displayChatMessages();
+    showNotification('Message updated!', 'success');
+  }
+  
+  cancelEditMessage();
+}
+
+function cancelEditMessage() {
+  currentEditingMessageId = null;
+  document.getElementById('editMessageModal').style.display = 'none';
+  document.getElementById('editMessageInput').value = '';
+}
+
+function deleteMessageForMe(messageId) {
+  if (!deletedMessagesForMe.includes(messageId)) {
+    deletedMessagesForMe.push(messageId);
+    saveDeletedForMe();
+    displayChatMessages();
+    showNotification('Message hidden', 'success');
+  }
+}
+
+function deleteMessageForAll(messageId) {
+  const msgIndex = chatMessages.findIndex(msg => msg.id === messageId);
+  if (msgIndex !== -1) {
+    chatMessages.splice(msgIndex, 1);
+    saveChatMessages();
+    displayChatMessages();
+    showNotification('Message deleted', 'success');
+  }
+}
+
+// ========== PAYMENT MODULE ==========
 function loadPaymentValidations() {
   const stored = localStorage.getItem('CleanSpark_payments');
-  if (stored) {
-    paymentValidations = JSON.parse(stored);
-  } else {
-    paymentValidations = [
-      {
-        id: 1,
-        jobId: 104,
-        jobService: "AC Maintenance & Filter",
-        customerName: "Omar Juma",
-        amount: 300000,
-        cashReceived: 300000,
-        change: 0,
-        paymentDate: "2026-03-20",
-        paymentTime: "15:30",
-        status: "completed",
-        receiptNumber: "RCP-20260320-001"
-      },
-      {
-        id: 2,
-        jobId: 105,
-        jobService: "Full Villa Cleaning",
-        customerName: "Salma Khamis",
-        amount: 850000,
-        cashReceived: 850000,
-        change: 0,
-        paymentDate: "2026-03-18",
-        paymentTime: "12:15",
-        status: "completed",
-        receiptNumber: "RCP-20260318-002"
-      }
-    ];
-    savePaymentValidations();
-  }
+  paymentValidations = stored ? JSON.parse(stored) : [
+    { id: 1, jobId: 104, jobService: "AC Maintenance & Filter", customerName: "Omar Juma", amount: 300000, cashReceived: 300000, change: 0, paymentDate: "2026-03-20", paymentTime: "15:30", status: "completed", receiptNumber: "RCP-20260320-001" },
+    { id: 2, jobId: 105, jobService: "Full Villa Cleaning", customerName: "Salma Khamis", amount: 850000, cashReceived: 850000, change: 0, paymentDate: "2026-03-18", paymentTime: "12:15", status: "completed", receiptNumber: "RCP-20260318-002" }
+  ];
+  savePaymentValidations();
   updatePaymentStats();
   loadRecentPayments();
 }
@@ -2158,31 +2105,11 @@ function updatePaymentStats() {
   const todayPayments = paymentValidations.filter(p => p.paymentDate === today).length;
   const todayAmount = paymentValidations.filter(p => p.paymentDate === today).reduce((sum, p) => sum + p.amount, 0);
   
-  const statsHTML = `
-    <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('totalPayments')">
-      <div class="payment-stat-icon"><i class="bi bi-receipt"></i></div>
-      <div class="payment-stat-value">${totalPayments}</div>
-      <div class="payment-stat-label">Total Validated Payments</div>
-    </div>
-    <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('totalRevenue')">
-      <div class="payment-stat-icon"><i class="bi bi-cash-stack"></i></div>
-      <div class="payment-stat-value">TZS ${formatNumber(totalAmount)}</div>
-      <div class="payment-stat-label">Total Revenue</div>
-    </div>
-    <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('todayPayments')">
-      <div class="payment-stat-icon"><i class="bi bi-calendar-today"></i></div>
-      <div class="payment-stat-value">${todayPayments}</div>
-      <div class="payment-stat-label">Today's Payments</div>
-    </div>
-    <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('todayRevenue')">
-      <div class="payment-stat-icon"><i class="bi bi-graph-up"></i></div>
-      <div class="payment-stat-value">TZS ${formatNumber(todayAmount)}</div>
-      <div class="payment-stat-label">Today's Revenue</div>
-    </div>
-  `;
-  
-  const statsContainer = document.getElementById('paymentStatsGrid');
-  if (statsContainer) statsContainer.innerHTML = statsHTML;
+  document.getElementById('paymentStatsGrid').innerHTML = `
+    <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('totalPayments')"><div class="payment-stat-icon"><i class="bi bi-receipt"></i></div><div class="payment-stat-value">${totalPayments}</div><div class="payment-stat-label">Total Payments</div></div>
+    <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('totalRevenue')"><div class="payment-stat-icon"><i class="bi bi-cash-stack"></i></div><div class="payment-stat-value">TZS ${formatNumber(totalAmount)}</div><div class="payment-stat-label">Total Revenue</div></div>
+    <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('todayPayments')"><div class="payment-stat-icon"><i class="bi bi-calendar-today"></i></div><div class="payment-stat-value">${todayPayments}</div><div class="payment-stat-label">Today's Payments</div></div>
+    <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('todayRevenue')"><div class="payment-stat-icon"><i class="bi bi-graph-up"></i></div><div class="payment-stat-value">TZS ${formatNumber(todayAmount)}</div><div class="payment-stat-label">Today's Revenue</div></div>`;
 }
 
 function loadCompletedJobsForPayment() {
@@ -2199,9 +2126,7 @@ function loadCompletedJobsForPayment() {
   
   let options = '<option value="">-- Select a completed job --</option>';
   pendingJobs.forEach(job => {
-    options += `<option value="${job.id}" data-service="${escapeHtml(job.service)}" data-client="${escapeHtml(job.client)}" data-price="${job.price}">
-      ${job.service} - ${job.client} (TZS ${formatNumber(job.price)})
-    </option>`;
+    options += `<option value="${job.id}" data-service="${escapeHtml(job.service)}" data-client="${escapeHtml(job.client)}" data-price="${job.price}">${job.service} - ${job.client} (TZS ${formatNumber(job.price)})</option>`;
   });
   
   jobSelect.innerHTML = options;
@@ -2209,19 +2134,15 @@ function loadCompletedJobsForPayment() {
   jobSelect.onchange = function() {
     const selectedOption = this.options[this.selectedIndex];
     if (this.value) {
-      const clientName = selectedOption.getAttribute('data-client');
-      const price = selectedOption.getAttribute('data-price');
-      
-      document.getElementById('customerName').value = clientName;
-      document.getElementById('serviceAmount').value = `TZS ${formatNumber(parseInt(price))}`;
+      document.getElementById('customerName').value = selectedOption.getAttribute('data-client');
+      document.getElementById('serviceAmount').value = `TZS ${formatNumber(parseInt(selectedOption.getAttribute('data-price')))}`;
       document.getElementById('cashReceived').value = '';
       document.getElementById('paymentNote').value = '';
-      
       selectedJobForPayment = {
         id: parseInt(this.value),
         service: selectedOption.getAttribute('data-service'),
-        client: clientName,
-        price: parseInt(price)
+        client: selectedOption.getAttribute('data-client'),
+        price: parseInt(selectedOption.getAttribute('data-price'))
       };
     } else {
       document.getElementById('customerName').value = '';
@@ -2236,29 +2157,14 @@ function validateCashPayment() {
   const cashReceivedInput = document.getElementById('cashReceived');
   const paymentNote = document.getElementById('paymentNote').value;
   
-  if (!jobSelect || !jobSelect.value) {
-    showNotification('Please select a job first', 'error');
-    return;
-  }
-  
-  if (!selectedJobForPayment) {
-    showNotification('Invalid job selection', 'error');
-    return;
-  }
+  if (!jobSelect || !jobSelect.value) { showNotification('Please select a job', 'error'); return; }
+  if (!selectedJobForPayment) { showNotification('Invalid job selection', 'error'); return; }
   
   const cashReceived = parseFloat(cashReceivedInput.value);
-  
-  if (isNaN(cashReceived) || cashReceived <= 0) {
-    showNotification('Please enter a valid cash amount', 'error');
-    return;
-  }
+  if (isNaN(cashReceived) || cashReceived <= 0) { showNotification('Please enter a valid amount', 'error'); return; }
   
   const serviceAmount = selectedJobForPayment.price;
-  
-  if (cashReceived < serviceAmount) {
-    showNotification(`Insufficient payment! Need TZS ${formatNumber(serviceAmount - cashReceived)} more.`, 'error');
-    return;
-  }
+  if (cashReceived < serviceAmount) { showNotification(`Insufficient payment! Need TZS ${formatNumber(serviceAmount - cashReceived)} more.`, 'error'); return; }
   
   const change = cashReceived - serviceAmount;
   
@@ -2273,7 +2179,7 @@ function validateCashPayment() {
     paymentDate: new Date().toISOString().split('T')[0],
     paymentTime: new Date().toLocaleTimeString(),
     status: "completed",
-    receiptNumber: generateReceiptNumber(),
+    receiptNumber: `RCP-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${Math.floor(Math.random()*1000).toString().padStart(3,'0')}`,
     note: paymentNote
   };
   
@@ -2294,64 +2200,19 @@ function validateCashPayment() {
   showNotification(`Payment validated! Receipt #${paymentRecord.receiptNumber}`, 'success');
 }
 
-function generateReceiptNumber() {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `RCP-${year}${month}${day}-${random}`;
-}
-
 function generateReceipt(payment) {
-  const receiptContent = `
-    <div style="text-align: center;">
-      <h4>PAYMENT RECEIPT</h4>
-      <p style="color: #718096;">Thank you for choosing CleanSpark Cleaning Services</p>
-    </div>
+  document.getElementById('receiptContent').innerHTML = `
+    <div style="text-align:center;"><h4>PAYMENT RECEIPT</h4><p style="color:#718096;">Thank you for choosing CleanSpark</p></div>
     <div class="receipt-details">
-      <div class="receipt-row">
-        <span class="receipt-label">Receipt Number:</span>
-        <span class="receipt-value">${payment.receiptNumber}</span>
-      </div>
-      <div class="receipt-row">
-        <span class="receipt-label">Date & Time:</span>
-        <span class="receipt-value">${payment.paymentDate} | ${payment.paymentTime}</span>
-      </div>
-      <div class="receipt-row">
-        <span class="receipt-label">Customer:</span>
-        <span class="receipt-value">${escapeHtml(payment.customerName)}</span>
-      </div>
-      <div class="receipt-row">
-        <span class="receipt-label">Service:</span>
-        <span class="receipt-value">${escapeHtml(payment.jobService)}</span>
-      </div>
-      <div class="receipt-row">
-        <span class="receipt-label">Amount:</span>
-        <span class="receipt-value">TZS ${formatNumber(payment.amount)}</span>
-      </div>
-      <div class="receipt-row">
-        <span class="receipt-label">Cash Received:</span>
-        <span class="receipt-value">TZS ${formatNumber(payment.cashReceived)}</span>
-      </div>
-      ${payment.change > 0 ? `
-      <div class="receipt-row">
-        <span class="receipt-label">Change:</span>
-        <span class="receipt-value">TZS ${formatNumber(payment.change)}</span>
-      </div>
-      ` : ''}
-      <div class="receipt-total">
-        <strong>PAID IN FULL</strong>
-      </div>
-      ${payment.note ? `
-      <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 8px;">
-        <span style="font-weight: 600; color: #4a5568;">Note:</span> ${escapeHtml(payment.note)}
-      </div>
-      ` : ''}
-    </div>
-  `;
-  
-  document.getElementById('receiptContent').innerHTML = receiptContent;
+      <div class="receipt-row"><span class="receipt-label">Receipt #:</span><span class="receipt-value">${payment.receiptNumber}</span></div>
+      <div class="receipt-row"><span class="receipt-label">Date:</span><span class="receipt-value">${payment.paymentDate} | ${payment.paymentTime}</span></div>
+      <div class="receipt-row"><span class="receipt-label">Customer:</span><span class="receipt-value">${escapeHtml(payment.customerName)}</span></div>
+      <div class="receipt-row"><span class="receipt-label">Service:</span><span class="receipt-value">${escapeHtml(payment.jobService)}</span></div>
+      <div class="receipt-row"><span class="receipt-label">Amount:</span><span class="receipt-value">TZS ${formatNumber(payment.amount)}</span></div>
+      <div class="receipt-row"><span class="receipt-label">Received:</span><span class="receipt-value">TZS ${formatNumber(payment.cashReceived)}</span></div>
+      ${payment.change > 0 ? `<div class="receipt-row"><span class="receipt-label">Change:</span><span class="receipt-value">TZS ${formatNumber(payment.change)}</span></div>` : ''}
+      <div class="receipt-total"><strong>PAID IN FULL</strong></div>
+    </div>`;
   document.getElementById('receiptModal').style.display = 'flex';
   window.currentReceipt = payment;
 }
@@ -2363,67 +2224,29 @@ function loadRecentPayments() {
   const recentPayments = [...paymentValidations].reverse().slice(0, 10);
   
   if (recentPayments.length === 0) {
-    container.innerHTML = `<div class="empty-state" style="padding: 40px;"><i class="bi bi-receipt"></i><h4>No Payments Yet</h4><p>Validated payments will appear here</p></div>`;
+    container.innerHTML = `<div class="empty-state" style="padding:30px;"><i class="bi bi-receipt"></i><h4>No Payments Yet</h4></div>`;
     return;
   }
   
-  let html = '';
-  recentPayments.forEach(payment => {
-    html += `
-      <div class="payment-item">
-        <div class="payment-info">
-          <div class="payment-job">${escapeHtml(payment.jobService)}</div>
-          <div class="payment-details">
-            <span><i class="bi bi-person"></i> ${escapeHtml(payment.customerName)}</span>
-            <span><i class="bi bi-receipt"></i> ${payment.receiptNumber}</span>
-          </div>
-          <span class="payment-status">Validated</span>
-        </div>
-        <div class="payment-amount">
-          <div class="amount-value">TZS ${formatNumber(payment.amount)}</div>
-          <div class="payment-date">${payment.paymentDate}</div>
-        </div>
+  container.innerHTML = recentPayments.map(payment => `
+    <div class="payment-item">
+      <div class="payment-info">
+        <div class="payment-job">${escapeHtml(payment.jobService)}</div>
+        <div class="payment-details"><span><i class="bi bi-person"></i> ${escapeHtml(payment.customerName)}</span><span><i class="bi bi-receipt"></i> ${payment.receiptNumber}</span></div>
+        <span class="payment-status">Validated</span>
       </div>
-    `;
-  });
-  
-  container.innerHTML = html;
+      <div class="payment-amount"><div class="amount-value">TZS ${formatNumber(payment.amount)}</div><div class="payment-date">${payment.paymentDate}</div></div>
+    </div>`).join('');
 }
 
-function closeReceiptModal() {
-  const receiptModal = document.getElementById('receiptModal');
-  if (receiptModal) receiptModal.style.display = 'none';
-}
+function closeReceiptModal() { document.getElementById('receiptModal').style.display = 'none'; }
 
 function printReceipt() {
   const receiptContent = document.getElementById('receiptContent')?.innerHTML;
   if (!receiptContent) return;
   
   const printWindow = window.open('', '_blank');
-  printWindow.document.write(`
-    <html>
-    <head>
-      <title>CleanSpark Payment Receipt</title>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-      <style>
-        body { font-family: 'Inter', sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
-        .receipt-details { margin: 20px 0; }
-        .receipt-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #e2e8f0; }
-        .receipt-label { font-weight: 600; color: #4a5568; }
-        .receipt-value { color: #1a202c; font-weight: 500; }
-        .receipt-total { margin-top: 20px; padding-top: 12px; border-top: 2px solid #1a202c; font-size: 18px; font-weight: 800; color: #28a745; text-align: right; }
-        @media print { body { padding: 0; } }
-      </style>
-    </head>
-    <body>
-      ${receiptContent}
-      <div style="text-align: center; margin-top: 20px;">
-        <button onclick="window.print()" style="padding: 10px 20px; margin: 0 10px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">Print</button>
-        <button onclick="window.close()" style="padding: 10px 20px; background: #e2e8f0; border: none; border-radius: 8px; cursor: pointer;">Close</button>
-      </div>
-    </body>
-    </html>
-  `);
+  printWindow.document.write(`<html><head><title>Receipt</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"><style>body{font-family:'Inter',sans-serif;padding:40px;max-width:600px;margin:0 auto;}.receipt-details{margin:20px 0;}.receipt-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px dashed #e2e8f0;}.receipt-label{font-weight:600;color:#4a5568;}.receipt-value{color:#1a202c;font-weight:500;}.receipt-total{margin-top:20px;padding-top:12px;border-top:2px solid #1a202c;font-size:18px;font-weight:800;color:#28a745;text-align:right;}@media print{body{padding:0;}}</style></head><body>${receiptContent}<div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:10px 20px;background:#667eea;color:white;border:none;border-radius:8px;cursor:pointer;">Print</button></div></body></html>`);
   printWindow.document.close();
 }
 
@@ -2443,25 +2266,12 @@ function showNotification(message, type = 'info') {
   let icon = 'bi-info-circle-fill';
   let borderColor = '#0d6efd';
   
-  if (type === 'success') {
-    icon = 'bi-check-circle-fill';
-    borderColor = '#198754';
-  } else if (type === 'error') {
-    icon = 'bi-exclamation-triangle-fill';
-    borderColor = '#dc3545';
-  } else if (type === 'warning') {
-    icon = 'bi-exclamation-triangle-fill';
-    borderColor = '#ffc107';
-  }
+  if (type === 'success') { icon = 'bi-check-circle-fill'; borderColor = '#198754'; }
+  else if (type === 'error') { icon = 'bi-exclamation-triangle-fill'; borderColor = '#dc3545'; }
+  else if (type === 'warning') { icon = 'bi-exclamation-triangle-fill'; borderColor = '#ffc107'; }
   
   toast.style.borderLeftColor = borderColor;
-  toast.innerHTML = `
-    <div class="d-flex align-items-center gap-2">
-      <i class="bi ${icon}" style="color: ${borderColor}; font-size: 18px;"></i>
-      <span class="flex-grow-1">${escapeHtml(message)}</span>
-      <button class="btn-close btn-sm" onclick="this.closest('.toast-notification').remove()"></button>
-    </div>
-  `;
+  toast.innerHTML = `<div class="d-flex align-items-center gap-2"><i class="bi ${icon}" style="color:${borderColor};font-size:16px;"></i><span class="flex-grow-1" style="font-size:13px;">${escapeHtml(message)}</span><button class="btn-close btn-sm" onclick="this.closest('.toast-notification').remove()"></button></div>`;
   
   toastContainer.appendChild(toast);
   setTimeout(() => { if (toast && toast.remove) toast.remove(); }, 4000);

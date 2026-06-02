@@ -1,1218 +1,1906 @@
-// ========== ENHANCED BOOKING WITH REAL MAP, PROFESSIONAL VALIDATION & REALISTIC PAYMENT ==========
+// ========== PROFESSIONAL BOOKING SYSTEM WITH SERVICE-SPECIFIC FORMS ==========
+// FULLY FIXED - All functionality working
 
-(function() {
-    'use strict';
+let currentStep = 1;
+let selectedService = null;
+let mapInstance = null;
+let currentMarker = null;
+let bookedDates = [];
+let flatpickrInstance = null;
+
+// Service configuration with specific form templates
+const SERVICE_CONFIGS = {
+    // Residential Services
+    home_cleaning: {
+        name: 'Home Cleaning',
+        category: 'residential',
+        icon: '🏠',
+        basePrice: 50000,
+        description: 'Complete home cleaning service for your residence',
+        formTemplate: 'homeCleaning',
+        validation: validateHomeCleaning,
+        getPrice: calculateHomeCleaningPrice,
+        duration: '2-4 hours'
+    },
+    apartment_cleaning: {
+        name: 'Apartment Cleaning',
+        category: 'residential',
+        icon: '🏢',
+        basePrice: 45000,
+        description: 'Specialized cleaning for apartments and condos',
+        formTemplate: 'homeCleaning',
+        validation: validateHomeCleaning,
+        getPrice: calculateHomeCleaningPrice,
+        duration: '2-3 hours'
+    },
+    deep_cleaning: {
+        name: 'Deep Cleaning',
+        category: 'residential',
+        icon: '🔍',
+        basePrice: 75000,
+        description: 'Intensive deep cleaning for every corner',
+        formTemplate: 'deepCleaning',
+        validation: validateDeepCleaning,
+        getPrice: calculateDeepCleaningPrice,
+        duration: '4-6 hours'
+    },
     
-    // Check login
-    function isLoggedIn() {
-        return localStorage.getItem('isLoggedIn') === 'true';
+    // Commercial Services
+    office_cleaning: {
+        name: 'Office Cleaning',
+        category: 'commercial',
+        icon: '🏢',
+        basePrice: 75000,
+        description: 'Professional office cleaning for workplaces',
+        formTemplate: 'officeCleaning',
+        validation: validateOfficeCleaning,
+        getPrice: calculateOfficeCleaningPrice,
+        duration: '3-4 hours'
+    },
+    hotel_cleaning: {
+        name: 'Hotel & Airbnb Cleaning',
+        category: 'commercial',
+        icon: '🏨',
+        basePrice: 100000,
+        description: 'Professional cleaning for hotels and short-stay properties',
+        formTemplate: 'hotelCleaning',
+        validation: validateHotelCleaning,
+        getPrice: calculateHotelCleaningPrice,
+        duration: '2-4 hours'
+    },
+    industrial_cleaning: {
+        name: 'Industrial Cleaning',
+        category: 'commercial',
+        icon: '🏭',
+        basePrice: 120000,
+        description: 'Heavy-duty cleaning for industrial spaces',
+        formTemplate: 'industrialCleaning',
+        validation: validateIndustrialCleaning,
+        getPrice: calculateIndustrialCleaningPrice,
+        duration: '4-8 hours'
+    },
+    
+    // Specialized Services
+    carpet_cleaning: {
+        name: 'Carpet Cleaning',
+        category: 'specialized',
+        icon: '🪑',
+        basePrice: 60000,
+        description: 'Deep carpet cleaning and stain removal',
+        formTemplate: 'carpetCleaning',
+        validation: validateCarpetCleaning,
+        getPrice: calculateCarpetCleaningPrice,
+        duration: '1-2 hours per room'
+    },
+    window_cleaning: {
+        name: 'Window Cleaning',
+        category: 'specialized',
+        icon: '🪟',
+        basePrice: 40000,
+        description: 'Professional streak-free window cleaning',
+        formTemplate: 'windowCleaning',
+        validation: validateWindowCleaning,
+        getPrice: calculateWindowCleaningPrice,
+        duration: '1-3 hours'
+    },
+    vehicle_cleaning: {
+        name: 'Vehicle Cleaning',
+        category: 'specialized',
+        icon: '🚗',
+        basePrice: 45000,
+        description: 'Complete interior and exterior vehicle cleaning',
+        formTemplate: 'vehicleCleaning',
+        validation: validateVehicleCleaning,
+        getPrice: calculateVehicleCleaningPrice,
+        duration: '1-2 hours'
+    },
+    pool_cleaning: {
+        name: 'Pool Cleaning',
+        category: 'specialized',
+        icon: '🏊',
+        basePrice: 80000,
+        description: 'Professional pool cleaning and maintenance',
+        formTemplate: 'poolCleaning',
+        validation: validatePoolCleaning,
+        getPrice: calculatePoolCleaningPrice,
+        duration: '2-3 hours'
+    },
+    mattress_cleaning: {
+        name: 'Mattress Cleaning',
+        category: 'specialized',
+        icon: '🛏️',
+        basePrice: 55000,
+        description: 'Deep mattress cleaning and sanitization',
+        formTemplate: 'mattressCleaning',
+        validation: validateMattressCleaning,
+        getPrice: calculateMattressCleaningPrice,
+        duration: '1 hour per mattress'
+    },
+    upholstery_cleaning: {
+        name: 'Upholstery Cleaning',
+        category: 'specialized',
+        icon: '🛋️',
+        basePrice: 65000,
+        description: 'Professional furniture and upholstery cleaning',
+        formTemplate: 'upholsteryCleaning',
+        validation: validateUpholsteryCleaning,
+        getPrice: calculateUpholsteryCleaningPrice,
+        duration: '2-3 hours'
+    },
+    move_cleaning: {
+        name: 'Move-In/Out Cleaning',
+        category: 'specialized',
+        icon: '🚚',
+        basePrice: 70000,
+        description: 'Complete cleaning for moving in or out',
+        formTemplate: 'moveCleaning',
+        validation: validateMoveCleaning,
+        getPrice: calculateMoveCleaningPrice,
+        duration: '3-5 hours'
+    },
+    construction_cleaning: {
+        name: 'Post Construction Cleaning',
+        category: 'specialized',
+        icon: '🏗️',
+        basePrice: 90000,
+        description: 'Complete cleaning after construction',
+        formTemplate: 'constructionCleaning',
+        validation: validateConstructionCleaning,
+        getPrice: calculateConstructionCleaningPrice,
+        duration: '4-6 hours'
+    },
+    laundry_service: {
+        name: 'Laundry & Ironing',
+        category: 'specialized',
+        icon: '👕',
+        basePrice: 54000,
+        description: 'Professional laundry and ironing service',
+        formTemplate: 'laundryCleaning',
+        validation: validateLaundryCleaning,
+        getPrice: calculateLaundryCleaningPrice,
+        duration: '24-hour turnaround'
+    },
+    pest_control: {
+        name: 'Pest Control',
+        category: 'specialized',
+        icon: '🐜',
+        basePrice: 54000,
+        description: 'Effective pest elimination and prevention',
+        formTemplate: 'pestControl',
+        validation: validatePestControl,
+        getPrice: calculatePestControlPrice,
+        duration: '1-2 hours'
+    },
+    event_cleaning: {
+        name: 'Event Setup & Cleanup',
+        category: 'commercial',
+        icon: '🎉',
+        basePrice: 90000,
+        description: 'Event setup and complete cleanup',
+        formTemplate: 'eventCleaning',
+        validation: validateEventCleaning,
+        getPrice: calculateEventCleaningPrice,
+        duration: '3-6 hours'
+    },
+    ac_cleaning: {
+        name: 'AC & Refrigerator Cleaning',
+        category: 'specialized',
+        icon: '❄️',
+        basePrice: 45000,
+        description: 'AC and refrigerator cleaning service',
+        formTemplate: 'acCleaning',
+        validation: validateAcCleaning,
+        getPrice: calculateAcCleaningPrice,
+        duration: '1-2 hours'
+    },
+    water_tank_cleaning: {
+        name: 'Water Tank Cleaning',
+        category: 'specialized',
+        icon: '💧',
+        basePrice: 70000,
+        description: 'Professional water tank cleaning',
+        formTemplate: 'waterTankCleaning',
+        validation: validateWaterTankCleaning,
+        getPrice: calculateWaterTankCleaningPrice,
+        duration: '2-3 hours'
+    },
+    curtain_cleaning: {
+        name: 'Curtain Cleaning',
+        category: 'specialized',
+        icon: '🪟',
+        basePrice: 40000,
+        description: 'Professional curtain cleaning service',
+        formTemplate: 'curtainCleaning',
+        validation: validateCurtainCleaning,
+        getPrice: calculateCurtainCleaningPrice,
+        duration: '2-3 hours'
+    },
+    garden_cleaning: {
+        name: 'Garden Cleaning',
+        category: 'specialized',
+        icon: '🌿',
+        basePrice: 55000,
+        description: 'Professional garden cleaning and maintenance',
+        formTemplate: 'gardenCleaning',
+        validation: validateGardenCleaning,
+        getPrice: calculateGardenCleaningPrice,
+        duration: '2-4 hours'
+    }
+};
+
+// Service-specific form templates (HTML strings)
+const FORM_TEMPLATES = {
+    homeCleaning: `
+        <div class="form-group full-width">
+            <label class="form-label">Property Type <span class="required">*</span></label>
+            <div class="property-type-grid" id="propertyTypeGrid">
+                <div class="property-option" data-type="apartment">
+                    <i class="fas fa-building"></i>
+                    <span>Apartment</span>
+                </div>
+                <div class="property-option" data-type="house">
+                    <i class="fas fa-home"></i>
+                    <span>House</span>
+                </div>
+                <div class="property-option" data-type="villa">
+                    <i class="fas fa-swimming-pool"></i>
+                    <span>Villa</span>
+                </div>
+                <div class="property-option" data-type="studio">
+                    <i class="fas fa-door-open"></i>
+                    <span>Studio</span>
+                </div>
+            </div>
+            <input type="hidden" id="propertyType" value="">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Number of Bedrooms</label>
+                <select id="bedrooms" class="form-control">
+                    <option value="0">0 (Studio/No bedroom)</option>
+                    <option value="1">1 Bedroom</option>
+                    <option value="2">2 Bedrooms</option>
+                    <option value="3">3 Bedrooms</option>
+                    <option value="4">4 Bedrooms</option>
+                    <option value="5">5+ Bedrooms</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Number of Bathrooms</label>
+                <select id="bathrooms" class="form-control">
+                    <option value="1">1 Bathroom</option>
+                    <option value="2">2 Bathrooms</option>
+                    <option value="3">3 Bathrooms</option>
+                    <option value="4">4+ Bathrooms</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group full-width">
+            <label class="form-label">Dirt Level <span class="required">*</span></label>
+            <div class="dirt-level-grid" id="dirtLevelGrid">
+                <div class="dirt-option" data-level="light">
+                    <i class="fas fa-leaf"></i>
+                    <strong>Light</strong>
+                    <small>Regular maintenance needed</small>
+                </div>
+                <div class="dirt-option" data-level="moderate">
+                    <i class="fas fa-broom"></i>
+                    <strong>Moderate</strong>
+                    <small>Some deep cleaning required</small>
+                </div>
+                <div class="dirt-option" data-level="heavy">
+                    <i class="fas fa-fire"></i>
+                    <strong>Heavy</strong>
+                    <small>Extensive deep cleaning needed</small>
+                </div>
+            </div>
+            <input type="hidden" id="dirtLevel" value="">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Cleaning Frequency</label>
+                <select id="frequency" class="form-control">
+                    <option value="one_time">One-Time Cleaning</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly (Save 10%)</option>
+                    <option value="biweekly">Bi-Weekly (Save 15%)</option>
+                    <option value="monthly">Monthly (Save 20%)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Number of Cleaners</label>
+                <select id="cleaners" class="form-control">
+                    <option value="1">1 Cleaner</option>
+                    <option value="2">2 Cleaners</option>
+                    <option value="3">3 Cleaners</option>
+                    <option value="4">4+ Cleaners</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Special Instructions</label>
+            <textarea id="specialInstructions" class="form-control" rows="3" placeholder="Any areas needing special attention, pets, access instructions..."></textarea>
+        </div>
+    `,
+
+    officeCleaning: `
+        <div class="form-group full-width">
+            <label class="form-label">Office Type <span class="required">*</span></label>
+            <div class="office-type-grid" id="officeTypeGrid">
+                <div class="office-option" data-type="corporate">
+                    <i class="fas fa-building"></i>
+                    <span>Corporate Office</span>
+                </div>
+                <div class="office-option" data-type="small">
+                    <i class="fas fa-store"></i>
+                    <span>Small Office</span>
+                </div>
+                <div class="office-option" data-type="coworking">
+                    <i class="fas fa-users"></i>
+                    <span>Coworking Space</span>
+                </div>
+                <div class="office-option" data-type="medical">
+                    <i class="fas fa-hospital"></i>
+                    <span>Medical Office</span>
+                </div>
+            </div>
+            <input type="hidden" id="officeType" value="">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Number of Rooms/Sections</label>
+                <select id="officeRooms" class="form-control">
+                    <option value="1">1-2 Rooms</option>
+                    <option value="2">3-4 Rooms</option>
+                    <option value="3">5-6 Rooms</option>
+                    <option value="4">7-9 Rooms</option>
+                    <option value="5">10+ Rooms</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Number of Workstations</label>
+                <select id="workstations" class="form-control">
+                    <option value="0">No dedicated workstations</option>
+                    <option value="5">1-5 Workstations</option>
+                    <option value="10">6-10 Workstations</option>
+                    <option value="15">11-15 Workstations</option>
+                    <option value="20">16-20 Workstations</option>
+                    <option value="25">20+ Workstations</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Cleaning Frequency</label>
+                <select id="frequency" class="form-control">
+                    <option value="one_time">One-Time</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Bi-Weekly</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Service Time</label>
+                <select id="serviceTime" class="form-control">
+                    <option value="business_hours">During Business Hours</option>
+                    <option value="after_hours">After Hours (Additional 20%)</option>
+                    <option value="weekend">Weekend (Additional 30%)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Security/Access Notes</label>
+            <textarea id="securityNotes" class="form-control" rows="2" placeholder="Access codes, security procedures, cleaning after hours instructions..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Special Requirements</label>
+            <textarea id="specialRequirements" class="form-control" rows="2" placeholder="Any special cleaning requirements or areas of focus..."></textarea>
+        </div>
+    `,
+
+    carpetCleaning: `
+        <div class="form-group full-width">
+            <label class="form-label">Carpet Type <span class="required">*</span></label>
+            <div class="carpet-type-grid" id="carpetTypeGrid">
+                <div class="carpet-option" data-type="wool">
+                    <i class="fas fa-tshirt"></i>
+                    <span>Wool</span>
+                </div>
+                <div class="carpet-option" data-type="synthetic">
+                    <i class="fas fa-industry"></i>
+                    <span>Synthetic</span>
+                </div>
+                <div class="carpet-option" data-type="berber">
+                    <i class="fas fa-th-large"></i>
+                    <span>Berber</span>
+                </div>
+                <div class="carpet-option" data-type="sisal">
+                    <i class="fas fa-leaf"></i>
+                    <span>Sisal</span>
+                </div>
+            </div>
+            <input type="hidden" id="carpetType" value="">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Number of Carpets</label>
+                <select id="carpetCount" class="form-control">
+                    <option value="1">1 Carpet</option>
+                    <option value="2">2 Carpets</option>
+                    <option value="3">3 Carpets</option>
+                    <option value="4">4 Carpets</option>
+                    <option value="5">5+ Carpets</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Carpet Size</label>
+                <select id="carpetSize" class="form-control">
+                    <option value="small">Small (under 2x3m)</option>
+                    <option value="medium">Medium (2x3m - 3x4m)</option>
+                    <option value="large">Large (3x4m - 4x5m)</option>
+                    <option value="extra_large">Extra Large (5x5m+)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group full-width">
+            <label class="form-label">Stain Level <span class="required">*</span></label>
+            <div class="stain-level-grid" id="stainLevelGrid">
+                <div class="stain-option" data-level="none">
+                    <i class="fas fa-check-circle"></i>
+                    <strong>No Stains</strong>
+                    <small>Regular cleaning only</small>
+                </div>
+                <div class="stain-option" data-level="light">
+                    <i class="fas fa-tint"></i>
+                    <strong>Light Stains</strong>
+                    <small>Few small spots</small>
+                </div>
+                <div class="stain-option" data-level="moderate">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Moderate Stains</strong>
+                    <small>Several noticeable stains</small>
+                </div>
+                <div class="stain-option" data-level="heavy">
+                    <i class="fas fa-fire"></i>
+                    <strong>Heavy Stains</strong>
+                    <small>Extensive staining</small>
+                </div>
+            </div>
+            <input type="hidden" id="stainLevel" value="">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Additional Services</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="stainProtection"> Stain Protection (+TZS 15,000)</label>
+                <label><input type="checkbox" id="deodorizing"> Deep Deodorizing (+TZS 10,000)</label>
+                <label><input type="checkbox" id="petTreatment"> Pet Stain Treatment (+TZS 20,000)</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Special Instructions</label>
+            <textarea id="specialInstructions" class="form-control" rows="2" placeholder="Furniture to move, delicate areas, etc..."></textarea>
+        </div>
+    `,
+
+    windowCleaning: `
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Number of Windows <span class="required">*</span></label>
+                <input type="number" id="windowCount" class="form-control" placeholder="e.g., 10" min="1" value="5">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Number of Window Panes per Window</label>
+                <select id="panesPerWindow" class="form-control">
+                    <option value="1">1 Pane (Single)</option>
+                    <option value="2">2 Panes (Double)</option>
+                    <option value="3">3+ Panes (Multiple)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Highest Floor Level</label>
+                <select id="maxFloor" class="form-control">
+                    <option value="1">Ground Floor (1st)</option>
+                    <option value="2">2nd Floor</option>
+                    <option value="3">3rd Floor</option>
+                    <option value="4">4th Floor</option>
+                    <option value="5">5th+ Floor (+30% fee)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Window Type</label>
+                <select id="windowType" class="form-control">
+                    <option value="standard">Standard</option>
+                    <option value="casement">Casement (Hinged)</option>
+                    <option value="sliding">Sliding</option>
+                    <option value="bay">Bay Window</option>
+                    <option value="skylight">Skylight</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group full-width">
+            <label class="form-label">Window Condition <span class="required">*</span></label>
+            <div class="condition-grid" id="windowConditionGrid">
+                <div class="condition-option" data-condition="clean">
+                    <i class="fas fa-check"></i>
+                    <strong>Generally Clean</strong>
+                    <small>Minor dust/dirt</small>
+                </div>
+                <div class="condition-option" data-condition="dirty">
+                    <i class="fas fa-broom"></i>
+                    <strong>Dirty</strong>
+                    <small>Visible grime</small>
+                </div>
+                <div class="condition-option" data-condition="very_dirty">
+                    <i class="fas fa-fire"></i>
+                    <strong>Very Dirty</strong>
+                    <small>Heavy build-up</small>
+                </div>
+            </div>
+            <input type="hidden" id="windowCondition" value="">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Accessibility Notes</label>
+            <textarea id="accessNotes" class="form-control" rows="2" placeholder="Ladder access, difficult to reach windows, safety considerations..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Screen Cleaning</label>
+            <div class="radio-group">
+                <label><input type="radio" name="screenCleaning" value="yes" checked> Yes, clean screens (+TZS 5,000)</label>
+                <label><input type="radio" name="screenCleaning" value="no"> No, skip screens</label>
+            </div>
+        </div>
+    `,
+
+    deepCleaning: `
+        <div class="form-group full-width">
+            <label class="form-label">Property Type <span class="required">*</span></label>
+            <div class="property-type-grid" id="propertyTypeGrid">
+                <div class="property-option" data-type="apartment">
+                    <i class="fas fa-building"></i>
+                    <span>Apartment</span>
+                </div>
+                <div class="property-option" data-type="house">
+                    <i class="fas fa-home"></i>
+                    <span>House</span>
+                </div>
+                <div class="property-option" data-type="villa">
+                    <i class="fas fa-swimming-pool"></i>
+                    <span>Villa</span>
+                </div>
+                <div class="property-option" data-type="mansion">
+                    <i class="fas fa-crown"></i>
+                    <span>Mansion</span>
+                </div>
+            </div>
+            <input type="hidden" id="propertyType" value="">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Total Area (sqm)</label>
+                <input type="number" id="areaSqm" class="form-control" placeholder="e.g., 200" value="100">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Number of Rooms</label>
+                <select id="roomCount" class="form-control">
+                    <option value="1">1-2 Rooms</option>
+                    <option value="2">3-4 Rooms</option>
+                    <option value="3">5-6 Rooms</option>
+                    <option value="4">7-8 Rooms</option>
+                    <option value="5">9+ Rooms</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group full-width">
+            <label class="form-label">Deep Clean Areas <span class="required">*</span></label>
+            <div class="deep-clean-grid" id="deepCleanAreas">
+                <div class="deep-option" data-area="kitchen">
+                    <i class="fas fa-utensils"></i>
+                    <span>Kitchen</span>
+                    <small>Appliances, cabinets, grease removal</small>
+                </div>
+                <div class="deep-option" data-area="bathroom">
+                    <i class="fas fa-toilet"></i>
+                    <span>Bathroom</span>
+                    <small>Tile grout, fixtures, mold prevention</small>
+                </div>
+                <div class="deep-option" data-area="bedroom">
+                    <i class="fas fa-bed"></i>
+                    <span>Bedroom</span>
+                    <small>Closets, under beds, baseboards</small>
+                </div>
+                <div class="deep-option" data-area="living">
+                    <i class="fas fa-couch"></i>
+                    <span>Living Area</span>
+                    <small>All surfaces, behind furniture</small>
+                </div>
+            </div>
+            <input type="hidden" id="deepCleanAreasValue" value="">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Additional Deep Cleaning Services</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="ovenCleaning"> Oven Cleaning (+TZS 25,000)</label>
+                <label><input type="checkbox" id="fridgeCleaning"> Refrigerator Cleaning (+TZS 20,000)</label>
+                <label><input type="checkbox" id="groutCleaning"> Tile & Grout Deep Clean (+TZS 30,000)</label>
+                <label><input type="checkbox" id="baseboardCleaning"> Baseboard & Trim Detail (+TZS 15,000)</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Special Instructions</label>
+            <textarea id="specialInstructions" class="form-control" rows="3" placeholder="Areas needing extra attention, fragile items, access instructions..."></textarea>
+        </div>
+    `,
+
+    constructionCleaning: `
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Property Size <span class="required">*</span></label>
+                <select id="propertySize" class="form-control">
+                    <option value="small">Small (under 100 sqm)</option>
+                    <option value="medium">Medium (100-300 sqm)</option>
+                    <option value="large">Large (300-600 sqm)</option>
+                    <option value="extra_large">Extra Large (600+ sqm)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Construction Type</label>
+                <select id="constructionType" class="form-control">
+                    <option value="renovation">Renovation</option>
+                    <option value="new_build">New Build</option>
+                    <option value="commercial">Commercial Construction</option>
+                    <option value="partial">Partial Renovation</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group full-width">
+            <label class="form-label">Debris Level <span class="required">*</span></label>
+            <div class="condition-grid" id="debrisLevelGrid">
+                <div class="condition-option" data-level="light">
+                    <i class="fas fa-broom"></i>
+                    <strong>Light</strong>
+                    <small>Dust and minor debris</small>
+                </div>
+                <div class="condition-option" data-level="moderate">
+                    <i class="fas fa-dumpster"></i>
+                    <strong>Moderate</strong>
+                    <small>Construction dust and debris</small>
+                </div>
+                <div class="condition-option" data-level="heavy">
+                    <i class="fas fa-hard-hat"></i>
+                    <strong>Heavy</strong>
+                    <small>Extensive debris and residue</small>
+                </div>
+            </div>
+            <input type="hidden" id="debrisLevel" value="">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Areas to Clean</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="cleanWalls"> Walls & Ceilings</label>
+                <label><input type="checkbox" id="cleanFloors"> Floors</label>
+                <label><input type="checkbox" id="cleanWindows"> Windows</label>
+                <label><input type="checkbox" id="cleanCabinets"> Cabinets & Fixtures</label>
+                <label><input type="checkbox" id="cleanHVAC"> HVAC/Vents</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Special Requirements</label>
+            <textarea id="specialRequirements" class="form-control" rows="2" placeholder="Safety equipment needed, working hours restrictions, etc..."></textarea>
+        </div>
+    `,
+
+    hotelCleaning: `
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Number of Rooms <span class="required">*</span></label>
+                <input type="number" id="roomCount" class="form-control" placeholder="e.g., 10" min="1" value="5">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Property Type</label>
+                <select id="propertyType" class="form-control">
+                    <option value="hotel">Hotel</option>
+                    <option value="airbnb">Airbnb</option>
+                    <option value="guesthouse">Guesthouse</option>
+                    <option value="lodge">Lodge</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Room Types to Clean</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="cleanStandard"> Standard Rooms</label>
+                <label><input type="checkbox" id="cleanSuite"> Suites</label>
+                <label><input type="checkbox" id="cleanCommon"> Common Areas</label>
+                <label><input type="checkbox" id="cleanKitchen"> Kitchen/Kitchenette</label>
+                <label><input type="checkbox" id="cleanBathroom"> Bathrooms</label>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Turnover Type</label>
+                <select id="turnoverType" class="form-control">
+                    <option value="standard">Standard Stay-over</option>
+                    <option value="deep">Deep Clean (Check-out)</option>
+                    <option value="express">Express (Same-day turnover)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Linen Service</label>
+                <select id="linenService" class="form-control">
+                    <option value="no">No linen change needed</option>
+                    <option value="basic">Basic linen change</option>
+                    <option value="full">Full linen service (towels + bedding)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Special Instructions</label>
+            <textarea id="specialInstructions" class="form-control" rows="2" placeholder="Guest preferences, key access, check-out times..."></textarea>
+        </div>
+    `,
+
+    // Default template for services without custom forms
+    default: `
+        <div class="form-group">
+            <label class="form-label">Service Details</label>
+            <textarea id="serviceDetails" class="form-control" rows="4" placeholder="Please describe your cleaning requirements in detail..."></textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Special Instructions</label>
+            <textarea id="specialInstructions" class="form-control" rows="3" placeholder="Any special requirements..."></textarea>
+        </div>
+    `
+};
+
+// Helper templates for remaining services
+FORM_TEMPLATES.vehicleCleaning = FORM_TEMPLATES.default;
+FORM_TEMPLATES.poolCleaning = FORM_TEMPLATES.default;
+FORM_TEMPLATES.mattressCleaning = FORM_TEMPLATES.default;
+FORM_TEMPLATES.upholsteryCleaning = FORM_TEMPLATES.default;
+FORM_TEMPLATES.moveCleaning = FORM_TEMPLATES.default;
+FORM_TEMPLATES.laundryCleaning = FORM_TEMPLATES.default;
+FORM_TEMPLATES.pestControl = FORM_TEMPLATES.default;
+FORM_TEMPLATES.eventCleaning = FORM_TEMPLATES.default;
+FORM_TEMPLATES.acCleaning = FORM_TEMPLATES.default;
+FORM_TEMPLATES.waterTankCleaning = FORM_TEMPLATES.default;
+FORM_TEMPLATES.curtainCleaning = FORM_TEMPLATES.default;
+FORM_TEMPLATES.gardenCleaning = FORM_TEMPLATES.default;
+FORM_TEMPLATES.industrialCleaning = FORM_TEMPLATES.default;
+
+function getFormTemplate(serviceId) {
+    const config = SERVICE_CONFIGS[serviceId];
+    if (config && FORM_TEMPLATES[config.formTemplate]) {
+        return FORM_TEMPLATES[config.formTemplate];
+    }
+    return FORM_TEMPLATES.default;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded - Initializing booking system');
+    
+    loadSelectedService();
+    loadBookedDates();
+    initializeNavigationButtons();
+    initializeStepClickHandlers();
+    initializeMap();
+    attachGlobalFormListeners();
+    
+    // Initialize date picker after a short delay to ensure DOM is ready
+    setTimeout(function() {
+        initializeDatePicker();
+    }, 100);
+    
+    updatePriceEstimate();
+});
+
+// Initialize all navigation buttons
+function initializeNavigationButtons() {
+    // Phase 1 to 2
+    const nextPhase1Btn = document.getElementById('nextPhase1Btn');
+    if (nextPhase1Btn) {
+        nextPhase1Btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            nextPhase(2);
+        });
     }
     
-    if (!isLoggedIn()) {
-        localStorage.setItem('pendingBooking', JSON.stringify({ attempted: true, timestamp: new Date().toISOString() }));
-        showValidationToast('warning', 'Login Required', 'Please login to continue with booking. Redirecting to login page...');
-        setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+    // Phase 2 navigation
+    const prevPhase2Btn = document.getElementById('prevPhase2Btn');
+    const nextPhase2Btn = document.getElementById('nextPhase2Btn');
+    if (prevPhase2Btn) prevPhase2Btn.addEventListener('click', function(e) { e.preventDefault(); prevPhase(1); });
+    if (nextPhase2Btn) nextPhase2Btn.addEventListener('click', function(e) { e.preventDefault(); validateAndNext(2, 3); });
+    
+    // Phase 3 navigation
+    const prevPhase3Btn = document.getElementById('prevPhase3Btn');
+    const nextPhase3Btn = document.getElementById('nextPhase3Btn');
+    if (prevPhase3Btn) prevPhase3Btn.addEventListener('click', function(e) { e.preventDefault(); prevPhase(2); });
+    if (nextPhase3Btn) nextPhase3Btn.addEventListener('click', function(e) { e.preventDefault(); validateAndNext(3, 4); });
+    
+    // Phase 4 navigation
+    const prevPhase4Btn = document.getElementById('prevPhase4Btn');
+    const nextPhase4Btn = document.getElementById('nextPhase4Btn');
+    if (prevPhase4Btn) prevPhase4Btn.addEventListener('click', function(e) { e.preventDefault(); prevPhase(3); });
+    if (nextPhase4Btn) nextPhase4Btn.addEventListener('click', function(e) { e.preventDefault(); validateAndNext(4, 5); });
+    
+    // Phase 5 navigation
+    const prevPhase5Btn = document.getElementById('prevPhase5Btn');
+    const submitBtn = document.getElementById('submitBookingBtn');
+    if (prevPhase5Btn) prevPhase5Btn.addEventListener('click', function(e) { e.preventDefault(); prevPhase(4); });
+    if (submitBtn) submitBtn.addEventListener('click', function(e) { e.preventDefault(); submitBooking(); });
+}
+
+// Initialize step click handlers for progress bar
+function initializeStepClickHandlers() {
+    const steps = document.querySelectorAll('.step');
+    steps.forEach(step => {
+        step.addEventListener('click', function(e) {
+            const targetStep = parseInt(this.dataset.step);
+            if (targetStep < currentStep) {
+                // Allow going back to previous steps
+                currentStep = targetStep;
+                updatePhaseDisplay();
+                updateProgressBar();
+                if (targetStep === 5) updateReview();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (targetStep > currentStep) {
+                // Validate current step before proceeding
+                if (validateCurrentPhase()) {
+                    currentStep = targetStep;
+                    updatePhaseDisplay();
+                    updateProgressBar();
+                    if (targetStep === 5) updateReview();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }
+        });
+    });
+}
+
+// Load selected service and render appropriate form
+function loadSelectedService() {
+    const serviceData = localStorage.getItem('selectedService');
+    console.log('Loading service:', serviceData);
+    
+    if (serviceData) {
+        selectedService = JSON.parse(serviceData);
+        const serviceId = selectedService.id;
+        const config = SERVICE_CONFIGS[serviceId] || {
+            name: selectedService.name || 'Cleaning Service',
+            basePrice: 50000,
+            description: 'Professional cleaning service',
+            formTemplate: 'default'
+        };
+        
+        selectedService.config = config;
+        
+        const banner = document.getElementById('selectedServiceBanner');
+        if (banner) banner.style.display = 'flex';
+        
+        const serviceNameSpan = document.getElementById('selectedServiceName');
+        if (serviceNameSpan) serviceNameSpan.innerText = config.name;
+        
+        const phase1Title = document.getElementById('phase1Title');
+        if (phase1Title) phase1Title.innerText = config.name + ' Details';
+        
+        const phase1Desc = document.getElementById('phase1Description');
+        if (phase1Desc) phase1Desc.innerHTML = config.description;
+        
+        const step1Label = document.getElementById('step1Label');
+        if (step1Label) step1Label.innerHTML = config.name.split(' ')[0] + ' Details';
+        
+        // Load the service-specific form
+        const formHtml = getFormTemplate(serviceId);
+        const dynamicForm = document.getElementById('dynamicServiceForm');
+        if (dynamicForm) {
+            dynamicForm.innerHTML = formHtml;
+        }
+        
+        // Initialize the service-specific form elements after a short delay
+        setTimeout(function() {
+            initializeServiceSpecificForm(serviceId);
+        }, 50);
+        
+        // Update price estimate on any form changes
+        attachServiceFormListeners(serviceId);
+    } else {
+        // Fallback - try to get from URL param
+        const urlParams = new URLSearchParams(window.location.search);
+        const serviceId = urlParams.get('service');
+        if (serviceId && SERVICE_CONFIGS[serviceId]) {
+            selectedService = { id: serviceId, name: SERVICE_CONFIGS[serviceId].name, config: SERVICE_CONFIGS[serviceId] };
+            localStorage.setItem('selectedService', JSON.stringify(selectedService));
+            loadSelectedService();
+        } else {
+            showToast('Please select a service first', 'error');
+            setTimeout(function() { 
+                window.location.href = 'service.html'; 
+            }, 1500);
+        }
+    }
+}
+
+// Initialize service-specific form elements (grid selections, etc.)
+function initializeServiceSpecificForm(serviceId) {
+    const config = SERVICE_CONFIGS[serviceId];
+    if (!config) return;
+    
+    // Initialize property type grid
+    const propertyGrids = ['propertyTypeGrid', 'officeTypeGrid', 'carpetTypeGrid', 'deepCleanAreas'];
+    propertyGrids.forEach(gridId => {
+        const grid = document.getElementById(gridId);
+        if (grid) {
+            const options = grid.querySelectorAll('.property-option, .office-option, .carpet-option, .deep-option');
+            options.forEach(opt => {
+                opt.removeEventListener('click', handleGridOptionClick);
+                opt.addEventListener('click', handleGridOptionClick);
+            });
+        }
+    });
+    
+    // Initialize condition/dirt/stain grids
+    const conditionGrids = ['dirtLevelGrid', 'stainLevelGrid', 'debrisLevelGrid', 'windowConditionGrid'];
+    conditionGrids.forEach(gridId => {
+        const grid = document.getElementById(gridId);
+        if (grid) {
+            const options = grid.querySelectorAll('.dirt-option, .stain-option, .condition-option');
+            options.forEach(opt => {
+                opt.removeEventListener('click', handleConditionOptionClick);
+                opt.addEventListener('click', handleConditionOptionClick);
+            });
+        }
+    });
+    
+    // Initialize select listeners
+    const selects = ['bedrooms', 'bathrooms', 'frequency', 'cleaners', 'officeRooms', 'workstations', 
+                     'carpetCount', 'carpetSize', 'windowCount', 'panesPerWindow', 'maxFloor', 'roomCount', 'areaSqm', 'propertySize'];
+    selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (select) {
+            select.removeEventListener('change', updatePriceEstimate);
+            select.addEventListener('change', updatePriceEstimate);
+        }
+    });
+    
+    // Initialize checkbox groups
+    const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.removeEventListener('change', updatePriceEstimate);
+        cb.addEventListener('change', updatePriceEstimate);
+    });
+    
+    // Initialize radio groups
+    const radios = document.querySelectorAll('.radio-group input[type="radio"]');
+    radios.forEach(radio => {
+        radio.removeEventListener('change', updatePriceEstimate);
+        radio.addEventListener('change', updatePriceEstimate);
+    });
+}
+
+// Handle grid option clicks
+function handleGridOptionClick(e) {
+    const clicked = e.currentTarget;
+    const parent = clicked.parentElement;
+    const siblings = parent.querySelectorAll('.property-option, .office-option, .carpet-option, .window-option, .deep-option, .construction-option, .dirt-option, .stain-option, .condition-option');
+    siblings.forEach(s => s.classList.remove('selected'));
+    clicked.classList.add('selected');
+    
+    // Find the hidden input
+    const hiddenInput = parent.nextElementSibling;
+    if (hiddenInput && hiddenInput.tagName === 'INPUT' && hiddenInput.type === 'hidden') {
+        hiddenInput.value = clicked.dataset.type || clicked.dataset.area || clicked.dataset.level || clicked.dataset.condition;
+    } else {
+        // Try to find by ID
+        const possibleIds = ['propertyType', 'officeType', 'carpetType', 'deepCleanAreasValue', 'dirtLevel', 'stainLevel', 'debrisLevel', 'windowCondition'];
+        for (let id of possibleIds) {
+            const hidden = document.getElementById(id);
+            if (hidden) {
+                hidden.value = clicked.dataset.type || clicked.dataset.area || clicked.dataset.level || clicked.dataset.condition;
+                break;
+            }
+        }
+    }
+    updatePriceEstimate();
+}
+
+function handleConditionOptionClick(e) {
+    const clicked = e.currentTarget;
+    const parent = clicked.parentElement;
+    const siblings = parent.querySelectorAll('.dirt-option, .stain-option, .condition-option');
+    siblings.forEach(s => s.classList.remove('selected'));
+    clicked.classList.add('selected');
+    
+    const hiddenId = parent.id === 'dirtLevelGrid' ? 'dirtLevel' : 
+                    (parent.id === 'stainLevelGrid' ? 'stainLevel' :
+                    (parent.id === 'debrisLevelGrid' ? 'debrisLevel' :
+                    (parent.id === 'windowConditionGrid' ? 'windowCondition' : 'cleaningCondition')));
+    const hiddenInput = document.getElementById(hiddenId);
+    if (hiddenInput) {
+        hiddenInput.value = clicked.dataset.level || clicked.dataset.condition;
+    }
+    updatePriceEstimate();
+}
+
+// Attach service-specific form listeners
+function attachServiceFormListeners(serviceId) {
+    const formContainer = document.getElementById('dynamicServiceForm');
+    if (formContainer) {
+        formContainer.removeEventListener('change', updatePriceEstimate);
+        formContainer.removeEventListener('input', updatePriceEstimate);
+        formContainer.addEventListener('change', updatePriceEstimate);
+        formContainer.addEventListener('input', updatePriceEstimate);
+    }
+}
+
+// Global form listeners
+function attachGlobalFormListeners() {
+    const allInputs = document.querySelectorAll('#phase2 input, #phase2 select, #phase2 textarea, #phase3 input, #phase3 select, #phase3 textarea, #phase4 input, #phase4 select, #phase4 textarea');
+    allInputs.forEach(input => {
+        input.removeEventListener('change', updateReview);
+        input.removeEventListener('input', updateReview);
+        input.addEventListener('change', updateReview);
+        input.addEventListener('input', updateReview);
+    });
+}
+
+// Price calculation functions
+function calculateHomeCleaningPrice() {
+    let basePrice = 50000;
+    const bedrooms = parseInt(document.getElementById('bedrooms')?.value || 1);
+    const bathrooms = parseInt(document.getElementById('bathrooms')?.value || 1);
+    const dirtLevel = document.getElementById('dirtLevel')?.value || 'moderate';
+    const cleaners = parseInt(document.getElementById('cleaners')?.value || 1);
+    
+    let sizeMultiplier = 0.8 + (bedrooms * 0.15) + (bathrooms * 0.05);
+    sizeMultiplier = Math.min(sizeMultiplier, 2.0);
+    
+    let conditionMultiplier = 1;
+    if (dirtLevel === 'light') conditionMultiplier = 0.8;
+    else if (dirtLevel === 'moderate') conditionMultiplier = 1;
+    else if (dirtLevel === 'heavy') conditionMultiplier = 1.4;
+    
+    let total = basePrice * sizeMultiplier * conditionMultiplier;
+    total += (cleaners - 1) * 20000;
+    
+    return Math.round(total);
+}
+
+function calculateOfficeCleaningPrice() {
+    let basePrice = 75000;
+    const officeRooms = parseInt(document.getElementById('officeRooms')?.value || 1);
+    const workstations = parseInt(document.getElementById('workstations')?.value || 0);
+    const serviceTime = document.getElementById('serviceTime')?.value || 'business_hours';
+    
+    let roomMultiplier = 0.8 + (officeRooms * 0.15);
+    let workstationExtra = Math.floor(workstations / 5) * 5000;
+    
+    let total = basePrice * roomMultiplier + workstationExtra;
+    
+    if (serviceTime === 'after_hours') total *= 1.2;
+    else if (serviceTime === 'weekend') total *= 1.3;
+    
+    return Math.round(total);
+}
+
+function calculateCarpetCleaningPrice() {
+    let basePrice = 60000;
+    const carpetCount = parseInt(document.getElementById('carpetCount')?.value || 1);
+    const carpetSize = document.getElementById('carpetSize')?.value || 'medium';
+    const stainLevel = document.getElementById('stainLevel')?.value || 'none';
+    
+    let sizeMultiplier = 1;
+    if (carpetSize === 'small') sizeMultiplier = 0.7;
+    else if (carpetSize === 'medium') sizeMultiplier = 1;
+    else if (carpetSize === 'large') sizeMultiplier = 1.4;
+    else if (carpetSize === 'extra_large') sizeMultiplier = 1.8;
+    
+    let stainMultiplier = 1;
+    if (stainLevel === 'light') stainMultiplier = 1.1;
+    else if (stainLevel === 'moderate') stainMultiplier = 1.3;
+    else if (stainLevel === 'heavy') stainMultiplier = 1.6;
+    
+    let total = basePrice * carpetCount * sizeMultiplier * stainMultiplier;
+    
+    if (document.getElementById('stainProtection')?.checked) total += 15000;
+    if (document.getElementById('deodorizing')?.checked) total += 10000;
+    if (document.getElementById('petTreatment')?.checked) total += 20000;
+    
+    return Math.round(total);
+}
+
+function calculateWindowCleaningPrice() {
+    let basePrice = 40000;
+    let windowCount = parseInt(document.getElementById('windowCount')?.value || 5);
+    let panesPerWindow = parseInt(document.getElementById('panesPerWindow')?.value || 1);
+    let maxFloor = parseInt(document.getElementById('maxFloor')?.value || 1);
+    let windowCondition = document.getElementById('windowCondition')?.value || 'clean';
+    let screenCleaning = document.querySelector('input[name="screenCleaning"]:checked')?.value === 'yes';
+    
+    let total = basePrice + (windowCount * panesPerWindow * 2000);
+    
+    if (maxFloor >= 5) total *= 1.3;
+    else if (maxFloor >= 3) total *= 1.15;
+    
+    if (windowCondition === 'dirty') total *= 1.2;
+    else if (windowCondition === 'very_dirty') total *= 1.4;
+    
+    if (screenCleaning) total += 5000;
+    
+    return Math.round(total);
+}
+
+function calculateDeepCleaningPrice() {
+    let basePrice = 75000;
+    let areaSqm = parseInt(document.getElementById('areaSqm')?.value || 100);
+    let roomCount = parseInt(document.getElementById('roomCount')?.value || 2);
+    
+    let areaMultiplier = Math.max(0.7, Math.min(2.0, areaSqm / 100));
+    let roomMultiplier = 0.8 + (roomCount * 0.15);
+    
+    let total = basePrice * areaMultiplier * roomMultiplier;
+    
+    if (document.getElementById('ovenCleaning')?.checked) total += 25000;
+    if (document.getElementById('fridgeCleaning')?.checked) total += 20000;
+    if (document.getElementById('groutCleaning')?.checked) total += 30000;
+    if (document.getElementById('baseboardCleaning')?.checked) total += 15000;
+    
+    return Math.round(total);
+}
+
+function calculateConstructionCleaningPrice() {
+    const propertySize = document.getElementById('propertySize')?.value || 'medium';
+    const debrisLevel = document.getElementById('debrisLevel')?.value || 'moderate';
+    
+    let basePrice = 90000;
+    let sizeMultiplier = 1;
+    if (propertySize === 'small') sizeMultiplier = 0.7;
+    else if (propertySize === 'medium') sizeMultiplier = 1;
+    else if (propertySize === 'large') sizeMultiplier = 1.5;
+    else if (propertySize === 'extra_large') sizeMultiplier = 2.2;
+    
+    let debrisMultiplier = 1;
+    if (debrisLevel === 'light') debrisMultiplier = 0.8;
+    else if (debrisLevel === 'moderate') debrisMultiplier = 1;
+    else if (debrisLevel === 'heavy') debrisMultiplier = 1.4;
+    
+    return Math.round(basePrice * sizeMultiplier * debrisMultiplier);
+}
+
+function calculateHotelCleaningPrice() {
+    const roomCount = parseInt(document.getElementById('roomCount')?.value || 5);
+    const turnoverType = document.getElementById('turnoverType')?.value || 'standard';
+    const linenService = document.getElementById('linenService')?.value || 'no';
+    
+    let basePrice = 50000;
+    let pricePerRoom = 15000;
+    let total = basePrice + (roomCount * pricePerRoom);
+    
+    if (turnoverType === 'deep') total *= 1.5;
+    else if (turnoverType === 'express') total *= 1.3;
+    
+    if (linenService === 'basic') total += roomCount * 5000;
+    else if (linenService === 'full') total += roomCount * 10000;
+    
+    return Math.round(total);
+}
+
+// Simple price functions for other services
+function calculateVehicleCleaningPrice() { return 45000; }
+function calculatePoolCleaningPrice() { return 80000; }
+function calculateMattressCleaningPrice() { return 55000; }
+function calculateUpholsteryCleaningPrice() { return 65000; }
+function calculateMoveCleaningPrice() { return 70000; }
+function calculateLaundryCleaningPrice() { return 54000; }
+function calculatePestControlPrice() { return 54000; }
+function calculateEventCleaningPrice() { return 90000; }
+function calculateAcCleaningPrice() { return 45000; }
+function calculateWaterTankCleaningPrice() { return 70000; }
+function calculateCurtainCleaningPrice() { return 40000; }
+function calculateGardenCleaningPrice() { return 55000; }
+function calculateIndustrialCleaningPrice() { return 120000; }
+
+// Main price estimate update function
+function updatePriceEstimate() {
+    if (!selectedService || !selectedService.config) {
+        const totalSpan = document.getElementById('totalPrice');
+        if (totalSpan) totalSpan.innerText = 'TZS 0';
+        return 0;
+    }
+    
+    const config = selectedService.config;
+    let total = 0;
+    
+    if (config.getPrice) {
+        total = config.getPrice();
+    } else {
+        total = config.basePrice || 50000;
+        const frequency = document.getElementById('frequency')?.value;
+        if (frequency === 'weekly') total *= 0.9;
+        else if (frequency === 'biweekly') total *= 0.85;
+        else if (frequency === 'monthly') total *= 0.8;
+    }
+    
+    // Update display elements
+    const basePriceSpan = document.getElementById('basePrice');
+    const totalPriceSpan = document.getElementById('totalPrice');
+    const estimatedPriceSpan = document.getElementById('estimatedPrice');
+    const estimatedHoursSpan = document.getElementById('estimatedHours');
+    
+    if (basePriceSpan) basePriceSpan.innerText = `TZS ${(config.basePrice || 50000).toLocaleString()}`;
+    if (totalPriceSpan) totalPriceSpan.innerText = `TZS ${total.toLocaleString()}`;
+    if (estimatedPriceSpan) estimatedPriceSpan.innerText = `TZS ${total.toLocaleString()}`;
+    if (estimatedHoursSpan) estimatedHoursSpan.innerText = config.duration || '2-3 hours';
+    
+    const sizeAdjustment = document.getElementById('sizeAdjustment');
+    const conditionAdjustment = document.getElementById('conditionAdjustment');
+    const extrasAdjustment = document.getElementById('extrasAdjustment');
+    
+    if (sizeAdjustment) sizeAdjustment.innerText = `TZS ${Math.round(total * 0.1).toLocaleString()}`;
+    if (conditionAdjustment) conditionAdjustment.innerText = `TZS ${Math.round(total * 0.15).toLocaleString()}`;
+    if (extrasAdjustment) extrasAdjustment.innerText = 'TZS 0';
+    
+    return total;
+}
+
+// Validation functions
+function validateHomeCleaning() {
+    const propertyType = document.getElementById('propertyType')?.value;
+    const dirtLevel = document.getElementById('dirtLevel')?.value;
+    
+    if (!propertyType) {
+        showToast('Please select a property type', 'error');
+        return false;
+    }
+    if (!dirtLevel) {
+        showToast('Please select the dirt level', 'error');
+        return false;
+    }
+    return true;
+}
+
+function validateOfficeCleaning() {
+    const officeType = document.getElementById('officeType')?.value;
+    if (!officeType) {
+        showToast('Please select an office type', 'error');
+        return false;
+    }
+    return true;
+}
+
+function validateCarpetCleaning() {
+    const carpetType = document.getElementById('carpetType')?.value;
+    const stainLevel = document.getElementById('stainLevel')?.value;
+    
+    if (!carpetType) {
+        showToast('Please select the carpet type', 'error');
+        return false;
+    }
+    if (!stainLevel) {
+        showToast('Please select the stain level', 'error');
+        return false;
+    }
+    return true;
+}
+
+function validateWindowCleaning() {
+    const windowCount = document.getElementById('windowCount')?.value;
+    const windowCondition = document.getElementById('windowCondition')?.value;
+    
+    if (!windowCount || windowCount < 1) {
+        showToast('Please enter the number of windows', 'error');
+        return false;
+    }
+    if (!windowCondition) {
+        showToast('Please select the window condition', 'error');
+        return false;
+    }
+    return true;
+}
+
+function validateDeepCleaning() {
+    const propertyType = document.getElementById('propertyType')?.value;
+    if (!propertyType) {
+        showToast('Please select a property type', 'error');
+        return false;
+    }
+    return true;
+}
+
+function validateConstructionCleaning() {
+    const debrisLevel = document.getElementById('debrisLevel')?.value;
+    if (!debrisLevel) {
+        showToast('Please select the debris level', 'error');
+        return false;
+    }
+    return true;
+}
+
+function validateHotelCleaning() {
+    const roomCount = document.getElementById('roomCount')?.value;
+    if (!roomCount || roomCount < 1) {
+        showToast('Please enter the number of rooms', 'error');
+        return false;
+    }
+    return true;
+}
+
+function validateVehicleCleaning() { return true; }
+function validatePoolCleaning() { return true; }
+function validateMattressCleaning() { return true; }
+function validateUpholsteryCleaning() { return true; }
+function validateMoveCleaning() { return true; }
+function validateLaundryCleaning() { return true; }
+function validatePestControl() { return true; }
+function validateEventCleaning() { return true; }
+function validateAcCleaning() { return true; }
+function validateWaterTankCleaning() { return true; }
+function validateCurtainCleaning() { return true; }
+function validateGardenCleaning() { return true; }
+function validateIndustrialCleaning() { return true; }
+
+// Validate current phase
+function validateCurrentPhase() {
+    switch(currentStep) {
+        case 1:
+            if (selectedService && selectedService.config && selectedService.config.validation) {
+                return selectedService.config.validation();
+            }
+            // For services without custom validation, check if any required fields exist
+            const requiredFields = document.querySelectorAll('#dynamicServiceForm .required');
+            if (requiredFields.length > 0) {
+                let allValid = true;
+                requiredFields.forEach(field => {
+                    const parent = field.closest('.form-group');
+                    if (parent) {
+                        const select = parent.querySelector('select');
+                        const input = parent.querySelector('input:not([type="hidden"])');
+                        const textarea = parent.querySelector('textarea');
+                        const grid = parent.querySelector('[class*="-grid"]');
+                        
+                        if (select && !select.value) allValid = false;
+                        if (input && !input.value) allValid = false;
+                        if (textarea && !textarea.value) allValid = false;
+                        if (grid) {
+                            const selected = grid.querySelector('.selected');
+                            if (!selected) allValid = false;
+                        }
+                    }
+                });
+                if (!allValid) {
+                    showToast('Please fill in all required fields', 'error');
+                    return false;
+                }
+            }
+            return true;
+            
+        case 2:
+            const date = document.getElementById('preferredDate').value;
+            const time = document.getElementById('preferredTime').value;
+            
+            if (!date) {
+                showToast('Please select a preferred date', 'error');
+                return false;
+            }
+            if (!time) {
+                showToast('Please select a preferred time', 'error');
+                return false;
+            }
+            
+            const key = `${date}_${time}`;
+            if (bookedDates[key] >= 3) {
+                showToast('This time slot is fully booked. Please select another time.', 'error');
+                return false;
+            }
+            return true;
+            
+        case 3:
+            const firstName = document.getElementById('firstName')?.value.trim();
+            const lastName = document.getElementById('lastName')?.value.trim();
+            const email = document.getElementById('email')?.value.trim();
+            const phone = document.getElementById('phone')?.value.trim();
+            
+            if (!firstName) { showToast('Please enter your first name', 'error'); return false; }
+            if (!lastName) { showToast('Please enter your last name', 'error'); return false; }
+            if (!email) { showToast('Please enter your email address', 'error'); return false; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('Please enter a valid email address', 'error'); return false; }
+            if (!phone) { showToast('Please enter your phone number', 'error'); return false; }
+            return true;
+            
+        case 4:
+            const street = document.getElementById('streetAddress')?.value.trim();
+            const area = document.getElementById('area')?.value.trim();
+            const city = document.getElementById('city')?.value.trim();
+            const lat = document.getElementById('latitude')?.value;
+            const lng = document.getElementById('longitude')?.value;
+            
+            if (!street) { showToast('Please enter your street address', 'error'); return false; }
+            if (!area) { showToast('Please enter your area/district', 'error'); return false; }
+            if (!city) { showToast('Please enter your city', 'error'); return false; }
+            if (!lat || !lng) { showToast('Please pin your location on the map', 'error'); return false; }
+            return true;
+            
+        default:
+            return true;
+    }
+}
+
+// Navigation functions
+function nextPhase(step) {
+    if (validateCurrentPhase()) {
+        currentStep = step;
+        updatePhaseDisplay();
+        updateProgressBar();
+        
+        if (step === 4 && mapInstance) {
+            setTimeout(function() { mapInstance.invalidateSize(); }, 100);
+        }
+        
+        if (step === 5) {
+            updateReview();
+        }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function prevPhase(step) {
+    currentStep = step;
+    updatePhaseDisplay();
+    updateProgressBar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateAndNext(current, next) {
+    const tempStep = currentStep;
+    currentStep = current;
+    if (validateCurrentPhase()) {
+        currentStep = next;
+        updatePhaseDisplay();
+        updateProgressBar();
+        if (next === 5) updateReview();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        currentStep = tempStep;
+    }
+}
+
+function updatePhaseDisplay() {
+    for (let i = 1; i <= 5; i++) {
+        const phase = document.getElementById(`phase${i}`);
+        const step = document.querySelector(`.step[data-step="${i}"]`);
+        if (phase) {
+            if (i === currentStep) {
+                phase.classList.add('active');
+                if (step) step.classList.add('active');
+            } else {
+                phase.classList.remove('active');
+                if (step) step.classList.remove('active');
+                if (i < currentStep && step) step.classList.add('completed');
+                else if (step) step.classList.remove('completed');
+            }
+        }
+    }
+}
+
+function updateProgressBar() {
+    const fillPercent = ((currentStep - 1) / 4) * 100;
+    const progressFill = document.getElementById('progressFill');
+    if (progressFill) progressFill.style.width = `${fillPercent}%`;
+}
+
+// Load booked dates
+function loadBookedDates() {
+    const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    bookings.forEach(booking => {
+        if (booking.scheduleDate && booking.status !== 'cancelled') {
+            const bookingDate = new Date(booking.scheduleDate);
+            if (bookingDate >= today) {
+                const key = `${booking.scheduleDate}_${booking.scheduleTime}`;
+                if (!bookedDates[key]) bookedDates[key] = 0;
+                bookedDates[key]++;
+            }
+        }
+    });
+}
+
+// Initialize date picker - FIXED
+function initializeDatePicker() {
+    const dateInput = document.getElementById('preferredDate');
+    if (!dateInput) {
+        console.error('Date picker element not found');
         return;
     }
     
-    // DOM Elements
-    const phases = document.querySelectorAll('.phase');
-    const nextBtns = document.querySelectorAll('.next');
-    const prevBtns = document.querySelectorAll('.prev');
-    const bookingForm = document.getElementById('bookingForm');
-    const progressSteps = document.querySelectorAll('.progress-step');
-    
-    // Summary Elements
-    const sumCleaners = document.getElementById('sumCleaners');
-    const sumHours = document.getElementById('sumHours');
-    const sumFreq = document.getElementById('sumFreq');
-    const sumMaterials = document.getElementById('sumMaterials');
-    const sumProperty = document.getElementById('sumProperty');
-    const sumDate = document.getElementById('sumDate');
-    const sumTime = document.getElementById('sumTime');
-    const sumName = document.getElementById('sumName');
-    const sumTotal = document.getElementById('sumTotal');
-    
-    // Form Inputs
-    const cleanersInp = document.getElementById('cleaners');
-    const hoursInp = document.getElementById('hours');
-    const freqSelect = document.getElementById('frequency');
-    const materialsSelect = document.getElementById('materials');
-    const propertySelect = document.getElementById('propertyType');
-    const streetInp = document.getElementById('street');
-    const cityInp = document.getElementById('city');
-    const dateInp = document.getElementById('date');
-    const timeInp = document.getElementById('time');
-    const fnameInp = document.getElementById('fname');
-    const lnameInp = document.getElementById('lname');
-    const emailInp = document.getElementById('email');
-    const instructionsInp = document.getElementById('instructions');
-    const phoneInp = document.getElementById('phone');
-    const latInp = document.getElementById('latitude');
-    const lngInp = document.getElementById('longitude');
-    
-    // Payment related
-    let selectedPaymentMethod = null;
-    let selectedProvider = null;
-    let currentBookingData = null;
-    let receiptModal = null;
-    let shareModal = null;
-    
-    // Map related
-    let locationMap = null;
-    let locationMarker = null;
-    
-    // Mobile Money Providers with details
-    const mobileProviders = ['M-PESA', 'AIRTEL Money', 'Tigo Pesa', 'HaloPesa', 'Azam Pesa', 'YAS (Mix)'];
-    // Bank Providers
-    const bankProviders = ['CRDB Bank', 'NMB Bank', 'NBC Bank', 'Stanbic', 'Absa', 'Exim Bank'];
-    
-    // ========== PROFESSIONAL VALIDATION TOAST SYSTEM ==========
-    function showValidationToast(type, title, message, duration = 4500) {
-        const container = document.getElementById('toastContainer');
-        
-        const iconMap = {
-            'warning': 'fa-exclamation-triangle',
-            'error': 'fa-times-circle',
-            'info': 'fa-info-circle',
-            'success': 'fa-check-circle'
-        };
-        
-        const icon = iconMap[type] || iconMap['info'];
-        const iconClass = type;
-        
-        const toast = document.createElement('div');
-        toast.className = 'validation-toast';
-        toast.innerHTML = `
-            <div class="toast-icon ${iconClass}">
-                <i class="fas ${icon}"></i>
-            </div>
-            <div class="toast-content">
-                <div class="toast-title">${title}</div>
-                <div class="toast-message">${message}</div>
-            </div>
-            <button class="toast-close" aria-label="Close notification">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        
-        container.appendChild(toast);
-        
-        // Close button handler
-        toast.querySelector('.toast-close').addEventListener('click', () => {
-            removeToast(toast);
-        });
-        
-        // Auto remove after duration
-        if (duration > 0) {
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    removeToast(toast);
-                }
-            }, duration);
-        }
-        
-        return toast;
+    // Destroy existing instance if any
+    if (flatpickrInstance) {
+        flatpickrInstance.destroy();
     }
     
-    function removeToast(toast) {
-        toast.classList.add('removing');
-        toast.addEventListener('animationend', () => {
-            if (toast.parentNode) {
-                toast.remove();
-            }
-        });
-    }
-    
-    // Clear all validation errors
-    function clearAllValidationErrors() {
-        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-        document.querySelectorAll('.invalid-feedback.show').forEach(el => el.classList.remove('show'));
-    }
-    
-    // Show field validation error
-    function showFieldError(field, message) {
-        field.classList.add('is-invalid');
-        const feedback = field.parentElement.querySelector('.invalid-feedback');
-        if (feedback) {
-            feedback.textContent = message || 'This field is required';
-            feedback.classList.add('show');
-        }
-        field.focus();
-        // Remove error on input
-        const removeError = () => {
-            field.classList.remove('is-invalid');
-            const fb = field.parentElement.querySelector('.invalid-feedback');
-            if (fb) fb.classList.remove('show');
-            field.removeEventListener('input', removeError);
-        };
-        field.addEventListener('input', removeError);
-    }
-    
-    // ========== INTERACTIVE MAP SYSTEM ==========
-    function initMap() {
-        const mapElement = document.getElementById('locationMap');
-        if (!mapElement) return;
-        
-        // Zanzibar Stone Town coordinates
-        const defaultLat = -6.1659;
-        const defaultLng = 39.2026;
-        const defaultZoom = 14;
-        
-        // Initialize Leaflet map
-        locationMap = L.map('locationMap', {
-            center: [defaultLat, defaultLng],
-            zoom: defaultZoom,
-            zoomControl: true,
-            scrollWheelZoom: true
-        });
-        
-        // Add tile layer (OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(locationMap);
-        
-        // Try to get user's location
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-                    locationMap.setView([userLat, userLng], 15);
-                    if (!locationMarker) {
-                        placeMarker(userLat, userLng);
-                    }
-                    showValidationToast('info', 'Location Detected', 'We found your approximate location. You can adjust the pin on the map.');
-                },
-                (error) => {
-                    console.log('Geolocation not available or denied:', error.message);
-                    showValidationToast('info', 'Location Not Detected', 'Please click on the map to pin your exact location.');
-                },
-                { timeout: 10000, enableHighAccuracy: true }
-            );
-        } else {
-            showValidationToast('info', 'Location Service', 'Please click on the map to pin your exact location.');
-        }
-        
-        // Handle map click to place marker
-        locationMap.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
-            placeMarker(lat, lng);
-        });
-        
-        // Fix map size issue on hidden containers
-        setTimeout(() => {
-            locationMap.invalidateSize();
-        }, 300);
-    }
-    
-    function placeMarker(lat, lng) {
-        // Remove existing marker
-        if (locationMarker) {
-            locationMap.removeLayer(locationMarker);
-        }
-        
-        // Create custom icon
-        const customIcon = L.divIcon({
-            className: 'custom-map-pin',
-            html: `<div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(102,126,234,0.5); border: 3px solid white;"><div style="transform: rotate(45deg); color: white; font-size: 14px;">📍</div></div>`,
-            iconSize: [36, 36],
-            iconAnchor: [18, 36],
-            popupAnchor: [0, -36]
-        });
-        
-        // Place new marker
-        locationMarker = L.marker([lat, lng], { icon: customIcon }).addTo(locationMap);
-        
-        // Add popup
-        locationMarker.bindPopup(`
-            <strong style="color: #667eea;">📍 Your Location</strong><br>
-            <small>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}</small>
-        `).openPopup();
-        
-        // Update hidden fields
-        if (latInp) latInp.value = lat.toFixed(6);
-        if (lngInp) lngInp.value = lng.toFixed(6);
-        
-        // Update coordinates display
-        const coordinatesText = document.getElementById('coordinatesText');
-        const mapCoordinates = document.getElementById('mapCoordinates');
-        const mapOverlayInfo = document.getElementById('mapOverlayInfo');
-        
-        if (coordinatesText) {
-            coordinatesText.textContent = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
-        }
-        if (mapCoordinates) {
-            mapCoordinates.style.display = 'flex';
-        }
-        if (mapOverlayInfo) {
-            mapOverlayInfo.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> Location pinned successfully!';
-            setTimeout(() => {
-                mapOverlayInfo.innerHTML = '<i class="fas fa-map-pin"></i> Click on the map to adjust your location';
-            }, 3000);
-        }
-        
-        // Reverse geocode to get address
-        reverseGeocode(lat, lng);
-    }
-    
-    function reverseGeocode(lat, lng) {
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18`)
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.display_name) {
-                    const address = data.display_name;
-                    // Auto-fill address fields if empty
-                    if (!streetInp.value.trim()) {
-                        const road = data.address?.road || data.address?.path || '';
-                        const houseNumber = data.address?.house_number || '';
-                        streetInp.value = (houseNumber ? houseNumber + ', ' : '') + road;
-                        refreshSummary();
-                    }
-                    if (!cityInp.value.trim()) {
-                        cityInp.value = data.address?.city || data.address?.town || data.address?.suburb || data.address?.county || '';
-                        refreshSummary();
+    flatpickrInstance = flatpickr(dateInput, {
+        minDate: "today",
+        dateFormat: "Y-m-d",
+        allowInput: false,
+        disable: [
+            function(date) {
+                const dateStr = flatpickr.formatDate(date, "Y-m-d");
+                let totalBookings = 0;
+                for (let key in bookedDates) {
+                    if (key.startsWith(dateStr)) {
+                        totalBookings += bookedDates[key];
                     }
                 }
-            })
-            .catch(err => console.log('Reverse geocoding failed:', err));
-    }
-    
-    // Refresh map size when phase becomes visible
-    function refreshMapSize() {
-        if (locationMap) {
-            setTimeout(() => {
-                locationMap.invalidateSize();
-            }, 200);
-        }
-    }
-    
-    // ========== CALCULATE TOTAL PRICE ==========
-    function calculateTotal() {
-        let cleaners = parseInt(cleanersInp.value) || 1;
-        let hours = parseInt(hoursInp.value) || 0;
-        let basePrice = cleaners * hours * 20000;
-        if (materialsSelect.value === 'Yes') basePrice += 10000;
-        if (freqSelect.value === 'Weekly') basePrice = Math.round(basePrice * 0.95);
-        if (selectedPaymentMethod === 'cash') basePrice += 5000;
-        return Math.round(basePrice);
-    }
-    
-    function refreshSummary() {
-        sumCleaners.innerText = cleanersInp.value || '1';
-        sumHours.innerText = hoursInp.value || '0';
-        sumFreq.innerText = freqSelect.value;
-        sumMaterials.innerText = materialsSelect.value;
-        let propVal = propertySelect.value;
-        if (!propVal && streetInp?.value) propVal = streetInp.value.split(' ')[0] + '...';
-        sumProperty.innerText = propVal || '—';
-        sumDate.innerText = dateInp.value || '—';
-        sumTime.innerText = timeInp.value || '—';
-        let first = fnameInp.value.trim() || '', last = lnameInp.value.trim() || '';
-        sumName.innerText = (first || last) ? `${first} ${last}`.trim() : '—';
-        const total = calculateTotal();
-        sumTotal.innerText = 'TZS ' + total.toLocaleString('en-US');
-        updateReviewPanel();
-    }
-    
-    function updateReviewPanel() {
-        const reviewDiv = document.getElementById('review');
-        if (!reviewDiv) return;
-        let cleaners = parseInt(cleanersInp.value) || 1;
-        let hours = parseInt(hoursInp.value) || 0;
-        let addr = `${streetInp?.value || ''}, ${cityInp?.value || ''}`.trim().replace(/^,|,$/g, '') || '—';
-        let total = calculateTotal();
-        let lat = latInp?.value;
-        let lng = lngInp?.value;
-        let locInfo = (lat && lng) ? `<i class="fas fa-map-pin text-success"></i> Pinned` : `<i class="fas fa-exclamation-circle text-warning"></i> Not pinned`;
-        
-        reviewDiv.innerHTML = `
-            <div class="review-row"><span><i class="fas fa-broom"></i> Service:</span><strong>${cleaners} cleaner(s) × ${hours} hours (${freqSelect.value})</strong></div>
-            <div class="review-row"><span><i class="fas fa-box"></i> Materials:</span><strong>${materialsSelect.value}</strong></div>
-            <div class="review-row"><span><i class="fas fa-home"></i> Address:</span><strong>${addr} (${propertySelect.value || 'Not selected'})</strong></div>
-            <div class="review-row"><span><i class="fas fa-map-marker-alt"></i> Location:</span><strong>${locInfo}</strong></div>
-            <div class="review-row"><span><i class="fas fa-calendar"></i> Schedule:</span><strong>${dateInp.value || '—'} at ${timeInp.value || '—'}</strong></div>
-            <div class="review-row"><span><i class="fas fa-user"></i> Contact:</span><strong>${fnameInp.value || ''} ${lnameInp.value || ''}</strong></div>
-            <div class="review-row"><span><i class="fas fa-envelope"></i> Email:</span><strong>${emailInp?.value || 'Not provided'}</strong></div>
-            <div class="review-row fw-bold mt-3 pt-2" style="border-top: 2px solid #cbd5e0;"><span>Total Amount:</span><strong style="color: #0d6efd;">TZS ${total.toLocaleString('en-US')}</strong></div>
-        `;
-    }
-    
-    function updateProgress(currentPhaseId) {
-        const currentPhaseNumber = parseInt(currentPhaseId.replace('phase', ''));
-        progressSteps.forEach((step) => {
-            const stepPhase = step.getAttribute('data-phase');
-            const stepNumber = parseInt(stepPhase.replace('phase', ''));
-            step.classList.remove('active', 'completed');
-            if (stepNumber === currentPhaseNumber) step.classList.add('active');
-            else if (stepNumber < currentPhaseNumber) step.classList.add('completed');
-        });
-        progressSteps.forEach(step => {
-            const stepPhase = step.getAttribute('data-phase');
-            const stepNumber = parseInt(stepPhase.replace('phase', ''));
-            step.onclick = () => { if (stepNumber <= parseInt(currentPhaseId.replace('phase', ''))) showPhase(stepPhase); };
-        });
-    }
-    
-    function showPhase(phaseId) {
-        phases.forEach(phase => phase.classList.remove('active'));
-        const targetPhase = document.getElementById(phaseId);
-        if (targetPhase) {
-            targetPhase.classList.add('active');
-            clearAllValidationErrors();
-            refreshSummary();
-            updateProgress(phaseId);
-            
-            // Refresh map if going to phase 3
-            if (phaseId === 'phase3') {
-                refreshMapSize();
+                return totalBookings >= 5;
             }
-            
-            if (window.innerWidth <= 768) {
-                document.querySelector('.phase-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        ],
+        onChange: function(selectedDates, dateStr, instance) {
+            if (dateStr) {
+                updateTimeSlotAvailability(dateStr);
+                // Clear any validation message
+                const validationDiv = document.getElementById('dateValidation');
+                if (validationDiv) validationDiv.innerHTML = '';
             }
+        },
+        onReady: function(selectedDates, dateStr, instance) {
+            // Force the calendar to be interactive
+            instance.calendarContainer.style.pointerEvents = 'auto';
         }
-    }
+    });
     
-    // ========== ENHANCED VALIDATION ==========
-    function validatePhase(currentPhaseId) {
-        clearAllValidationErrors();
-        
-        switch(currentPhaseId) {
-            case 'phase1':
-                if (!cleanersInp.value || cleanersInp.value < 1 || cleanersInp.value > 10) {
-                    showFieldError(cleanersInp, 'Please enter number of cleaners (1-10)');
-                    showValidationToast('warning', 'Missing Information', 'Please specify the number of cleaners required.');
-                    return false;
-                }
-                if (!hoursInp.value || hoursInp.value < 1 || hoursInp.value > 12) {
-                    showFieldError(hoursInp, 'Please enter hours needed (1-12)');
-                    showValidationToast('warning', 'Missing Information', 'Please specify how many hours of service you need.');
-                    return false;
-                }
-                break;
-                
-            case 'phase2':
-                if (!propertySelect.value) {
-                    showFieldError(propertySelect, 'Please select a property type');
-                    showValidationToast('warning', 'Property Type Required', 'Please select your property type to continue.');
-                    return false;
-                }
-                break;
-                
-            case 'phase3':
-                if (!streetInp.value.trim()) {
-                    showFieldError(streetInp, 'Please enter your street address');
-                    showValidationToast('warning', 'Address Required', 'Please provide your street address for accurate service delivery.');
-                    return false;
-                }
-                if (!cityInp.value.trim()) {
-                    showFieldError(cityInp, 'Please enter your city or area');
-                    showValidationToast('warning', 'City Required', 'Please specify your city or area name.');
-                    return false;
-                }
-                if (!latInp.value || !lngInp.value) {
-                    showValidationToast('warning', 'Map Location Required', 'Please click on the map to pin your exact location before proceeding.');
-                    const mapEl = document.getElementById('locationMap');
-                    if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    return false;
-                }
-                break;
-                
-            case 'phase4':
-                if (!dateInp.value) {
-                    showFieldError(dateInp, 'Please select a preferred date');
-                    showValidationToast('warning', 'Date Required', 'Please select your preferred service date.');
-                    return false;
-                }
-                const selectedDate = new Date(dateInp.value + 'T00:00:00');
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                if (selectedDate < today) {
-                    showFieldError(dateInp, 'Please select a future date');
-                    showValidationToast('warning', 'Invalid Date', 'The selected date has already passed. Please choose a future date.');
-                    return false;
-                }
-                if (!timeInp.value) {
-                    showFieldError(timeInp, 'Please select a preferred time');
-                    showValidationToast('warning', 'Time Required', 'Please select your preferred service time.');
-                    return false;
-                }
-                break;
-                
-            case 'phase5':
-                if (!fnameInp.value.trim()) {
-                    showFieldError(fnameInp, 'Please enter your first name');
-                    showValidationToast('warning', 'Name Required', 'Please enter your first name to continue.');
-                    return false;
-                }
-                if (!lnameInp.value.trim()) {
-                    showFieldError(lnameInp, 'Please enter your last name');
-                    showValidationToast('warning', 'Name Required', 'Please enter your last name to continue.');
-                    return false;
-                }
-                if (!emailInp.value.trim()) {
-                    showFieldError(emailInp, 'Please enter your email address');
-                    showValidationToast('warning', 'Email Required', 'Please provide your email address for booking confirmation.');
-                    return false;
-                }
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInp.value)) {
-                    showFieldError(emailInp, 'Please enter a valid email address');
-                    showValidationToast('warning', 'Invalid Email', 'The email format appears to be incorrect. Please check and try again.');
-                    return false;
-                }
-                if (phoneInp.value.trim() && !/^\+?[\d\s-]{9,15}$/.test(phoneInp.value.trim())) {
-                    showFieldError(phoneInp, 'Please enter a valid phone number');
-                    showValidationToast('warning', 'Invalid Phone', 'Please enter a valid phone number in the format +255 XXX XXX XXX.');
-                    return false;
-                }
-                break;
+    // Also allow clicking on the input to open calendar
+    dateInput.addEventListener('click', function(e) {
+        if (flatpickrInstance) {
+            flatpickrInstance.open();
         }
-        return true;
-    }
-    
-    // ========== PAYMENT UI - REALISTIC PAYMENT DETAILS ==========
-    function renderPaymentDetails(method) {
-        const container = document.getElementById('paymentDetailsContainer');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        if (method === 'mobile_money') {
-            renderMobileMoneyDetails(container);
-        } else if (method === 'bank_transfer') {
-            renderBankTransferDetails(container);
-        } else if (method === 'card') {
-            renderCardDetails(container);
-        }
-    }
-    
-    function renderMobileMoneyDetails(container) {
-        let html = `
-            <div class="payment-details-card">
-                <h6><i class="fas fa-mobile-alt"></i> Mobile Money Payment</h6>
-                <div class="mb-3">
-                    <label class="form-label">Select Provider <span class="text-danger">*</span></label>
-                    <div class="provider-grid" id="providerGrid">
-        `;
-        
-        mobileProviders.forEach(prov => {
-            html += `<div class="provider-btn" data-provider="${prov}"><strong>${prov}</strong></div>`;
-        });
-        
-        html += `
-                    </div>
-                    <div class="invalid-feedback">Please select a provider</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="paymentAccount">Mobile Money Number <span class="text-danger">*</span></label>
-                    <input type="tel" id="paymentAccount" class="form-control" placeholder="e.g., 0712345678">
-                    <div class="invalid-feedback">Please enter a valid mobile money number</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="paymentName">Account Holder Name <span class="text-danger">*</span></label>
-                    <input type="text" id="paymentName" class="form-control" placeholder="Full name as registered">
-                    <div class="invalid-feedback">Please enter the account holder name</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="paymentPin">Transaction PIN <span class="text-danger">*</span></label>
-                    <input type="password" id="paymentPin" class="form-control" placeholder="Enter your PIN to confirm" maxlength="6">
-                    <div class="invalid-feedback">Please enter your PIN</div>
-                </div>
-                <button type="button" id="processPaymentBtn" class="btn btn-success w-100 mt-2">
-                    <i class="fas fa-lock me-2"></i> Pay TZS ${calculateTotal().toLocaleString('en-US')}
-                </button>
-            </div>
-        `;
-        
-        container.innerHTML = html;
-        
-        // Provider selection handlers
-        document.querySelectorAll('.provider-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedProvider = this.getAttribute('data-provider');
-            });
-        });
-        
-        // Payment button handler
-        document.getElementById('processPaymentBtn').addEventListener('click', () => processMobileMoneyPayment());
-    }
-    
-    function processMobileMoneyPayment() {
-        const accountInput = document.getElementById('paymentAccount');
-        const nameInput = document.getElementById('paymentName');
-        const pinInput = document.getElementById('paymentPin');
-        
-        clearAllValidationErrors();
-        let hasError = false;
-        
-        if (!selectedProvider) {
-            showValidationToast('warning', 'Provider Required', 'Please select a mobile money provider.');
-            hasError = true;
-        }
-        if (!accountInput?.value.trim()) {
-            showFieldError(accountInput, 'Please enter your mobile money number');
-            hasError = true;
-        } else if (!/^\d{9,12}$/.test(accountInput.value.replace(/\s/g, ''))) {
-            showFieldError(accountInput, 'Please enter a valid mobile number (9-12 digits)');
-            hasError = true;
-        }
-        if (!nameInput?.value.trim()) {
-            showFieldError(nameInput, 'Please enter the account holder name');
-            hasError = true;
-        }
-        if (!pinInput?.value.trim() || pinInput.value.length < 4) {
-            showFieldError(pinInput, 'Please enter a valid PIN (4-6 digits)');
-            hasError = true;
-        }
-        
-        if (hasError) {
-            showValidationToast('error', 'Payment Incomplete', 'Please complete all payment details before confirming.');
-            return;
-        }
-        
-        finalizePayment('mobile_money', accountInput.value);
-    }
-    
-    function renderBankTransferDetails(container) {
-        let html = `
-            <div class="payment-details-card">
-                <h6><i class="fas fa-university"></i> Bank Transfer Payment</h6>
-                <div class="mb-3">
-                    <label class="form-label">Select Bank <span class="text-danger">*</span></label>
-                    <div class="provider-grid" id="providerGrid">
-        `;
-        
-        bankProviders.forEach(prov => {
-            html += `<div class="provider-btn" data-provider="${prov}"><strong>${prov}</strong></div>`;
-        });
-        
-        html += `
-                    </div>
-                    <div class="invalid-feedback">Please select a bank</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="paymentAccount">Account Number <span class="text-danger">*</span></label>
-                    <input type="text" id="paymentAccount" class="form-control" placeholder="Enter your bank account number">
-                    <div class="invalid-feedback">Please enter a valid account number</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="paymentName">Account Holder Name <span class="text-danger">*</span></label>
-                    <input type="text" id="paymentName" class="form-control" placeholder="Full name on bank account">
-                    <div class="invalid-feedback">Please enter the account holder name</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="paymentPin">Transaction Password <span class="text-danger">*</span></label>
-                    <input type="password" id="paymentPin" class="form-control" placeholder="Enter your banking password">
-                    <div class="invalid-feedback">Please enter your password</div>
-                </div>
-                <div class="alert alert-info mt-3" style="font-size: 0.85rem;">
-                    <i class="fas fa-info-circle me-2"></i> Bank transfers may take 1-3 business days to process. Your booking will be confirmed once payment is received.
-                </div>
-                <button type="button" id="processPaymentBtn" class="btn btn-success w-100 mt-2">
-                    <i class="fas fa-lock me-2"></i> Pay TZS ${calculateTotal().toLocaleString('en-US')}
-                </button>
-            </div>
-        `;
-        
-        container.innerHTML = html;
-        
-        document.querySelectorAll('.provider-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedProvider = this.getAttribute('data-provider');
-            });
-        });
-        
-        document.getElementById('processPaymentBtn').addEventListener('click', () => processBankPayment());
-    }
-    
-    function processBankPayment() {
-        const accountInput = document.getElementById('paymentAccount');
-        const nameInput = document.getElementById('paymentName');
-        const pinInput = document.getElementById('paymentPin');
-        
-        clearAllValidationErrors();
-        let hasError = false;
-        
-        if (!selectedProvider) {
-            showValidationToast('warning', 'Bank Required', 'Please select your bank.');
-            hasError = true;
-        }
-        if (!accountInput?.value.trim()) {
-            showFieldError(accountInput, 'Please enter your account number');
-            hasError = true;
-        } else if (!/^\d{6,20}$/.test(accountInput.value.replace(/\s/g, ''))) {
-            showFieldError(accountInput, 'Please enter a valid account number (6-20 digits)');
-            hasError = true;
-        }
-        if (!nameInput?.value.trim()) {
-            showFieldError(nameInput, 'Please enter the account holder name');
-            hasError = true;
-        }
-        if (!pinInput?.value.trim()) {
-            showFieldError(pinInput, 'Please enter your banking password');
-            hasError = true;
-        }
-        
-        if (hasError) {
-            showValidationToast('error', 'Payment Incomplete', 'Please complete all payment details before confirming.');
-            return;
-        }
-        
-        finalizePayment('bank_transfer', accountInput.value);
-    }
-    
-    function renderCardDetails(container) {
-        let html = `
-            <div class="payment-details-card">
-                <h6><i class="fas fa-credit-card"></i> Card Payment</h6>
-                <div class="mb-3">
-                    <label class="form-label">Card Type <span class="text-danger">*</span></label>
-                    <div class="provider-grid" id="providerGrid">
-                        <div class="provider-btn" data-provider="Visa"><i class="fab fa-cc-visa" style="font-size: 1.2rem;"></i> <strong>Visa</strong></div>
-                        <div class="provider-btn" data-provider="Mastercard"><i class="fab fa-cc-mastercard" style="font-size: 1.2rem;"></i> <strong>Mastercard</strong></div>
-                    </div>
-                    <div class="invalid-feedback">Please select a card type</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="paymentAccount">Card Number <span class="text-danger">*</span></label>
-                    <input type="text" id="paymentAccount" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19">
-                    <div class="invalid-feedback">Please enter a valid 16-digit card number</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="paymentName">Cardholder Name <span class="text-danger">*</span></label>
-                    <input type="text" id="paymentName" class="form-control" placeholder="Name on card">
-                    <div class="invalid-feedback">Please enter the cardholder name</div>
-                </div>
-                <div class="card-input-row mb-3">
-                    <div>
-                        <label class="form-label" for="paymentExpiry">Expiry Date <span class="text-danger">*</span></label>
-                        <input type="text" id="paymentExpiry" class="form-control" placeholder="MM/YY" maxlength="5">
-                        <div class="invalid-feedback">Please enter a valid expiry date</div>
-                    </div>
-                    <div>
-                        <label class="form-label" for="paymentCvv">CVV <span class="text-danger">*</span></label>
-                        <input type="text" id="paymentCvv" class="form-control" placeholder="123" maxlength="4">
-                        <div class="invalid-feedback">Please enter a valid CVV</div>
-                    </div>
-                </div>
-                <div class="alert alert-info mt-3" style="font-size: 0.85rem;">
-                    <i class="fas fa-shield-alt me-2"></i> Your card details are encrypted and secure. We do not store your full card information.
-                </div>
-                <button type="button" id="processPaymentBtn" class="btn btn-success w-100 mt-2">
-                    <i class="fas fa-lock me-2"></i> Pay TZS ${calculateTotal().toLocaleString('en-US')}
-                </button>
-            </div>
-        `;
-        
-        container.innerHTML = html;
-        
-        document.querySelectorAll('.provider-grid .provider-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.provider-grid .provider-btn').forEach(b => b.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedProvider = this.getAttribute('data-provider');
-            });
-        });
-        
-        // Format card number
-        const cardInput = document.getElementById('paymentAccount');
-        if (cardInput) {
-            cardInput.addEventListener('input', function(e) {
-                let val = e.target.value.replace(/\s/g, '').replace(/[^\d]/g, '');
-                if (val.length > 16) val = val.slice(0, 16);
-                e.target.value = val.replace(/(\d{4})/g, '$1 ').trim();
-            });
-        }
-        
-        // Format expiry date
-        const expiryInput = document.getElementById('paymentExpiry');
-        if (expiryInput) {
-            expiryInput.addEventListener('input', function(e) {
-                let val = e.target.value.replace(/[^\d]/g, '');
-                if (val.length > 4) val = val.slice(0, 4);
-                if (val.length >= 3) val = val.slice(0, 2) + '/' + val.slice(2);
-                e.target.value = val;
-            });
-        }
-        
-        document.getElementById('processPaymentBtn').addEventListener('click', () => processCardPayment());
-    }
-    
-    function processCardPayment() {
-        const cardInput = document.getElementById('paymentAccount');
-        const nameInput = document.getElementById('paymentName');
-        const expiryInput = document.getElementById('paymentExpiry');
-        const cvvInput = document.getElementById('paymentCvv');
-        
-        clearAllValidationErrors();
-        let hasError = false;
-        
-        if (!selectedProvider) {
-            showValidationToast('warning', 'Card Type Required', 'Please select Visa or Mastercard.');
-            hasError = true;
-        }
-        
-        const cardNum = cardInput?.value.replace(/\s/g, '') || '';
-        if (!cardNum) {
-            showFieldError(cardInput, 'Please enter your card number');
-            hasError = true;
-        } else if (!/^\d{16}$/.test(cardNum)) {
-            showFieldError(cardInput, 'Please enter a valid 16-digit card number');
-            hasError = true;
-        }
-        
-        if (!nameInput?.value.trim()) {
-            showFieldError(nameInput, 'Please enter the cardholder name');
-            hasError = true;
-        }
-        
-        const expiry = expiryInput?.value || '';
-        if (!expiry) {
-            showFieldError(expiryInput, 'Please enter the expiry date');
-            hasError = true;
-        } else if (!/^\d{2}\/\d{2}$/.test(expiry)) {
-            showFieldError(expiryInput, 'Please enter a valid expiry date (MM/YY)');
-            hasError = true;
-        } else {
-            const [month, year] = expiry.split('/').map(Number);
-            const now = new Date();
-            const currentYear = now.getFullYear() % 100;
-            const currentMonth = now.getMonth() + 1;
-            if (month < 1 || month > 12 || (year < currentYear || (year === currentYear && month < currentMonth))) {
-                showFieldError(expiryInput, 'Card has expired. Please use a valid card.');
-                hasError = true;
-            }
-        }
-        
-        const cvv = cvvInput?.value || '';
-        if (!cvv) {
-            showFieldError(cvvInput, 'Please enter the CVV');
-            hasError = true;
-        } else if (!/^\d{3,4}$/.test(cvv)) {
-            showFieldError(cvvInput, 'Please enter a valid CVV (3-4 digits)');
-            hasError = true;
-        }
-        
-        if (hasError) {
-            showValidationToast('error', 'Payment Incomplete', 'Please check your card details and try again.');
-            return;
-        }
-        
-        finalizePayment('card', cardNum.slice(-4));
-    }
-    
-    function finalizePayment(method, accountMask) {
-        const totalAmount = calculateTotal();
-        
-        let methodLabel = '';
-        if (method === 'mobile_money') methodLabel = `Mobile Money (${selectedProvider})`;
-        else if (method === 'bank_transfer') methodLabel = `Bank Transfer (${selectedProvider})`;
-        else if (method === 'card') methodLabel = `${selectedProvider} Card`;
-        
-        const transactionId = 'TXN-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
-        
-        const bookingData = {
-            bookingId: 'BK-' + Date.now(),
-            date: new Date().toISOString(),
-            cleaners: cleanersInp.value,
-            hours: hoursInp.value,
-            frequency: freqSelect.value,
-            materials: materialsSelect.value,
-            propertyType: propertySelect.value,
-            address: `${streetInp.value}, ${cityInp.value}`,
-            latitude: latInp.value,
-            longitude: lngInp.value,
-            scheduleDate: dateInp.value,
-            scheduleTime: timeInp.value,
-            customerName: `${fnameInp.value} ${lnameInp.value}`,
-            email: emailInp.value,
-            phone: phoneInp?.value || '',
-            instructions: instructionsInp?.value || '',
-            paymentMethod: methodLabel,
-            totalAmount: totalAmount,
-            paymentStatus: 'completed',
-            transactionId: transactionId,
-            paymentAccount: accountMask,
-            paidAt: new Date().toISOString()
-        };
-        
-        // Save booking
-        const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-        bookings.push(bookingData);
-        localStorage.setItem('bookings', JSON.stringify(bookings));
-        
-        currentBookingData = bookingData;
-        
-        showValidationToast('success', 'Payment Successful!', 'Your payment has been processed successfully.');
-        
-        // Launch celebration animation
-        launchCelebration();
-        
-        setTimeout(() => showReceipt(bookingData), 800);
-    }
-    
-    function processCashPayment() {
-        const totalAmount = calculateTotal();
-        
-        const bookingData = {
-            bookingId: 'BK-' + Date.now(),
-            date: new Date().toISOString(),
-            cleaners: cleanersInp.value,
-            hours: hoursInp.value,
-            frequency: freqSelect.value,
-            materials: materialsSelect.value,
-            propertyType: propertySelect.value,
-            address: `${streetInp.value}, ${cityInp.value}`,
-            latitude: latInp.value,
-            longitude: lngInp.value,
-            scheduleDate: dateInp.value,
-            scheduleTime: timeInp.value,
-            customerName: `${fnameInp.value} ${lnameInp.value}`,
-            email: emailInp.value,
-            phone: phoneInp?.value || '',
-            instructions: instructionsInp?.value || '',
-            paymentMethod: 'Cash (+TZS 5,000)',
-            totalAmount: totalAmount,
-            paymentStatus: 'pending',
-            transactionId: null,
-            paidAt: null,
-            cashPending: true
-        };
-        
-        const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-        bookings.push(bookingData);
-        localStorage.setItem('bookings', JSON.stringify(bookings));
-        
-        const pendingCash = JSON.parse(localStorage.getItem('pendingCashPayments') || '[]');
-        pendingCash.push({ bookingId: bookingData.bookingId, customerName: bookingData.customerName, amount: totalAmount, address: bookingData.address });
-        localStorage.setItem('pendingCashPayments', JSON.stringify(pendingCash));
-        
-        currentBookingData = bookingData;
-        
-        showValidationToast('success', 'Booking Confirmed!', 'Cash payment will be collected by staff on arrival.');
-        
-        launchCelebration();
-        
-        setTimeout(() => showReceipt(bookingData), 800);
-    }
-    
-    function showReceipt(booking) {
-        const receiptContent = document.getElementById('receiptContent');
-        const isPending = booking.paymentStatus === 'pending';
-        
-        let paymentStatusHtml = isPending ? 
-            `<div class="text-center my-3"><span class="payment-pending-badge"><i class="fas fa-clock me-1"></i> PENDING PAYMENT</span><p class="text-muted small mt-2">Payment will be collected by staff upon service delivery. Staff will validate and you'll receive confirmation.</p></div>` :
-            `<div class="text-center my-2 text-success"><i class="fas fa-check-circle fa-2x"></i><p class="mt-1">Payment Confirmed</p></div>`;
-        
-        receiptContent.innerHTML = `
-            <div class="text-center mb-3" id="receiptHeaderContent">
-                <strong>CleanSpark</strong>
-                <p class="text-muted small">Official Payment Receipt</p>
-            </div>
-            <div class="border-top border-bottom py-2 mb-2">
-                <div class="d-flex justify-content-between"><span>Booking ID:</span><strong>${booking.bookingId}</strong></div>
-                <div class="d-flex justify-content-between"><span>Date:</span><span>${new Date(booking.scheduleDate).toLocaleDateString()}</span></div>
-                <div class="d-flex justify-content-between"><span>Time:</span><span>${booking.scheduleTime}</span></div>
-            </div>
-            <div class="mb-2">
-                <div class="d-flex justify-content-between"><span>Customer:</span><strong>${booking.customerName}</strong></div>
-                <div class="d-flex justify-content-between"><span>Service:</span><span>${booking.cleaners} cleaner(s) × ${booking.hours} hrs</span></div>
-                <div class="d-flex justify-content-between"><span>Frequency:</span><span>${booking.frequency}</span></div>
-                <div class="d-flex justify-content-between"><span>Address:</span><span>${booking.address}</span></div>
-                ${booking.latitude ? `<div class="d-flex justify-content-between"><span>Coordinates:</span><span>${booking.latitude}, ${booking.longitude}</span></div>` : ''}
-            </div>
-            <div class="border-top border-bottom py-2 my-2">
-                <div class="d-flex justify-content-between"><span>Payment Method:</span><strong>${booking.paymentMethod}</strong></div>
-                ${booking.transactionId ? `<div class="d-flex justify-content-between"><span>Transaction ID:</span><span>${booking.transactionId}</span></div>` : ''}
-                ${booking.paymentAccount ? `<div class="d-flex justify-content-between"><span>Account ending:</span><span>****${booking.paymentAccount}</span></div>` : ''}
-                <div class="d-flex justify-content-between fw-bold mt-2"><span>Total Amount:</span><span style="color:#0d6efd;">TZS ${booking.totalAmount.toLocaleString()}</span></div>
-            </div>
-            ${paymentStatusHtml}
-            <div class="text-center text-muted small mt-3">
-                <i class="fas fa-envelope"></i> Receipt sent to: ${booking.email}
-            </div>
-        `;
-        
-        receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
-        receiptModal.show();
-    }
-    
-    // ========== CELEBRATION FUNCTION ==========
-    function launchCelebration() {
-        const duration = 3 * 1000;
-        const end = Date.now() + duration;
+    });
+}
 
-        (function frame() {
-            confetti({
-                particleCount: 5,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 },
-                colors: ['#4361ee', '#4cc9f0', '#f72585', '#f8961e', '#4bb543']
-            });
-            confetti({
-                particleCount: 5,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 },
-                colors: ['#4361ee', '#4cc9f0', '#f72585', '#f8961e', '#4bb543']
-            });
-
-            if (Date.now() < end) {
-                requestAnimationFrame(frame);
+function updateTimeSlotAvailability(dateStr) {
+    const timeSelect = document.getElementById('preferredTime');
+    if (!timeSelect) return;
+    
+    const slots = timeSelect.querySelectorAll('option');
+    slots.forEach(slot => {
+        if (slot.value) {
+            const key = `${dateStr}_${slot.value}`;
+            const bookingCount = bookedDates[key] || 0;
+            if (bookingCount >= 3) {
+                slot.disabled = true;
+                slot.textContent = slot.textContent.replace(/\s*\(.*\)/, '') + ' (Fully Booked)';
+            } else if (bookingCount >= 2) {
+                slot.disabled = false;
+                slot.textContent = slot.textContent.replace(/\s*\(.*\)/, '') + ' (Limited Availability)';
+            } else {
+                slot.disabled = false;
+                slot.textContent = slot.textContent.replace(/\s*\(.*\)/, '');
             }
-        }());
-    }
-    
-    // ========== RECEIPT DOWNLOAD FUNCTIONALITY ==========
-    function downloadReceipt() {
-        const receiptContent = document.getElementById('receiptContent');
-        
-        const clone = receiptContent.cloneNode(true);
-        clone.style.position = 'absolute';
-        clone.style.left = '-9999px';
-        clone.style.top = '0';
-        clone.style.width = '600px';
-        clone.style.padding = '30px';
-        clone.style.background = 'white';
-        clone.style.borderRadius = '16px';
-        clone.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
-        document.body.appendChild(clone);
-        
-        html2canvas(clone, {
-            scale: 2,
-            backgroundColor: '#ffffff',
-            logging: false
-        }).then(canvas => {
-            document.body.removeChild(clone);
-            
-            const link = document.createElement('a');
-            link.download = `CleanSpark_Receipt_${currentBookingData?.bookingId || 'booking'}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            
-            showValidationToast('success', 'Downloaded!', 'Receipt downloaded successfully.');
-        }).catch(error => {
-            console.error('Download failed:', error);
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>CleanSpark Receipt</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-                        .receipt { border: 2px solid #e2e8f0; border-radius: 16px; padding: 30px; }
-                        strong { color: #2d3748; }
-                        .text-center { text-align: center; }
-                        .border-top { border-top: 1px solid #e2e8f0; padding-top: 10px; }
-                        .border-bottom { border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
-                        .d-flex { display: flex; justify-content: space-between; margin: 8px 0; }
-                        .text-success { color: #198754; }
-                        .text-muted { color: #6c757d; }
-                        .fw-bold { font-weight: bold; }
-                        .mt-2 { margin-top: 10px; }
-                        .mt-3 { margin-top: 15px; }
-                        .my-2 { margin: 10px 0; }
-                        .my-3 { margin: 15px 0; }
-                        .mb-2 { margin-bottom: 10px; }
-                        .small { font-size: 0.875rem; }
-                    </style>
-                </head>
-                <body>
-                    <div class="receipt">
-                        ${receiptContent.innerHTML}
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
-        });
-    }
-    
-    // ========== SHARE FUNCTIONALITY ==========
-    function shareReceiptModal() {
-        shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
-        shareModal.show();
-    }
-    
-    window.shareVia = function(platform) {
-        if (!currentBookingData) return;
-        
-        const booking = currentBookingData;
-        const shareText = `CleanSpark Cleaning Service Booking Confirmed!\n\nBooking ID: ${booking.bookingId}\nService: ${booking.cleaners} cleaner(s) × ${booking.hours} hrs\nDate: ${booking.scheduleDate} at ${booking.scheduleTime}\nAmount: TZS ${booking.totalAmount.toLocaleString()}\n\nThank you for choosing CleanSpark!`;
-        const shareUrl = `https://CleanSpark.co.tz/booking/${booking.bookingId}`;
-        
-        let url = '';
-        
-        switch(platform) {
-            case 'whatsapp':
-                url = `https://wa.me/?text=${encodeURIComponent(shareText + '\n\n' + shareUrl)}`;
-                window.open(url, '_blank');
-                break;
-            case 'email':
-                url = `mailto:?subject=CleanSpark Booking Confirmation - ${booking.bookingId}&body=${encodeURIComponent(shareText + '\n\nView details: ' + shareUrl)}`;
-                window.location.href = url;
-                break;
-            case 'sms':
-                url = `sms:?body=${encodeURIComponent(shareText)}`;
-                window.location.href = url;
-                break;
-            case 'copy':
-                navigator.clipboard.writeText(shareText + '\n\n' + shareUrl).then(() => {
-                    showValidationToast('success', 'Copied!', 'Receipt details copied to clipboard.');
-                }).catch(() => {
-                    showValidationToast('error', 'Copy Failed', 'Failed to copy. Please try again.');
-                });
-                break;
-            case 'facebook':
-                url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
-                window.open(url, '_blank', 'width=600,height=400');
-                break;
-            case 'twitter':
-                url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText.substring(0, 200))}&url=${encodeURIComponent(shareUrl)}`;
-                window.open(url, '_blank', 'width=600,height=400');
-                break;
         }
-        
-        if (shareModal) {
-            shareModal.hide();
+    });
+}
+
+// Initialize map
+function initializeMap() {
+    const mapContainer = document.getElementById('locationMap');
+    if (!mapContainer) {
+        console.log('Map container not found yet, will initialize later');
+        return;
+    }
+    
+    const defaultLat = -6.1659;
+    const defaultLng = 39.2026;
+    
+    mapInstance = L.map('locationMap').setView([defaultLat, defaultLng], 14);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(mapInstance);
+    
+    mapInstance.on('click', function(e) {
+        placeMarker(e.latlng.lat, e.latlng.lng);
+    });
+    
+    // Try to get user location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                mapInstance.setView([userLat, userLng], 15);
+                placeMarker(userLat, userLng);
+            },
+            function(error) {
+                console.log('Geolocation error:', error.message);
+            }
+        );
+    }
+}
+
+function placeMarker(lat, lng) {
+    if (currentMarker) {
+        mapInstance.removeLayer(currentMarker);
+    }
+    
+    const customIcon = L.divIcon({
+        html: `<div style="background: linear-gradient(135deg, #4361ee, #764ba2); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"><i class="fas fa-map-pin" style="color: white; font-size: 14px;"></i></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+    });
+    
+    currentMarker = L.marker([lat, lng], { icon: customIcon }).addTo(mapInstance);
+    currentMarker.bindPopup('📍 Your selected location').openPopup();
+    
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    if (latInput) latInput.value = lat.toFixed(6);
+    if (lngInput) lngInput.value = lng.toFixed(6);
+    
+    const coordsDisplay = document.getElementById('coordsDisplay');
+    const coordsInfo = document.getElementById('coordinatesInfo');
+    if (coordsDisplay) coordsDisplay.innerText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    if (coordsInfo) coordsInfo.style.display = 'flex';
+    
+    reverseGeocode(lat, lng);
+}
+
+function reverseGeocode(lat, lng) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.address) {
+                const road = data.address.road || data.address.path || '';
+                const houseNumber = data.address.house_number || '';
+                const suburb = data.address.suburb || data.address.village || '';
+                const city = data.address.city || data.address.town || data.address.county || '';
+                
+                const streetAddress = document.getElementById('streetAddress');
+                const areaInput = document.getElementById('area');
+                const cityInput = document.getElementById('city');
+                
+                if (streetAddress && !streetAddress.value) {
+                    streetAddress.value = (houseNumber ? houseNumber + ', ' : '') + road;
+                }
+                if (areaInput && !areaInput.value && suburb) {
+                    areaInput.value = suburb;
+                }
+                if (cityInput && !cityInput.value && city) {
+                    cityInput.value = city;
+                }
+            }
+        })
+        .catch(err => console.log('Reverse geocoding failed:', err));
+}
+
+// Update review section
+function updateReview() {
+    const reviewContainer = document.getElementById('reviewContent');
+    if (!reviewContainer) return;
+    
+    let serviceDetailsHtml = '';
+    const phase1Inputs = document.querySelectorAll('#dynamicServiceForm input, #dynamicServiceForm select, #dynamicServiceForm textarea');
+    phase1Inputs.forEach(input => {
+        if (input.type === 'checkbox') {
+            if (input.checked) {
+                const label = input.parentElement.innerText;
+                serviceDetailsHtml += `<div class="review-item"><span class="review-label">${label.split('(')[0]}:</span><span class="review-value">Yes</span></div>`;
+            }
+        } else if (input.type === 'radio') {
+            if (input.checked) {
+                const label = input.parentElement.innerText;
+                serviceDetailsHtml += `<div class="review-item"><span class="review-label">${label.split('(')[0]}:</span><span class="review-value">${input.value === 'yes' ? 'Yes' : 'No'}</span></div>`;
+            }
+        } else if (input.value && input.id) {
+            const label = input.previousElementSibling?.innerText || input.placeholder || input.id;
+            let displayValue = input.value;
+            if (input.tagName === 'SELECT' && input.options[input.selectedIndex]) {
+                displayValue = input.options[input.selectedIndex].text;
+            }
+            if (displayValue && !input.id.includes('Instructions') && displayValue !== '') {
+                serviceDetailsHtml += `<div class="review-item"><span class="review-label">${label.replace('*', '').trim()}:</span><span class="review-value">${displayValue}</span></div>`;
+            }
         }
+    });
+    
+    const total = updatePriceEstimate();
+    const serviceName = selectedService?.config?.name || selectedService?.name || 'Service';
+    
+    reviewContainer.innerHTML = `
+        <h4><i class="fas fa-clipboard-list"></i> ${serviceName} Details</h4>
+        ${serviceDetailsHtml || '<div class="review-item"><span class="review-label">No additional details</span><span class="review-value">-</span></div>'}
+        
+        <h4 class="mt-3"><i class="fas fa-calendar"></i> Schedule</h4>
+        <div class="review-item"><span class="review-label">Preferred Date:</span><span class="review-value">${document.getElementById('preferredDate')?.value || 'Not selected'}</span></div>
+        <div class="review-item"><span class="review-label">Preferred Time:</span><span class="review-value">${document.getElementById('preferredTime')?.options[document.getElementById('preferredTime')?.selectedIndex]?.text || 'Not selected'}</span></div>
+        
+        <h4 class="mt-3"><i class="fas fa-user"></i> Customer Details</h4>
+        <div class="review-item"><span class="review-label">Full Name:</span><span class="review-value">${document.getElementById('firstName')?.value || ''} ${document.getElementById('lastName')?.value || ''}</span></div>
+        <div class="review-item"><span class="review-label">Email:</span><span class="review-value">${document.getElementById('email')?.value || ''}</span></div>
+        <div class="review-item"><span class="review-label">Phone:</span><span class="review-value">${document.getElementById('phone')?.value || ''}</span></div>
+        
+        <h4 class="mt-3"><i class="fas fa-map-marker-alt"></i> Location</h4>
+        <div class="review-item"><span class="review-label">Address:</span><span class="review-value">${document.getElementById('streetAddress')?.value || ''}, ${document.getElementById('area')?.value || ''}, ${document.getElementById('city')?.value || ''}</span></div>
+        
+        <div class="review-item total mt-3"><span class="review-label">Estimated Total:</span><span class="review-value" style="color: var(--primary); font-weight: 800;">TZS ${total.toLocaleString()}</span></div>
+        <p class="text-muted small mt-2"><i class="fas fa-info-circle"></i> Final invoice will be sent after admin review</p>
+    `;
+}
+
+// Submit booking
+function submitBooking() {
+    if (!validateCurrentPhase()) return;
+    
+    const serviceDetails = {};
+    const phase1Inputs = document.querySelectorAll('#dynamicServiceForm input, #dynamicServiceForm select, #dynamicServiceForm textarea');
+    phase1Inputs.forEach(input => {
+        if (input.type === 'checkbox') {
+            serviceDetails[input.id] = input.checked;
+        } else if (input.type === 'radio' && input.checked) {
+            serviceDetails[input.name] = input.value;
+        } else if (input.value && input.id) {
+            serviceDetails[input.id] = input.value;
+        }
+    });
+    
+    const bookingData = {
+        bookingId: 'BK' + Date.now() + Math.floor(Math.random() * 1000),
+        serviceId: selectedService?.id || 'unknown',
+        serviceName: selectedService?.config?.name || selectedService?.name || 'Cleaning Service',
+        serviceCategory: selectedService?.config?.category || 'general',
+        serviceDetails: serviceDetails,
+        scheduleDate: document.getElementById('preferredDate')?.value || '',
+        scheduleTime: document.getElementById('preferredTime')?.value || '',
+        scheduleInstructions: document.getElementById('scheduleInstructions')?.value || '',
+        firstName: document.getElementById('firstName')?.value || '',
+        lastName: document.getElementById('lastName')?.value || '',
+        email: document.getElementById('email')?.value || '',
+        phone: document.getElementById('phone')?.value || '',
+        altPhone: document.getElementById('altPhone')?.value || '',
+        preferredCommunication: document.getElementById('prefComm')?.value || 'email',
+        streetAddress: document.getElementById('streetAddress')?.value || '',
+        area: document.getElementById('area')?.value || '',
+        city: document.getElementById('city')?.value || '',
+        region: document.getElementById('region')?.value || '',
+        landmark: document.getElementById('landmark')?.value || '',
+        buildingName: document.getElementById('buildingName')?.value || '',
+        floorNumber: document.getElementById('floorNumber')?.value || '',
+        latitude: document.getElementById('latitude')?.value || '',
+        longitude: document.getElementById('longitude')?.value || '',
+        estimatedTotal: updatePriceEstimate(),
+        paymentStatus: 'pending',
+        bookingStatus: 'pending_review',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
     };
     
-    // ========== PAYMENT METHOD SELECTION ==========
-    function initPaymentSelection() {
-        const paymentCards = document.querySelectorAll('.payment-option-card');
-        paymentCards.forEach(card => {
-            card.addEventListener('click', function() {
-                paymentCards.forEach(c => c.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedPaymentMethod = this.getAttribute('data-method');
-                selectedProvider = null;
-                
-                if (selectedPaymentMethod === 'cash') {
-                    const container = document.getElementById('paymentDetailsContainer');
-                    container.innerHTML = `
-                        <div class="payment-details-card">
-                            <h6><i class="fas fa-money-bill-wave"></i> Cash Payment</h6>
-                            <div class="alert alert-warning">
-                                <i class="fas fa-info-circle me-2"></i> 
-                                Cash payment includes an additional <strong>TZS 5,000</strong> service fee. 
-                                Total amount: <strong>TZS ${calculateTotal().toLocaleString('en-US')}</strong>
-                            </div>
-                            <p class="text-muted small">Payment will be collected by our staff on arrival. Payment will remain pending until staff validates.</p>
-                            <button type="button" id="confirmCashBtn" class="btn btn-success w-100">
-                                <i class="fas fa-check me-2"></i> Confirm Cash Booking
-                            </button>
-                        </div>
-                    `;
-                    document.getElementById('confirmCashBtn').addEventListener('click', () => processCashPayment());
-                } else {
-                    renderPaymentDetails(selectedPaymentMethod);
-                }
-                
-                refreshSummary();
-            });
-        });
-    }
+    const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+    bookings.push(bookingData);
+    localStorage.setItem('bookings', JSON.stringify(bookings));
+    localStorage.removeItem('selectedService');
     
-    // ========== NAVIGATION BUTTONS ==========
-    nextBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const nextId = this.getAttribute('data-next');
-            let currentPhaseId = null;
-            phases.forEach(phase => { if (phase.classList.contains('active')) currentPhaseId = phase.id; });
-            if (currentPhaseId && !validatePhase(currentPhaseId)) return;
-            if (nextId) showPhase(nextId);
-        });
-    });
+    const bookingIdDisplay = document.getElementById('bookingIdDisplay');
+    if (bookingIdDisplay) bookingIdDisplay.innerText = `Booking ID: ${bookingData.bookingId}`;
     
-    prevBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const prevId = this.getAttribute('data-prev');
-            if (prevId) showPhase(prevId);
-        });
-    });
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    successModal.show();
+}
+
+// Toast notification
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
     
-    // ========== LIVE INPUT LISTENERS ==========
-    const liveInputs = [cleanersInp, hoursInp, freqSelect, materialsSelect, propertySelect, streetInp, cityInp, dateInp, timeInp, fnameInp, lnameInp, emailInp, instructionsInp, phoneInp];
-    liveInputs.forEach(inp => { 
-        if (inp) { 
-            inp.addEventListener('input', refreshSummary); 
-            inp.addEventListener('change', refreshSummary); 
-        } 
-    });
+    const toast = document.createElement('div');
+    toast.className = `custom-toast toast-${type}`;
+    toast.innerHTML = `
+        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    `;
     
-    bookingForm.addEventListener('submit', (e) => e.preventDefault());
+    toastContainer.appendChild(toast);
     
-    // ========== INITIALIZATION ==========
-    // Set min date and defaults
-    if (dateInp) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInp.min = today;
-        dateInp.value = today;
-    }
-    if (timeInp) timeInp.value = '09:00';
-    if (fnameInp) fnameInp.value = '';
-    if (lnameInp) lnameInp.value = '';
-    if (emailInp) {
-        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        if (user.email) emailInp.value = user.email;
-    }
-    if (propertySelect && !propertySelect.value) propertySelect.value = 'Apartment';
-    
-    // Initialize map
-    initMap();
-    
-    refreshSummary();
-    updateProgress('phase1');
-    initPaymentSelection();
-    
-    // ========== RECEIPT MODAL BUTTONS ==========
-    document.getElementById('closeReceiptBtn')?.addEventListener('click', () => {
-        receiptModal?.hide();
-        window.location.href = 'index.html';
-    });
-    document.getElementById('moreBookingBtn')?.addEventListener('click', () => {
-        receiptModal?.hide();
-        window.location.href = 'service.html';
-        instructionsInp.value = '';
-        streetInp.value = '';
-        cityInp.value = '';
-        if (latInp) latInp.value = '';
-        if (lngInp) lngInp.value = '';
-        selectedPaymentMethod = null;
-        selectedProvider = null;
-        document.getElementById('paymentDetailsContainer').innerHTML = '';
-        document.querySelectorAll('.payment-option-card').forEach(c => c.classList.remove('selected'));
-        if (locationMarker) {
-            locationMap.removeLayer(locationMarker);
-            locationMarker = null;
+    setTimeout(() => {
+        if (toast.parentElement) toast.remove();
+    }, 5000);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    `;
+    document.body.appendChild(container);
+    return container;
+}
+
+// Add toast styles if not already present
+if (!document.querySelector('#toastStyles')) {
+    const toastStyles = document.createElement('style');
+    toastStyles.id = 'toastStyles';
+    toastStyles.textContent = `
+        .custom-toast {
+            background: var(--bg-white);
+            border-left: 4px solid;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
+            min-width: 280px;
         }
-        const mapCoordinates = document.getElementById('mapCoordinates');
-        if (mapCoordinates) mapCoordinates.style.display = 'none';
-        const mapOverlayInfo = document.getElementById('mapOverlayInfo');
-        if (mapOverlayInfo) mapOverlayInfo.innerHTML = '<i class="fas fa-map-pin"></i> Click on the map to pin your exact location';
-        showPhase('phase1');
-        refreshSummary();
-        refreshMapSize();
-    });
-    
-    document.getElementById('downloadReceiptBtn')?.addEventListener('click', () => {
-        downloadReceipt();
-    });
-    
-    document.getElementById('shareReceiptBtn')?.addEventListener('click', () => {
-        shareReceiptModal();
-    });
-    
-    localStorage.removeItem('pendingBooking');
-    console.log('✓ Enhanced booking system with interactive map, professional validation & realistic payment ready');
-})();
+        .custom-toast.toast-error { border-left-color: #ef4444; }
+        .custom-toast.toast-error i { color: #ef4444; }
+        .custom-toast i:first-child { font-size: 1.2rem; }
+        .custom-toast span { flex: 1; font-size: 0.9rem; }
+        .custom-toast button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(toastStyles);
+}

@@ -127,6 +127,105 @@ const paymentHistory = [
     { id: 'PAY-003', service: 'AC Maintenance', amount: 'TZS 285,000', date: '2026-02-15', method: 'Mastercard •••• 8888', status: 'completed', transactionId: 'TXN-20260215-G7H8I9', reference: 'CleanSpark-108', paymentDate: '2026-02-15 09:00:00', payerName: 'John Doe', payerEmail: 'john.doe@example.com' }
 ];
 
+// ========== INVOICES DATA ==========
+const invoicesData = [
+    { 
+        id: 'INV-2026-001', 
+        service: 'Premium Home Deep Cleaning', 
+        invoiceDate: '2026-03-25', 
+        dueDate: '2026-04-08',
+        status: 'paid',
+        totalAmount: 'TZS 212,000',
+        items: [
+            { description: 'Deep cleaning service (entire home)', quantity: 1, rate: 'TZS 150,000', amount: 'TZS 150,000' },
+            { description: 'Kitchen deep sanitization', quantity: 1, rate: 'TZS 35,000', amount: 'TZS 35,000' },
+            { description: 'Bathroom deep cleaning', quantity: 2, rate: 'TZS 10,000', amount: 'TZS 20,000' },
+            { description: 'Window cleaning', quantity: 8, rate: 'TZS 2,000', amount: 'TZS 16,000' }
+        ],
+        cleaningCharges: 'TZS 221,000',
+        equipmentCharges: 'TZS 0',
+        taxes: 'TZS 0',
+        notes: 'Service completed on 2026-03-28. Thank you for choosing CleanSpark!',
+        bookingId: 101
+    },
+    { 
+        id: 'INV-2026-002', 
+        service: 'Office Carpet Steam Cleaning', 
+        invoiceDate: '2026-03-10', 
+        dueDate: '2026-03-25',
+        status: 'paid',
+        totalAmount: 'TZS 499,000',
+        items: [
+            { description: 'Carpet steam cleaning (office area)', quantity: 1, rate: 'TZS 350,000', amount: 'TZS 350,000' },
+            { description: 'Stain removal treatment', quantity: 5, rate: 'TZS 15,000', amount: 'TZS 75,000' },
+            { description: 'Deodorizing and sanitizing', quantity: 1, rate: 'TZS 50,000', amount: 'TZS 50,000' },
+            { description: 'Equipment rental', quantity: 1, rate: 'TZS 24,000', amount: 'TZS 24,000' }
+        ],
+        cleaningCharges: 'TZS 475,000',
+        equipmentCharges: 'TZS 24,000',
+        taxes: 'TZS 0',
+        notes: 'Service completed on 2026-03-18. 24-hour satisfaction guarantee applies.',
+        bookingId: 103
+    },
+    { 
+        id: 'INV-2026-003', 
+        service: 'Full Villa Cleaning (4 Rooms)', 
+        invoiceDate: '2026-03-15', 
+        dueDate: '2026-03-30',
+        status: 'unpaid',
+        totalAmount: 'TZS 808,000',
+        items: [
+            { description: 'Villa deep cleaning (4 bedrooms)', quantity: 1, rate: 'TZS 600,000', amount: 'TZS 600,000' },
+            { description: 'Living room & common areas', quantity: 1, rate: 'TZS 80,000', amount: 'TZS 80,000' },
+            { description: 'Kitchen sanitization', quantity: 1, rate: 'TZS 45,000', amount: 'TZS 45,000' },
+            { description: 'Bathroom cleaning', quantity: 3, rate: 'TZS 15,000', amount: 'TZS 45,000' },
+            { description: 'Window cleaning (exterior)', quantity: 12, rate: 'TZS 3,000', amount: 'TZS 36,000' }
+        ],
+        cleaningCharges: 'TZS 806,000',
+        equipmentCharges: 'TZS 0',
+        taxes: 'TZS 2,000',
+        notes: 'Tax includes service levy. Payment due upon receipt.',
+        bookingId: 106
+    },
+    { 
+        id: 'INV-2026-004', 
+        service: 'AC Maintenance & Filter Replacement', 
+        invoiceDate: '2026-04-01', 
+        dueDate: '2026-04-15',
+        status: 'pending',
+        totalAmount: 'TZS 285,000',
+        items: [
+            { description: 'AC unit inspection & cleaning', quantity: 3, rate: 'TZS 45,000', amount: 'TZS 135,000' },
+            { description: 'Filter replacement', quantity: 3, rate: 'TZS 35,000', amount: 'TZS 105,000' },
+            { description: 'Refrigerant top-up', quantity: 1, rate: 'TZS 45,000', amount: 'TZS 45,000' }
+        ],
+        cleaningCharges: 'TZS 285,000',
+        equipmentCharges: 'TZS 0',
+        taxes: 'TZS 0',
+        notes: 'Service scheduled for 2026-04-12. Payment due upon completion.',
+        bookingId: 102
+    },
+    { 
+        id: 'INV-2026-005', 
+        service: 'Upholstery & Mattress Deep Clean', 
+        invoiceDate: '2026-03-18', 
+        dueDate: '2026-04-02',
+        status: 'partial',
+        totalAmount: 'TZS 233,000',
+        items: [
+            { description: 'Sofa deep cleaning (3-seater)', quantity: 1, rate: 'TZS 80,000', amount: 'TZS 80,000' },
+            { description: 'Mattress deep cleaning (king)', quantity: 1, rate: 'TZS 70,000', amount: 'TZS 70,000' },
+            { description: 'Mattress deep cleaning (queen)', quantity: 1, rate: 'TZS 60,000', amount: 'TZS 60,000' },
+            { description: 'Stain removal treatment', quantity: 2, rate: 'TZS 11,500', amount: 'TZS 23,000' }
+        ],
+        cleaningCharges: 'TZS 233,000',
+        equipmentCharges: 'TZS 0',
+        taxes: 'TZS 0',
+        notes: 'Partial payment received: TZS 100,000. Remaining balance: TZS 133,000.',
+        bookingId: 107
+    }
+];
+
 const notifications = [
     { id: 1, icon: 'bi-calendar-check', bgColor: '#e8f0fe', iconColor: '#4361ee', title: 'Booking Confirmed', message: 'Your Home Deep Cleaning is scheduled for Apr 5.', time: '2 hours ago' },
     { id: 2, icon: 'bi-star-half', bgColor: '#fff3cd', iconColor: '#f59e0b', title: 'Rate Your Service', message: 'How was your Kitchen Sanitization? Leave a review.', time: '1 day ago' },
@@ -333,6 +432,25 @@ function getStatusBadge(status) {
     };
 }
 
+function getInvoiceStatusBadge(status) {
+    const badges = {
+        paid: 'invoice-status-paid',
+        unpaid: 'invoice-status-unpaid',
+        pending: 'invoice-status-pending',
+        partial: 'invoice-status-partial'
+    };
+    const texts = {
+        paid: 'Paid',
+        unpaid: 'Unpaid',
+        pending: 'Pending',
+        partial: 'Partially Paid'
+    };
+    return {
+        className: badges[status] || 'invoice-status-pending',
+        text: texts[status] || 'Pending'
+    };
+}
+
 // ----------------------------- SHARE FUNCTIONALITY -----------------------------
 
 function openShareModal(quoteData) {
@@ -399,7 +517,6 @@ function openShareModal(quoteData) {
     const shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
     shareModal.show();
     
-    // Share button handlers
     document.querySelectorAll('.share-option-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const platform = this.dataset.share;
@@ -407,7 +524,6 @@ function openShareModal(quoteData) {
         });
     });
     
-    // Copy link button
     document.getElementById('copyLinkBtn')?.addEventListener('click', function() {
         const linkInput = document.getElementById('shareLinkInput');
         if (linkInput) {
@@ -520,7 +636,6 @@ function openApproveQuoteModal(quoteData) {
             quoteData.status = 'approved';
             approveModal.hide();
             
-            // Show success overlay
             const overlay = document.createElement('div');
             overlay.className = 'payment-success-overlay';
             overlay.innerHTML = `
@@ -654,6 +769,478 @@ function openPaymentDetailsModal(payment) {
         printWindow.document.close();
         setTimeout(() => printWindow.print(), 500);
         showNotification('Receipt sent to printer!', 'success');
+    });
+}
+
+// ----------------------------- INVOICE FUNCTIONALITY -----------------------------
+
+function openInvoiceDetailModal(invoice) {
+    const statusBadge = getInvoiceStatusBadge(invoice.status);
+    
+    const itemsHtml = invoice.items.map(item => `
+        <tr>
+            <td>${escapeHtml(item.description)}</td>
+            <td class="text-center">${item.quantity}</td>
+            <td class="text-end">${item.rate}</td>
+            <td class="text-end fw-semibold">${item.amount}</td>
+        </tr>
+    `).join('');
+    
+    const bodyHtml = `
+        <div class="invoice-document" id="invoiceDocumentContent">
+            <div class="invoice-doc-header">
+                <div class="invoice-doc-company">
+                    <h3>✨ CleanSpark</h3>
+                    <p>Cleaning Service Management System</p>
+                    <p>Stone Town, Zanzibar</p>
+                    <p>info@cleanspark.co.tz | +255 777 123 456</p>
+                </div>
+                <div class="invoice-doc-number">
+                    <div class="doc-label">Invoice Number</div>
+                    <div class="doc-value">#${escapeHtml(invoice.id)}</div>
+                    <div style="margin-top: 8px;">
+                        <span class="invoice-status ${statusBadge.className}">${statusBadge.text}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="invoice-info-grid">
+                <div class="invoice-info-box">
+                    <h5><i class="bi bi-person-circle me-2"></i>Bill To:</h5>
+                    <p><strong>John Doe</strong></p>
+                    <p>john.doe@example.com</p>
+                    <p>+255 777 123 456</p>
+                    <p>Stone Town, Zanzibar</p>
+                </div>
+                <div class="invoice-info-box">
+                    <h5><i class="bi bi-receipt me-2"></i>Invoice Details:</h5>
+                    <p><strong>Invoice Date:</strong> ${invoice.invoiceDate}</p>
+                    <p><strong>Due Date:</strong> ${invoice.dueDate}</p>
+                    <p><strong>Service:</strong> ${escapeHtml(invoice.service)}</p>
+                </div>
+            </div>
+            
+            <div class="invoice-doc-section">
+                <h5><i class="bi bi-list-check me-2"></i>Service Breakdown</h5>
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Rate</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHtml}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="invoice-total-section">
+                <div class="invoice-total-row">
+                    <span class="invoice-total-label">Cleaning Charges:</span>
+                    <span class="invoice-total-value">${invoice.cleaningCharges}</span>
+                </div>
+                <div class="invoice-total-row">
+                    <span class="invoice-total-label">Equipment Charges:</span>
+                    <span class="invoice-total-value">${invoice.equipmentCharges}</span>
+                </div>
+                <div class="invoice-total-row">
+                    <span class="invoice-total-label">Taxes & Fees:</span>
+                    <span class="invoice-total-value">${invoice.taxes}</span>
+                </div>
+                <div class="invoice-total-row invoice-grand-total">
+                    <span class="invoice-total-label">Total Amount:</span>
+                    <span class="invoice-total-value">${invoice.totalAmount}</span>
+                </div>
+            </div>
+            
+            <div class="invoice-doc-footer">
+                <p><strong>Notes:</strong> ${escapeHtml(invoice.notes)}</p>
+                <p class="mt-3"><strong>Payment Terms:</strong> Payment is due by the due date. Late payments may incur a 5% monthly fee. For inquiries, please contact billing@cleanspark.co.tz</p>
+                <p class="mt-3 text-center text-muted">Thank you for choosing CleanSpark - Zanzibar's Premier Cleaning Service</p>
+            </div>
+        </div>
+    `;
+    
+    const labelEl = document.getElementById('invoiceModalLabel');
+    if (labelEl) labelEl.innerHTML = `<i class="bi bi-receipt me-2"></i>Invoice #${invoice.id}`;
+    
+    const bodyEl = document.getElementById('invoiceModalBody');
+    if (bodyEl) bodyEl.innerHTML = bodyHtml;
+    
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'invoice-actions-bar';
+    actionsDiv.innerHTML = `
+        <button class="btn-invoice-action-large btn-invoice-download-large" id="downloadInvoiceBtn">
+            <i class="bi bi-download"></i> Download Invoice
+        </button>
+        <button class="btn-invoice-action-large btn-invoice-share-large" id="shareInvoiceBtn">
+            <i class="bi bi-share"></i> Share Invoice
+        </button>
+        ${invoice.status !== 'paid' ? `
+            <button class="btn-invoice-action-large" id="payInvoiceBtn" style="background: #dc3545; color: white;">
+                <i class="bi bi-credit-card"></i> Pay Now
+            </button>
+        ` : ''}
+    `;
+    bodyEl.appendChild(actionsDiv);
+    
+    const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceDetailModal'));
+    invoiceModal.show();
+    
+    document.getElementById('downloadInvoiceBtn')?.addEventListener('click', function() {
+        downloadInvoicePDF(invoice);
+    });
+    
+    document.getElementById('shareInvoiceBtn')?.addEventListener('click', function() {
+        invoiceModal.hide();
+        const shareUrl = `https://cleanspark.co.tz/invoices/${invoice.id}`;
+        const shareText = `Invoice #${invoice.id} from CleanSpark: ${invoice.service} - ${invoice.totalAmount}`;
+        
+        const shareBodyHtml = `
+            <div class="share-preview-card">
+                <div class="share-quote-id">Invoice #${invoice.id}</div>
+                <div class="share-quote-service">${escapeHtml(invoice.service)}</div>
+                <div class="share-quote-total">${invoice.totalAmount}</div>
+                <div class="share-quote-id" style="font-size:0.7rem;">Status: ${statusBadge.text}</div>
+            </div>
+            <h6 class="fw-bold mb-3 text-center">Share via</h6>
+            <div class="share-options-grid">
+                <button class="share-option-btn share-whatsapp" data-share="whatsapp">
+                    <div class="share-icon-circle"><i class="fab fa-whatsapp"></i></div>
+                    <span>WhatsApp</span>
+                </button>
+                <button class="share-option-btn share-email" data-share="email">
+                    <div class="share-icon-circle"><i class="fas fa-envelope"></i></div>
+                    <span>Email</span>
+                </button>
+                <button class="share-option-btn share-sms" data-share="sms">
+                    <div class="share-icon-circle"><i class="fas fa-sms"></i></div>
+                    <span>SMS</span>
+                </button>
+                <button class="share-option-btn share-copy" data-share="copy">
+                    <div class="share-icon-circle"><i class="fas fa-link"></i></div>
+                    <span>Copy Link</span>
+                </button>
+            </div>
+            <div class="share-link-section">
+                <input type="text" class="share-link-input" value="${shareUrl}" readonly id="shareLinkInputInv">
+                <button class="share-link-copy-btn" id="copyLinkBtnInv"><i class="bi bi-clipboard me-1"></i> Copy</button>
+            </div>
+        `;
+        
+        openGlobalModal('<i class="bi bi-share-fill me-2"></i>Share Invoice', shareBodyHtml);
+        
+        document.querySelectorAll('.share-option-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const platform = this.dataset.share;
+                handleInvoiceShare(platform, invoice, shareUrl, shareText);
+            });
+        });
+        
+        document.getElementById('copyLinkBtnInv')?.addEventListener('click', function() {
+            const linkInput = document.getElementById('shareLinkInputInv');
+            if (linkInput) {
+                linkInput.select();
+                document.execCommand('copy');
+                showNotification('Link copied to clipboard!', 'success');
+            }
+        });
+    });
+    
+    document.getElementById('payInvoiceBtn')?.addEventListener('click', function() {
+        invoiceModal.hide();
+        const amount = invoice.totalAmount;
+        showPaymentMethods(amount);
+    });
+}
+
+function handleInvoiceShare(platform, invoice, shareUrl, shareText) {
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(shareText);
+    
+    switch(platform) {
+        case 'whatsapp':
+            window.open(`https://wa.me/?text=${encodedText}%20${encodedUrl}`, '_blank');
+            break;
+        case 'email':
+            window.location.href = `mailto:?subject=Invoice%20%23${invoice.id}%20-%20CleanSpark&body=${encodedText}%0A%0AView%20Invoice:%20${encodedUrl}`;
+            break;
+        case 'sms':
+            window.location.href = `sms:?body=${encodedText}%20${encodedUrl}`;
+            break;
+        case 'copy':
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showNotification('Link copied to clipboard!', 'success');
+            });
+            break;
+    }
+}
+
+function downloadInvoicePDF(invoice) {
+    const statusBadge = getInvoiceStatusBadge(invoice.status);
+    
+    const itemsHtml = invoice.items.map(item => `
+        <tr>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: left;">${escapeHtml(item.description)}</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">${item.quantity}</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">${item.rate}</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600;">${item.amount}</td>
+        </tr>
+    `).join('');
+    
+    const printContent = `
+        <div style="font-family: 'Inter', 'Segoe UI', sans-serif; max-width: 900px; margin: 0 auto; padding: 40px; background: white;">
+            <div style="text-align: center; margin-bottom: 30px; padding-bottom: 25px; border-bottom: 3px solid #4361ee;">
+                <div style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; margin-bottom: 15px;">
+                    <span style="font-size: 2rem; font-weight: 800; color: white; letter-spacing: 2px;">✨ CleanSpark</span>
+                </div>
+                <p style="color: #6c757d; margin: 5px 0; font-size: 0.9rem;">Cleaning Service Management System</p>
+                <p style="color: #6c757d; font-size: 0.8rem;">Stone Town, Zanzibar | info@cleanspark.co.tz | +255 777 123 456</p>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                <div>
+                    <h4 style="color: #4361ee; margin: 0 0 5px 0;">INVOICE</h4>
+                    <p style="margin: 0; color: #6c757d;">#${invoice.id}</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 0;"><strong>Status:</strong> <span style="color: ${invoice.status === 'paid' ? '#059669' : invoice.status === 'unpaid' ? '#dc3545' : '#e68a2e'};">${statusBadge.text}</span></p>
+                    <p style="margin: 0;"><strong>Date:</strong> ${invoice.invoiceDate}</p>
+                    <p style="margin: 0;"><strong>Due Date:</strong> ${invoice.dueDate}</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 40px; margin-bottom: 30px; flex-wrap: wrap;">
+                <div style="flex: 1;">
+                    <h5 style="color: #4361ee; margin: 0 0 10px 0;">Bill To:</h5>
+                    <p style="margin: 3px 0;"><strong>John Doe</strong></p>
+                    <p style="margin: 3px 0;">john.doe@example.com</p>
+                    <p style="margin: 3px 0;">+255 777 123 456</p>
+                    <p style="margin: 3px 0;">Stone Town, Zanzibar</p>
+                </div>
+                <div style="flex: 1;">
+                    <h5 style="color: #4361ee; margin: 0 0 10px 0;">Service Details:</h5>
+                    <p style="margin: 3px 0;"><strong>Service:</strong> ${invoice.service}</p>
+                    <p style="margin: 3px 0;"><strong>Invoice Date:</strong> ${invoice.invoiceDate}</p>
+                </div>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 25px 0;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <th style="padding: 12px 16px; text-align: left;">Description</th>
+                        <th style="padding: 12px 16px; text-align: center;">Qty</th>
+                        <th style="padding: 12px 16px; text-align: right;">Rate</th>
+                        <th style="padding: 12px 16px; text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                </tbody>
+            </table>
+            
+            <div style="text-align: right; margin-top: 20px;">
+                <div style="display: flex; justify-content: flex-end; gap: 30px; margin-bottom: 8px;">
+                    <span style="color: #6c757d;">Cleaning Charges:</span>
+                    <span style="min-width: 120px; text-align: right;">${invoice.cleaningCharges}</span>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 30px; margin-bottom: 8px;">
+                    <span style="color: #6c757d;">Equipment Charges:</span>
+                    <span style="min-width: 120px; text-align: right;">${invoice.equipmentCharges}</span>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 30px; margin-bottom: 8px;">
+                    <span style="color: #6c757d;">Taxes & Fees:</span>
+                    <span style="min-width: 120px; text-align: right;">${invoice.taxes}</span>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 30px; margin-top: 10px; padding-top: 10px; border-top: 2px solid #e2e8f0;">
+                    <span style="font-size: 1.2rem; font-weight: 800;">Total Amount:</span>
+                    <span style="min-width: 120px; text-align: right; font-size: 1.2rem; font-weight: 800; color: #4361ee;">${invoice.totalAmount}</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                <p style="font-size: 0.85rem; color: #6c757d;"><strong>Notes:</strong> ${escapeHtml(invoice.notes)}</p>
+                <p style="font-size: 0.85rem; color: #6c757d;"><strong>Payment Terms:</strong> Payment is due by the due date. Late payments may incur a 5% monthly fee.</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                <p style="color: #6c757d; font-size: 0.9rem;">Thank you for choosing CleanSpark - Zanzibar's Premier Cleaning Service</p>
+                <p style="color: #94a3b8; font-size: 0.75rem;">&copy; 2026 CleanSpark. All rights reserved. | www.cleanspark.co.tz</p>
+            </div>
+        </div>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Invoice ${invoice.id} - CleanSpark</title>
+                <style>
+                    @media print {
+                        body { margin: 0; padding: 20px; }
+                        @page { margin: 10mm; }
+                    }
+                    body { margin: 0; padding: 20px; font-family: 'Inter', 'Segoe UI', sans-serif; }
+                </style>
+            </head>
+            <body>${printContent}</body>
+        </html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 500);
+    showNotification('Invoice sent to printer!', 'success');
+}
+
+function loadInvoices() {
+    const invoiceListEl = document.getElementById('invoiceList');
+    if (!invoiceListEl) return;
+    
+    if (invoicesData.length === 0) {
+        invoiceListEl.innerHTML = `
+            <div class="empty-state">
+                <i class="bi bi-receipt"></i>
+                <h5 class="fw-semibold">No Invoices Found</h5>
+                <p class="text-muted">You don't have any invoices yet.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="booking-grid">';
+    invoicesData.forEach(invoice => {
+        const statusBadge = getInvoiceStatusBadge(invoice.status);
+        html += `
+            <div class="invoice-card" data-invoice-id="${invoice.id}">
+                <div class="invoice-card-header">
+                    <div>
+                        <span class="invoice-number"><i class="bi bi-receipt me-1"></i> #${escapeHtml(invoice.id)}</span>
+                    </div>
+                    <span class="invoice-status ${statusBadge.className}">${statusBadge.text}</span>
+                </div>
+                <div class="invoice-body">
+                    <div class="invoice-info">
+                        <p><i class="bi bi-briefcase"></i> ${escapeHtml(invoice.service)}</p>
+                        <p><i class="bi bi-calendar3"></i> ${invoice.invoiceDate}</p>
+                        <p><i class="bi bi-clock-history"></i> Due: ${invoice.dueDate}</p>
+                    </div>
+                    <div class="invoice-amount">
+                        <span class="total">${invoice.totalAmount}</span>
+                    </div>
+                </div>
+                <div class="invoice-footer">
+                    <button class="btn-invoice-action btn-invoice-download" data-invoice-id="${invoice.id}" data-action="download">
+                        <i class="bi bi-download"></i> Download
+                    </button>
+                    <button class="btn-invoice-action btn-invoice-share" data-invoice-id="${invoice.id}" data-action="share">
+                        <i class="bi bi-share"></i> Share
+                    </button>
+                    ${invoice.status !== 'paid' ? `
+                        <button class="btn-invoice-action" data-invoice-id="${invoice.id}" data-action="pay" style="color: #dc3545;">
+                            <i class="bi bi-credit-card"></i> Pay Now
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    invoiceListEl.innerHTML = html;
+    
+    // Add click handlers for invoice cards
+    document.querySelectorAll('.invoice-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-invoice-action')) return;
+            const invoiceId = this.dataset.invoiceId;
+            const invoice = invoicesData.find(inv => inv.id === invoiceId);
+            if (invoice) openInvoiceDetailModal(invoice);
+        });
+    });
+    
+    // Add button handlers
+    document.querySelectorAll('.btn-invoice-download').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const invoiceId = this.dataset.invoiceId;
+            const invoice = invoicesData.find(inv => inv.id === invoiceId);
+            if (invoice) downloadInvoicePDF(invoice);
+        });
+    });
+    
+    document.querySelectorAll('.btn-invoice-share').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const invoiceId = this.dataset.invoiceId;
+            const invoice = invoicesData.find(inv => inv.id === invoiceId);
+            if (invoice) {
+                const shareUrl = `https://cleanspark.co.tz/invoices/${invoice.id}`;
+                const shareText = `Invoice #${invoice.id} from CleanSpark: ${invoice.service} - ${invoice.totalAmount}`;
+                const statusBadge = getInvoiceStatusBadge(invoice.status);
+                
+                const shareBodyHtml = `
+                    <div class="share-preview-card">
+                        <div class="share-quote-id">Invoice #${invoice.id}</div>
+                        <div class="share-quote-service">${escapeHtml(invoice.service)}</div>
+                        <div class="share-quote-total">${invoice.totalAmount}</div>
+                        <div class="share-quote-id" style="font-size:0.7rem;">Status: ${statusBadge.text}</div>
+                    </div>
+                    <h6 class="fw-bold mb-3 text-center">Share via</h6>
+                    <div class="share-options-grid">
+                        <button class="share-option-btn share-whatsapp" data-share="whatsapp">
+                            <div class="share-icon-circle"><i class="fab fa-whatsapp"></i></div>
+                            <span>WhatsApp</span>
+                        </button>
+                        <button class="share-option-btn share-email" data-share="email">
+                            <div class="share-icon-circle"><i class="fas fa-envelope"></i></div>
+                            <span>Email</span>
+                        </button>
+                        <button class="share-option-btn share-sms" data-share="sms">
+                            <div class="share-icon-circle"><i class="fas fa-sms"></i></div>
+                            <span>SMS</span>
+                        </button>
+                        <button class="share-option-btn share-copy" data-share="copy">
+                            <div class="share-icon-circle"><i class="fas fa-link"></i></div>
+                            <span>Copy Link</span>
+                        </button>
+                    </div>
+                    <div class="share-link-section">
+                        <input type="text" class="share-link-input" value="${shareUrl}" readonly id="shareLinkInputInv">
+                        <button class="share-link-copy-btn" id="copyLinkBtnInv"><i class="bi bi-clipboard me-1"></i> Copy</button>
+                    </div>
+                `;
+                
+                openGlobalModal('<i class="bi bi-share-fill me-2"></i>Share Invoice', shareBodyHtml);
+                
+                document.querySelectorAll('.share-option-btn').forEach(shareBtn => {
+                    shareBtn.addEventListener('click', function() {
+                        const platform = this.dataset.share;
+                        handleInvoiceShare(platform, invoice, shareUrl, shareText);
+                    });
+                });
+                
+                document.getElementById('copyLinkBtnInv')?.addEventListener('click', function() {
+                    const linkInput = document.getElementById('shareLinkInputInv');
+                    if (linkInput) {
+                        linkInput.select();
+                        document.execCommand('copy');
+                        showNotification('Link copied to clipboard!', 'success');
+                    }
+                });
+            }
+        });
+    });
+    
+    document.querySelectorAll('[data-action="pay"]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const invoiceId = this.dataset.invoiceId;
+            const invoice = invoicesData.find(inv => inv.id === invoiceId);
+            if (invoice) {
+                showPaymentMethods(invoice.totalAmount);
+            }
+        });
     });
 }
 
@@ -1228,28 +1815,25 @@ function openQuoteViewer(quoteData) {
     quoteModal.show();
 
     const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'quote-actions-bar';
     actionsDiv.innerHTML = `
-        <div class="quote-actions-bar">
-            <button class="btn-quote-action btn-quote-download" id="downloadQuoteBtn">
-                <i class="bi bi-download"></i> Download Quote
-            </button>
-            <button class="btn-quote-action btn-quote-share" id="shareQuoteBtn">
-                <i class="bi bi-share"></i> Share Quote
-            </button>
-            ${quoteData.status === 'pending' ? `
-            <button class="btn-quote-action btn-quote-approve" id="approveQuoteBtn">
-                <i class="bi bi-check-circle"></i> Approve Quote
-            </button>
-            ` : ''}
-        </div>
+        <button class="btn-quote-action btn-quote-download" id="downloadQuoteBtn">
+            <i class="bi bi-download"></i> Download Quote
+        </button>
+        <button class="btn-quote-action btn-quote-share" id="shareQuoteBtn">
+            <i class="bi bi-share"></i> Share Quote
+        </button>
+        ${quoteData.status === 'pending' ? `
+        <button class="btn-quote-action btn-quote-approve" id="approveQuoteBtn">
+            <i class="bi bi-check-circle"></i> Approve Quote
+        </button>
+        ` : ''}
     `;
     bodyEl.appendChild(actionsDiv);
 
-    // Download functionality with professional layout
     document.getElementById('downloadQuoteBtn')?.addEventListener('click', function() {
         const printContent = `
             <div style="font-family: 'Inter', 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; background: white;">
-                <!-- Logo Header -->
                 <div style="text-align: center; margin-bottom: 30px; padding-bottom: 25px; border-bottom: 3px solid #4361ee;">
                     <div style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; margin-bottom: 15px;">
                         <span style="font-size: 2rem; font-weight: 800; color: white; letter-spacing: 2px;">✨ CleanSpark</span>
@@ -1257,14 +1841,10 @@ function openQuoteViewer(quoteData) {
                     <p style="color: #6c757d; margin: 5px 0; font-size: 0.9rem;">Cleaning Service Management System</p>
                     <p style="color: #6c757d; font-size: 0.8rem;">Stone Town, Zanzibar | info@cleanspark.co.tz | +255 777 123 456</p>
                 </div>
-                
-                <!-- Quote Title -->
                 <div style="text-align: center; margin: 25px 0;">
                     <h2 style="color: #1e1e2f; font-weight: 800; margin: 0;">PROFESSIONAL QUOTE</h2>
                     <p style="color: #4361ee; font-weight: 600; font-size: 1.1rem; margin-top: 5px;">Quote #${escapeHtml(quoteData.id)}</p>
                 </div>
-                
-                <!-- Status & Info -->
                 <div style="display: flex; justify-content: space-between; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                     <div style="flex: 1; min-width: 200px; background: #f8fafc; border-radius: 12px; padding: 20px;">
                         <h4 style="color: #4361ee; font-weight: 700; margin: 0 0 12px 0; font-size: 1rem;">Client Information</h4>
@@ -1279,15 +1859,13 @@ function openQuoteViewer(quoteData) {
                         <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Status:</strong> ${quoteData.status.toUpperCase()}</p>
                     </div>
                 </div>
-                
-                <!-- Items Table -->
                 <table style="width: 100%; border-collapse: collapse; margin: 25px 0;">
                     <thead>
                         <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                            <th style="padding: 12px 16px; text-align: left; font-size: 0.85rem; font-weight: 600;">Description</th>
-                            <th style="padding: 12px 16px; text-align: center; font-size: 0.85rem; font-weight: 600;">Qty</th>
-                            <th style="padding: 12px 16px; text-align: right; font-size: 0.85rem; font-weight: 600;">Rate</th>
-                            <th style="padding: 12px 16px; text-align: right; font-size: 0.85rem; font-weight: 600;">Amount</th>
+                            <th style="padding: 12px 16px; text-align: left;">Description</th>
+                            <th style="padding: 12px 16px; text-align: center;">Qty</th>
+                            <th style="padding: 12px 16px; text-align: right;">Rate</th>
+                            <th style="padding: 12px 16px; text-align: right;">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1301,19 +1879,13 @@ function openQuoteViewer(quoteData) {
                         `).join('')}
                     </tbody>
                 </table>
-                
-                <!-- Total -->
                 <div style="text-align: right; margin: 20px 0; padding: 15px 20px; background: #f0f4ff; border-radius: 10px;">
                     <span style="font-size: 1.3rem; font-weight: 800; color: #4361ee;">Total: ${quoteData.total}</span>
                 </div>
-                
-                <!-- Notes & Terms -->
                 <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
                     <p style="font-size: 0.85rem; color: #6c757d;"><strong>Notes:</strong> ${escapeHtml(quoteData.notes)}</p>
                     <p style="font-size: 0.85rem; color: #6c757d;"><strong>Terms:</strong> This quote is valid until the date specified above. Payment is due upon service completion.</p>
                 </div>
-                
-                <!-- Footer -->
                 <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
                     <p style="color: #6c757d; font-size: 0.9rem;">Thank you for choosing CleanSpark - Zanzibar's Premier Cleaning Service</p>
                     <p style="color: #94a3b8; font-size: 0.75rem;">&copy; 2026 CleanSpark. All rights reserved. | www.cleanspark.co.tz</p>
@@ -1342,13 +1914,11 @@ function openQuoteViewer(quoteData) {
         showNotification('Quote sent to printer!', 'success');
     });
 
-    // Share functionality
     document.getElementById('shareQuoteBtn')?.addEventListener('click', function() {
         quoteModal.hide();
         openShareModal(quoteData);
     });
 
-    // Approve functionality
     document.getElementById('approveQuoteBtn')?.addEventListener('click', function() {
         quoteModal.hide();
         openApproveQuoteModal(quoteData);
@@ -1675,13 +2245,18 @@ const panelRenderers = {
         <div id="bookingList" class="booking-box"></div>
     `,
 
-
     payments: () => `
         <div class="section-header"><h1 class="page-title"><i class="bi bi-credit-card-2-front text-primary me-2"></i>Payments</h1></div>
         <h5 class="fw-bold mb-3 ms-2" style="color: var(--dark-color);"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Outstanding Balances</h5>
         <div class="booking-grid" id="outstandingList"></div>
         <h5 class="fw-bold mb-3 mt-4 ms-2" style="color: var(--dark-color);"><i class="bi bi-clock-history text-success me-2"></i>Payment History</h5>
         <div class="booking-grid" id="paymentHistoryList"></div>
+    `,
+
+    invoices: () => `
+        <div class="section-header"><h1 class="page-title"><i class="bi bi-receipt text-primary me-2"></i>My Invoices</h1></div>
+        <p class="text-muted mb-4 ms-2">View and manage all your invoices from CleanSpark services.</p>
+        <div id="invoiceList" class="booking-box"></div>
     `,
 
     support: () => `
@@ -1800,16 +2375,6 @@ function renderPanel(menuType) {
                 });
                 break;
                 
-            case 'quotes':
-                document.querySelectorAll('.quote-view-card').forEach(card => {
-                    card.addEventListener('click', function() {
-                        const quoteId = this.dataset.quoteId;
-                        const quote = quotesData.find(q => q.id === quoteId);
-                        if (quote) openQuoteViewer(quote);
-                    });
-                });
-                break;
-                
             case 'payments':
                 loadOutstandingPayments();
                 const historyList = document.getElementById('paymentHistoryList');
@@ -1826,7 +2391,6 @@ function renderPanel(menuType) {
                         </div>
                     `).join('');
                     
-                    // Add click handlers for payment history
                     historyList.querySelectorAll('.payment-card').forEach(card => {
                         card.addEventListener('click', function() {
                             const paymentId = this.dataset.paymentId;
@@ -1835,6 +2399,10 @@ function renderPanel(menuType) {
                         });
                     });
                 }
+                break;
+                
+            case 'invoices':
+                loadInvoices();
                 break;
                 
             case 'support':
@@ -2161,5 +2729,6 @@ window.openQuoteViewer = openQuoteViewer;
 window.openShareModal = openShareModal;
 window.openApproveQuoteModal = openApproveQuoteModal;
 window.openPaymentDetailsModal = openPaymentDetailsModal;
+window.openInvoiceDetailModal = openInvoiceDetailModal;
 
 document.addEventListener('DOMContentLoaded', init);

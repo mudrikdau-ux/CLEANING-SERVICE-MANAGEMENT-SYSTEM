@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Services - CleanSpark | Professional Cleaning</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>CleanSpark - Our Professional Cleaning Services | Zanzibar</title>
     
     <script>
         (function() {
@@ -14,9 +14,68 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/service.css">
+    <style>
+        .service-category-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            z-index: 2;
+            letter-spacing: 0.5px;
+        }
+        .service-card {
+            position: relative;
+        }
+        .popular-badge {
+            background: #f59e0b;
+        }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .loading-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
+
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+</div>
 
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
@@ -40,24 +99,25 @@
     </a>
 
     <div class="search-container">
-        <select class="location-select" id="locationFilter" aria-label="Filter by location">
-            <option value="all">All Locations</option>
-            <option value="Unguja">Unguja Island</option>
-            <option value="Pemba">Pemba Island</option>
+        <select class="location-select" aria-label="Select location">
+            <option value="unguja">Unguja</option>
+            <option value="pemba">Pemba</option>
         </select>
-        <input type="search" placeholder="Search services..." class="search-input" id="serviceSearch">
-        <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> <span>Search</span></button>
+        <input type="search" placeholder="Search services..." class="search-input" aria-label="Search services" id="searchInput">
+        <button class="search-btn" id="searchBtn" aria-label="Search"><i class="fas fa-search"></i> <span class="btn-text">Search</span></button>
     </div>
 
     <div class="top-bar-actions">
-        <button class="theme-toggle-btn" id="themeToggle">
+        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light mode">
             <i class="fas fa-moon"></i>
             <i class="fas fa-sun"></i>
         </button>
         <a href="login.html" class="btn btn-primary login-btn" id="headerLoginBtn">
-            <i class="fas fa-sign-in-alt"></i> <span>Login</span>
+            <i class="fas fa-sign-in-alt"></i> <span class="btn-text">Login</span>
         </a>
-        <button class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
+        <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+            <i class="fas fa-bars"></i>
+        </button>
     </div>
 </header>
 
@@ -65,79 +125,523 @@
     <div class="container services-section">
         <div class="section-header text-center">
             <h2><i class="fas fa-broom"></i> Our Professional Cleaning Services</h2>
-            <p class="lead">Choose from our wide range of premium cleaning services</p>
+            <p class="lead">Choose from our wide range of cleaning services tailored to your needs</p>
         </div>
 
         <div class="row g-4" id="servicesContainer">
-            <!-- Services will be loaded dynamically from API -->
-            <div class="col-12 text-center py-5" id="loadingIndicator">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+            <!-- Service 1: Home Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="home_cleaning" data-service-name="Home Cleaning" data-service-category="residential" data-service-price="50000">
+                    <div class="service-category-badge"><i class="fas fa-home"></i> Residential</div>
+                    <div class="card-img-wrap">
+                        <img src="image/home.jpeg" alt="Home Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🏠 Home Cleaning</div>
+                        <div class="description">Complete home cleaning including kitchen, bathrooms, and living areas. Eco-friendly products used.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="home_cleaning" data-service-name="Home Cleaning" data-service-price="50000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="home_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <p class="mt-2">Loading services...</p>
+            </div>
+
+            <!-- Service 2: Office Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="office_cleaning" data-service-name="Office Cleaning" data-service-category="commercial" data-service-price="75000">
+                    <div class="service-category-badge"><i class="fas fa-building"></i> Commercial</div>
+                    <div class="card-img-wrap">
+                        <img src="image/office.jpg" alt="Office Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🏢 Office Cleaning</div>
+                        <div class="description">Professional office cleaning to maintain hygiene and productivity. After-hours service available.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="office_cleaning" data-service-name="Office Cleaning" data-service-price="75000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="office_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 3: Deep Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="deep_cleaning" data-service-name="Deep Cleaning" data-service-category="residential" data-service-price="75000">
+                    <div class="service-category-badge popular-badge"><i class="fas fa-fire"></i> Popular</div>
+                    <div class="card-img-wrap">
+                        <img src="image/deepcleaning.jpg" alt="Deep Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🔍 Deep Cleaning</div>
+                        <div class="description">Intensive deep cleaning for every corner. Perfect for spring cleaning or special occasions.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="deep_cleaning" data-service-name="Deep Cleaning" data-service-price="75000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="deep_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 4: Apartment Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="apartment_cleaning" data-service-name="Apartment Cleaning" data-service-category="residential" data-service-price="45000">
+                    <div class="service-category-badge"><i class="fas fa-building"></i> Residential</div>
+                    <div class="card-img-wrap">
+                        <img src="image/apartment.jpg" alt="Apartment Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🏢 Apartment Cleaning</div>
+                        <div class="description">Specialized cleaning for apartments and condos. Fast, efficient, and thorough service.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="apartment_cleaning" data-service-name="Apartment Cleaning" data-service-price="45000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="apartment_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 5: Move-In/Move-Out Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="move_cleaning" data-service-name="Move-In/Out Cleaning" data-service-category="specialized" data-service-price="70000">
+                    <div class="service-category-badge"><i class="fas fa-truck"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/move.jpg" alt="Move Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🚚 Move-In/Out Cleaning</div>
+                        <div class="description">Complete cleaning for moving in or out. Ensure your deposit return or fresh start.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="move_cleaning" data-service-name="Move-In/Out Cleaning" data-service-price="70000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="move_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 6: Post Construction Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="construction_cleaning" data-service-name="Post Construction Cleaning" data-service-category="specialized" data-service-price="90000">
+                    <div class="service-category-badge"><i class="fas fa-hard-hat"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/post.jpeg" alt="Post Construction" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🏗️ Post Construction</div>
+                        <div class="description">Complete cleaning after construction or renovation. Dust removal and debris cleanup.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="construction_cleaning" data-service-name="Post Construction Cleaning" data-service-price="90000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="construction_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 7: Carpet Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="carpet_cleaning" data-service-name="Carpet Cleaning" data-service-category="specialized" data-service-price="60000">
+                    <div class="service-category-badge"><i class="fas fa-rug"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/s.avif" alt="Carpet Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🪑 Carpet Cleaning</div>
+                        <div class="description">Deep carpet cleaning with eco-friendly solutions. Steam cleaning available for tough stains.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="carpet_cleaning" data-service-name="Carpet Cleaning" data-service-price="60000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="carpet_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 8: Window Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="window_cleaning" data-service-name="Window Cleaning" data-service-category="specialized" data-service-price="40000">
+                    <div class="service-category-badge"><i class="fas fa-window-maximize"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/window.jpg" alt="Window Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🪟 Window Cleaning</div>
+                        <div class="description">Professional window cleaning for homes and offices. Streak-free guarantee.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="window_cleaning" data-service-name="Window Cleaning" data-service-price="40000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="window_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 9: Vehicle Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="vehicle_cleaning" data-service-name="Vehicle Cleaning" data-service-category="specialized" data-service-price="45000">
+                    <div class="service-category-badge"><i class="fas fa-car"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/vehicle.jpg" alt="Vehicle Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🚗 Vehicle Cleaning</div>
+                        <div class="description">Complete interior and exterior vehicle cleaning. Waxing and polishing available.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="vehicle_cleaning" data-service-name="Vehicle Cleaning" data-service-price="45000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="vehicle_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 10: Pool Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="pool_cleaning" data-service-name="Pool Cleaning" data-service-category="specialized" data-service-price="80000">
+                    <div class="service-category-badge"><i class="fas fa-swimming-pool"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/pool.jpeg" alt="Pool Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🏊 Pool Cleaning</div>
+                        <div class="description">Professional pool cleaning and maintenance. Chemical balancing and filter cleaning.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="pool_cleaning" data-service-name="Pool Cleaning" data-service-price="80000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="pool_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 11: Mattress Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="mattress_cleaning" data-service-name="Mattress Cleaning" data-service-category="specialized" data-service-price="55000">
+                    <div class="service-category-badge"><i class="fas fa-bed"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/matres.jpg" alt="Mattress Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🛏️ Mattress Cleaning</div>
+                        <div class="description">Deep mattress cleaning to remove dust mites and allergens. UV sanitization available.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="mattress_cleaning" data-service-name="Mattress Cleaning" data-service-price="55000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="mattress_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 12: Upholstery Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="upholstery_cleaning" data-service-name="Upholstery Cleaning" data-service-category="specialized" data-service-price="65000">
+                    <div class="service-category-badge"><i class="fas fa-couch"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/upholstrey (2).jpg" alt="Upholstery Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🛋️ Upholstery Cleaning</div>
+                        <div class="description">Professional cleaning for sofas, chairs, and furniture. Stain removal specialists.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="upholstery_cleaning" data-service-name="Upholstery Cleaning" data-service-price="65000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="upholstery_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 13: Hotel & Airbnb -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="hotel_cleaning" data-service-name="Hotel & Airbnb Cleaning" data-service-category="commercial" data-service-price="100000">
+                    <div class="service-category-badge"><i class="fas fa-hotel"></i> Commercial</div>
+                    <div class="card-img-wrap">
+                        <img src="image/hotel.jpg" alt="Hotel Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🏨 Hotel & Airbnb</div>
+                        <div class="description">Fast and professional cleaning for hotels and short-stay apartments to maintain high standards.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="hotel_cleaning" data-service-name="Hotel & Airbnb Cleaning" data-service-price="100000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="hotel_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 14: Laundry & Ironing -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="laundry_service" data-service-name="Laundry & Ironing" data-service-category="specialized" data-service-price="54000">
+                    <div class="service-category-badge"><i class="fas fa-tshirt"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/iron.jpg" alt="Laundry Service" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">👕 Laundry & Ironing</div>
+                        <div class="description">Washing, drying, and ironing clothes to save time and ensure neat appearance.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="laundry_service" data-service-name="Laundry & Ironing" data-service-price="54000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="laundry_service" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 15: Pest Control -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="pest_control" data-service-name="Pest Control" data-service-category="specialized" data-service-price="54000">
+                    <div class="service-category-badge"><i class="fas fa-bug"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/pest.jpg" alt="Pest Control" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🐜 Pest Control</div>
+                        <div class="description">Effective elimination of pests and prevention of infestations for a healthy environment.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="pest_control" data-service-name="Pest Control" data-service-price="54000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="pest_control" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 16: Event Setup & Cleanup -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="event_cleaning" data-service-name="Event Setup & Cleanup" data-service-category="commercial" data-service-price="90000">
+                    <div class="service-category-badge"><i class="fas fa-calendar-alt"></i> Commercial</div>
+                    <div class="card-img-wrap">
+                        <img src="image/event.jpg" alt="Event Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🎉 Event Setup & Cleanup</div>
+                        <div class="description">Arrangement of chairs, tables, decorations, followed by full cleanup after the event.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="event_cleaning" data-service-name="Event Setup & Cleanup" data-service-price="90000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="event_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 17: Refrigerator & AC Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="ac_cleaning" data-service-name="AC & Refrigerator Cleaning" data-service-category="specialized" data-service-price="45000">
+                    <div class="service-category-badge"><i class="fas fa-snowflake"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/ac.avif" alt="AC Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">❄️ AC & Fridge Cleaning</div>
+                        <div class="description">Thorough cleaning and maintenance of refrigerators and air conditioning units for optimal performance.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="ac_cleaning" data-service-name="AC & Refrigerator Cleaning" data-service-price="45000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="ac_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 18: Industrial Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="industrial_cleaning" data-service-name="Industrial Cleaning" data-service-category="commercial" data-service-price="120000">
+                    <div class="service-category-badge"><i class="fas fa-industry"></i> Commercial</div>
+                    <div class="card-img-wrap">
+                        <img src="image/industry.avif" alt="Industrial Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🏭 Industrial Cleaning</div>
+                        <div class="description">Heavy-duty cleaning for factories and warehouses including machinery areas and large spaces.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="industrial_cleaning" data-service-name="Industrial Cleaning" data-service-price="120000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="industrial_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 19: Water Tank Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="water_tank_cleaning" data-service-name="Water Tank Cleaning" data-service-category="specialized" data-service-price="70000">
+                    <div class="service-category-badge"><i class="fas fa-water"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/tank.jpeg" alt="Water Tank Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">💧 Water Tank Cleaning</div>
+                        <div class="description">Professional water tank cleaning and sanitization. Ensure clean and safe water supply.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="water_tank_cleaning" data-service-name="Water Tank Cleaning" data-service-price="70000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="water_tank_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 20: Curtain Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="curtain_cleaning" data-service-name="Curtain Cleaning" data-service-category="specialized" data-service-price="40000">
+                    <div class="service-category-badge"><i class="fas fa-curtain"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/curtel.jpeg" alt="Curtain Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🪟 Curtain Cleaning</div>
+                        <div class="description">Professional curtain cleaning and care. Gentle washing and ironing service.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="curtain_cleaning" data-service-name="Curtain Cleaning" data-service-price="40000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="curtain_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 21: Garden Cleaning -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card" data-service-id="garden_cleaning" data-service-name="Garden Cleaning" data-service-category="specialized" data-service-price="55000">
+                    <div class="service-category-badge"><i class="fas fa-leaf"></i> Specialized</div>
+                    <div class="card-img-wrap">
+                        <img src="image/gaden.jpg" alt="Garden Cleaning" loading="lazy">
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="title">🌿 Garden Cleaning</div>
+                        <div class="description">Professional garden cleaning and maintenance. Lawn mowing, trimming, and waste removal.</div>
+                        <div class="card-actions">
+                            <button class="btn btn-success book-service-btn" data-service-id="garden_cleaning" data-service-name="Garden Cleaning" data-service-price="55000">
+                                <i class="fas fa-calendar-check"></i> Book Service
+                            </button>
+                            <button class="info-btn" data-service="garden_cleaning" aria-label="More info">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </main>
-
-<!-- Service Modal -->
-<div class="modal fade" id="serviceModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="serviceModalTitle">Service Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="serviceModalBody">
-                <!-- Dynamic content -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" id="modalBookBtn">Book Now</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <footer class="footer">
     <div class="container">
         <div class="row">
             <div class="col-lg-4 col-md-6 mb-4">
                 <h5>About CleanSpark</h5>
-                <p>CleanSpark is Zanzibar's premier cleaning service provider.</p>
+                <p>CleanSpark is Zanzibar's premier cleaning service provider, offering professional and reliable cleaning solutions for homes and businesses since 2026.</p>
                 <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4">
                 <h5>Quick Links</h5>
                 <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="service.html">Services</a></li>
-                    <li><a href="aboutus.html">About Us</a></li>
-                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
+                    <li><a href="service.html"><i class="fas fa-chevron-right"></i> Our Services</a></li>
+                    <li><a href="aboutus.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                    <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
+                    <li><a href="login.html"><i class="fas fa-chevron-right"></i> Login</a></li>
+                    <li><a href="register.html"><i class="fas fa-chevron-right"></i> Register</a></li>
                 </ul>
             </div>
             <div class="col-lg-4 col-md-12 mb-4">
                 <h5>Contact Info</h5>
                 <ul class="contact-info">
                     <li><i class="fas fa-map-marker-alt"></i> Stone Town, Zanzibar</li>
-                    <li><i class="fas fa-phone"></i> +255 777 123 456</li>
-                    <li><i class="fas fa-envelope"></i> info@cleanspark.co.tz</li>
+                    <li><i class="fas fa-phone"></i> <a href="tel:+0621662883" class="footer-contact-link">+062 166 2883</a></li>
+                    <li><i class="fas fa-envelope"></i> <a href="mailto:info@cleanspark.co.tz" class="footer-contact-link">info@cleanspark.co.tz</a></li>
+                    <li><i class="fas fa-clock"></i> Available 24/7 - Always Open</li>
                 </ul>
+                <h5 class="mt-4">Newsletter</h5>
+                <form class="newsletter-form" id="newsletterForm">
+                    <input type="email" placeholder="Your email address" required>
+                    <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                </form>
             </div>
         </div>
         <div class="copyright">
-            <p>&copy; 2026 CleanSpark. All rights reserved.</p>
+            <p>&copy; 2026 CleanSpark - Cleaning Service Management System. All rights reserved.</p>
         </div>
     </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/theme.js"></script>
-<script src="js/api.js"></script>
 <script src="js/service.js"></script>
 </body>
 </html>
