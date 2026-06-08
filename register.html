@@ -17,6 +17,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/register.css">
 </head>
@@ -58,38 +60,57 @@
             <div class="col-md-6 mb-3">
                 <label for="firstName" class="form-label">First Name</label>
                 <input type="text" class="form-control" id="firstName" placeholder="John" required>
+                <div class="invalid-feedback" id="firstNameError"></div>
             </div>
             
             <div class="col-md-6 mb-3">
                 <label for="lastName" class="form-label">Last Name</label>
                 <input type="text" class="form-control" id="lastName" placeholder="Doe" required>
+                <div class="invalid-feedback" id="lastNameError"></div>
             </div>
         </div>
         
         <div class="mb-3">
             <label for="email" class="form-label">Email Address</label>
             <input type="email" class="form-control" id="email" placeholder="john@example.com" required>
+            <div class="invalid-feedback" id="emailError"></div>
         </div>
         
         <div class="mb-3">
             <label for="phone" class="form-label">Phone Number</label>
             <input type="tel" class="form-control" id="phone" placeholder="+255 XXX XXX XXX">
+            <div class="invalid-feedback" id="phoneError"></div>
         </div>
         
         <div class="mb-3">
             <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control" id="password" placeholder="Create password" required>
+            <div class="password-input-wrapper">
+                <input type="password" class="form-control" id="password" placeholder="Create password" required>
+                <button type="button" class="password-toggle-btn" id="passwordToggle" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
             <small class="text-muted">Password must be at least 6 characters</small>
+            <div id="passwordStrength" class="password-strength"></div>
+            <div class="invalid-feedback" id="passwordError"></div>
         </div>
         
         <div class="mb-3">
             <label for="confirmPassword" class="form-label">Confirm Password</label>
-            <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm password" required>
+            <div class="password-input-wrapper">
+                <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm password" required>
+                <button type="button" class="password-toggle-btn" id="confirmPasswordToggle" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <div id="passwordMatch" class="password-match"></div>
+            <div class="invalid-feedback" id="confirmPasswordError"></div>
         </div>
         
         <div class="mb-3">
             <label for="address" class="form-label">Address</label>
             <input type="text" class="form-control" id="address" placeholder="Your address in Zanzibar" required>
+            <div class="invalid-feedback" id="addressError"></div>
         </div>
         
         <div class="mb-3">
@@ -98,8 +119,8 @@
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
-                <option value="Other">Other</option>
             </select>
+            <div class="invalid-feedback" id="genderError"></div>
         </div>
         
         <div class="mb-3 form-check">
@@ -107,6 +128,7 @@
             <label class="form-check-label" for="terms">
                 I agree to the <a href="#" id="openTermsModal"><i class="fas fa-file-contract"></i> Terms and Conditions</a>
             </label>
+            <div class="invalid-feedback" id="termsError"></div>
         </div>
         
         <button type="submit" class="btn btn-primary w-100" id="registerBtn">
@@ -115,7 +137,7 @@
     </form>
     
     <div class="social-login">
-        <button id="googleRegisterBtn"><i class="fab fa-google"></i> Register with Google</button>
+        <div id="googleRegisterButton"></div>
     </div>
     
     <p class="text-center mt-3">
@@ -193,9 +215,15 @@
         <div class="mb-3">
             <label for="otpCode" class="form-label">Verification Code</label>
             <input type="text" class="form-control" id="otpCode" placeholder="Enter 6-digit code" maxlength="6" autocomplete="off">
+            <div class="invalid-feedback" id="otpCodeError"></div>
         </div>
         <div class="text-center">
-            <small>Didn't receive code? <a href="#" id="resendOtpBtn">Resend Code</a></small>
+            <div class="otp-timer-container">
+                <span class="otp-timer" id="otpTimer"></span>
+                <button type="button" class="otp-resend-btn" id="resendOtpBtn" disabled>
+                    <i class="fas fa-redo-alt"></i> Resend Code
+                </button>
+            </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -240,7 +268,7 @@
                 <ul class="contact-info">
                     <li><i class="fas fa-map-marker-alt"></i> <a href="https://www.google.com/maps/search/Stone+Town,+Zanzibar" target="_blank" rel="noopener noreferrer">Stone Town, Zanzibar</a></li>
                     <li><i class="fas fa-phone"></i> <a href="tel:+0621662883">+062 166 2883</a></li>
-                    <li><i class="fas fa-envelope"></i> <a href="mailto:mudrikdau@gmail.com">info@cleanspark.co.tz</a></li>
+                    <li><i class="fas fa-envelope"></i> <a href="mailto:info@cleanspark.co.tz">info@cleanspark.co.tz</a></li>
                     <li><i class="fas fa-clock"></i> Available 24/7 - Always Open</li>
                 </ul>
                 <h5 class="mt-4">Newsletter</h5>
@@ -251,7 +279,7 @@
             </div>
         </div>
         <div class="copyright">
-            <p>&copy; 2026 CleanSpark . All rights reserved.</p>
+            <p>&copy; 2026 CleanSpark. All rights reserved.</p>
         </div>
     </div>
 </footer>

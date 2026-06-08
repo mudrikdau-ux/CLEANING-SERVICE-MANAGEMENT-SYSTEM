@@ -1,16 +1,14 @@
 /**
- * CleanSpark Login Page - Backend Integrated with Google OAuth
- * Fully integrated with the backend API endpoints
+ * CleanSpark Login Page - Fully Integrated with Backend API
+ * Handles user login with OTP verification and Google Sign-In
  */
 
 // ===== GOOGLE CLIENT CONFIGURATION =====
-// IMPORTANT: Replace this with your actual Google Client ID from Google Cloud Console
-// Get it from: https://console.cloud.google.com/apis/credentials
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '91975372653-8u9lcjinnjj7r0qvga02adot9jpn0ehg.apps.googleusercontent.com';
 
 // ===== SIDEBAR FUNCTIONS =====
 function openSidebar() {
-    var sidebar = document.getElementById("sidebar");
+    const sidebar = document.getElementById("sidebar");
     if (sidebar) {
         if (window.innerWidth <= 300) {
             sidebar.style.width = "100%";
@@ -22,7 +20,7 @@ function openSidebar() {
 }
 
 function closeSidebar() {
-    var sidebar = document.getElementById("sidebar");
+    const sidebar = document.getElementById("sidebar");
     if (sidebar) {
         sidebar.style.width = "0";
         document.body.style.overflow = "auto";
@@ -35,7 +33,7 @@ document.addEventListener('click', function(event) {
     const hamburger = document.querySelector('.hamburger');
     
     if (sidebar && hamburger) {
-        if (!sidebar.contains(event.target) && !hamburger.contains(event.target) && sidebar.style.width !== '0px' && sidebar.style.width !== '0' && sidebar.style.width !== '') {
+        if (!sidebar.contains(event.target) && !hamburger.contains(event.target) && sidebar.style.width === '280px') {
             closeSidebar();
         }
     }
@@ -51,18 +49,15 @@ function validateEmail(email) {
 
 // Show notification
 function showNotification(message, type) {
-    type = type || 'info';
-    
     const existingNotification = document.querySelector('.alert');
     if (existingNotification) {
         existingNotification.remove();
     }
     
     const notification = document.createElement('div');
-    notification.className = 'alert alert-' + type + ' alert-dismissible fade show';
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
     notification.role = 'alert';
-    notification.innerHTML = message +
-        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+    notification.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
     
     if (window.innerWidth <= 576) {
         notification.style.cssText = 'position: fixed; top: 10px; left: 10px; right: 10px; z-index: 9999;';
@@ -90,7 +85,7 @@ function showLoading(show) {
         document.body.appendChild(spinner);
     }
     if (spinner) {
-        spinner.style.display = show ? 'block' : 'none';
+        spinner.style.display = show ? 'flex' : 'none';
     }
 }
 
@@ -103,7 +98,7 @@ function setButtonLoading(button, isLoading, text) {
         if (!button.getAttribute('data-original-html')) {
             button.setAttribute('data-original-html', button.innerHTML);
         }
-        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' + (text || 'Loading...');
+        button.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${text || 'Loading...'}`;
     } else {
         button.disabled = false;
         const originalHtml = button.getAttribute('data-original-html');
@@ -142,16 +137,22 @@ function clearFieldError(fieldId, errorId) {
 
 // Clear all errors
 function clearAllErrors() {
-    const errorElements = document.querySelectorAll('.invalid-feedback');
-    const formControls = document.querySelectorAll('.form-control');
+    const errorIds = ['emailError', 'passwordError', 'otpError'];
+    const fieldIds = ['emailLogin', 'passwordLogin', 'otpInput'];
     
-    errorElements.forEach(function(el) {
-        el.textContent = '';
-        el.classList.remove('show');
+    errorIds.forEach(id => {
+        const error = document.getElementById(id);
+        if (error) {
+            error.textContent = '';
+            error.classList.remove('show');
+        }
     });
     
-    formControls.forEach(function(el) {
-        el.classList.remove('is-invalid', 'is-valid');
+    fieldIds.forEach(id => {
+        const field = document.getElementById(id);
+        if (field) {
+            field.classList.remove('is-invalid', 'is-valid');
+        }
     });
 }
 
@@ -196,28 +197,26 @@ function getPendingBooking() {
     return data ? JSON.parse(data) : null;
 }
 
-// ===== OTP TIMER FUNCTIONALITY =====
+// ===== OTP TIMER FUNCTIONS =====
 let otpTimerInterval = null;
 let otpSecondsRemaining = 30;
-const OTP_COOLDOWN_SECONDS = 30;
 
 function startOTPTimer() {
     stopOTPTimer();
     
-    otpSecondsRemaining = OTP_COOLDOWN_SECONDS;
+    otpSecondsRemaining = 30;
     const timerElement = document.getElementById('otpTimer');
     const resendBtn = document.getElementById('otpResendBtn');
     
     if (!timerElement || !resendBtn) return;
     
     resendBtn.disabled = true;
-    resendBtn.classList.remove('resending');
     timerElement.classList.remove('warning', 'expired');
     
     function updateTimerDisplay() {
         const minutes = Math.floor(otpSecondsRemaining / 60);
         const seconds = otpSecondsRemaining % 60;
-        timerElement.textContent = 'Resend in ' + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+        timerElement.textContent = `Resend in ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
         
         if (otpSecondsRemaining <= 10 && otpSecondsRemaining > 0) {
             timerElement.classList.add('warning');
@@ -250,7 +249,7 @@ function resetOTPTimer() {
     startOTPTimer();
 }
 
-// ===== PASSWORD TOGGLE FUNCTIONALITY =====
+// ===== PASSWORD TOGGLE =====
 function setupPasswordToggle() {
     const passwordInput = document.getElementById('passwordLogin');
     const toggleBtn = document.getElementById('passwordToggle');
@@ -258,11 +257,8 @@ function setupPasswordToggle() {
     if (passwordInput && toggleBtn) {
         toggleBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
-            
             const icon = this.querySelector('i');
             if (type === 'text') {
                 icon.classList.remove('fa-eye');
@@ -274,32 +270,23 @@ function setupPasswordToggle() {
                 this.setAttribute('aria-label', 'Show password');
             }
         });
-        
-        toggleBtn.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-        });
     }
 }
 
-// ===== GOOGLE LOGIN HANDLER (REAL IMPLEMENTATION) =====
+// ===== GOOGLE LOGIN =====
 function initializeGoogleLogin() {
     if (typeof google === 'undefined') {
-        console.log('Google API not loaded yet, waiting...');
-        // Wait for Google API to load
         setTimeout(initializeGoogleLogin, 500);
         return;
     }
     
-    console.log('Initializing Google Login...');
-    
     google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredentialResponse,
+        callback: handleGoogleLoginResponse,
         auto_select: false,
         cancel_on_tap_outside: true,
     });
     
-    // Render the Google button
     google.accounts.id.renderButton(
         document.getElementById('googleButton'),
         { 
@@ -311,25 +298,19 @@ function initializeGoogleLogin() {
             logo_alignment: 'left'
         }
     );
-    
-    // Also prompt one-tap login (optional)
-    // google.accounts.id.prompt(); // Uncomment to enable one-tap
 }
 
-async function handleGoogleCredentialResponse(response) {
+async function handleGoogleLoginResponse(response) {
     const googleToken = response.credential;
     
-    console.log('Google credential received, sending to backend...');
     showLoading(true);
     
     try {
-        // Send Google token to your backend for verification
         const result = await API.auth.googleLogin(googleToken);
         
         showLoading(false);
         
         if (result.token && result.user) {
-            // Store token and user data
             API.setAuthToken(result.token, true);
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('currentUser', JSON.stringify(result.user));
@@ -337,7 +318,6 @@ async function handleGoogleCredentialResponse(response) {
             launchCelebration();
             showNotification(`Welcome ${result.user.first_name}! Login successful.`, 'success');
             
-            // Check for pending booking
             const pendingBooking = getPendingBooking();
             setTimeout(() => {
                 window.location.href = pendingBooking ? 'booking.html' : 'index.html';
@@ -353,27 +333,27 @@ async function handleGoogleCredentialResponse(response) {
 }
 
 // ===== RESEND OTP =====
+let currentResendEmail = '';
+
 async function resendOTP(email) {
     const resendBtn = document.getElementById('otpResendBtn');
     
     if (!resendBtn || resendBtn.disabled) return;
     
-    resendBtn.classList.add('resending');
     resendBtn.disabled = true;
     const originalHTML = resendBtn.innerHTML;
     resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resending...';
     
     try {
-        // Call backend resend OTP endpoint (for forgot password flow)
         const result = await API.auth.resendResetOTP(email);
         
         if (result.success || result.message) {
             const otpInput = document.getElementById('otpInput');
             if (otpInput) {
                 otpInput.value = '';
+                otpInput.classList.remove('is-invalid');
                 otpInput.focus();
             }
-            
             clearFieldError('otpInput', 'otpError');
             resetOTPTimer();
             showNotification(result.message || 'New OTP sent to your email', 'success');
@@ -385,52 +365,17 @@ async function resendOTP(email) {
         showNotification(error.message || 'Failed to resend OTP. Please try again.', 'danger');
         resendBtn.disabled = false;
     } finally {
-        resendBtn.classList.remove('resending');
         resendBtn.innerHTML = originalHTML;
     }
 }
 
-// ===== HANDLE LOGIN SUCCESS =====
-function handleLoginSuccess(response) {
-    const { token, user } = response;
-    
-    // Store token based on user role
-    if (token) {
-        API.setAuthToken(token, true);
-    }
-    
-    localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    
-    // Clear any OTP related data
-    localStorage.removeItem('otpEmail');
-    localStorage.removeItem('otpExpiry');
-    stopOTPTimer();
-    
-    launchCelebration();
-    
-    const pendingBooking = getPendingBooking();
-    if (pendingBooking) {
-        showNotification('Login successful! Redirecting to booking...', 'success');
-        setTimeout(() => {
-            window.location.href = 'booking.html';
-        }, 1500);
-    } else {
-        showNotification('Login successful!', 'success');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1500);
-    }
-}
-
 // ===== MAIN LOGIN FLOW =====
-let loginStep = 'credentials'; // 'credentials' or 'otp'
+let loginStep = 'credentials';
 let currentEmail = '';
 
 async function handleCredentialsSubmit(email, password) {
     const loginBtn = document.getElementById('loginBtn');
     
-    // Validate email
     if (!email) {
         showFieldError('emailLogin', 'emailError', 'Please enter your email address');
         return false;
@@ -439,8 +384,6 @@ async function handleCredentialsSubmit(email, password) {
         showFieldError('emailLogin', 'emailError', 'Please enter a valid email address');
         return false;
     }
-    
-    // Validate password
     if (!password) {
         showFieldError('passwordLogin', 'passwordError', 'Please enter your password');
         return false;
@@ -453,63 +396,47 @@ async function handleCredentialsSubmit(email, password) {
     setButtonLoading(loginBtn, true, 'Verifying credentials...');
     
     try {
-        // Step 1: Call backend login endpoint to get OTP
         const response = await API.auth.login(email, password);
         
         setButtonLoading(loginBtn, false);
         
         if (response.message) {
-            // Success - OTP sent
             currentEmail = response.email || email;
-            
-            // Store email for resend
             localStorage.setItem('otpEmail', currentEmail);
             
-            // Show OTP section
+            // Show OTP section with animation
             const otpSection = document.getElementById('otpSection');
             if (otpSection) {
                 otpSection.style.display = 'block';
                 setTimeout(() => {
                     otpSection.classList.add('show-section');
-                }, 50);
+                }, 10);
             }
             
-            // Update button for OTP step
+            // Update button text
             const loginBtnText = document.getElementById('loginBtnText');
-            if (loginBtnText) {
-                loginBtnText.textContent = 'Verify OTP';
-            }
+            if (loginBtnText) loginBtnText.textContent = 'Verify OTP';
             const btnIcon = loginBtn.querySelector('i');
-            if (btnIcon) {
-                btnIcon.className = 'fas fa-check';
-            }
+            if (btnIcon) btnIcon.className = 'fas fa-check';
             
             loginStep = 'otp';
             
-            // Focus on OTP input
             setTimeout(() => {
                 const otpInput = document.getElementById('otpInput');
                 if (otpInput) otpInput.focus();
             }, 500);
             
-            // Update OTP info text
             const otpInfoText = document.getElementById('otpInfoText');
-            if (otpInfoText) {
-                otpInfoText.textContent = `A 6-digit OTP has been sent to ${currentEmail}`;
-            }
+            if (otpInfoText) otpInfoText.textContent = `A 6-digit OTP has been sent to ${currentEmail}`;
             
-            // Start OTP timer
             startOTPTimer();
-            
             showNotification(response.message, 'success');
-            
             return true;
         }
     } catch (error) {
         setButtonLoading(loginBtn, false);
         console.error('Login error:', error);
         
-        // Handle specific error messages from backend
         const errorMessage = error.message || 'Login failed. Please try again.';
         
         if (errorMessage.toLowerCase().includes('email') || errorMessage.toLowerCase().includes('account')) {
@@ -531,12 +458,10 @@ async function handleOTPSubmit(otp) {
         showFieldError('otpInput', 'otpError', 'Please enter the 6-digit OTP');
         return false;
     }
-    
     if (otp.length !== 6) {
         showFieldError('otpInput', 'otpError', 'OTP must be exactly 6 digits');
         return false;
     }
-    
     if (!/^\d{6}$/.test(otp)) {
         showFieldError('otpInput', 'otpError', 'OTP must contain only numbers');
         return false;
@@ -545,7 +470,6 @@ async function handleOTPSubmit(otp) {
     setButtonLoading(loginBtn, true, 'Verifying OTP...');
     
     try {
-        // Step 2: Verify OTP with backend
         const response = await API.auth.verifyOTP(currentEmail, otp);
         
         setButtonLoading(loginBtn, false);
@@ -576,18 +500,32 @@ async function handleOTPSubmit(otp) {
     }
 }
 
-// ===== CHECK ADMIN LOGIN STATUS =====
-function checkAdminLoginStatus() {
-    const adminLoggedIn = sessionStorage.getItem('adminLoggedIn') === 'true';
-    const token = API.getAuthToken();
+function handleLoginSuccess(response) {
+    const { token, user } = response;
     
-    if (adminLoggedIn && token) {
-        // Verify token is still valid by making a test request
-        API.auth.getProfile().catch(() => {
-            // Token expired or invalid
-            sessionStorage.removeItem('adminLoggedIn');
-            API.clearAuthToken();
-        });
+    if (token) {
+        API.setAuthToken(token, true);
+    }
+    
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    
+    localStorage.removeItem('otpEmail');
+    stopOTPTimer();
+    
+    launchCelebration();
+    
+    const pendingBooking = getPendingBooking();
+    if (pendingBooking) {
+        showNotification('Login successful! Redirecting to booking...', 'success');
+        setTimeout(() => {
+            window.location.href = 'booking.html';
+        }, 1500);
+    } else {
+        showNotification('Login successful!', 'success');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1500);
     }
 }
 
@@ -595,9 +533,6 @@ function checkAdminLoginStatus() {
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Google Login
     initializeGoogleLogin();
-    
-    // Check admin login status
-    checkAdminLoginStatus();
     
     // Setup password toggle
     setupPasswordToggle();
@@ -620,7 +555,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showNotification('Please login to complete your booking', 'info');
     }
     
-    // ===== LOGIN FORM SUBMIT =====
+    // Login form submission
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         const emailInput = document.getElementById('emailLogin');
@@ -630,25 +565,19 @@ document.addEventListener('DOMContentLoaded', function() {
         // Real-time validation clearing
         if (emailInput) {
             emailInput.addEventListener('input', function() {
-                if (this.value.trim()) {
-                    clearFieldError('emailLogin', 'emailError');
-                }
+                if (this.value.trim()) clearFieldError('emailLogin', 'emailError');
             });
         }
         
         if (passwordInput) {
             passwordInput.addEventListener('input', function() {
-                if (this.value.trim()) {
-                    clearFieldError('passwordLogin', 'passwordError');
-                }
+                if (this.value.trim()) clearFieldError('passwordLogin', 'passwordError');
             });
         }
         
         if (otpInput) {
             otpInput.addEventListener('input', function() {
-                if (this.value.trim()) {
-                    clearFieldError('otpInput', 'otpError');
-                }
+                if (this.value.trim()) clearFieldError('otpInput', 'otpError');
             });
         }
         
@@ -668,8 +597,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ===== NEWSLETTER FORM =====
-    const newsletterForm = document.querySelector('.newsletter-form');
+    // Newsletter form
+    const newsletterForm = document.getElementById('newsletterForm');
     if (newsletterForm) {
         newsletterForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -685,33 +614,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ===== RESIZE HANDLER FOR SIDEBAR =====
-    window.addEventListener('resize', function() {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar && sidebar.style.width === '280px' && window.innerWidth <= 300) {
-            sidebar.style.width = '100%';
-        }
+    // Clean up OTP timer on page unload
+    window.addEventListener('beforeunload', function() {
+        stopOTPTimer();
     });
     
-    // Log instructions for testing
     console.log('========================================');
     console.log('CleanSpark Login - Backend Integrated');
     console.log('========================================');
-    console.log('Email/Password Login Flow:');
+    console.log('Login Flow:');
     console.log('1. POST /api/auth/login - sends OTP to email');
     console.log('2. POST /api/auth/verify-otp - verifies OTP and returns token');
     console.log('');
     console.log('Google Login Flow:');
-    console.log('1. User clicks Google button');
-    console.log('2. Google prompts for account selection');
-    console.log('3. Google returns ID token');
-    console.log('4. POST /api/auth/google-login - verifies token with Google');
-    console.log('5. Backend creates/finds user and returns JWT');
-    console.log('');
-    console.log('IMPORTANT:');
-    console.log('1. Set your GOOGLE_CLIENT_ID in login.js');
-    console.log('2. Add your GOOGLE_CLIENT_ID to backend .env file');
-    console.log('3. Make sure your backend has GOOGLE_CLIENT_ID configured');
+    console.log('1. POST /api/auth/google-login - verifies token and returns JWT');
     console.log('========================================');
 });
 
