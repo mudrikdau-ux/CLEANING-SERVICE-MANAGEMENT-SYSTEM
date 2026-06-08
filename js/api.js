@@ -311,6 +311,12 @@ const API = (function() {
             return request(`/bookings/my-bookings${params ? `?${params}` : ''}`);
         },
         
+        // Get my invoices (customer)
+        getMyInvoices: () => request('/bookings/my-invoices'),
+        
+        // Download customer invoice
+        downloadInvoice: (invoiceId) => `${BASE_URL}/bookings/invoices/${invoiceId}/download`,
+        
         // Get all bookings (admin only)
         getAll: (filters = {}) => {
             const params = new URLSearchParams(filters).toString();
@@ -340,6 +346,18 @@ const API = (function() {
         
         // Remove staff from booking (admin)
         removeStaff: (id) => request(`/bookings/${id}/assign-staff`, { method: 'DELETE' }),
+        
+        // Update booking estimation (admin)
+        updateEstimation: (id, estimationData) => request(`/bookings/${id}/estimation`, {
+            method: 'POST',
+            body: JSON.stringify(estimationData),
+        }),
+        
+        // Generate and send invoice (admin)
+        generateInvoice: (id, dueDate, notes) => request(`/bookings/${id}/generate-invoice`, {
+            method: 'POST',
+            body: JSON.stringify({ due_date: dueDate, notes }),
+        }),
         
         // Get booking stats (admin)
         getStats: () => request('/bookings/stats'),
@@ -395,25 +413,6 @@ const API = (function() {
                 confirm_password: confirmPassword,
             }),
         }),
-        
-        // Get cash payment list
-        getCashPaymentList: () => request('/staff/payments/cash/list'),
-        
-        // Validate cash payment
-        validateCashPayment: (bookingId, amountReceived, paymentNote = '') => request('/staff/payments/cash/validate', {
-            method: 'POST',
-            body: JSON.stringify({
-                booking_id: bookingId,
-                amount_received: amountReceived,
-                payment_note: paymentNote,
-            }),
-        }),
-        
-        // Get cash payment stats
-        getCashPaymentStats: () => request('/staff/payments/cash/stats'),
-        
-        // Get cash payment history
-        getCashPaymentHistory: (limit = 50) => request(`/staff/payments/cash/history?limit=${limit}`),
     };
     
     // ========================================
@@ -466,7 +465,7 @@ const API = (function() {
         getMyReports: () => request('/supervisor/reports'),
         
         // Download weekly report
-        downloadReport: (reportId) => request(`/supervisor/reports/${reportId}/download`),
+        downloadReport: (reportId) => `${BASE_URL}/supervisor/reports/${reportId}/download`,
         
         // Submit report to admin
         submitReportToAdmin: (reportId) => request(`/supervisor/reports/${reportId}/submit`, { method: 'POST' }),
@@ -487,6 +486,75 @@ const API = (function() {
                 return requestFormData('/supervisor/chat/send', formData);
             }
             return request('/supervisor/chat/send', {
+                method: 'POST',
+                body: JSON.stringify({ message, report_id: reportId }),
+            });
+        },
+    };
+    
+    // ========================================
+    // GENERAL SUPERVISOR ENDPOINTS
+    // ========================================
+    
+    const generalSupervisor = {
+        // Get profile
+        getProfile: () => request('/general-supervisor/profile'),
+        
+        // Change password
+        changePassword: (currentPassword, newPassword, confirmPassword) => request('/general-supervisor/change-password', {
+            method: 'PUT',
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword,
+                confirm_password: confirmPassword,
+            }),
+        }),
+        
+        // My Team
+        getMyTeam: () => request('/general-supervisor/team'),
+        getAllTeamJobs: (filters = {}) => {
+            const params = new URLSearchParams(filters).toString();
+            return request(`/general-supervisor/team/jobs${params ? `?${params}` : ''}`);
+        },
+        getTeamJobs: (staffId, filters = {}) => {
+            const params = new URLSearchParams(filters).toString();
+            return request(`/general-supervisor/team/${staffId}/jobs${params ? `?${params}` : ''}`);
+        },
+        updateTeamJobStatus: (jobId, status) => request(`/general-supervisor/team/jobs/${jobId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status }),
+        }),
+        
+        // Cash Payment Validation
+        getCashPaymentList: () => request('/general-supervisor/payments/cash/list'),
+        validateCashPayment: (bookingId, amountReceived, paymentNote) => request('/general-supervisor/payments/cash/validate', {
+            method: 'POST',
+            body: JSON.stringify({ booking_id: bookingId, amount_received: amountReceived, payment_note: paymentNote }),
+        }),
+        getCashPaymentStats: () => request('/general-supervisor/payments/cash/stats'),
+        getCashPaymentHistory: (limit = 50) => request(`/general-supervisor/payments/cash/history?limit=${limit}`),
+        
+        // Weekly Reports
+        generateWeeklyReport: (reportData) => request('/general-supervisor/reports', {
+            method: 'POST',
+            body: JSON.stringify(reportData),
+        }),
+        getMyReports: () => request('/general-supervisor/reports'),
+        downloadReport: (reportId) => `${BASE_URL}/general-supervisor/reports/${reportId}/download`,
+        submitReportToAdmin: (reportId) => request(`/general-supervisor/reports/${reportId}/submit`, { method: 'POST' }),
+        
+        // Chat
+        getChatMessages: () => request('/general-supervisor/chat/messages'),
+        getUnreadCount: () => request('/general-supervisor/chat/unread'),
+        sendMessage: (message, reportId = null, attachmentFile = null) => {
+            if (attachmentFile) {
+                const formData = new FormData();
+                formData.append('message', message);
+                if (reportId) formData.append('report_id', reportId);
+                formData.append('attachment', attachmentFile);
+                return requestFormData('/general-supervisor/chat/send', formData);
+            }
+            return request('/general-supervisor/chat/send', {
                 method: 'POST',
                 body: JSON.stringify({ message, report_id: reportId }),
             });
@@ -565,10 +633,10 @@ const API = (function() {
         }),
         
         // Download invoice PDF
-        downloadPDF: (id) => `${API.BASE_URL}/invoices/${id}/download`,
+        downloadPDF: (id) => `${BASE_URL}/invoices/${id}/download`,
         
         // View invoice PDF
-        viewPDF: (id) => `${API.BASE_URL}/invoices/${id}/view`,
+        viewPDF: (id) => `${BASE_URL}/invoices/${id}/view`,
     };
     
     // ========================================
@@ -657,11 +725,20 @@ const API = (function() {
         // Get assigned services
         getAssignedServices: () => request('/assignments/services/assigned'),
         
+        // Get all services with status
+        getAllServicesWithStatus: () => request('/assignments/services/all'),
+        
         // Get unassigned staff
         getUnassignedStaff: () => request('/assignments/staff/unassigned'),
         
         // Get assigned staff
         getAssignedStaff: () => request('/assignments/staff/assigned'),
+        
+        // Get all staff with status
+        getAllStaffWithStatus: () => request('/assignments/staff/all'),
+        
+        // Get staff sorted by assignments
+        getStaffSortedByAssignments: () => request('/assignments/staff/sorted'),
         
         // Get staff service details
         getStaffServices: (staffId) => request(`/assignments/staff/${staffId}/details`),
@@ -774,7 +851,7 @@ const API = (function() {
         getReceipt: (paymentId) => request(`/payments/${paymentId}/receipt`),
         
         // Download payment receipt
-        downloadReceipt: (paymentId) => `${API.BASE_URL}/payments/${paymentId}/download`,
+        downloadReceipt: (paymentId) => `${BASE_URL}/payments/${paymentId}/download`,
     };
     
     // ========================================
@@ -913,10 +990,10 @@ const API = (function() {
         delete: (id) => request(`/jobs/${id}`, { method: 'DELETE' }),
         
         // Download application PDF (admin)
-        downloadPDF: (id) => `${API.BASE_URL}/jobs/${id}/download`,
+        downloadPDF: (id) => `${BASE_URL}/jobs/${id}/download`,
         
         // View application PDF (admin)
-        viewPDF: (id) => `${API.BASE_URL}/jobs/${id}/view`,
+        viewPDF: (id) => `${BASE_URL}/jobs/${id}/view`,
     };
     
     // ========================================
@@ -969,6 +1046,46 @@ const API = (function() {
     };
     
     // ========================================
+    // STAFF ISSUES ENDPOINTS
+    // ========================================
+    
+    const staffIssues = {
+        // Submit issue (staff)
+        submit: (issueData) => request('/staff-issues', {
+            method: 'POST',
+            body: JSON.stringify(issueData),
+        }),
+        
+        // Get my issues (staff)
+        getMy: (status = null, limit = 50) => {
+            let url = `/staff-issues/my?limit=${limit}`;
+            if (status) url += `&status=${status}`;
+            return request(url);
+        },
+        
+        // Get single issue (staff)
+        getById: (id) => request(`/staff-issues/${id}`),
+        
+        // Get all issues (admin)
+        getAll: (filters = {}) => {
+            const params = new URLSearchParams(filters).toString();
+            return request(`/staff-issues/admin/all${params ? `?${params}` : ''}`);
+        },
+        
+        // Get issue stats (admin)
+        getStats: () => request('/staff-issues/admin/stats'),
+        
+        // Update issue status (admin)
+        updateStatus: (id, status, adminResponse = null) => request(`/staff-issues/admin/${id}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status, admin_response: adminResponse }),
+        }),
+        
+        // Delete issue (admin)
+        delete: (id) => request(`/staff-issues/admin/${id}`, { method: 'DELETE' }),
+    };
+    
+    // ========================================
     // REPORTS ENDPOINTS (Admin)
     // ========================================
     
@@ -986,7 +1103,7 @@ const API = (function() {
         },
         
         // Download report
-        download: (reportId) => `${API.BASE_URL}/reports/download/${reportId}`,
+        download: (reportId) => `${BASE_URL}/reports/download/${reportId}`,
         
         // Get booking analytics
         getBookingAnalytics: (dateFrom, dateTo) => request(`/reports/bookings?date_from=${dateFrom}&date_to=${dateTo}`),
@@ -1040,6 +1157,7 @@ const API = (function() {
         bookings,
         staffJobs,
         supervisor,
+        generalSupervisor,
         contractors,
         invoices,
         adminStaff,
@@ -1052,6 +1170,7 @@ const API = (function() {
         profile,
         jobApplications,
         ratings,
+        staffIssues,
         reports,
         adminChats,
         health,

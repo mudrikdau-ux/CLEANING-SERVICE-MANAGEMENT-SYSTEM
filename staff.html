@@ -121,10 +121,6 @@
         <i class="bi bi-gear-fill"></i>
         <span>Settings</span>
       </button>
-      <button class="sidebar-nav-btn" data-view="payment">
-        <i class="bi bi-cash-stack"></i>
-        <span>Cash Payment</span>
-      </button>
       
       <div class="sidebar-divider">
         <span>Management</span>
@@ -225,66 +221,7 @@
         </div>
       </div>
 
-      <!-- CASH PAYMENT VALIDATION VIEW -->
-      <div id="paymentView" class="content-view">
-        <div class="view-header">
-          <h2><i class="bi bi-cash-stack"></i> Cash Payment Validation</h2>
-          <p>Validate customer cash payments and generate receipts</p>
-        </div>
-        
-        <!-- Payment Stats Summary -->
-        <div class="payment-stats-grid" id="paymentStatsGrid">
-          <!-- Dynamic payment stats will be loaded here -->
-        </div>
-        
-        <!-- Payment Validation Form -->
-        <div class="payment-validation-card">
-          <h3><i class="bi bi-receipt"></i> Validate Payment</h3>
-          <form id="paymentValidationForm">
-            <div class="form-group">
-              <label for="jobSelect"><i class="bi bi-briefcase"></i> Select Job</label>
-              <select id="jobSelect" class="form-control" required>
-                <option value="">-- Select a completed job --</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label for="customerName"><i class="bi bi-person"></i> Customer Name</label>
-              <input type="text" id="customerName" class="form-control" readonly>
-            </div>
-            
-            <div class="form-group">
-              <label for="serviceAmount"><i class="bi bi-cash"></i> Service Amount</label>
-              <input type="text" id="serviceAmount" class="form-control" readonly>
-            </div>
-            
-            <div class="form-group">
-              <label for="cashReceived"><i class="bi bi-cash-stack"></i> Cash Received (TZS)</label>
-              <input type="number" id="cashReceived" class="form-control" step="1000" placeholder="Enter amount received">
-              <small class="text-muted">Enter the exact amount received from customer in Tanzanian Shillings (TZS)</small>
-            </div>
-            
-            <div class="form-group">
-              <label for="paymentNote"><i class="bi bi-pencil"></i> Payment Note (Optional)</label>
-              <textarea id="paymentNote" class="form-control" rows="3" placeholder="Any additional notes about the payment..."></textarea>
-            </div>
-            
-            <button type="button" id="validatePaymentBtn" class="btn-validate-payment">
-              <i class="bi bi-check-circle"></i> Validate Payment & Generate Receipt
-            </button>
-          </form>
-        </div>
-        
-        <!-- Recent Payment Validations -->
-        <div class="recent-payments-card">
-          <h3><i class="bi bi-clock-history"></i> Recent Payment Validations</h3>
-          <div id="recentPaymentsContainer" class="recent-payments-list">
-            <!-- Recent payments will be loaded here -->
-          </div>
-        </div>
-      </div>
-
-      <!-- SUPERVISOR VIEW (UNCHANGED - Original Supervisor functionality) -->
+      <!-- SUPERVISOR VIEW (Original Supervisor functionality - UNCHANGED) -->
       <div id="supervisorView" class="content-view">
         <div class="view-header">
           <h2><i class="bi bi-person-badge"></i> Supervisor Control Panel</h2>
@@ -390,11 +327,11 @@
         </div>
       </div>
 
-      <!-- GENERAL SUPERVISOR VIEW (NEW SEPARATE MENU) -->
+      <!-- GENERAL SUPERVISOR VIEW (UPDATED with Cash Payment, Communication, Weekly Reports) -->
       <div id="generalSupervisorView" class="content-view">
         <div class="view-header">
           <h2><i class="bi bi-person-workspace"></i> General Supervisor Dashboard</h2>
-          <p>Manage assigned workers, job statuses, and team performance</p>
+          <p>Manage assigned workers, job statuses, team performance, payments, and communicate with Admin</p>
         </div>
         
         <div class="general-supervisor-dashboard">
@@ -440,6 +377,154 @@
                 <button id="gsMarkCompletedBtn" class="btn-gs-complete" disabled>
                   <i class="bi bi-check-circle-fill"></i> Mark Job Completed
                 </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CASH PAYMENT VALIDATION - MOVED HERE -->
+          <div class="gs-card">
+            <h3><i class="bi bi-cash-stack"></i> Cash Payment Validation</h3>
+            <p class="text-muted small">Validate customer cash payments and generate receipts</p>
+            
+            <!-- Payment Stats Summary -->
+            <div class="payment-stats-grid" id="gsPaymentStatsGrid">
+              <!-- Dynamic payment stats will be loaded here -->
+            </div>
+            
+            <!-- Payment Validation Form -->
+            <div class="payment-validation-form">
+              <div class="form-group">
+                <label for="gsJobSelectPayment"><i class="bi bi-briefcase"></i> Select Job</label>
+                <select id="gsJobSelectPayment" class="form-control" required>
+                  <option value="">-- Select a completed job --</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="gsCustomerName"><i class="bi bi-person"></i> Customer Name</label>
+                <input type="text" id="gsCustomerName" class="form-control" readonly>
+              </div>
+              
+              <div class="form-group">
+                <label for="gsServiceAmount"><i class="bi bi-cash"></i> Service Amount</label>
+                <input type="text" id="gsServiceAmount" class="form-control" readonly>
+              </div>
+              
+              <div class="form-group">
+                <label for="gsCashReceived"><i class="bi bi-cash-stack"></i> Cash Received (TZS)</label>
+                <input type="number" id="gsCashReceived" class="form-control" step="1000" placeholder="Enter amount received">
+                <small class="text-muted">Enter the exact amount received from customer in Tanzanian Shillings (TZS)</small>
+              </div>
+              
+              <div class="form-group">
+                <label for="gsPaymentNote"><i class="bi bi-pencil"></i> Payment Note (Optional)</label>
+                <textarea id="gsPaymentNote" class="form-control" rows="2" placeholder="Any additional notes about the payment..."></textarea>
+              </div>
+              
+              <button type="button" id="gsValidatePaymentBtn" class="btn-validate-payment">
+                <i class="bi bi-check-circle"></i> Validate Payment & Generate Receipt
+              </button>
+            </div>
+            
+            <!-- Recent Payment Validations -->
+            <div class="recent-payments-container" style="margin-top: 24px;">
+              <h4><i class="bi bi-clock-history"></i> Recent Payment Validations</h4>
+              <div id="gsRecentPaymentsContainer" class="recent-payments-list">
+                <!-- Recent payments will be loaded here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- COMMUNICATION WITH ADMIN -->
+          <div class="gs-card communication-card">
+            <h3><i class="bi bi-chat-dots"></i> Communicate with Admin</h3>
+            <div class="chat-messages" id="gsChatMessagesContainer">
+              <!-- Chat history will appear here -->
+              <div class="chat-placeholder">No messages yet. Start a conversation with Admin.</div>
+            </div>
+            <div class="chat-input-group">
+              <textarea id="gsChatMessageInput" class="form-control" rows="2" placeholder="Type your message to Admin here..."></textarea>
+              <button id="gsSendChatMessageBtn" class="btn-supervisor-primary mt-2">
+                <i class="bi bi-send"></i> Send to Admin
+              </button>
+            </div>
+          </div>
+
+          <!-- WEEKLY REPORTS SYSTEM -->
+          <div class="gs-card">
+            <h3><i class="bi bi-file-text-fill"></i> Weekly Reports</h3>
+            
+            <!-- Create New Report -->
+            <div class="report-creation-section">
+              <h4><i class="bi bi-plus-circle"></i> Create New Weekly Report</h4>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label><i class="bi bi-calendar-week"></i> Week Ending Date</label>
+                    <input type="date" id="gsReportWeekEnding" class="form-control">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label><i class="bi bi-building"></i> Sites Supervised</label>
+                    <input type="text" id="gsReportSites" class="form-control" placeholder="e.g., ZSSF, Michenzani Mall, Zanzibar University">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label><i class="bi bi-people-fill"></i> Workers Supervised</label>
+                <input type="text" id="gsReportWorkers" class="form-control" placeholder="List workers under your supervision">
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label><i class="bi bi-check-circle-fill"></i> Completed Jobs</label>
+                    <input type="number" id="gsReportCompletedJobs" class="form-control" placeholder="Number of completed jobs">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label><i class="bi bi-clock-history"></i> Pending Jobs</label>
+                    <input type="number" id="gsReportPendingJobs" class="form-control" placeholder="Number of pending jobs">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label><i class="bi bi-calendar-check"></i> Attendance Summary</label>
+                <textarea id="gsReportAttendance" class="form-control" rows="2" placeholder="Summarize attendance for the week, highlight any absences or issues..."></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label><i class="bi bi-exclamation-triangle-fill"></i> Issues Encountered</label>
+                <textarea id="gsReportIssues" class="form-control" rows="2" placeholder="Describe any challenges, equipment failures, or customer concerns..."></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label><i class="bi bi-lightbulb-fill"></i> Recommendations</label>
+                <textarea id="gsReportRecommendations" class="form-control" rows="2" placeholder="Suggest improvements, training needs, or resource requests..."></textarea>
+              </div>
+              
+              <div class="report-actions">
+                <button id="gsGenerateReportBtn" class="btn-supervisor-primary">
+                  <i class="bi bi-file-earmark-text"></i> Generate Report
+                </button>
+                <button id="gsDownloadReportBtn" class="btn-supervisor-secondary" disabled>
+                  <i class="bi bi-download"></i> Download PDF
+                </button>
+                <button id="gsSubmitReportBtn" class="btn-supervisor-info" disabled>
+                  <i class="bi bi-send"></i> Submit to Admin
+                </button>
+              </div>
+            </div>
+            
+            <!-- Report History -->
+            <div class="report-history-section" style="margin-top: 28px;">
+              <h4><i class="bi bi-clock-history"></i> Report History</h4>
+              <div id="gsReportHistoryContainer" class="report-history-list">
+                <!-- Report history will be loaded here -->
               </div>
             </div>
           </div>

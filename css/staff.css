@@ -2664,6 +2664,128 @@ input:checked + .toggle-slider:before {
   cursor: not-allowed;
 }
 
+/* ========== ADDITIONAL GS PAYMENT STYLES ========== */
+.payment-validation-form {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.recent-payments-container h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-creation-section h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-history-section h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-history-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.report-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-section-alt);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.report-history-item:hover {
+  background: var(--bg-hover);
+  transform: translateX(4px);
+}
+
+.report-history-info {
+  flex: 1;
+}
+
+.report-history-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.report-history-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.report-history-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-report-download {
+  background: none;
+  border: none;
+  color: #667eea;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.btn-report-download:hover {
+  background: var(--bg-hover);
+  transform: scale(1.1);
+}
+
+/* ========== GS COMMUNICATION STYLES ========== */
+.gs-card.communication-card .chat-messages {
+  background: var(--bg-chat-messages);
+  border-radius: 16px;
+  padding: 16px;
+  height: 350px;
+  overflow-y: auto;
+  margin-bottom: 14px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gs-card.communication-card .chat-input-group textarea {
+  border-radius: 12px;
+  resize: vertical;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
 /* ========== EMPTY STATE ========== */
 .empty-state {
   text-align: center;
@@ -2884,6 +3006,21 @@ input:checked + .toggle-slider:before {
   
   .chat-message {
     max-width: 85%;
+  }
+
+  .report-history-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .report-history-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .report-history-meta {
+    font-size: 10px;
   }
 }
 

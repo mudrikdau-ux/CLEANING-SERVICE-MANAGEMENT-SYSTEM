@@ -1,4 +1,5 @@
 // staff.js - Complete Staff Page System
+
 // ========== STAFF ACCOUNT DATA ==========
 const staffAccount = {
   id: 1,
@@ -12,7 +13,7 @@ const staffAccount = {
   isSupervisor: true,
   isGeneralSupervisor: true,
   supervisorLocation: "Zanzibar University",
-  assignedWorkers: [5, 6, 9] // IDs of workers under this general supervisor
+  assignedWorkers: [5, 6, 9]
 };
 
 // Additional supervisor accounts for demo
@@ -142,6 +143,15 @@ let currentEditingMessageId = null;
 let currentActionMessageId = null;
 let currentGeneratedReport = null;
 
+// ========== GS DATA STORAGE ==========
+let gsPaymentValidations = [];
+let gsSelectedJobForPayment = null;
+let gsChatMessages = [];
+let gsDeletedMessagesForMe = [];
+let gsCurrentEditingMessageId = null;
+let gsWeeklyReports = [];
+let gsCurrentGeneratedReport = null;
+
 // ========== SETTINGS STORAGE ==========
 function getSettings() {
   const stored = localStorage.getItem('CleanSpark_settings');
@@ -260,7 +270,6 @@ function initThemeToggle() {
   const currentTheme = localStorage.getItem('theme') || 'light';
   document.documentElement.setAttribute('data-theme', currentTheme);
   
-  // Sync settings
   const settings = getSettings();
   settings.darkMode = currentTheme === 'dark';
   saveSettings(settings);
@@ -300,7 +309,6 @@ function setupMobileMenu() {
     closeBtn.addEventListener('click', closeSidebar);
   }
   
-  // Close sidebar when a nav button is clicked on mobile
   document.querySelectorAll('.sidebar-nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       if (window.innerWidth <= 768) {
@@ -353,7 +361,6 @@ function setupEventListeners() {
     });
   }
   
-  // Theme toggles
   const themeToggle = document.getElementById('themeToggle');
   if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
   
@@ -363,18 +370,15 @@ function setupEventListeners() {
   const sidebarThemeToggle = document.querySelector('.sidebar-theme-toggle');
   if (sidebarThemeToggle) sidebarThemeToggle.addEventListener('click', toggleTheme);
   
-  // Logout buttons
   const logoutBtn = document.getElementById('sidebarLogoutBtn');
   if (logoutBtn) logoutBtn.addEventListener('click', showLogoutConfirmation);
   
-  // Logout modal
   const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
   if (cancelLogoutBtn) cancelLogoutBtn.addEventListener('click', hideLogoutConfirmation);
   
   const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
   if (confirmLogoutBtn) confirmLogoutBtn.addEventListener('click', performLogout);
   
-  // Job detail modal
   const closeJobDetailModal = document.getElementById('closeJobDetailModal');
   if (closeJobDetailModal) closeJobDetailModal.addEventListener('click', closeJobDetailModalFn);
   
@@ -388,7 +392,6 @@ function setupEventListeners() {
     });
   }
   
-  // Stats detail modal
   const closeStatsDetailModal = document.getElementById('closeStatsDetailModal');
   if (closeStatsDetailModal) closeStatsDetailModal.addEventListener('click', closeStatsDetailModalFn);
   
@@ -402,7 +405,6 @@ function setupEventListeners() {
     });
   }
   
-  // Payment stats detail modal
   const closePaymentStatsDetailModalBtn = document.getElementById('closePaymentStatsDetailModal');
   if (closePaymentStatsDetailModalBtn) closePaymentStatsDetailModalBtn.addEventListener('click', closePaymentStatsDetailModal);
   
@@ -416,7 +418,6 @@ function setupEventListeners() {
     });
   }
   
-  // Logout confirmation modal overlay
   const logoutConfirmModal = document.getElementById('logoutConfirmModal');
   if (logoutConfirmModal) {
     logoutConfirmModal.addEventListener('click', function(e) {
@@ -424,7 +425,6 @@ function setupEventListeners() {
     });
   }
   
-  // Action modal
   const closeActionModal = document.getElementById('closeActionModal');
   if (closeActionModal) closeActionModal.addEventListener('click', closeActionModalFn);
   
@@ -441,11 +441,6 @@ function setupEventListeners() {
     });
   }
   
-  // Payment validation
-  const validateBtn = document.getElementById('validatePaymentBtn');
-  if (validateBtn) validateBtn.addEventListener('click', validateCashPayment);
-  
-  // Receipt modal
   const closeModalBtn = document.getElementById('closeReceiptModalBtn');
   if (closeModalBtn) closeModalBtn.addEventListener('click', closeReceiptModal);
   
@@ -462,7 +457,6 @@ function setupEventListeners() {
     });
   }
   
-  // Supervisor event listeners
   const loadLocationBtn = document.getElementById('loadLocationDataBtn');
   if (loadLocationBtn) {
     loadLocationBtn.addEventListener('click', () => {
@@ -500,7 +494,6 @@ function setupEventListeners() {
     });
   }
   
-  // Chat
   const sendChatMsgBtn = document.getElementById('sendChatMessageBtn');
   if (sendChatMsgBtn) {
     sendChatMsgBtn.addEventListener('click', () => {
@@ -512,7 +505,6 @@ function setupEventListeners() {
   const attachReportBtn = document.getElementById('attachReportToChatBtn');
   if (attachReportBtn) attachReportBtn.addEventListener('click', attachLastReportToChat);
   
-  // Edit message modal
   const saveEditBtn = document.getElementById('saveEditMessage');
   if (saveEditBtn) saveEditBtn.addEventListener('click', saveEditedMessage);
   
@@ -522,7 +514,6 @@ function setupEventListeners() {
   const closeEditModal = document.getElementById('closeEditMessageModal');
   if (closeEditModal) closeEditModal.addEventListener('click', cancelEditMessage);
   
-  // Chat input enter key
   const chatInput = document.getElementById('chatMessageInput');
   if (chatInput) {
     chatInput.addEventListener('keypress', (e) => {
@@ -533,7 +524,6 @@ function setupEventListeners() {
     });
   }
   
-  // Login enter key
   const inputs = document.querySelectorAll('#loginSection input');
   inputs.forEach(input => {
     input.addEventListener('keypress', (e) => {
@@ -544,7 +534,6 @@ function setupEventListeners() {
     });
   });
   
-  // General Supervisor event listeners
   const gsStatusFilter = document.getElementById('gsStatusFilter');
   if (gsStatusFilter) gsStatusFilter.addEventListener('change', filterGSJobs);
   
@@ -587,7 +576,9 @@ function setupEventListeners() {
     });
   }
   
-  // Escape key to close modals
+  const gsValidatePaymentBtn = document.getElementById('gsValidatePaymentBtn');
+  if (gsValidatePaymentBtn) gsValidatePaymentBtn.addEventListener('click', validateGSCashPayment);
+  
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeJobDetailModalFn();
@@ -601,7 +592,6 @@ function setupEventListeners() {
     }
   });
   
-  // Window resize handler
   window.addEventListener('resize', () => {
     if (window.innerWidth > 768) {
       closeSidebar();
@@ -620,7 +610,6 @@ function showDashboard() {
   loadStats();
   loadProfile();
   loadSettings();
-  initPaymentModule();
   toggleSupervisorMenu();
   toggleGeneralSupervisorMenu();
   
@@ -635,6 +624,7 @@ function showDashboard() {
   sessionStorage.setItem('staffName', currentStaff.name);
   sessionStorage.setItem('staffEmail', currentStaff.email);
 }
+
 // ========== LOGOUT FUNCTIONS ==========
 function showLogoutConfirmation() {
   const modal = document.getElementById('logoutConfirmModal');
@@ -779,8 +769,6 @@ function loadStaffData() {
 function loadJobs() {
   let staffJobs;
   
-  // For regular staff: show jobs assigned to them
-  // For general supervisors: show all jobs under their supervision
   if (currentStaff.isGeneralSupervisor) {
     staffJobs = jobs.filter(job => job.generalSupervisorId === currentStaff.id);
   } else {
@@ -1140,7 +1128,6 @@ function updateSetting(key, value) {
     showNotification(`Language set to: ${value === 'en' ? 'English' : 'Kiswahili'}`, 'success');
   }
   
-  // Reload settings to reflect changes
   if (key === 'availabilityStatus') loadSettings();
 }
 
@@ -1153,7 +1140,6 @@ function toggleThemeFromSettings(enableDark) {
   settings.darkMode = enableDark;
   saveSettings(settings);
   
-  // Update the sidebar theme toggle icons
   showNotification(`Theme switched to ${newTheme} mode`, 'success');
 }
 
@@ -1209,7 +1195,6 @@ function submitActionReport() {
     status: 'submitted'
   };
   
-  // Store action reports
   const actionReports = JSON.parse(localStorage.getItem('CleanSpark_actionReports') || '[]');
   actionReports.push(actionReport);
   localStorage.setItem('CleanSpark_actionReports', JSON.stringify(actionReports));
@@ -1246,7 +1231,6 @@ function showJobDetailModal(jobId) {
   const statusIcon = job.status === 'pending' ? 'bi-clock' : job.status === 'in-progress' ? 'bi-play-circle' : 'bi-check-circle';
   const supervisorPhone = job.supervisorPhone || getSupervisorPhone(job.generalSupervisorId);
   
-  // Build content - for staff/non-GS users, hide price and duration
   let html = `
     <div class="detail-group">
       <div class="detail-group-header">
@@ -1308,7 +1292,6 @@ function showJobDetailModal(jobId) {
     </div>
   `;
   
-  // Only show price and duration for General Supervisors or Supervisors
   if (currentStaff.isGeneralSupervisor || currentStaff.isSupervisor) {
     html += `
     <div class="detail-group">
@@ -1364,6 +1347,7 @@ function closeJobDetailModalFn() {
     document.body.style.overflow = '';
   }
 }
+
 // ========== STATS DETAIL MODAL ==========
 function showStatsDetail(statId) {
   const modal = document.getElementById('statsDetailModal');
@@ -1559,7 +1543,6 @@ function setupSidebarNav() {
       if (activeView) {
         activeView.classList.add('active');
         
-        // Update top bar title
         const topBarTitle = document.getElementById('topBarTitle');
         if (topBarTitle) topBarTitle.textContent = viewTitles[view] || view;
         
@@ -1619,13 +1602,16 @@ function loadGeneralSupervisorData() {
   loadGSTeam();
   loadGSJobs();
   loadGSJobSelect();
+  loadGSPaymentModule();
+  loadGSCommunication();
+  loadGSReportHistory();
+  updateGSStats();
 }
 
 function loadGSTeam() {
   const container = document.getElementById('gsTeamContainer');
   if (!container) return;
   
-  // Get workers assigned to this general supervisor
   const assignedWorkerIds = currentStaff.assignedWorkers || [];
   const workers = staffMembers.filter(s => assignedWorkerIds.includes(s.id) && !s.isSupervisor);
   
@@ -1656,7 +1642,6 @@ function loadGSTeam() {
   
   container.innerHTML = html;
   
-  // Update worker filter
   const workerFilter = document.getElementById('gsWorkerFilter');
   if (workerFilter) {
     let options = '<option value="all">All Workers</option>';
@@ -1674,10 +1659,8 @@ function loadGSJobs() {
   const statusFilter = document.getElementById('gsStatusFilter')?.value || 'all';
   const workerFilter = document.getElementById('gsWorkerFilter')?.value || 'all';
   
-  // Get jobs under this general supervisor
   let gsJobs = jobs.filter(j => j.generalSupervisorId === currentStaff.id);
   
-  // Apply filters
   if (statusFilter !== 'all') {
     gsJobs = gsJobs.filter(j => j.status === statusFilter);
   }
@@ -1731,7 +1714,6 @@ function loadGSJobSelect() {
   
   select.innerHTML = options;
   
-  // Reset action buttons
   const gsMarkStartedBtn = document.getElementById('gsMarkStartedBtn');
   const gsMarkCompletedBtn = document.getElementById('gsMarkCompletedBtn');
   if (gsMarkStartedBtn) gsMarkStartedBtn.disabled = true;
@@ -1760,7 +1742,6 @@ function updateJobStatusGS(jobId, newStatus) {
     loadJobHistory();
     loadStats();
     
-    // Reset buttons
     const gsMarkStartedBtn = document.getElementById('gsMarkStartedBtn');
     const gsMarkCompletedBtn = document.getElementById('gsMarkCompletedBtn');
     const gsJobSelect = document.getElementById('gsJobSelect');
@@ -1768,6 +1749,617 @@ function updateJobStatusGS(jobId, newStatus) {
     if (gsMarkCompletedBtn) gsMarkCompletedBtn.disabled = true;
     if (gsJobSelect) gsJobSelect.value = '';
   }
+}
+
+// ========== GS PAYMENT MODULE ==========
+function loadGSPaymentModule() {
+  loadGSPaymentValidations();
+  loadGSCompletedJobsForPayment();
+}
+
+function loadGSPaymentValidations() {
+  const stored = localStorage.getItem('CleanSpark_payments');
+  gsPaymentValidations = stored ? JSON.parse(stored) : [
+    { id: 1, jobId: 104, jobService: "AC Maintenance & Filter", customerName: "Omar Juma", amount: 300000, cashReceived: 300000, change: 0, paymentDate: "2026-03-20", paymentTime: "15:30", status: "completed", receiptNumber: "RCP-20260320-001" },
+    { id: 2, jobId: 105, jobService: "Full Villa Cleaning", customerName: "Salma Khamis", amount: 850000, cashReceived: 850000, change: 0, paymentDate: "2026-03-18", paymentTime: "12:15", status: "completed", receiptNumber: "RCP-20260318-002" }
+  ];
+  saveGSPaymentValidations();
+}
+
+function saveGSPaymentValidations() {
+  localStorage.setItem('CleanSpark_payments', JSON.stringify(gsPaymentValidations));
+}
+
+function updateGSStats() {
+  const totalPayments = gsPaymentValidations.length;
+  const totalAmount = gsPaymentValidations.reduce((sum, p) => sum + p.amount, 0);
+  const today = new Date().toISOString().split('T')[0];
+  const todayPayments = gsPaymentValidations.filter(p => p.paymentDate === today).length;
+  const todayAmount = gsPaymentValidations.filter(p => p.paymentDate === today).reduce((sum, p) => sum + p.amount, 0);
+  
+  const statsGrid = document.getElementById('gsPaymentStatsGrid');
+  if (statsGrid) {
+    statsGrid.innerHTML = `
+      <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('totalPayments')">
+        <div class="payment-stat-icon"><i class="bi bi-receipt"></i></div>
+        <div class="payment-stat-value">${totalPayments}</div>
+        <div class="payment-stat-label">Total Payments</div>
+      </div>
+      <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('totalRevenue')">
+        <div class="payment-stat-icon"><i class="bi bi-cash-stack"></i></div>
+        <div class="payment-stat-value">TZS ${formatNumber(totalAmount)}</div>
+        <div class="payment-stat-label">Total Revenue</div>
+      </div>
+      <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('todayPayments')">
+        <div class="payment-stat-icon"><i class="bi bi-calendar-today"></i></div>
+        <div class="payment-stat-value">${todayPayments}</div>
+        <div class="payment-stat-label">Today's Payments</div>
+      </div>
+      <div class="payment-stat-card clickable-indicator" onclick="showPaymentStatsDetail('todayRevenue')">
+        <div class="payment-stat-icon"><i class="bi bi-graph-up"></i></div>
+        <div class="payment-stat-value">TZS ${formatNumber(todayAmount)}</div>
+        <div class="payment-stat-label">Today's Revenue</div>
+      </div>`;
+  }
+}
+
+function loadGSCompletedJobsForPayment() {
+  const gsJobs = jobs.filter(job => job.generalSupervisorId === currentStaff.id && job.status === 'completed');
+  const jobSelect = document.getElementById('gsJobSelectPayment');
+  if (!jobSelect) return;
+  
+  const pendingJobs = gsJobs.filter(job => !gsPaymentValidations.some(p => p.jobId === job.id));
+  
+  if (pendingJobs.length === 0) {
+    jobSelect.innerHTML = '<option value="">-- No pending payments --</option>';
+    return;
+  }
+  
+  let options = '<option value="">-- Select a completed job --</option>';
+  pendingJobs.forEach(job => {
+    options += `<option value="${job.id}" data-service="${escapeHtml(job.service)}" data-client="${escapeHtml(job.client)}" data-price="${job.price}">${job.service} - ${job.client} (TZS ${formatNumber(job.price)})</option>`;
+  });
+  
+  jobSelect.innerHTML = options;
+  
+  jobSelect.onchange = function() {
+    const selectedOption = this.options[this.selectedIndex];
+    if (this.value) {
+      document.getElementById('gsCustomerName').value = selectedOption.getAttribute('data-client');
+      document.getElementById('gsServiceAmount').value = `TZS ${formatNumber(parseInt(selectedOption.getAttribute('data-price')))}`;
+      document.getElementById('gsCashReceived').value = '';
+      document.getElementById('gsPaymentNote').value = '';
+      gsSelectedJobForPayment = {
+        id: parseInt(this.value),
+        service: selectedOption.getAttribute('data-service'),
+        client: selectedOption.getAttribute('data-client'),
+        price: parseInt(selectedOption.getAttribute('data-price'))
+      };
+    } else {
+      document.getElementById('gsCustomerName').value = '';
+      document.getElementById('gsServiceAmount').value = '';
+      gsSelectedJobForPayment = null;
+    }
+  };
+}
+
+function validateGSCashPayment() {
+  const jobSelect = document.getElementById('gsJobSelectPayment');
+  const cashReceivedInput = document.getElementById('gsCashReceived');
+  const paymentNote = document.getElementById('gsPaymentNote').value;
+  
+  if (!jobSelect || !jobSelect.value) { showNotification('Please select a job', 'error'); return; }
+  if (!gsSelectedJobForPayment) { showNotification('Invalid job selection', 'error'); return; }
+  
+  const cashReceived = parseFloat(cashReceivedInput.value);
+  if (isNaN(cashReceived) || cashReceived <= 0) { showNotification('Please enter a valid amount', 'error'); return; }
+  
+  const serviceAmount = gsSelectedJobForPayment.price;
+  if (cashReceived < serviceAmount) { showNotification(`Insufficient payment! Need TZS ${formatNumber(serviceAmount - cashReceived)} more.`, 'error'); return; }
+  
+  const change = cashReceived - serviceAmount;
+  
+  const paymentRecord = {
+    id: gsPaymentValidations.length + 1,
+    jobId: gsSelectedJobForPayment.id,
+    jobService: gsSelectedJobForPayment.service,
+    customerName: gsSelectedJobForPayment.client,
+    amount: serviceAmount,
+    cashReceived: cashReceived,
+    change: change,
+    paymentDate: new Date().toISOString().split('T')[0],
+    paymentTime: new Date().toLocaleTimeString(),
+    status: "completed",
+    receiptNumber: `RCP-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${Math.floor(Math.random()*1000).toString().padStart(3,'0')}`,
+    note: paymentNote
+  };
+  
+  gsPaymentValidations.push(paymentRecord);
+  saveGSPaymentValidations();
+  generateReceipt(paymentRecord);
+  updateGSStats();
+  loadGSRecentPayments();
+  loadGSCompletedJobsForPayment();
+  
+  cashReceivedInput.value = '';
+  document.getElementById('gsPaymentNote').value = '';
+  jobSelect.value = '';
+  document.getElementById('gsCustomerName').value = '';
+  document.getElementById('gsServiceAmount').value = '';
+  gsSelectedJobForPayment = null;
+  
+  showNotification(`Payment validated! Receipt #${paymentRecord.receiptNumber}`, 'success');
+}
+
+function loadGSRecentPayments() {
+  const container = document.getElementById('gsRecentPaymentsContainer');
+  if (!container) return;
+  
+  const recentPayments = [...gsPaymentValidations].reverse().slice(0, 10);
+  
+  if (recentPayments.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="padding:20px;"><i class="bi bi-receipt"></i><h4>No Payments Yet</h4></div>`;
+    return;
+  }
+  
+  container.innerHTML = recentPayments.map(payment => `
+    <div class="payment-item">
+      <div class="payment-info">
+        <div class="payment-job">${escapeHtml(payment.jobService)}</div>
+        <div class="payment-details"><span><i class="bi bi-person"></i> ${escapeHtml(payment.customerName)}</span><span><i class="bi bi-receipt"></i> ${payment.receiptNumber}</span></div>
+        <span class="payment-status">Validated</span>
+      </div>
+      <div class="payment-amount"><div class="amount-value">TZS ${formatNumber(payment.amount)}</div><div class="payment-date">${payment.paymentDate}</div></div>
+    </div>`).join('');
+}
+
+// ========== GS COMMUNICATION WITH ADMIN ==========
+function loadGSCommunication() {
+  loadGSChatMessages();
+  displayGSChatMessages();
+  
+  const sendBtn = document.getElementById('gsSendChatMessageBtn');
+  if (sendBtn) {
+    sendBtn.onclick = () => {
+      const message = document.getElementById('gsChatMessageInput').value;
+      sendGSChatMessage(message);
+    };
+  }
+  
+  const chatInput = document.getElementById('gsChatMessageInput');
+  if (chatInput) {
+    chatInput.onkeypress = (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendGSChatMessage(chatInput.value);
+      }
+    };
+  }
+}
+
+function loadGSChatMessages() {
+  const stored = localStorage.getItem('CleanSpark_gs_chat');
+  if (stored) {
+    gsChatMessages = JSON.parse(stored);
+  } else {
+    gsChatMessages = [
+      { id: 1, sender: "Admin", message: "Welcome General Supervisor! This is your direct communication channel with Admin. Use this for reports, issues, and updates.", timestamp: new Date().toISOString(), type: "received", edited: false, read: true }
+    ];
+    saveGSChatMessages();
+  }
+  
+  const storedDeleted = localStorage.getItem('CleanSpark_gs_deletedForMe');
+  if (storedDeleted) {
+    gsDeletedMessagesForMe = JSON.parse(storedDeleted);
+  }
+}
+
+function saveGSChatMessages() {
+  localStorage.setItem('CleanSpark_gs_chat', JSON.stringify(gsChatMessages));
+}
+
+function saveGSDeletedForMe() {
+  localStorage.setItem('CleanSpark_gs_deletedForMe', JSON.stringify(gsDeletedMessagesForMe));
+}
+
+function sendGSChatMessage(message) {
+  if (!message || !message.trim()) return;
+  
+  const newMessage = {
+    id: Date.now(),
+    sender: currentStaff.name,
+    senderEmail: currentStaff.email,
+    message: message.trim(),
+    timestamp: new Date().toISOString(),
+    type: "sent",
+    edited: false,
+    read: false
+  };
+  
+  gsChatMessages.unshift(newMessage);
+  saveGSChatMessages();
+  displayGSChatMessages();
+  
+  document.getElementById('gsChatMessageInput').value = '';
+  showNotification('Message sent to Admin!', 'success');
+}
+
+function displayGSChatMessages() {
+  const container = document.getElementById('gsChatMessagesContainer');
+  if (!container) return;
+  
+  const visibleMessages = gsChatMessages.filter(msg => !gsDeletedMessagesForMe.includes(msg.id));
+  
+  if (visibleMessages.length === 0) {
+    container.innerHTML = '<div class="chat-placeholder">No messages yet. Start a conversation with Admin.</div>';
+    return;
+  }
+  
+  let html = '';
+  visibleMessages.slice().reverse().forEach(msg => {
+    const date = new Date(msg.timestamp);
+    const messageClass = msg.type === 'sent' ? 'sent' : 'received';
+    const senderName = msg.type === 'sent' ? 'You' : msg.sender;
+    
+    html += `
+      <div class="chat-message-wrapper ${messageClass}" data-message-id="${msg.id}">
+        <div class="chat-message ${messageClass}">
+          <div style="font-weight: 600; margin-bottom: 4px; font-size: 12px;">${escapeHtml(senderName)}</div>
+          <div class="message-text">${escapeHtml(msg.message)}</div>
+          <div class="message-meta">
+            ${msg.edited ? '<span class="edited-badge">(edited)</span>' : ''}
+            <span>${date.toLocaleString()}</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 4px; margin-top: 2px; padding: 0 4px;">
+          <button onclick="copyGSMessage(${msg.id})" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);" title="Copy"><i class="bi bi-clipboard"></i></button>
+          ${msg.type === 'sent' ? `<button onclick="editGSMessage(${msg.id})" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);" title="Edit"><i class="bi bi-pencil"></i></button>` : ''}
+          <button onclick="deleteGSMessageForMe(${msg.id})" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);" title="Hide"><i class="bi bi-eye-slash"></i></button>
+          ${msg.type === 'sent' ? `<button onclick="deleteGSMessageForAll(${msg.id})" style="background:none;border:none;cursor:pointer;font-size:11px;color:#dc3545;" title="Delete"><i class="bi bi-trash"></i></button>` : ''}
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+function copyGSMessage(messageId) {
+  const message = gsChatMessages.find(msg => msg.id === messageId);
+  if (!message) return;
+  
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(message.message).then(() => showNotification('Copied!', 'success'));
+  } else {
+    const textarea = document.createElement('textarea');
+    textarea.value = message.message;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showNotification('Copied!', 'success');
+  }
+}
+
+function editGSMessage(messageId) {
+  const message = gsChatMessages.find(msg => msg.id === messageId);
+  if (!message) return;
+  
+  gsCurrentEditingMessageId = messageId;
+  document.getElementById('editMessageInput').value = message.message;
+  document.getElementById('editMessageModal').style.display = 'flex';
+  
+  const saveBtn = document.getElementById('saveEditMessage');
+  const originalClick = saveBtn.onclick;
+  saveBtn.onclick = () => {
+    const newText = document.getElementById('editMessageInput').value.trim();
+    if (!newText) { showNotification('Message cannot be empty', 'error'); return; }
+    
+    const msgIndex = gsChatMessages.findIndex(msg => msg.id === gsCurrentEditingMessageId);
+    if (msgIndex !== -1) {
+      gsChatMessages[msgIndex].message = newText;
+      gsChatMessages[msgIndex].edited = true;
+      gsChatMessages[msgIndex].timestamp = new Date().toISOString();
+      saveGSChatMessages();
+      displayGSChatMessages();
+      showNotification('Message updated!', 'success');
+    }
+    
+    gsCurrentEditingMessageId = null;
+    document.getElementById('editMessageModal').style.display = 'none';
+    document.getElementById('editMessageInput').value = '';
+    saveBtn.onclick = originalClick;
+  };
+}
+
+function deleteGSMessageForMe(messageId) {
+  if (!gsDeletedMessagesForMe.includes(messageId)) {
+    gsDeletedMessagesForMe.push(messageId);
+    saveGSDeletedForMe();
+    displayGSChatMessages();
+    showNotification('Message hidden', 'success');
+  }
+}
+
+function deleteGSMessageForAll(messageId) {
+  const msgIndex = gsChatMessages.findIndex(msg => msg.id === messageId);
+  if (msgIndex !== -1) {
+    gsChatMessages.splice(msgIndex, 1);
+    saveGSChatMessages();
+    displayGSChatMessages();
+    showNotification('Message deleted', 'success');
+  }
+}
+
+// ========== GS WEEKLY REPORTS SYSTEM ==========
+function loadGSReportHistory() {
+  const stored = localStorage.getItem('CleanSpark_gs_reports');
+  if (stored) {
+    gsWeeklyReports = JSON.parse(stored);
+  } else {
+    gsWeeklyReports = [];
+  }
+  displayGSReportHistory();
+  
+  const generateBtn = document.getElementById('gsGenerateReportBtn');
+  if (generateBtn) {
+    generateBtn.onclick = generateGSWeeklyReport;
+  }
+  
+  const downloadBtn = document.getElementById('gsDownloadReportBtn');
+  if (downloadBtn) {
+    downloadBtn.onclick = downloadGSReport;
+  }
+  
+  const submitBtn = document.getElementById('gsSubmitReportBtn');
+  if (submitBtn) {
+    submitBtn.onclick = submitGSReportToAdmin;
+  }
+  
+  const today = new Date();
+  const daysUntilFriday = (5 - today.getDay() + 7) % 7;
+  const friday = new Date(today);
+  friday.setDate(today.getDate() + (daysUntilFriday || 7));
+  const weekEndingInput = document.getElementById('gsReportWeekEnding');
+  if (weekEndingInput) weekEndingInput.value = friday.toISOString().split('T')[0];
+}
+
+function generateGSWeeklyReport() {
+  const weekEnding = document.getElementById('gsReportWeekEnding').value;
+  const sites = document.getElementById('gsReportSites').value;
+  const workers = document.getElementById('gsReportWorkers').value;
+  const completedJobs = document.getElementById('gsReportCompletedJobs').value;
+  const pendingJobs = document.getElementById('gsReportPendingJobs').value;
+  const attendance = document.getElementById('gsReportAttendance').value;
+  const issues = document.getElementById('gsReportIssues').value;
+  const recommendations = document.getElementById('gsReportRecommendations').value;
+  
+  if (!weekEnding) { showNotification('Please select the week ending date', 'error'); return; }
+  if (!sites) { showNotification('Please enter sites supervised', 'error'); return; }
+  if (!workers) { showNotification('Please enter workers supervised', 'error'); return; }
+  
+  const report = {
+    id: Date.now(),
+    reportNumber: `GSR-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${Math.floor(Math.random()*1000)}`,
+    weekEnding: weekEnding,
+    sitesSupervised: sites,
+    workersSupervised: workers,
+    completedJobs: parseInt(completedJobs) || 0,
+    pendingJobs: parseInt(pendingJobs) || 0,
+    attendanceSummary: attendance || 'No attendance summary provided.',
+    issuesEncountered: issues || 'No issues reported.',
+    recommendations: recommendations || 'No recommendations provided.',
+    generatedBy: currentStaff.name,
+    generatedByEmail: currentStaff.email,
+    generatedDate: new Date().toISOString(),
+    submittedToAdmin: false,
+    submittedDate: null
+  };
+  
+  gsCurrentGeneratedReport = report;
+  
+  const previewContent = `
+    <div class="professional-report">
+      <div class="report-header-section">
+        <div class="report-title-main">GENERAL SUPERVISOR WEEKLY REPORT</div>
+        <div class="report-subtitle">CleanSpark Cleaning Services</div>
+      </div>
+      <div class="report-meta-grid">
+        <div class="meta-item"><span class="meta-label">Report Number</span><span class="meta-value">${report.reportNumber}</span></div>
+        <div class="meta-item"><span class="meta-label">Week Ending</span><span class="meta-value">${report.weekEnding}</span></div>
+        <div class="meta-item"><span class="meta-label">Generated By</span><span class="meta-value">${escapeHtml(report.generatedBy)}</span></div>
+        <div class="meta-item"><span class="meta-label">Date</span><span class="meta-value">${new Date(report.generatedDate).toLocaleDateString()}</span></div>
+      </div>
+      <div class="report-section-block"><div class="section-title"><i class="bi bi-building"></i> Sites Supervised</div><div class="section-content">${escapeHtml(report.sitesSupervised)}</div></div>
+      <div class="report-section-block"><div class="section-title"><i class="bi bi-people-fill"></i> Workers Supervised</div><div class="section-content">${escapeHtml(report.workersSupervised)}</div></div>
+      <div class="report-stats-row"><div class="stat-box"><div class="stat-number">${report.completedJobs}</div><div class="stat-label">Completed Jobs</div></div><div class="stat-box"><div class="stat-number">${report.pendingJobs}</div><div class="stat-label">Pending Jobs</div></div></div>
+      <div class="report-section-block"><div class="section-title"><i class="bi bi-calendar-check"></i> Attendance Summary</div><div class="section-content">${escapeHtml(report.attendanceSummary)}</div></div>
+      <div class="report-section-block"><div class="section-title"><i class="bi bi-exclamation-triangle-fill"></i> Issues Encountered</div><div class="section-content">${escapeHtml(report.issuesEncountered)}</div></div>
+      <div class="report-section-block"><div class="section-title"><i class="bi bi-lightbulb-fill"></i> Recommendations</div><div class="section-content">${escapeHtml(report.recommendations)}</div></div>
+    </div>`;
+  
+  document.getElementById('reportPreviewContent').innerHTML = previewContent;
+  document.getElementById('reportPreviewModal').style.display = 'flex';
+  
+  const downloadBtn = document.getElementById('gsDownloadReportBtn');
+  const submitBtn = document.getElementById('gsSubmitReportBtn');
+  if (downloadBtn) downloadBtn.disabled = false;
+  if (submitBtn) submitBtn.disabled = false;
+  
+  showNotification('Report generated! You can now download or submit it.', 'success');
+}
+
+function downloadGSReport() {
+  if (!gsCurrentGeneratedReport) { showNotification('No report to download.', 'error'); return; }
+  
+  const report = gsCurrentGeneratedReport;
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>CleanSpark General Supervisor Report - ${report.reportNumber}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Inter', sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; color: #1a202c; background: white; }
+          @media print { body { margin: 0; padding: 20px; } @page { size: A4; margin: 2cm; } }
+          .report-header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #667eea; }
+          .report-title { font-size: 24px; font-weight: 800; color: #1a202c; margin-bottom: 8px; }
+          .report-subtitle { color: #667eea; font-size: 14px; }
+          .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 20px 0; padding: 16px; background: #f7fafc; border-radius: 12px; }
+          .meta-item { display: flex; justify-content: space-between; font-size: 13px; }
+          .meta-label { font-weight: 600; color: #4a5568; }
+          .meta-value { color: #1a202c; }
+          .section { margin: 24px 0; }
+          .section-title { font-size: 18px; font-weight: 700; color: #1a202c; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+          .section-content { color: #4a5568; line-height: 1.6; padding: 12px; background: #f7fafc; border-radius: 8px; }
+          .stats-row { display: flex; gap: 20px; margin: 20px 0; }
+          .stat-box { flex: 1; text-align: center; padding: 20px; background: linear-gradient(135deg, #667eea10, #764ba210); border-radius: 12px; }
+          .stat-number { font-size: 32px; font-weight: 800; color: #667eea; }
+          .stat-label { font-size: 13px; color: #4a5568; margin-top: 4px; }
+          .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #a0aec0; }
+          @media print { .no-print { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="report-header">
+          <div class="report-title">GENERAL SUPERVISOR WEEKLY REPORT</div>
+          <div class="report-subtitle">CleanSpark Cleaning Services</div>
+        </div>
+        
+        <div class="meta-grid">
+          <div class="meta-item"><span class="meta-label">Report Number:</span><span class="meta-value">${report.reportNumber}</span></div>
+          <div class="meta-item"><span class="meta-label">Week Ending:</span><span class="meta-value">${report.weekEnding}</span></div>
+          <div class="meta-item"><span class="meta-label">Generated By:</span><span class="meta-value">${escapeHtml(report.generatedBy)}</span></div>
+          <div class="meta-item"><span class="meta-label">Date:</span><span class="meta-value">${new Date(report.generatedDate).toLocaleDateString()}</span></div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title"><span>🏢</span> Sites Supervised</div>
+          <div class="section-content">${escapeHtml(report.sitesSupervised)}</div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title"><span>👥</span> Workers Supervised</div>
+          <div class="section-content">${escapeHtml(report.workersSupervised)}</div>
+        </div>
+        
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-number">${report.completedJobs}</div><div class="stat-label">Completed Jobs</div></div>
+          <div class="stat-box"><div class="stat-number">${report.pendingJobs}</div><div class="stat-label">Pending Jobs</div></div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title"><span>📅</span> Attendance Summary</div>
+          <div class="section-content">${escapeHtml(report.attendanceSummary)}</div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title"><span>⚠️</span> Issues Encountered</div>
+          <div class="section-content">${escapeHtml(report.issuesEncountered)}</div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title"><span>💡</span> Recommendations</div>
+          <div class="section-content">${escapeHtml(report.recommendations)}</div>
+        </div>
+        
+        <div class="footer">
+          <p>This report is generated automatically by CleanSpark Management System</p>
+          <p>© ${new Date().getFullYear()} CleanSpark Cleaning Services</p>
+        </div>
+        
+        <div class="no-print" style="text-align:center; margin-top:30px;">
+          <button onclick="window.print()" style="padding:12px 30px;background:#667eea;color:white;border:none;border-radius:10px;cursor:pointer;">Print / Save as PDF</button>
+        </div>
+        <script>setTimeout(function(){ window.print(); }, 500);</script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+  
+  showNotification('Report opened for printing/saving as PDF!', 'success');
+  closeReportModal();
+}
+
+function submitGSReportToAdmin() {
+  if (!gsCurrentGeneratedReport) { showNotification('No report to submit.', 'error'); return; }
+  
+  gsCurrentGeneratedReport.submittedToAdmin = true;
+  gsCurrentGeneratedReport.submittedDate = new Date().toISOString();
+  
+  gsWeeklyReports.unshift(gsCurrentGeneratedReport);
+  saveGSReports();
+  displayGSReportHistory();
+  
+  const reportSummary = `📋 **WEEKLY REPORT SUBMITTED**\nReport #: ${gsCurrentGeneratedReport.reportNumber}\nWeek Ending: ${gsCurrentGeneratedReport.weekEnding}\nSites: ${gsCurrentGeneratedReport.sitesSupervised}\nCompleted Jobs: ${gsCurrentGeneratedReport.completedJobs}\nPending Jobs: ${gsCurrentGeneratedReport.pendingJobs}\n\nIssues: ${gsCurrentGeneratedReport.issuesEncountered.substring(0, 100)}...\nRecommendations: ${gsCurrentGeneratedReport.recommendations.substring(0, 100)}...`;
+  
+  sendGSChatMessage(reportSummary);
+  
+  showNotification(`Report #${gsCurrentGeneratedReport.reportNumber} submitted to Admin!`, 'success');
+  closeReportModal();
+  
+  document.getElementById('gsReportSites').value = '';
+  document.getElementById('gsReportWorkers').value = '';
+  document.getElementById('gsReportCompletedJobs').value = '';
+  document.getElementById('gsReportPendingJobs').value = '';
+  document.getElementById('gsReportAttendance').value = '';
+  document.getElementById('gsReportIssues').value = '';
+  document.getElementById('gsReportRecommendations').value = '';
+  
+  const downloadBtn = document.getElementById('gsDownloadReportBtn');
+  const submitBtn = document.getElementById('gsSubmitReportBtn');
+  if (downloadBtn) downloadBtn.disabled = true;
+  if (submitBtn) submitBtn.disabled = true;
+  
+  gsCurrentGeneratedReport = null;
+}
+
+function saveGSReports() {
+  localStorage.setItem('CleanSpark_gs_reports', JSON.stringify(gsWeeklyReports));
+}
+
+function displayGSReportHistory() {
+  const container = document.getElementById('gsReportHistoryContainer');
+  if (!container) return;
+  
+  if (gsWeeklyReports.length === 0) {
+    container.innerHTML = '<div class="empty-state" style="padding:20px;"><i class="bi bi-file-text"></i><h4>No Reports Yet</h4><p>Generate and submit your first weekly report.</p></div>';
+    return;
+  }
+  
+  let html = '';
+  gsWeeklyReports.forEach(report => {
+    const submittedBadge = report.submittedToAdmin ? '<span class="status-badge status-completed" style="font-size:10px;">Submitted</span>' : '<span class="status-badge status-pending" style="font-size:10px;">Draft</span>';
+    
+    html += `
+      <div class="report-history-item">
+        <div class="report-history-info">
+          <div class="report-history-title">${escapeHtml(report.reportNumber)} - Week Ending ${report.weekEnding}</div>
+          <div class="report-history-meta">
+            <span><i class="bi bi-building"></i> ${escapeHtml(report.sitesSupervised.substring(0, 30))}${report.sitesSupervised.length > 30 ? '...' : ''}</span>
+            <span><i class="bi bi-check-circle"></i> ${report.completedJobs} completed</span>
+            <span>${submittedBadge}</span>
+          </div>
+        </div>
+        <div class="report-history-actions">
+          <button class="btn-report-download" onclick="downloadGSReportById(${report.id})" title="Download PDF"><i class="bi bi-download"></i></button>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+function downloadGSReportById(reportId) {
+  const report = gsWeeklyReports.find(r => r.id === reportId);
+  if (!report) return;
+  
+  gsCurrentGeneratedReport = report;
+  downloadGSReport();
 }
 
 // ========== SUPERVISOR FUNCTIONS (Site Supervisor) ==========
