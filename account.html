@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>My Account - CleanSpark | Smart Cleaning Management System</title>
 
-<!-- Apply saved theme immediately to prevent flash of wrong theme -->
+<!-- Apply saved theme immediately -->
 <script>
     (function() {
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -18,31 +18,21 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-
-<!-- External CSS -->
 <link rel="stylesheet" href="css/account.css">
 </head>
 <body>
 
-<!-- Access Control Overlay (shown when not logged in) -->
+<!-- Access Control Overlay -->
 <div id="accessControlOverlay" class="access-overlay" style="display:none;">
     <div class="access-card">
-        <div class="access-icon">
-            <i class="fas fa-lock"></i>
-        </div>
+        <div class="access-icon"><i class="fas fa-lock"></i></div>
         <h2>Access Restricted</h2>
         <p>You must be logged in to access your account settings.</p>
         <div class="access-actions">
-            <a href="login.html" class="btn btn-primary btn-lg">
-                <i class="fas fa-sign-in-alt"></i> Login to Continue
-            </a>
-            <a href="register.html" class="btn btn-outline-primary btn-lg">
-                <i class="fas fa-user-plus"></i> Create Account
-            </a>
+            <a href="login.html" class="btn btn-primary btn-lg"><i class="fas fa-sign-in-alt"></i> Login to Continue</a>
+            <a href="register.html" class="btn btn-outline-primary btn-lg"><i class="fas fa-user-plus"></i> Create Account</a>
         </div>
-        <div class="access-home">
-            <a href="index.html"><i class="fas fa-home"></i> Return to Home</a>
-        </div>
+        <div class="access-home"><a href="index.html"><i class="fas fa-home"></i> Return to Home</a></div>
     </div>
 </div>
 
@@ -50,18 +40,10 @@
 <div class="top-bar">
     <a href="index.html"><img src="image/logo.jpeg" alt="CleanSpark Logo" class="logo"></a>
     <div class="top-bar-center">
-        <!-- Theme Toggle Button -->
-        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light mode" title="Toggle dark/light mode">
-            <i class="fas fa-moon"></i>
-            <i class="fas fa-sun"></i>
-        </button>
-        <a href="index.html" class="home-icon-link">
-            <i class="fas fa-home"></i> Home
-        </a>
+        <button class="theme-toggle-btn" id="themeToggle"><i class="fas fa-moon"></i><i class="fas fa-sun"></i></button>
+        <a href="index.html" class="home-icon-link"><i class="fas fa-home"></i> Home</a>
     </div>
-    <div class="hamburger" onclick="openSidebar()">
-        <i class="fas fa-bars"></i>
-    </div>
+    <div class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></div>
 </div>
 
 <!-- Right Sidebar -->
@@ -87,59 +69,21 @@
             <div class="col-lg-3 col-md-4">
                 <div class="sidebar-card">
                     <div class="user-header">
-                        <div class="user-avatar" id="userAvatar">
-                            <span class="initial">A</span>
-                        </div>
-                        <h5 id="userDisplayName">Aly Hassan</h5>
-                        <p id="userDisplayEmail">aly@cleanspark.co.tz</p>
+                        <div class="user-avatar" id="userAvatar"><span class="initial">A</span></div>
+                        <h5 id="userDisplayName">Loading...</h5>
+                        <p id="userDisplayEmail">loading@cleanspark.co.tz</p>
                     </div>
                     
                     <ul class="account-menu" id="accountMenu">
-                        <li data-section="profile" class="active">
-                            <i class="fas fa-user-circle"></i>
-                            <span>Profile Information</span>
-                            <i class="fas fa-chevron-right ms-auto"></i>
-                        </li>
-                        <li data-section="password">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Change Password</span>
-                            <i class="fas fa-chevron-right ms-auto"></i>
-                        </li>
-                        <li data-section="location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Saved Locations</span>
-                            <i class="fas fa-chevron-right ms-auto"></i>
-                        </li>
-                        <li data-section="payment">
-                            <i class="fas fa-credit-card"></i>
-                            <span>Payment Methods</span>
-                            <i class="fas fa-chevron-right ms-auto"></i>
-                        </li>
-                        <li data-section="history">
-                            <i class="fas fa-history"></i>
-                            <span>Service History</span>
-                            <i class="fas fa-chevron-right ms-auto"></i>
-                        </li>
-                        <li data-section="notifications">
-                            <i class="fas fa-bell"></i>
-                            <span>Notifications</span>
-                            <i class="fas fa-chevron-right ms-auto"></i>
-                        </li>
-                        <li data-section="preferences">
-                            <i class="fas fa-sliders-h"></i>
-                            <span>Preferences</span>
-                            <i class="fas fa-chevron-right ms-auto"></i>
-                        </li>
-                        <li class="logout-item" data-section="logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Logout</span>
-                            <i class="fas fa-chevron-right ms-auto"></i>
-                        </li>
-                        <li class="delete-account-item" data-section="deleteAccount">
-                            <i class="fas fa-user-times"></i>
-                            <span>Delete Account</span>
-                            <i class="fas fa-chevron-right ms-auto"></i>
-                        </li>
+                        <li data-section="profile" class="active"><i class="fas fa-user-circle"></i><span>Profile Information</span><i class="fas fa-chevron-right ms-auto"></i></li>
+                        <li data-section="password"><i class="fas fa-shield-alt"></i><span>Change Password</span><i class="fas fa-chevron-right ms-auto"></i></li>
+                        <li data-section="location"><i class="fas fa-map-marker-alt"></i><span>Saved Locations</span><i class="fas fa-chevron-right ms-auto"></i></li>
+                        <li data-section="payment"><i class="fas fa-credit-card"></i><span>Payment Methods</span><i class="fas fa-chevron-right ms-auto"></i></li>
+                        <li data-section="history"><i class="fas fa-history"></i><span>Service History</span><i class="fas fa-chevron-right ms-auto"></i></li>
+                        <li data-section="notifications"><i class="fas fa-bell"></i><span>Notifications</span><i class="fas fa-chevron-right ms-auto"></i></li>
+                        <li data-section="preferences"><i class="fas fa-sliders-h"></i><span>Preferences</span><i class="fas fa-chevron-right ms-auto"></i></li>
+                        <li class="logout-item" data-section="logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span><i class="fas fa-chevron-right ms-auto"></i></li>
+                        <li class="delete-account-item" data-section="deleteAccount"><i class="fas fa-user-times"></i><span>Delete Account</span><i class="fas fa-chevron-right ms-auto"></i></li>
                     </ul>
                 </div>
             </div>
@@ -179,191 +123,102 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">First Name</label>
-                                    <input type="text" id="firstName" class="form-control form-control-lg" placeholder="Enter first name">
+                                    <input type="text" id="firstName" class="form-control form-control-lg" placeholder="Enter first name" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Last Name</label>
-                                    <input type="text" id="lastName" class="form-control form-control-lg" placeholder="Enter last name">
+                                    <input type="text" id="lastName" class="form-control form-control-lg" placeholder="Enter last name" required>
                                 </div>
                             </div>
-                            
                             <div class="mb-3 mt-3">
                                 <label class="form-label">Email Address</label>
-                                <input type="email" id="email" class="form-control form-control-lg" placeholder="Enter email address">
+                                <input type="email" id="email" class="form-control form-control-lg" placeholder="Enter email address" required>
                             </div>
-                            
                             <div class="mb-3">
                                 <label class="form-label">Phone Number</label>
                                 <input type="tel" id="phone" class="form-control form-control-lg" placeholder="+255 XXX XXX XXX">
                             </div>
-                                                       
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-check-circle"></i> Save Changes
-                            </button>
+                            <div class="mb-3">
+                                <label class="form-label">Address</label>
+                                <input type="text" id="address" class="form-control form-control-lg" placeholder="Your address">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Gender</label>
+                                <select id="gender" class="form-select form-select-lg">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-check-circle"></i> Save Changes</button>
                         </form>
                     </div>
 
                     <!-- CHANGE PASSWORD SECTION -->
                     <div id="passwordSection" class="account-section">
-                        <div class="section-header">
-                            <h3><i class="fas fa-shield-alt text-primary"></i> Change Password</h3>
-                            <p>Ensure your account security by updating your password</p>
-                        </div>
-                        
+                        <div class="section-header"><h3><i class="fas fa-shield-alt text-primary"></i> Change Password</h3><p>Ensure your account security</p></div>
                         <form id="passwordForm">
-                            <div class="mb-3">
-                                <label class="form-label">Current Password</label>
-                                <input type="password" id="currentPassword" class="form-control form-control-lg" placeholder="Enter current password">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">New Password</label>
-                                <input type="password" id="newPassword" class="form-control form-control-lg" placeholder="Enter new password">
-                                <div class="password-strength mt-2" id="passwordStrength"></div>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="form-label">Confirm New Password</label>
-                                <input type="password" id="confirmPassword" class="form-control form-control-lg" placeholder="Confirm new password">
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-key"></i> Update Password
-                            </button>
+                            <div class="mb-3"><label class="form-label">Current Password</label><input type="password" id="currentPassword" class="form-control form-control-lg" placeholder="Enter current password" required></div>
+                            <div class="mb-3"><label class="form-label">New Password</label><input type="password" id="newPassword" class="form-control form-control-lg" placeholder="Enter new password" required><div class="password-strength mt-2" id="passwordStrength"></div></div>
+                            <div class="mb-4"><label class="form-label">Confirm New Password</label><input type="password" id="confirmPassword" class="form-control form-control-lg" placeholder="Confirm new password" required></div>
+                            <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-key"></i> Update Password</button>
                         </form>
                     </div>
 
                     <!-- SAVED LOCATIONS SECTION -->
                     <div id="locationSection" class="account-section">
-                        <div class="section-header">
-                            <h3><i class="fas fa-map-marker-alt text-primary"></i> Saved Locations</h3>
-                            <p>Manage your frequently used addresses for quick booking</p>
-                        </div>
-                        
+                        <div class="section-header"><h3><i class="fas fa-map-marker-alt text-primary"></i> Saved Locations</h3><p>Manage your frequently used addresses</p></div>
                         <div class="add-location-box">
                             <div class="location-input-wrapper">
-                                <input type="text" id="newLocation" class="form-control form-control-lg location-input" placeholder="Enter a new location (e.g., Home, Office, etc.)">
-                                <button class="btn btn-primary btn-lg add-location-btn" id="addLocationBtn">
-                                    <i class="fas fa-plus-circle"></i> <span class="btn-text">Add Location</span>
-                                </button>
+                                <input type="text" id="newLocation" class="form-control form-control-lg" placeholder="Enter a new location (e.g., Home, Office)">
+                                <button class="btn btn-primary btn-lg" id="addLocationBtn"><i class="fas fa-plus-circle"></i> Add Location</button>
                             </div>
                         </div>
-                        
                         <div id="locationsList" class="locations-container"></div>
                     </div>
 
                     <!-- PAYMENT METHODS SECTION -->
                     <div id="paymentSection" class="account-section">
-                        <div class="section-header">
-                            <h3><i class="fas fa-credit-card text-primary"></i> Payment Methods</h3>
-                            <p>Add and manage your preferred payment options</p>
-                        </div>
-                        
+                        <div class="section-header"><h3><i class="fas fa-credit-card text-primary"></i> Payment Methods</h3><p>Manage your payment options</p></div>
                         <div id="paymentMethodsList" class="payment-methods-container"></div>
-                        
-                        <button class="btn btn-primary btn-lg mt-3 w-100 w-md-auto" id="addPaymentBtn">
-                            <i class="fas fa-plus-circle"></i> Add New Payment Method
-                        </button>
+                        <button class="btn btn-primary btn-lg mt-3" id="addPaymentBtn"><i class="fas fa-plus-circle"></i> Add Payment Method</button>
                     </div>
 
                     <!-- SERVICE HISTORY SECTION -->
                     <div id="historySection" class="account-section">
-                        <div class="section-header">
-                            <h3><i class="fas fa-history text-primary"></i> Service History</h3>
-                            <p>View and manage your cleaning service history</p>
-                        </div>
-                        
-                        <div class="history-actions mb-4">
-                            <button class="btn btn-outline-danger" id="clearAllHistoryBtn">
-                                <i class="fas fa-trash-alt"></i> Clear All History
-                            </button>
-                        </div>
-                        
-                        <div id="historyList" class="history-container"></div>
+                        <div class="section-header"><h3><i class="fas fa-history text-primary"></i> Service History</h3><p>View your service history</p></div>
+                        <div id="historyList" class="history-container"><div class="text-center py-5"><div class="spinner-border text-primary"></div></div></div>
                     </div>
 
                     <!-- NOTIFICATIONS SECTION -->
                     <div id="notificationsSection" class="account-section">
-                        <div class="section-header">
-                            <h3><i class="fas fa-bell text-primary"></i> Notification Settings</h3>
-                            <p>Choose how you want to receive updates</p>
-                        </div>
-                        
+                        <div class="section-header"><h3><i class="fas fa-bell text-primary"></i> Notification Settings</h3><p>Choose how you receive updates</p></div>
                         <div class="notification-settings">
                             <div class="notification-item">
                                 <div class="notification-row">
-                                    <div class="notification-info">
-                                        <i class="fas fa-envelope text-primary"></i>
-                                        <div>
-                                            <strong>Email Notifications</strong>
-                                            <p class="text-muted small mb-0">Receive booking confirmations and updates via email</p>
-                                        </div>
-                                    </div>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
-                                    </div>
+                                    <div class="notification-info"><i class="fas fa-envelope text-primary"></i><div><strong>Email Notifications</strong><p class="text-muted small mb-0">Receive booking confirmations via email</p></div></div>
+                                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="emailNotifications"></div>
                                 </div>
                             </div>
-                            
                             <div class="notification-item">
                                 <div class="notification-row">
-                                    <div class="notification-info">
-                                        <i class="fas fa-globe text-primary"></i>
-                                        <div>
-                                            <strong>Website Notifications</strong>
-                                            <p class="text-muted small mb-0">Receive notifications through the website</p>
-                                        </div>
-                                    </div>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="webNotifications">
-                                    </div>
+                                    <div class="notification-info"><i class="fas fa-globe text-primary"></i><div><strong>Website Notifications</strong><p class="text-muted small mb-0">Receive notifications on website</p></div></div>
+                                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="webNotifications"></div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <button class="btn btn-primary btn-lg mt-3 w-100 w-md-auto" id="saveNotificationsBtn">
-                            <i class="fas fa-save"></i> Save Preferences
-                        </button>
+                        <button class="btn btn-primary btn-lg mt-3" id="saveNotificationsBtn"><i class="fas fa-save"></i> Save Preferences</button>
                     </div>
 
                     <!-- PREFERENCES SECTION -->
                     <div id="preferencesSection" class="account-section">
-                        <div class="section-header">
-                            <h3><i class="fas fa-sliders-h text-primary"></i> Preferences</h3>
-                            <p>Customize your account settings</p>
-                        </div>
-                        
+                        <div class="section-header"><h3><i class="fas fa-sliders-h text-primary"></i> Preferences</h3><p>Customize your account settings</p></div>
                         <div class="preferences-settings">
-                            <div class="preference-item">
-                                <label class="form-label">Language</label>
-                                <select id="languageSelect" class="form-select form-select-lg">
-                                    <option value="en">English</option>
-                                    <option value="sw">Swahili</option>
-                                </select>
-                            </div>
-                            
-                            <div class="preference-item mt-3">
-                                <label class="form-label">Time Zone</label>
-                                <select id="timezoneSelect" class="form-select form-select-lg">
-                                    <option value="UTC+3">East Africa Time (UTC+3)</option>
-                                    <option value="UTC+0">UTC</option>
-                                    <option value="UTC-5">Eastern Time</option>
-                                </select>
-                            </div>
-                            
-                            <div class="preference-item mt-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="autoBookConfirm">
-                                    <label class="form-check-label">
-                                        Automatically confirm bookings
-                                    </label>
-                                </div>
-                            </div>
+                            <div class="preference-item"><label class="form-label">Language</label><select id="languageSelect" class="form-select form-select-lg"><option value="en">English</option><option value="sw">Swahili</option></select></div>
+                            <div class="preference-item mt-3"><label class="form-label">Time Zone</label><select id="timezoneSelect" class="form-select form-select-lg"><option value="UTC+3">East Africa Time (UTC+3)</option><option value="UTC+0">UTC</option><option value="UTC-5">Eastern Time</option></select></div>
+                            <div class="preference-item mt-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="autoBookConfirm"><label class="form-check-label">Automatically confirm bookings</label></div></div>
                         </div>
-                        
-                        <button class="btn btn-primary btn-lg mt-3 w-100 w-md-auto" id="savePreferencesBtn">
-                            <i class="fas fa-save"></i> Save Preferences
-                        </button>
+                        <button class="btn btn-primary btn-lg mt-3" id="savePreferencesBtn"><i class="fas fa-save"></i> Save Preferences</button>
                     </div>
                 </div>
             </div>
@@ -373,247 +228,95 @@
 
 <!-- Payment Method Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title"><i class="fas fa-credit-card text-primary"></i> Add Payment Method</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <form id="paymentForm">
+                <div class="mb-3">
+                    <label class="form-label">Payment Type</label>
+                    <select id="paymentType" class="form-select form-select-lg" required>
+                        <option value="">Select type</option>
+                        <option value="mobile_money">Mobile Money (M-Pesa, Airtel)</option>
+                        <option value="credit_card">Credit Card</option>
+                        <option value="debit_card">Debit Card</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Account/Phone Number</label>
+                    <input type="text" id="paymentAccountNumber" class="form-control form-control-lg" placeholder="Enter account or phone number" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Account Holder Name</label>
+                    <input type="text" id="paymentAccountHolder" class="form-control form-control-lg" placeholder="Enter account holder name" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea id="paymentNotes" class="form-control" rows="2" placeholder="Any additional information"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="savePaymentBtn"><i class="fas fa-save"></i> Save</button></div>
+    </div></div>
+</div>
+
+<!-- Booking Details Modal -->
+<div class="modal fade" id="bookingDetailsModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-credit-card text-primary"></i> Add Payment Method
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-receipt"></i> Booking Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <form id="paymentForm">
-                    <div class="mb-3">
-                        <label class="form-label">Payment Type</label>
-                        <select id="paymentType" class="form-select form-select-lg">
-                            <option value="">Select payment type</option>
-                            <option value="Mobile Money">Mobile Money (M-Pesa, Airtel Money)</option>
-                            <option value="Credit Card">Credit Card</option>
-                            <option value="Debit Card">Debit Card</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="PayPal">PayPal</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Account Number / Phone Number</label>
-                        <input type="text" id="paymentAccountNumber" class="form-control form-control-lg" placeholder="Enter account or phone number">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Account Holder Name</label>
-                        <input type="text" id="paymentAccountHolder" class="form-control form-control-lg" placeholder="Enter account holder name">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Additional Notes (Optional)</label>
-                        <textarea id="paymentNotes" class="form-control" rows="3" placeholder="Any additional information..."></textarea>
-                    </div>
-                </form>
+            <div class="modal-body" id="bookingDetailsBody">
+                <!-- Dynamic content -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="savePaymentBtn">
-                    <i class="fas fa-save"></i> Save Payment Method
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Logout Modal -->
-<div class="modal fade" id="logoutModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content logout-modal-content">
-            <div class="modal-body text-center">
-                <div class="logout-avatar">
-                    <div class="user-avatar-large" id="logoutAvatar">
-                        <span class="initial-large">A</span>
-                    </div>
-                    <h4 class="mt-3" id="logoutUserName">Aly Hassan</h4>
-                    <p class="text-muted" id="logoutUserEmail">aly@cleanspark.co.tz</p>
-                </div>
-                <div class="logout-warning">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <h5>Ready to Leave?</h5>
-                    <p>Are you sure you want to logout from your account?</p>
-                </div>
-                <div class="logout-actions">
-                    <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button type="button" class="btn btn-danger btn-lg" id="confirmLogoutBtn">
-                        <i class="fas fa-sign-out-alt"></i> Yes, Logout
-                    </button>
-                </div>
-            </div>
-        </div>
+<div class="modal fade" id="logoutModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content logout-modal-content">
+    <div class="modal-body text-center">
+        <div class="logout-avatar"><div class="user-avatar-large" id="logoutAvatar"><span class="initial-large">A</span></div><h4 class="mt-3" id="logoutUserName">Loading...</h4><p class="text-muted" id="logoutUserEmail">loading@cleanspark.co.tz</p></div>
+        <div class="logout-warning"><i class="fas fa-sign-out-alt"></i><h5>Ready to Leave?</h5><p>Are you sure you want to logout?</p></div>
+        <div class="logout-actions"><button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cancel</button><button type="button" class="btn btn-danger btn-lg" id="confirmLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
     </div>
-</div>
+</div></div></div>
 
 <!-- Delete Account Modal -->
-<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content delete-account-modal-content">
-            <div class="modal-body p-0">
-
-                <!-- Step 1: Warning -->
-                <div id="deleteStep1" class="delete-step">
-                    <div class="delete-modal-header">
-                        <div class="delete-danger-icon">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <h3>Delete Your Account</h3>
-                        <p>This action is permanent and cannot be undone</p>
-                    </div>
-
-                    <div class="delete-modal-body">
-                        <div class="delete-user-info">
-                            <div class="delete-user-avatar" id="deleteAvatar">
-                                <span class="initial-large">A</span>
-                            </div>
-                            <div>
-                                <h5 id="deleteUserName">Aly Hassan</h5>
-                                <span id="deleteUserEmail">aly@cleanspark.co.tz</span>
-                            </div>
-                        </div>
-
-                        <div class="delete-consequences">
-                            <h6><i class="fas fa-info-circle"></i> What will be permanently deleted:</h6>
-                            <ul class="delete-list">
-                                <li><i class="fas fa-user-slash"></i> Your profile and personal information</li>
-                                <li><i class="fas fa-map-marked-alt"></i> All saved locations</li>
-                                <li><i class="fas fa-credit-card"></i> All payment methods</li>
-                                <li><i class="fas fa-history"></i> Your complete service history</li>
-                                <li><i class="fas fa-bell-slash"></i> All notification preferences</li>
-                                <li><i class="fas fa-ban"></i> Access to all CleanSpark services</li>
-                            </ul>
-                        </div>
-
-                        <div class="delete-note">
-                            <i class="fas fa-lock"></i>
-                            <p>This action <strong>cannot be reversed</strong>. Once deleted, your data cannot be recovered.</p>
-                        </div>
-                    </div>
-
-                    <div class="delete-modal-footer">
-                        <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">
-                            <i class="fas fa-arrow-left"></i> Keep My Account
-                        </button>
-                        <button type="button" class="btn btn-danger-outline btn-lg" id="proceedToStep2Btn">
-                            <i class="fas fa-arrow-right"></i> Continue
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 2: Confirmation -->
-                <div id="deleteStep2" class="delete-step" style="display:none;">
-                    <div class="delete-modal-header danger-header">
-                        <div class="delete-danger-icon pulse-danger">
-                            <i class="fas fa-user-times"></i>
-                        </div>
-                        <h3>Final Confirmation</h3>
-                        <p>Please confirm you want to permanently delete your account</p>
-                    </div>
-
-                    <div class="delete-modal-body">
-                        <div class="confirm-input-section">
-                            <label class="confirm-label">
-                                Type <strong>DELETE</strong> to confirm account deletion:
-                            </label>
-                            <input type="text" id="deleteConfirmInput" class="form-control confirm-input" placeholder="Type DELETE here..." autocomplete="off">
-                            <div id="deleteInputFeedback" class="delete-input-feedback"></div>
-                        </div>
-
-                        <div class="delete-final-warning">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>By deleting your account, you agree that all your data will be permanently removed from CleanSpark systems.</p>
-                        </div>
-                    </div>
-
-                    <div class="delete-modal-footer">
-                        <button type="button" class="btn btn-secondary btn-lg" id="backToStep1Btn">
-                            <i class="fas fa-arrow-left"></i> Go Back
-                        </button>
-                        <button type="button" class="btn btn-delete btn-lg" id="confirmDeleteAccountBtn" disabled>
-                            <i class="fas fa-trash-alt"></i> Delete My Account
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 3: Deleting (progress) -->
-                <div id="deleteStep3" class="delete-step" style="display:none;">
-                    <div class="delete-processing">
-                        <div class="delete-spinner">
-                            <div class="spinner-ring"></div>
-                        </div>
-                        <h4>Deleting Your Account...</h4>
-                        <p>Please wait while we securely remove your data.</p>
-                        <div class="delete-progress-bar">
-                            <div class="delete-progress-fill" id="deleteProgressFill"></div>
-                        </div>
-                        <span id="deleteProgressText" class="delete-progress-text">Removing profile data...</span>
-                    </div>
-                </div>
-
-            </div>
+<div class="modal fade" id="deleteAccountModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content delete-account-modal-content"><div class="modal-body p-0">
+    <div id="deleteStep1" class="delete-step">
+        <div class="delete-modal-header"><div class="delete-danger-icon"><i class="fas fa-exclamation-triangle"></i></div><h3>Delete Your Account</h3><p>This action is permanent</p></div>
+        <div class="delete-modal-body">
+            <div class="delete-consequences"><h6><i class="fas fa-info-circle"></i> What will be deleted:</h6><ul class="delete-list"><li><i class="fas fa-user-slash"></i> Profile and personal info</li><li><i class="fas fa-map-marked-alt"></i> Saved locations</li><li><i class="fas fa-credit-card"></i> Payment methods</li><li><i class="fas fa-history"></i> Service history</li><li><i class="fas fa-bell-slash"></i> Notification preferences</li></ul></div>
+            <div class="delete-note"><i class="fas fa-lock"></i><p>This action <strong>cannot be reversed</strong>.</p></div>
         </div>
+        <div class="delete-modal-footer"><button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal"><i class="fas fa-arrow-left"></i> Keep Account</button><button type="button" class="btn btn-danger-outline btn-lg" id="proceedToStep2Btn"><i class="fas fa-arrow-right"></i> Continue</button></div>
     </div>
-</div>
-
-<!-- Footer -->
-<footer class="footer">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 mb-4">
-                <h5>About CleanSpark</h5>
-                <p>CleanSpark is Zanzibar's premier cleaning service provider, offering professional and reliable cleaning solutions for homes and businesses since 2026.</p>
-                <div class="social-links">
-                    <a href="https://www.facebook.com/CleanSparkTZ" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://twitter.com/CleanSparkTZ" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
-                    <a href="https://www.instagram.com/CleanSparkTZ" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.linkedin.com/company/CleanSparkTZ" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="https://wa.me/0621662883" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a>
-                </div>
-            </div>
-            
-            <div class="col-md-4 mb-4">
-                <h5>Quick Links</h5>
-                <ul>
-                    <li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
-                    <li><a href="service.html"><i class="fas fa-chevron-right"></i> Our Services</a></li>
-                    <li><a href="aboutus.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
-                    <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
-                    <li><a href="login.html"><i class="fas fa-chevron-right"></i> Login</a></li>
-                    <li><a href="register.html"><i class="fas fa-chevron-right"></i> Register</a></li>
-                </ul>
-            </div>
-            
-            <div class="col-md-4 mb-4">
-                <h5>Contact Info</h5>
-                <ul class="contact-info">
-                    <li><i class="fas fa-map-marker-alt"></i> <a href="https://www.google.com/maps/place/Stone+Town,+Zanzibar" target="_blank" rel="noopener noreferrer" style="color: rgba(255,255,255,0.8); text-decoration: none;">Stone Town, Zanzibar</a></li>
-                    <li><i class="fas fa-phone"></i> <a href="tel:+0621662883" style="color: rgba(255,255,255,0.8); text-decoration: none;">+062 166 2883</a></li>
-                    <li><i class="fas fa-envelope"></i> <a href="mailto:mudrikdau@gmail.com" style="color: rgba(255,255,255,0.8); text-decoration: none;">info@cleanspark.co.tz</a></li>
-                    <li><i class="fas fa-clock"></i> Available 24/7 - Always Open</li>
-                </ul>
-                
-                <h5 class="mt-4">Newsletter</h5>
-                <form class="newsletter-form">
-                    <input type="email" placeholder="Your email" required>
-                    <button type="submit"><i class="fas fa-paper-plane"></i></button>
-                </form>
-            </div>
+    <div id="deleteStep2" class="delete-step" style="display:none;">
+        <div class="delete-modal-header danger-header"><div class="delete-danger-icon pulse-danger"><i class="fas fa-user-times"></i></div><h3>Final Confirmation</h3><p>Confirm permanent deletion</p></div>
+        <div class="delete-modal-body">
+            <div class="confirm-input-section"><label class="confirm-label">Type <strong>DELETE</strong> to confirm:</label><input type="text" id="deleteConfirmInput" class="form-control confirm-input" placeholder="Type DELETE here"><div id="deleteInputFeedback" class="delete-input-feedback"></div></div>
+            <div class="delete-final-warning"><i class="fas fa-exclamation-circle"></i><p>All your data will be permanently removed.</p></div>
         </div>
-        
-        <div class="copyright">
-            <p>&copy; 2026 CleanSpark . All rights reserved.</p>
-        </div>
+        <div class="delete-modal-footer"><button type="button" class="btn btn-secondary btn-lg" id="backToStep1Btn"><i class="fas fa-arrow-left"></i> Go Back</button><button type="button" class="btn btn-delete btn-lg" id="confirmDeleteAccountBtn" disabled><i class="fas fa-trash-alt"></i> Delete Account</button></div>
     </div>
-</footer>
+    <div id="deleteStep3" class="delete-step" style="display:none;"><div class="delete-processing"><div class="delete-spinner"><div class="spinner-ring"></div></div><h4>Deleting Your Account...</h4><p>Please wait while we remove your data.</p><div class="delete-progress-bar"><div class="delete-progress-fill" id="deleteProgressFill"></div></div><span id="deleteProgressText" class="delete-progress-text">Removing profile data...</span></div></div>
+</div></div></div></div>
 
-<!-- Toast Notification Container -->
+<!-- Toast Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-<!-- External JavaScript -->
+<!-- Footer -->
+<footer class="footer"><div class="container"><div class="row"><div class="col-md-4 mb-4"><h5>About CleanSpark</h5><p>CleanSpark is Zanzibar's premier cleaning service provider.</p><div class="social-links"><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-twitter"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-linkedin-in"></i></a></div></div><div class="col-md-4 mb-4"><h5>Quick Links</h5><ul><li><a href="index.html">Home</a></li><li><a href="service.html">Services</a></li><li><a href="aboutus.html">About Us</a></li><li><a href="contact.html">Contact</a></li></ul></div><div class="col-md-4 mb-4"><h5>Contact Info</h5><ul><li><i class="fas fa-map-marker-alt"></i> Stone Town, Zanzibar</li><li><i class="fas fa-phone"></i> +062 166 2883</li><li><i class="fas fa-envelope"></i> info@cleanspark.co.tz</li></ul></div></div><div class="copyright"><p>&copy; 2026 CleanSpark. All rights reserved.</p></div></div></footer>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="js/api.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/account.js"></script>
 </body>

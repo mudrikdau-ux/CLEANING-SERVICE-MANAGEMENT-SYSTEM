@@ -1,105 +1,20 @@
-// ========== STORAGE KEYS ==========
-const STORAGE_KEYS = {
-    PROFILE: 'cleanspark_profile',
-    LOCATIONS: 'cleanspark_locations',
-    PAYMENT_METHODS: 'cleanspark_payment_methods',
-    NOTIFICATIONS: 'cleanspark_notifications',
-    PREFERENCES: 'cleanspark_preferences',
-    SERVICE_HISTORY: 'cleanspark_service_history',
-    IS_LOGGED_IN: 'cleanspark_is_logged_in'
-};
-
-// ========== INITIAL DATA ==========
-let currentUser = {
-    firstName: 'Aly',
-    lastName: 'Hassan',
-    email: 'aly@cleanspark.co.tz',
-    phone: '+255 777 123 456'
-};
-
-// ========== ACCESS CONTROL ==========
 /**
- * Checks whether the current user is authenticated.
- * 
- * For demo/prototype purposes this reads a flag from localStorage.
- * In a real application replace this with a server-side session/token check.
- *
- * To simulate a logged-in user in the browser console run:
- *   localStorage.setItem('cleanspark_is_logged_in', 'true')
- * To simulate a logged-out user:
- *   localStorage.removeItem('cleanspark_is_logged_in')
+ * CleanSpark Account Page - FULLY INTEGRATED with Backend API
+ * ALL Features: Profile (with picture), Password, Locations, Payment Methods,
+ * Service History, Notifications, Preferences, Logout, Delete Account
  */
-function isUserLoggedIn() {
-    return localStorage.getItem(STORAGE_KEYS.IS_LOGGED_IN) === 'true';
+
+// ===== AUTH HELPERS =====
+function isLoggedIn() {
+    return !!API.getAuthToken() && localStorage.getItem('isLoggedIn') === 'true';
 }
 
-function enforceAccessControl() {
-    const overlay = document.getElementById('accessControlOverlay');
-    const mainContent = document.getElementById('mainContent');
-    const footer = document.querySelector('.footer');
-
-    if (!isUserLoggedIn()) {
-        // Show the access-denied overlay
-        if (overlay) {
-            overlay.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-        // Visually hide (but keep in DOM) main content so the page doesn't flash
-        if (mainContent) mainContent.style.visibility = 'hidden';
-        if (footer) footer.style.visibility = 'hidden';
-        return false; // not authorised
-    }
-
-    // User is logged in — make sure overlay is hidden
-    if (overlay) overlay.style.display = 'none';
-    if (mainContent) mainContent.style.visibility = 'visible';
-    if (footer) footer.style.visibility = 'visible';
-    document.body.style.overflow = 'auto';
-    return true;
+function getCurrentUser() {
+    const user = localStorage.getItem('currentUser');
+    return user ? JSON.parse(user) : null;
 }
 
-// ========== DOM READY ==========
-document.addEventListener('DOMContentLoaded', () => {
-    // ---- DEMO CONVENIENCE ----
-    // For this prototype we auto-set the login flag so the page works out-of-the-box.
-    // Remove or replace this line when you integrate real authentication.
-    if (localStorage.getItem(STORAGE_KEYS.IS_LOGGED_IN) === null) {
-        localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-    }
-    // --------------------------
-
-    // Enforce access before rendering anything
-    if (!enforceAccessControl()) {
-        return; // Stop further initialisation for unauthenticated users
-    }
-
-    // Initialize data
-    initializeData();
-
-    // Load all saved data
-    loadProfileData();
-    loadLocations();
-    loadPaymentMethods();
-    loadServiceHistory();
-    loadNotifications();
-    loadPreferences();
-
-    // Setup event listeners
-    setupEventListeners();
-    setupMenuClickHandlers();
-    setupPasswordStrength();
-    setupSidebarFunctions();
-
-    // Initialize profile picture
-    initProfilePicture();
-
-    // Setup modals
-    setupPaymentModal();
-    setupLogoutModal();
-    setupDeleteAccountModal();
-});
-
-// ========== SIDEBAR FUNCTIONS ==========
+// ===== SIDEBAR FUNCTIONS =====
 function openSidebar() {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
@@ -120,29 +35,34 @@ function setupSidebarFunctions() {
     window.openSidebar = openSidebar;
     window.closeSidebar = closeSidebar;
 
-    document.addEventListener('click', function (event) {
+    document.addEventListener('click', function(event) {
         const sidebar = document.getElementById('sidebar');
         const hamburger = document.querySelector('.hamburger');
-        if (sidebar && hamburger) {
-            const isClickInside = sidebar.contains(event.target);
-            const isClickOnHamburger = hamburger.contains(event.target);
-            if (!isClickInside && !isClickOnHamburger && sidebar.style.width === '280px') {
-                closeSidebar();
-            }
-        }
-    });
-
-    window.addEventListener('resize', function () {
-        if (window.innerWidth > 992) {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar && sidebar.style.width === '280px') {
-                closeSidebar();
-            }
+        if (sidebar && hamburger && !sidebar.contains(event.target) && !hamburger.contains(event.target) && sidebar.style.width === '280px') {
+            closeSidebar();
         }
     });
 }
 
-// ========== PROFILE PICTURE FUNCTIONS ==========
+// ===== ACCESS CONTROL =====
+async function enforceAccessControl() {
+    const overlay = document.getElementById('accessControlOverlay');
+    const mainContent = document.getElementById('mainContent');
+
+    if (!isLoggedIn()) {
+        if (overlay) overlay.style.display = 'flex';
+        if (mainContent) mainContent.style.visibility = 'hidden';
+        document.body.style.overflow = 'hidden';
+        return false;
+    }
+
+    if (overlay) overlay.style.display = 'none';
+    if (mainContent) mainContent.style.visibility = 'visible';
+    document.body.style.overflow = 'auto';
+    return true;
+}
+
+// ===== PROFILE PICTURE FUNCTIONS =====
 function initProfilePicture() {
     const uploadInput = document.getElementById('profilePictureUpload');
     const profilePicture = document.getElementById('profilePicture');
@@ -152,8 +72,8 @@ function initProfilePicture() {
     if (!profilePicture) return;
 
     const profileIcon = profilePicture.querySelector('i');
-
     const savedImage = localStorage.getItem('cleanspark_profile_picture');
+
     if (savedImage && profileImage && profileIcon) {
         profileImage.src = savedImage;
         profileImage.style.display = 'block';
@@ -165,7 +85,7 @@ function initProfilePicture() {
     }
 
     if (uploadInput) {
-        uploadInput.addEventListener('change', function (e) {
+        uploadInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 if (!file.type.match('image.*')) {
@@ -177,7 +97,7 @@ function initProfilePicture() {
                     return;
                 }
                 const reader = new FileReader();
-                reader.onload = function (event) {
+                reader.onload = function(event) {
                     const imageData = event.target.result;
                     if (profileImage) {
                         profileImage.src = imageData;
@@ -197,7 +117,7 @@ function initProfilePicture() {
     }
 
     if (removeBtn) {
-        removeBtn.addEventListener('click', function (e) {
+        removeBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             if (profileImage) {
                 profileImage.src = '';
@@ -214,7 +134,7 @@ function initProfilePicture() {
     }
 
     if (profilePicture) {
-        profilePicture.addEventListener('click', function () {
+        profilePicture.addEventListener('click', function() {
             if (uploadInput) uploadInput.click();
         });
     }
@@ -234,8 +154,8 @@ function updateSidebarAvatar(imageData) {
 function resetSidebarAvatar() {
     const sidebarAvatar = document.querySelector('.user-avatar');
     if (sidebarAvatar) {
-        const profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE));
-        const initial = profile?.firstName ? profile.firstName.charAt(0).toUpperCase() : 'U';
+        const firstName = document.getElementById('firstName')?.value || 'U';
+        const initial = firstName.charAt(0).toUpperCase();
         sidebarAvatar.innerHTML = '';
         const span = document.createElement('span');
         span.className = 'initial';
@@ -258,8 +178,8 @@ function updateLogoutAvatar(imageData) {
 function resetLogoutAvatar() {
     const logoutAvatar = document.getElementById('logoutAvatar');
     if (logoutAvatar) {
-        const profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE));
-        const initial = profile?.firstName ? profile.firstName.charAt(0).toUpperCase() : 'U';
+        const firstName = document.getElementById('firstName')?.value || 'U';
+        const initial = firstName.charAt(0).toUpperCase();
         logoutAvatar.innerHTML = '';
         const span = document.createElement('span');
         span.className = 'initial-large';
@@ -282,8 +202,8 @@ function updateDeleteAvatar(imageData) {
 function resetDeleteAvatar() {
     const deleteAvatar = document.getElementById('deleteAvatar');
     if (deleteAvatar) {
-        const profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE));
-        const initial = profile?.firstName ? profile.firstName.charAt(0).toUpperCase() : 'U';
+        const firstName = document.getElementById('firstName')?.value || 'U';
+        const initial = firstName.charAt(0).toUpperCase();
         deleteAvatar.innerHTML = '';
         const span = document.createElement('span');
         span.className = 'initial-large';
@@ -292,180 +212,123 @@ function resetDeleteAvatar() {
     }
 }
 
-// ========== INITIALIZE DATA ==========
-function initializeData() {
-    if (!localStorage.getItem(STORAGE_KEYS.PROFILE)) {
-        localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(currentUser));
-    }
+// ===== PROFILE FUNCTIONS =====
+async function loadProfileData() {
+    try {
+        showLoading(true);
+        const response = await API.auth.getProfile();
+        showLoading(false);
 
-    if (!localStorage.getItem(STORAGE_KEYS.LOCATIONS)) {
-        const defaultLocations = [
-            { id: 1, name: 'Home - Stone Town, Unguja', icon: 'fa-home' },
-            { id: 2, name: 'Office - Vikokotoni Business Hub', icon: 'fa-briefcase' }
-        ];
-        localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(defaultLocations));
-    }
-
-    if (!localStorage.getItem(STORAGE_KEYS.PAYMENT_METHODS)) {
-        const defaultPayments = [
-            {
-                id: 1,
-                type: 'Mobile Money',
-                accountNumber: '+255 777 123 456',
-                accountHolder: 'Aly Hassan',
-                notes: 'M-Pesa',
-                icon: 'fa-mobile-alt'
-            },
-            {
-                id: 2,
-                type: 'Credit Card',
-                accountNumber: '**** **** **** 1234',
-                accountHolder: 'Aly Hassan',
-                notes: 'Visa Card',
-                icon: 'fa-credit-card'
+        if (response.success && response.profile) {
+            const p = response.profile;
+            
+            document.getElementById('firstName').value = p.first_name || '';
+            document.getElementById('lastName').value = p.last_name || '';
+            document.getElementById('email').value = p.email || '';
+            document.getElementById('phone').value = p.phone || '';
+            document.getElementById('address').value = p.address || '';
+            
+            const genderSelect = document.getElementById('gender');
+            if (genderSelect && p.gender) {
+                genderSelect.value = p.gender;
             }
-        ];
-        localStorage.setItem(STORAGE_KEYS.PAYMENT_METHODS, JSON.stringify(defaultPayments));
-    }
-
-    if (!localStorage.getItem(STORAGE_KEYS.SERVICE_HISTORY)) {
-        const defaultHistory = [
-            {
-                id: 1,
-                serviceType: 'Deep House Cleaning',
-                serviceIcon: 'fa-home',
-                status: 'completed',
-                date: '2026-12-15',
-                time: '10:00 AM',
-                duration: '4 hours',
-                staff: 'Mohammed Ali',
-                location: 'Stone Town, Unguja',
-                price: '120,000 TZS',
-                rating: 5
-            },
-            {
-                id: 2,
-                serviceType: 'Office Cleaning',
-                serviceIcon: 'fa-building',
-                status: 'completed',
-                date: '2026-12-10',
-                time: '08:00 AM',
-                duration: '3 hours',
-                staff: 'Fatima Hassan',
-                location: 'Vikokotoni Business Hub',
-                price: '200,000 TZS',
-                rating: 4
-            },
-            {
-                id: 3,
-                serviceType: 'Carpet Cleaning',
-                serviceIcon: 'fa-rug',
-                status: 'in-progress',
-                date: '2026-12-20',
-                time: '02:00 PM',
-                duration: '2 hours',
-                staff: 'Juma Khamis',
-                location: 'Home - Stone Town',
-                price: '80,000 TZS',
-                rating: null
-            }
-        ];
-        localStorage.setItem(STORAGE_KEYS.SERVICE_HISTORY, JSON.stringify(defaultHistory));
-    }
-
-    if (!localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS)) {
-        localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify({ email: true, web: false }));
-    }
-
-    if (!localStorage.getItem(STORAGE_KEYS.PREFERENCES)) {
-        localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify({
-            language: 'en',
-            timezone: 'UTC+3',
-            autoConfirm: false
-        }));
-    }
-}
-
-// ========== PROFILE FUNCTIONS ==========
-function loadProfileData() {
-    const profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE));
-    if (profile) {
-        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-        setVal('firstName', profile.firstName);
-        setVal('lastName', profile.lastName);
-        setVal('email', profile.email);
-        setVal('phone', profile.phone);
-
-        const fullName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
-        const displayName = document.getElementById('userDisplayName');
-        const displayEmail = document.getElementById('userDisplayEmail');
-        if (displayName) displayName.textContent = fullName || 'User';
-        if (displayEmail) displayEmail.textContent = profile.email || 'user@example.com';
-
-        const savedImage = localStorage.getItem('cleanspark_profile_picture');
-        if (!savedImage) {
-            const initial = profile.firstName ? profile.firstName.charAt(0).toUpperCase() : 'U';
+            
+            const fullName = `${p.first_name || ''} ${p.last_name || ''}`.trim();
+            const displayName = document.getElementById('userDisplayName');
+            const displayEmail = document.getElementById('userDisplayEmail');
+            
+            if (displayName) displayName.textContent = fullName || 'User';
+            if (displayEmail) displayEmail.textContent = p.email || '';
+            
+            const initial = p.first_name ? p.first_name.charAt(0).toUpperCase() : 'U';
             const avatarDiv = document.querySelector('.user-avatar');
-            if (avatarDiv) {
+            if (avatarDiv && !localStorage.getItem('cleanspark_profile_picture')) {
                 avatarDiv.innerHTML = '';
                 const span = document.createElement('span');
                 span.className = 'initial';
                 span.textContent = initial;
                 avatarDiv.appendChild(span);
             }
+            
+            updateLogoutModalInfo(p);
+            updateDeleteModalInfo(p);
+            
+            return p;
         }
-
-        updateLogoutModalInfo(profile);
-        updateDeleteModalInfo(profile);
+    } catch (error) {
+        showLoading(false);
+        console.error('Error loading profile:', error);
+        showNotification('Failed to load profile data', 'error');
+        return null;
     }
 }
 
-function updateLogoutModalInfo(profile) {
-    const fullName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
-    const el = (id) => document.getElementById(id);
-    if (el('logoutUserName')) el('logoutUserName').textContent = fullName || 'User';
-    if (el('logoutUserEmail')) el('logoutUserEmail').textContent = profile.email || 'user@example.com';
-    if (!localStorage.getItem('cleanspark_profile_picture')) resetLogoutAvatar();
-}
-
-function updateDeleteModalInfo(profile) {
-    const fullName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
-    const el = (id) => document.getElementById(id);
-    if (el('deleteUserName')) el('deleteUserName').textContent = fullName || 'User';
-    if (el('deleteUserEmail')) el('deleteUserEmail').textContent = profile.email || 'user@example.com';
-    if (!localStorage.getItem('cleanspark_profile_picture')) resetDeleteAvatar();
-    else updateDeleteAvatar(localStorage.getItem('cleanspark_profile_picture'));
-}
-
-function saveProfile(event) {
+async function saveProfile(event) {
     event.preventDefault();
 
-    const profile = {
-        firstName: document.getElementById('firstName').value.trim(),
-        lastName: document.getElementById('lastName').value.trim(),
+    const profileData = {
+        first_name: document.getElementById('firstName').value.trim(),
+        last_name: document.getElementById('lastName').value.trim(),
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim(),
-        updatedAt: new Date().toISOString()
+        address: document.getElementById('address').value.trim(),
+        gender: document.getElementById('gender').value
     };
 
-    if (!profile.firstName || !profile.lastName) {
+    if (!profileData.first_name || !profileData.last_name) {
         showNotification('Please fill in your first and last name', 'error');
         return;
     }
-    if (!profile.email) {
+    if (!profileData.email) {
         showNotification('Please enter your email address', 'error');
         return;
     }
 
-    localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
-    loadProfileData();
-    if (!localStorage.getItem('cleanspark_profile_picture')) resetSidebarAvatar();
-    updateLogoutModalInfo(profile);
-    updateDeleteModalInfo(profile);
-    showNotification('Profile updated successfully!', 'success');
+    try {
+        showLoading(true);
+        const response = await API.auth.updateProfile(profileData);
+        showLoading(false);
+
+        if (response.success) {
+            // Update localStorage currentUser
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                currentUser.first_name = profileData.first_name;
+                currentUser.last_name = profileData.last_name;
+                currentUser.email = profileData.email;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            await loadProfileData();
+            showNotification('Profile updated successfully!', 'success');
+        } else {
+            showNotification(response.message || 'Failed to update profile', 'error');
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Error saving profile:', error);
+        showNotification(error.message || 'Failed to update profile', 'error');
+    }
 }
 
-// ========== PASSWORD FUNCTIONS ==========
+function updateLogoutModalInfo(profile) {
+    const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+    const logoutUserName = document.getElementById('logoutUserName');
+    const logoutUserEmail = document.getElementById('logoutUserEmail');
+    
+    if (logoutUserName) logoutUserName.textContent = fullName || 'User';
+    if (logoutUserEmail) logoutUserEmail.textContent = profile.email || '';
+}
+
+function updateDeleteModalInfo(profile) {
+    const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+    const deleteUserName = document.getElementById('deleteUserName');
+    const deleteUserEmail = document.getElementById('deleteUserEmail');
+    
+    if (deleteUserName) deleteUserName.textContent = fullName || 'User';
+    if (deleteUserEmail) deleteUserEmail.textContent = profile.email || '';
+}
+
+// ===== PASSWORD FUNCTIONS =====
 function setupPasswordStrength() {
     const newPassword = document.getElementById('newPassword');
     if (newPassword) newPassword.addEventListener('input', checkPasswordStrength);
@@ -474,27 +337,37 @@ function setupPasswordStrength() {
 function checkPasswordStrength() {
     const password = document.getElementById('newPassword').value;
     const strengthDiv = document.getElementById('passwordStrength');
-    if (!password) { if (strengthDiv) strengthDiv.innerHTML = ''; return; }
+    if (!password) {
+        if (strengthDiv) strengthDiv.innerHTML = '';
+        return;
+    }
 
     let strength = 0;
-    if (password.length >= 8) strength++;
+    if (password.length >= 6) strength++;
     if (password.match(/[a-z]+/)) strength++;
     if (password.match(/[A-Z]+/)) strength++;
     if (password.match(/[0-9]+/)) strength++;
     if (password.match(/[$@#&!]+/)) strength++;
 
     let message = '', className = '';
-    if (strength <= 1) { message = 'Weak password'; className = 'strength-weak'; }
-    else if (strength <= 3) { message = 'Medium password'; className = 'strength-medium'; }
-    else { message = 'Strong password'; className = 'strength-strong'; }
+    if (strength <= 2) {
+        message = 'Weak';
+        className = 'strength-weak';
+    } else if (strength <= 4) {
+        message = 'Medium';
+        className = 'strength-medium';
+    } else {
+        message = 'Strong';
+        className = 'strength-strong';
+    }
 
     if (strengthDiv) {
-        strengthDiv.innerHTML = `<i class="fas fa-shield-alt"></i> ${message}`;
+        strengthDiv.innerHTML = `<i class="fas fa-shield-alt"></i> ${message} password`;
         strengthDiv.className = `password-strength ${className}`;
     }
 }
 
-function changePassword(event) {
+async function changePassword(event) {
     event.preventDefault();
 
     const currentPassword = document.getElementById('currentPassword').value;
@@ -509,389 +382,577 @@ function changePassword(event) {
         showNotification('New passwords do not match!', 'error');
         return;
     }
-    if (newPassword.length < 8) {
-        showNotification('Password must be at least 8 characters long', 'error');
+    if (newPassword.length < 6) {
+        showNotification('Password must be at least 6 characters', 'error');
         return;
     }
 
-    showNotification('Password changed successfully!', 'success');
-    document.getElementById('currentPassword').value = '';
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmPassword').value = '';
-    const strengthDiv = document.getElementById('passwordStrength');
-    if (strengthDiv) strengthDiv.innerHTML = '';
-}
+    try {
+        showLoading(true);
+        const response = await API.auth.changePassword(currentPassword, newPassword, confirmPassword);
+        showLoading(false);
 
-// ========== LOCATION FUNCTIONS ==========
-function loadLocations() {
-    const locations = JSON.parse(localStorage.getItem(STORAGE_KEYS.LOCATIONS)) || [];
-    const container = document.getElementById('locationsList');
-    if (!container) return;
-
-    if (locations.length === 0) {
-        container.innerHTML = '<div class="text-center text-muted py-4">No saved locations yet. Add your first location above!</div>';
-        return;
+        if (response.success) {
+            showNotification('Password changed successfully! Please login again.', 'success');
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            
+            setTimeout(() => performLogout(), 2000);
+        } else {
+            showNotification(response.message || 'Failed to change password', 'error');
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Error changing password:', error);
+        showNotification(error.message || 'Failed to change password', 'error');
     }
-
-    container.innerHTML = locations.map(location => `
-        <div class="location-item" data-id="${location.id}">
-            <div class="location-info">
-                <i class="fas ${location.icon || 'fa-map-marker-alt'}"></i>
-                <span>${escapeHtml(location.name)}</span>
-            </div>
-            <div class="location-actions">
-                <button onclick="deleteLocation(${location.id})" class="btn btn-sm btn-outline-danger">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
-            </div>
-        </div>
-    `).join('');
 }
 
-function addLocation() {
-    const locationInput = document.getElementById('newLocation');
-    const locationName = locationInput ? locationInput.value.trim() : '';
+// ===== SAVED LOCATIONS =====
+async function loadLocations() {
+    try {
+        const response = await API.profile.getLocations();
+        const container = document.getElementById('locationsList');
+        if (!container) return;
 
-    if (!locationName) {
+        if (response.success && response.locations && response.locations.length > 0) {
+            container.innerHTML = response.locations.map(loc => `
+                <div class="location-item" data-id="${loc.id}">
+                    <div class="location-info">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${escapeHtml(loc.location_name)}</span>
+                    </div>
+                    <div class="location-actions">
+                        <button onclick="deleteLocation(${loc.id})" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<div class="text-center text-muted py-4">No saved locations yet. Add your first location above!</div>';
+        }
+    } catch (error) {
+        console.error('Error loading locations:', error);
+        document.getElementById('locationsList').innerHTML = '<div class="alert alert-danger">Failed to load locations</div>';
+    }
+}
+
+async function addLocation() {
+    const input = document.getElementById('newLocation');
+    const name = input ? input.value.trim() : '';
+    
+    if (!name) {
         showNotification('Please enter a location name', 'error');
         return;
     }
 
-    const locations = JSON.parse(localStorage.getItem(STORAGE_KEYS.LOCATIONS)) || [];
-    locations.push({ id: Date.now(), name: locationName, icon: 'fa-map-marker-alt' });
-    localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(locations));
-    if (locationInput) locationInput.value = '';
-    loadLocations();
-    showNotification('Location added successfully!', 'success');
+    try {
+        showLoading(true);
+        const response = await API.profile.addLocation({
+            location_name: name,
+            address: name,
+            city: 'Zanzibar',
+            is_default: false
+        });
+        showLoading(false);
+        
+        if (response.success) {
+            input.value = '';
+            await loadLocations();
+            showNotification('Location added successfully!', 'success');
+        } else {
+            showNotification(response.message || 'Failed to add location', 'error');
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Error adding location:', error);
+        showNotification(error.message || 'Failed to add location', 'error');
+    }
 }
 
-function deleteLocation(id) {
-    let locations = JSON.parse(localStorage.getItem(STORAGE_KEYS.LOCATIONS)) || [];
-    locations = locations.filter(loc => loc.id !== id);
-    localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(locations));
-    loadLocations();
-    showNotification('Location deleted successfully!', 'success');
+async function deleteLocation(id) {
+    if (!confirm('Are you sure you want to delete this location?')) return;
+    
+    try {
+        showLoading(true);
+        const response = await API.profile.deleteLocation(id);
+        showLoading(false);
+        
+        if (response.success) {
+            await loadLocations();
+            showNotification('Location deleted successfully!', 'success');
+        } else {
+            showNotification(response.message || 'Failed to delete location', 'error');
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Error deleting location:', error);
+        showNotification(error.message || 'Failed to delete location', 'error');
+    }
 }
 
-// ========== PAYMENT METHODS FUNCTIONS ==========
+// ===== PAYMENT METHODS =====
+let paymentModal = null;
+
 function setupPaymentModal() {
-    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
-    const savePaymentBtn = document.getElementById('savePaymentBtn');
-    if (savePaymentBtn) {
-        savePaymentBtn.addEventListener('click', function () {
+    const modalEl = document.getElementById('paymentModal');
+    if (modalEl) paymentModal = new bootstrap.Modal(modalEl);
+    
+    const saveBtn = document.getElementById('savePaymentBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
             savePaymentMethod();
-            paymentModal.hide();
+            if (paymentModal) paymentModal.hide();
         });
     }
-    window.paymentModal = paymentModal;
 }
 
-function loadPaymentMethods() {
-    const payments = JSON.parse(localStorage.getItem(STORAGE_KEYS.PAYMENT_METHODS)) || [];
-    const container = document.getElementById('paymentMethodsList');
-    if (!container) return;
+async function loadPaymentMethods() {
+    try {
+        const response = await API.profile.getPaymentMethods();
+        const container = document.getElementById('paymentMethodsList');
+        if (!container) return;
 
-    if (payments.length === 0) {
-        container.innerHTML = '<div class="text-center text-muted py-4">No payment methods added yet.</div>';
-        return;
-    }
-
-    container.innerHTML = payments.map(payment => `
-        <div class="payment-item" data-id="${payment.id}">
-            <div class="payment-info">
-                <div class="payment-icon"><i class="fas ${payment.icon || 'fa-wallet'}"></i></div>
-                <div class="payment-details">
-                    <h6>${escapeHtml(payment.type)}</h6>
-                    <p><strong>Account:</strong> ${escapeHtml(payment.accountNumber || payment.details || 'N/A')}</p>
-                    <p><strong>Holder:</strong> ${escapeHtml(payment.accountHolder || 'N/A')}</p>
-                    ${payment.notes ? `<p class="text-muted small">${escapeHtml(payment.notes)}</p>` : ''}
+        if (response.success && response.payment_methods && response.payment_methods.length > 0) {
+            container.innerHTML = response.payment_methods.map(pm => `
+                <div class="payment-item" data-id="${pm.id}">
+                    <div class="payment-info">
+                        <div class="payment-icon"><i class="fas ${getPaymentIcon(pm.payment_type)}"></i></div>
+                        <div class="payment-details">
+                            <h6>${escapeHtml(formatPaymentType(pm.payment_type))}</h6>
+                            <p><strong>Account:</strong> ${escapeHtml(pm.mobile_number || pm.card_last_four || pm.account_number || 'N/A')}</p>
+                            <p><strong>Holder:</strong> ${escapeHtml(pm.account_holder || 'N/A')}</p>
+                            <p><strong>Added:</strong> ${new Date(pm.created_at).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <div class="payment-actions">
+                        <button onclick="deletePaymentMethod(${pm.id})" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i> Remove
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="payment-actions">
-                <button onclick="deletePaymentMethod(${payment.id})" class="btn btn-sm btn-outline-danger">
-                    <i class="fas fa-trash"></i> Remove
-                </button>
-            </div>
-        </div>
-    `).join('');
+            `).join('');
+        } else {
+            container.innerHTML = '<div class="text-center text-muted py-4">No payment methods added yet.</div>';
+        }
+    } catch (error) {
+        console.error('Error loading payment methods:', error);
+        document.getElementById('paymentMethodsList').innerHTML = '<div class="alert alert-danger">Failed to load payment methods</div>';
+    }
+}
+
+function formatPaymentType(type) {
+    const types = {
+        'mobile_money': 'Mobile Money',
+        'credit_card': 'Credit Card',
+        'debit_card': 'Debit Card',
+        'bank_transfer': 'Bank Transfer'
+    };
+    return types[type] || type;
 }
 
 function addPaymentMethod() {
-    const paymentForm = document.getElementById('paymentForm');
-    if (paymentForm) paymentForm.reset();
-    if (window.paymentModal) window.paymentModal.show();
+    const form = document.getElementById('paymentForm');
+    if (form) form.reset();
+    if (paymentModal) paymentModal.show();
 }
 
-function savePaymentMethod() {
+async function savePaymentMethod() {
     const paymentType = document.getElementById('paymentType').value;
     const accountNumber = document.getElementById('paymentAccountNumber').value.trim();
     const accountHolder = document.getElementById('paymentAccountHolder').value.trim();
     const notes = document.getElementById('paymentNotes').value.trim();
 
-    if (!paymentType) { showNotification('Please select a payment type', 'error'); return; }
-    if (!accountNumber) { showNotification('Please enter account or phone number', 'error'); return; }
-    if (!accountHolder) { showNotification('Please enter account holder name', 'error'); return; }
+    if (!paymentType) {
+        showNotification('Please select a payment type', 'error');
+        return;
+    }
+    if (!accountNumber) {
+        showNotification('Please enter account or phone number', 'error');
+        return;
+    }
+    if (!accountHolder) {
+        showNotification('Please enter account holder name', 'error');
+        return;
+    }
 
-    const payments = JSON.parse(localStorage.getItem(STORAGE_KEYS.PAYMENT_METHODS)) || [];
-    payments.push({
-        id: Date.now(),
-        type: paymentType,
-        accountNumber,
-        accountHolder,
-        notes,
-        icon: getPaymentIcon(paymentType)
-    });
-    localStorage.setItem(STORAGE_KEYS.PAYMENT_METHODS, JSON.stringify(payments));
-    loadPaymentMethods();
-    showNotification('Payment method added successfully!', 'success');
+    try {
+        showLoading(true);
+        // Fix: Send account_holder field correctly
+        const response = await API.profile.addPaymentMethod({
+            payment_type: paymentType,
+            mobile_number: accountNumber,
+            account_holder: accountHolder,  // Make sure this matches backend expectation
+            notes: notes
+        });
+        showLoading(false);
+        
+        if (response.success) {
+            await loadPaymentMethods();
+            showNotification('Payment method added successfully!', 'success');
+            // Clear form
+            document.getElementById('paymentForm').reset();
+            if (paymentModal) paymentModal.hide();
+        } else {
+            showNotification(response.message || 'Failed to add payment method', 'error');
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Error saving payment method:', error);
+        showNotification(error.message || 'Failed to add payment method', 'error');
+    }
 }
 
-function deletePaymentMethod(id) {
-    if (confirm('Are you sure you want to remove this payment method?')) {
-        let payments = JSON.parse(localStorage.getItem(STORAGE_KEYS.PAYMENT_METHODS)) || [];
-        payments = payments.filter(p => p.id !== id);
-        localStorage.setItem(STORAGE_KEYS.PAYMENT_METHODS, JSON.stringify(payments));
-        loadPaymentMethods();
-        showNotification('Payment method removed successfully!', 'success');
+
+async function deletePaymentMethod(id) {
+    if (!confirm('Are you sure you want to remove this payment method?')) return;
+    
+    try {
+        showLoading(true);
+        const response = await API.profile.deletePaymentMethod(id);
+        showLoading(false);
+        
+        if (response.success) {
+            await loadPaymentMethods();
+            showNotification('Payment method removed successfully!', 'success');
+        } else {
+            showNotification(response.message || 'Failed to remove payment method', 'error');
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Error deleting payment method:', error);
+        showNotification(error.message || 'Failed to remove payment method', 'error');
     }
 }
 
 function getPaymentIcon(type) {
-    type = type.toLowerCase();
-    if (type.includes('mobile') || type.includes('m-pesa') || type.includes('airtel')) return 'fa-mobile-alt';
-    if (type.includes('credit') || type.includes('debit')) return 'fa-credit-card';
+    if (type.includes('mobile')) return 'fa-mobile-alt';
+    if (type.includes('credit')) return 'fa-credit-card';
+    if (type.includes('debit')) return 'fa-credit-card';
     if (type.includes('bank')) return 'fa-university';
-    if (type.includes('paypal')) return 'fa-paypal';
     return 'fa-wallet';
 }
 
-// ========== SERVICE HISTORY FUNCTIONS ==========
-function loadServiceHistory() {
-    const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.SERVICE_HISTORY)) || [];
+// ===== SERVICE HISTORY =====
+async function loadServiceHistory() {
     const container = document.getElementById('historyList');
     if (!container) return;
 
-    if (history.length === 0) {
-        container.innerHTML = `
-            <div class="history-empty">
-                <i class="fas fa-history"></i>
-                <h5>No Service History</h5>
-                <p>Your completed and ongoing services will appear here</p>
-            </div>`;
-        return;
+    try {
+        showLoading(true);
+        const response = await API.bookings.getMyBookings();
+        showLoading(false);
+
+        if (response.success && response.bookings && response.bookings.length > 0) {
+            container.innerHTML = response.bookings.map(booking => `
+                <div class="history-item">
+                    <div class="history-item-header">
+                        <div class="history-service-type">
+                            <div class="history-service-icon">
+                                <i class="fas ${getServiceIcon(booking.service?.name)}"></i>
+                            </div>
+                            <div class="history-service-info">
+                                <h6>${escapeHtml(booking.service?.name || 'Cleaning Service')}</h6>
+                                <span>Booking #${booking.id}</span>
+                            </div>
+                        </div>
+                        <span class="history-status status-${booking.status}">${getStatusText(booking.status)}</span>
+                    </div>
+                    <div class="history-item-body">
+                        <div class="history-detail">
+                            <span class="history-detail-label">Date</span>
+                            <span class="history-detail-value">${formatDate(booking.schedule?.date)}</span>
+                        </div>
+                        <div class="history-detail">
+                            <span class="history-detail-label">Time</span>
+                            <span class="history-detail-value">${booking.schedule?.time || 'N/A'}</span>
+                        </div>
+                        <div class="history-detail">
+                            <span class="history-detail-label">Location</span>
+                            <span class="history-detail-value">${escapeHtml(booking.location?.address || booking.booking_details?.address || 'N/A')}</span>
+                        </div>
+                        <div class="history-detail">
+                            <span class="history-detail-label">Amount</span>
+                            <span class="history-detail-value">TZS ${parseFloat(booking.payment?.total_price || 0).toLocaleString()}</span>
+                        </div>
+                        <div class="history-detail">
+                            <span class="history-detail-label">Payment Status</span>
+                            <span class="history-detail-value ${booking.payment?.payment_status === 'paid' ? 'text-success' : 'text-warning'}">
+                                ${booking.payment?.payment_status_label || 'N/A'}
+                            </span>
+                        </div>
+                        ${booking.assigned_staff ? `
+                        <div class="history-detail">
+                            <span class="history-detail-label">Staff</span>
+                            <span class="history-detail-value">${escapeHtml(booking.assigned_staff.full_name || booking.assigned_staff.name)}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="history-item-footer">
+                        <div class="history-date">
+                            <i class="far fa-calendar-alt"></i> ${formatDate(booking.created_at)}
+                        </div>
+                        <button onclick="viewBookingDetails(${booking.id})" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> Details
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = `
+                <div class="history-empty text-center py-5">
+                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                    <h5>No Service History</h5>
+                    <p>Your bookings will appear here</p>
+                    <a href="service.html" class="btn btn-primary mt-3">Book a Service</a>
+                </div>`;
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Error loading service history:', error);
+        container.innerHTML = '<div class="alert alert-danger">Failed to load service history</div>';
     }
+}
 
-    history.sort((a, b) => new Date(b.date) - new Date(a.date));
+async function viewBookingDetails(bookingId) {
+    try {
+        showLoading(true);
+        const response = await API.bookings.getReceipt(bookingId);
+        showLoading(false);
+        
+        if (response.success && response.receipt) {
+            const r = response.receipt;
+            const modalBody = document.getElementById('bookingDetailsBody');
+            if (modalBody) {
+                // Safely handle includes array
+                let includesHtml = '';
+                if (r.service?.includes && Array.isArray(r.service.includes) && r.service.includes.length > 0) {
+                    includesHtml = `
+                        <div class="mt-3">
+                            <p><strong>What's Included:</strong></p>
+                            <ul class="mb-0">
+                                ${r.service.includes.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                modalBody.innerHTML = `
+                    <div class="receipt-details">
+                        <p><strong>Booking ID:</strong> #${r.id}</p>
+                        <p><strong>Service:</strong> ${escapeHtml(r.service?.name || 'N/A')}</p>
+                        <p><strong>Date:</strong> ${r.schedule?.date || 'N/A'}</p>
+                        <p><strong>Time:</strong> ${r.schedule?.time || 'N/A'}</p>
+                        <p><strong>Address:</strong> ${escapeHtml(r.booking_details?.address || 'N/A')}</p>
+                        <p><strong>City:</strong> ${escapeHtml(r.booking_details?.city || 'N/A')}</p>
+                        <p><strong>Total Amount:</strong> TZS ${parseFloat(r.pricing?.total_price || 0).toLocaleString()}</p>
+                        <p><strong>Payment Method:</strong> ${r.pricing?.payment_method || 'N/A'}</p>
+                        <p><strong>Payment Status:</strong> <span class="badge ${r.pricing?.payment_status === 'paid' ? 'bg-success' : 'bg-warning'}">${r.pricing?.payment_status_label || 'N/A'}</span></p>
+                        <p><strong>Booking Status:</strong> <span class="badge bg-info">${r.status_label || 'N/A'}</span></p>
+                        ${r.assigned_staff ? `<p><strong>Assigned Staff:</strong> ${escapeHtml(r.assigned_staff.full_name || r.assigned_staff.name)}</p>` : ''}
+                        ${includesHtml}
+                        ${r.special_instructions_cleaners ? `<p><strong>Special Instructions:</strong> ${escapeHtml(r.special_instructions_cleaners)}</p>` : ''}
+                    </div>
+                `;
+            }
+            const modal = new bootstrap.Modal(document.getElementById('bookingDetailsModal'));
+            modal.show();
+        } else {
+            showNotification('Failed to load booking details', 'error');
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Error loading booking details:', error);
+        showNotification(error.message || 'Failed to load booking details', 'error');
+    }
+}
 
-    container.innerHTML = history.map(item => {
-        const starsHtml = item.rating ? generateStars(item.rating) : '<span class="text-muted">Not rated</span>';
-        return `
-            <div class="history-item" data-id="${item.id}">
-                <div class="history-item-header">
-                    <div class="history-service-type">
-                        <div class="history-service-icon">
-                            <i class="fas ${item.serviceIcon || 'fa-broom'}"></i>
-                        </div>
-                        <div class="history-service-info">
-                            <h6>${escapeHtml(item.serviceType)}</h6>
-                            <span>Staff: ${escapeHtml(item.staff || 'N/A')}</span>
-                        </div>
-                    </div>
-                    <span class="history-status status-${item.status}">${getStatusText(item.status)}</span>
-                </div>
-                <div class="history-item-body">
-                    <div class="history-detail">
-                        <span class="history-detail-label">Date</span>
-                        <span class="history-detail-value">${formatDate(item.date)}</span>
-                    </div>
-                    <div class="history-detail">
-                        <span class="history-detail-label">Time</span>
-                        <span class="history-detail-value">${item.time || 'N/A'}</span>
-                    </div>
-                    <div class="history-detail">
-                        <span class="history-detail-label">Duration</span>
-                        <span class="history-detail-value">${item.duration || 'N/A'}</span>
-                    </div>
-                    <div class="history-detail">
-                        <span class="history-detail-label">Location</span>
-                        <span class="history-detail-value">${escapeHtml(item.location || 'N/A')}</span>
-                    </div>
-                    <div class="history-detail">
-                        <span class="history-detail-label">Price</span>
-                        <span class="history-detail-value">${escapeHtml(item.price || 'N/A')}</span>
-                    </div>
-                    <div class="history-detail">
-                        <span class="history-detail-label">Rating</span>
-                        <span class="history-detail-value">${starsHtml}</span>
-                    </div>
-                </div>
-                <div class="history-item-footer">
-                    <div class="history-date">
-                        <i class="far fa-calendar-alt"></i> ${formatDate(item.date)}
-                    </div>
-                    <button onclick="deleteHistoryItem(${item.id})" class="btn btn-sm btn-outline-danger">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>
-            </div>`;
-    }).join('');
+function getServiceIcon(serviceName) {
+    if (!serviceName) return 'fa-broom';
+    const name = serviceName.toLowerCase();
+    if (name.includes('home')) return 'fa-home';
+    if (name.includes('office')) return 'fa-building';
+    if (name.includes('carpet')) return 'fa-rug';
+    return 'fa-broom';
 }
 
 function getStatusText(status) {
-    const map = { completed: 'Completed', pending: 'Pending', cancelled: 'Cancelled', 'in-progress': 'In Progress' };
-    return map[status] || 'Unknown';
-}
-
-function generateStars(rating) {
-    let stars = '';
-    for (let i = 1; i <= 5; i++) {
-        stars += i <= rating
-            ? '<i class="fas fa-star text-warning"></i>'
-            : '<i class="far fa-star text-muted"></i>';
-    }
-    return stars;
+    const map = {
+        completed: 'Completed',
+        pending: 'Pending',
+        confirmed: 'Confirmed',
+        in_progress: 'In Progress',
+        cancelled: 'Cancelled'
+    };
+    return map[status] || status;
 }
 
 function formatDate(dateString) {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function deleteHistoryItem(id) {
-    if (confirm('Are you sure you want to delete this service history record?')) {
-        let history = JSON.parse(localStorage.getItem(STORAGE_KEYS.SERVICE_HISTORY)) || [];
-        history = history.filter(item => item.id !== id);
-        localStorage.setItem(STORAGE_KEYS.SERVICE_HISTORY, JSON.stringify(history));
-        loadServiceHistory();
-        showNotification('History record deleted successfully!', 'success');
+// ===== NOTIFICATIONS =====
+async function loadNotifications() {
+    try {
+        const emailResponse = await API.auth.getNotificationPreferences();
+        if (emailResponse.success && emailResponse.preferences) {
+            const emailCb = document.getElementById('emailNotifications');
+            if (emailCb) emailCb.checked = emailResponse.preferences.email_notifications;
+        }
+    } catch (error) {
+        console.error('Error loading email notifications:', error);
+    }
+    
+    try {
+        const webResponse = await API.profile.getNotificationSettings();
+        if (webResponse.success && webResponse.settings) {
+            const webCb = document.getElementById('webNotifications');
+            if (webCb) webCb.checked = webResponse.settings.web_notifications;
+        }
+    } catch (error) {
+        console.error('Error loading web notifications:', error);
     }
 }
 
-function clearAllHistory() {
-    if (confirm('Are you sure you want to clear all your service history? This action cannot be undone.')) {
-        localStorage.setItem(STORAGE_KEYS.SERVICE_HISTORY, JSON.stringify([]));
-        loadServiceHistory();
-        showNotification('All service history cleared successfully!', 'success');
+async function saveNotifications() {
+    const emailEnabled = document.getElementById('emailNotifications')?.checked || false;
+    const webEnabled = document.getElementById('webNotifications')?.checked || false;
+    
+    try {
+        showLoading(true);
+        await API.auth.toggleEmailNotifications(emailEnabled);
+        await API.profile.toggleWebNotifications(webEnabled);
+        showLoading(false);
+        showNotification('Notification preferences saved successfully!', 'success');
+    } catch (error) {
+        showLoading(false);
+        console.error('Error saving notifications:', error);
+        showNotification(error.message || 'Failed to save preferences', 'error');
     }
 }
 
-// ========== NOTIFICATION FUNCTIONS ==========
-function loadNotifications() {
-    const notifications = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS));
-    if (notifications) {
-        const emailCb = document.getElementById('emailNotifications');
-        const webCb = document.getElementById('webNotifications');
-        if (emailCb) emailCb.checked = notifications.email || false;
-        if (webCb) webCb.checked = notifications.web || false;
-    }
-}
-
-function saveNotifications() {
-    const notifications = {
-        email: document.getElementById('emailNotifications')?.checked || false,
-        web: document.getElementById('webNotifications')?.checked || false
-    };
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
-    showNotification('Notification preferences saved!', 'success');
-}
-
-// ========== PREFERENCES FUNCTIONS ==========
+// ===== PREFERENCES =====
 function loadPreferences() {
-    const prefs = JSON.parse(localStorage.getItem(STORAGE_KEYS.PREFERENCES));
-    if (prefs) {
-        const ls = document.getElementById('languageSelect');
-        const ts = document.getElementById('timezoneSelect');
-        const ac = document.getElementById('autoBookConfirm');
-        if (ls) ls.value = prefs.language || 'en';
-        if (ts) ts.value = prefs.timezone || 'UTC+3';
-        if (ac) ac.checked = prefs.autoConfirm || false;
-    }
+    const language = localStorage.getItem('pref_language') || 'en';
+    const timezone = localStorage.getItem('pref_timezone') || 'UTC+3';
+    const autoConfirm = localStorage.getItem('pref_autoConfirm') === 'true';
+    
+    const langSelect = document.getElementById('languageSelect');
+    const tzSelect = document.getElementById('timezoneSelect');
+    const autoCheckbox = document.getElementById('autoBookConfirm');
+    
+    if (langSelect) langSelect.value = language;
+    if (tzSelect) tzSelect.value = timezone;
+    if (autoCheckbox) autoCheckbox.checked = autoConfirm;
 }
 
 function savePreferences() {
-    const prefs = {
-        language: document.getElementById('languageSelect')?.value || 'en',
-        timezone: document.getElementById('timezoneSelect')?.value || 'UTC+3',
-        autoConfirm: document.getElementById('autoBookConfirm')?.checked || false
-    };
-    localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(prefs));
+    const language = document.getElementById('languageSelect')?.value || 'en';
+    const timezone = document.getElementById('timezoneSelect')?.value || 'UTC+3';
+    const autoConfirm = document.getElementById('autoBookConfirm')?.checked || false;
+    
+    localStorage.setItem('pref_language', language);
+    localStorage.setItem('pref_timezone', timezone);
+    localStorage.setItem('pref_autoConfirm', autoConfirm);
+    
     showNotification('Preferences saved successfully!', 'success');
 }
 
-// ========== LOGOUT FUNCTIONS ==========
+// ===== LOGOUT =====
+let logoutModal = null;
+
 function setupLogoutModal() {
-    const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
-    const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
-    if (confirmLogoutBtn) {
-        confirmLogoutBtn.addEventListener('click', function () {
+    const modalEl = document.getElementById('logoutModal');
+    if (modalEl) logoutModal = new bootstrap.Modal(modalEl);
+    
+    const confirmBtn = document.getElementById('confirmLogoutBtn');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function() {
             performLogout();
-            logoutModal.hide();
+            if (logoutModal) logoutModal.hide();
         });
     }
-    window.logoutModal = logoutModal;
-
-    const profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE));
-    if (profile) updateLogoutModalInfo(profile);
 }
 
 function showLogoutModal() {
-    const profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE));
-    if (profile) updateLogoutModalInfo(profile);
-    if (window.logoutModal) window.logoutModal.show();
+    if (logoutModal) logoutModal.show();
 }
 
-function performLogout() {
-    localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'false');
-    showNotification('Logged out successfully!', 'success');
-    setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+async function performLogout() {
+    try {
+        showLoading(true);
+        await API.auth.logout();
+        showLoading(false);
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        API.clearAuthToken();
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('pref_language');
+        localStorage.removeItem('pref_timezone');
+        localStorage.removeItem('pref_autoConfirm');
+        localStorage.removeItem('cleanspark_profile_picture');
+        sessionStorage.removeItem('adminLoggedIn');
+        sessionStorage.removeItem('staffLoggedIn');
+        
+        showNotification('Logged out successfully!', 'success');
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1000);
+    }
 }
 
-// ========== DELETE ACCOUNT FUNCTIONS ==========
+// ===== DELETE ACCOUNT =====
+let deleteAccountModal = null;
+
 function setupDeleteAccountModal() {
     const modalEl = document.getElementById('deleteAccountModal');
     if (!modalEl) return;
 
-    const deleteModal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
-    window.deleteAccountModal = deleteModal;
+    deleteAccountModal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
 
-    // Reset modal to step 1 whenever it's opened
-    modalEl.addEventListener('show.bs.modal', function () {
+    modalEl.addEventListener('show.bs.modal', function() {
         showDeleteStep(1);
         const input = document.getElementById('deleteConfirmInput');
         if (input) input.value = '';
         const feedback = document.getElementById('deleteInputFeedback');
-        if (feedback) { feedback.textContent = ''; feedback.className = 'delete-input-feedback'; }
+        if (feedback) {
+            feedback.textContent = '';
+            feedback.className = 'delete-input-feedback';
+        }
         const confirmBtn = document.getElementById('confirmDeleteAccountBtn');
         if (confirmBtn) confirmBtn.disabled = true;
     });
 
-    // Step navigation
     const proceedBtn = document.getElementById('proceedToStep2Btn');
     if (proceedBtn) {
-        proceedBtn.addEventListener('click', function () {
+        proceedBtn.addEventListener('click', function() {
             showDeleteStep(2);
-            setTimeout(() => { document.getElementById('deleteConfirmInput')?.focus(); }, 300);
+            setTimeout(() => document.getElementById('deleteConfirmInput')?.focus(), 300);
         });
     }
 
     const backBtn = document.getElementById('backToStep1Btn');
     if (backBtn) {
-        backBtn.addEventListener('click', function () {
+        backBtn.addEventListener('click', function() {
             showDeleteStep(1);
         });
     }
 
-    // Confirm input validation
     const confirmInput = document.getElementById('deleteConfirmInput');
     if (confirmInput) {
-        confirmInput.addEventListener('input', function () {
+        confirmInput.addEventListener('input', function() {
             validateDeleteInput(this.value);
         });
     }
 
-    // Final delete button
     const confirmDeleteBtn = document.getElementById('confirmDeleteAccountBtn');
     if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', function () {
+        confirmDeleteBtn.addEventListener('click', function() {
             if (document.getElementById('deleteConfirmInput')?.value.toUpperCase() === 'DELETE') {
                 performAccountDeletion();
             }
@@ -900,10 +961,10 @@ function setupDeleteAccountModal() {
 }
 
 function showDeleteStep(step) {
-    [1, 2, 3].forEach(n => {
+    for (let n = 1; n <= 3; n++) {
         const el = document.getElementById(`deleteStep${n}`);
         if (el) el.style.display = n === step ? 'block' : 'none';
-    });
+    }
 }
 
 function validateDeleteInput(value) {
@@ -934,49 +995,65 @@ function validateDeleteInput(value) {
 }
 
 function showDeleteAccountModal() {
-    const profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE));
-    if (profile) updateDeleteModalInfo(profile);
-    if (window.deleteAccountModal) window.deleteAccountModal.show();
+    if (deleteAccountModal) deleteAccountModal.show();
 }
 
-function performAccountDeletion() {
-    // Transition to step 3 (progress)
+async function performAccountDeletion() {
     showDeleteStep(3);
-
+    
     const progressFill = document.getElementById('deleteProgressFill');
     const progressText = document.getElementById('deleteProgressText');
-
+    
     const steps = [
-        { pct: 20, text: 'Removing profile data...' },
-        { pct: 40, text: 'Deleting saved locations...' },
-        { pct: 60, text: 'Removing payment methods...' },
-        { pct: 80, text: 'Clearing service history...' },
-        { pct: 100, text: 'Finalising account deletion...' }
+        { pct: 25, text: 'Verifying account...' },
+        { pct: 50, text: 'Deleting profile...' },
+        { pct: 75, text: 'Clearing history...' },
+        { pct: 100, text: 'Finalising...' }
     ];
-
+    
     let i = 0;
     const interval = setInterval(() => {
         if (i < steps.length) {
             if (progressFill) progressFill.style.width = steps[i].pct + '%';
             if (progressText) progressText.textContent = steps[i].text;
             i++;
-        } else {
-            clearInterval(interval);
-
-            // Wipe all user data from localStorage
-            Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
-            localStorage.removeItem('cleanspark_profile_picture');
-
-            // Close modal then redirect
-            if (window.deleteAccountModal) window.deleteAccountModal.hide();
-
-            showNotification('Your account has been permanently deleted.', 'success');
-            setTimeout(() => { window.location.href = 'index.html'; }, 1500);
         }
-    }, 500);
+    }, 400);
+    
+    try {
+        const password = prompt('Please enter your password to confirm deletion:');
+        if (!password) {
+            clearInterval(interval);
+            showNotification('Account deletion cancelled', 'info');
+            if (deleteAccountModal) deleteAccountModal.hide();
+            return;
+        }
+        
+        const response = await API.auth.deleteAccount(password, 'DELETE');
+        
+        clearInterval(interval);
+        if (progressFill) progressFill.style.width = '100%';
+        if (progressText) progressText.textContent = 'Account deleted successfully!';
+        
+        setTimeout(() => {
+            if (deleteAccountModal) deleteAccountModal.hide();
+            API.clearAuthToken();
+            localStorage.clear();
+            showNotification('Your account has been permanently deleted.', 'success');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+        }, 800);
+        
+    } catch (error) {
+        clearInterval(interval);
+        console.error('Error deleting account:', error);
+        showNotification(error.message || 'Failed to delete account', 'error');
+        showDeleteStep(1);
+    }
 }
 
-// ========== UI FUNCTIONS ==========
+// ===== UI FUNCTIONS =====
 function showSection(sectionId) {
     document.querySelectorAll('.account-section').forEach(s => s.classList.remove('active'));
     const selected = document.getElementById(`${sectionId}Section`);
@@ -996,13 +1073,13 @@ function showNotification(message, type = 'info') {
 
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
-
+    
     const icons = { success: 'fa-check-circle', error: 'fa-exclamation-triangle', warning: 'fa-exclamation-circle', info: 'fa-info-circle' };
     const colors = { success: '#198754', error: '#dc3545', warning: '#ffc107', info: '#4361ee' };
-
+    
     const icon = icons[type] || icons.info;
     const color = colors[type] || colors.info;
-
+    
     toast.style.borderLeftColor = color;
     toast.innerHTML = `
         <div class="d-flex align-items-center gap-2">
@@ -1010,9 +1087,25 @@ function showNotification(message, type = 'info') {
             <span class="flex-grow-1">${escapeHtml(message)}</span>
             <button class="btn-close btn-sm" onclick="this.closest('.toast-notification').remove()"></button>
         </div>`;
-
+    
     toastContainer.appendChild(toast);
-    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+    setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+    }, 4000);
+}
+
+function showLoading(show) {
+    let spinner = document.getElementById('loading-spinner');
+    if (!spinner && show) {
+        spinner = document.createElement('div');
+        spinner.id = 'loading-spinner';
+        spinner.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+        spinner.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:rgba(0,0,0,0.5);width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
+        document.body.appendChild(spinner);
+    }
+    if (spinner) {
+        spinner.style.display = show ? 'flex' : 'none';
+    }
 }
 
 function escapeHtml(str) {
@@ -1022,34 +1115,40 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// ========== EVENT LISTENERS ==========
+// ===== EVENT LISTENERS =====
 function setupEventListeners() {
-    const listeners = [
-        ['profileForm', 'submit', saveProfile],
-        ['passwordForm', 'submit', changePassword],
-        ['addLocationBtn', 'click', addLocation],
-        ['addPaymentBtn', 'click', addPaymentMethod],
-        ['saveNotificationsBtn', 'click', saveNotifications],
-        ['savePreferencesBtn', 'click', savePreferences],
-        ['clearAllHistoryBtn', 'click', clearAllHistory]
-    ];
-
-    listeners.forEach(([id, event, fn]) => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener(event, fn);
-    });
-
-    const locationInput = document.getElementById('newLocation');
-    if (locationInput) {
-        locationInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); addLocation(); }
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) profileForm.addEventListener('submit', saveProfile);
+    
+    const passwordForm = document.getElementById('passwordForm');
+    if (passwordForm) passwordForm.addEventListener('submit', changePassword);
+    
+    const addLocationBtn = document.getElementById('addLocationBtn');
+    if (addLocationBtn) addLocationBtn.addEventListener('click', addLocation);
+    
+    const addPaymentBtn = document.getElementById('addPaymentBtn');
+    if (addPaymentBtn) addPaymentBtn.addEventListener('click', addPaymentMethod);
+    
+    const saveNotificationsBtn = document.getElementById('saveNotificationsBtn');
+    if (saveNotificationsBtn) saveNotificationsBtn.addEventListener('click', saveNotifications);
+    
+    const savePreferencesBtn = document.getElementById('savePreferencesBtn');
+    if (savePreferencesBtn) savePreferencesBtn.addEventListener('click', savePreferences);
+    
+    const newLocationInput = document.getElementById('newLocation');
+    if (newLocationInput) {
+        newLocationInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addLocation();
+            }
         });
     }
 }
 
 function setupMenuClickHandlers() {
     document.querySelectorAll('.account-menu li').forEach(item => {
-        item.addEventListener('click', function (e) {
+        item.addEventListener('click', function(e) {
             e.stopPropagation();
             const section = this.getAttribute('data-section');
             if (section === 'logout') {
@@ -1063,13 +1162,38 @@ function setupMenuClickHandlers() {
     });
 }
 
-// ========== GLOBAL EXPORTS ==========
-window.deleteLocation = deleteLocation;
-window.deletePaymentMethod = deletePaymentMethod;
-window.deleteHistoryItem = deleteHistoryItem;
-window.showNotification = showNotification;
+// ===== INITIALIZATION =====
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Account page initializing...');
+    
+    setupSidebarFunctions();
+    setupPasswordStrength();
+    setupEventListeners();
+    setupMenuClickHandlers();
+    setupLogoutModal();
+    setupDeleteAccountModal();
+    setupPaymentModal();
+    initProfilePicture();
+    
+    const isAuth = await enforceAccessControl();
+    if (!isAuth) return;
+    
+    await loadProfileData();
+    await loadLocations();
+    await loadPaymentMethods();
+    await loadServiceHistory();
+    await loadNotifications();
+    await loadPreferences();
+    
+    console.log('Account page initialized successfully');
+});
+
+// Global exports
 window.openSidebar = openSidebar;
 window.closeSidebar = closeSidebar;
 window.showSection = showSection;
 window.showLogoutModal = showLogoutModal;
 window.showDeleteAccountModal = showDeleteAccountModal;
+window.viewBookingDetails = viewBookingDetails;
+window.deleteLocation = deleteLocation;
+window.deletePaymentMethod = deletePaymentMethod;

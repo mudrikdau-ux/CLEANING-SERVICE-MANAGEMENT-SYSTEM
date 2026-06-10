@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CleanSpark - Professional Cleaning Services in Zanzibar</title>
     
-    <!-- Apply saved theme immediately to prevent flash of wrong theme -->
+    <!-- Apply saved theme immediately -->
     <script>
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
@@ -45,18 +45,17 @@
     </a>
 
     <div class="search-container">
-        <select class="location-select" aria-label="Select location">
-            <option value="unguja">Unguja</option>
-            <option value="pemba">Pemba</option>
-            <option value="both">Both</option>
+        <select class="location-select" id="locationSelect" aria-label="Select location">
+            <option value="all">All Islands</option>
+            <option value="Unguja Island">Unguja Island</option>
+            <option value="Pemba Island">Pemba Island</option>
         </select>
-        <input type="search" placeholder="Search services..." class="search-input" aria-label="Search services">
-        <button class="search-btn" aria-label="Search"><i class="fas fa-search"></i> <span class="btn-text">Search</span></button>
+        <input type="search" id="searchInput" placeholder="Search services..." class="search-input" aria-label="Search services">
+        <button class="search-btn" id="searchBtn" aria-label="Search"><i class="fas fa-search"></i> <span class="btn-text">Search</span></button>
     </div>
 
     <div class="top-bar-actions">
-        <!-- Theme Toggle Button -->
-        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light mode" title="Toggle dark/light mode">
+        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light mode">
             <i class="fas fa-moon"></i>
             <i class="fas fa-sun"></i>
         </button>
@@ -75,6 +74,7 @@
     <div class="carousel-indicators">
         <button type="button" data-bs-target="#carouselAds" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
         <button type="button" data-bs-target="#carouselAds" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#carouselAds" data-bs-slide-to="2" aria-label="Slide 3"></button>
     </div>
     <div class="carousel-inner">
         <div class="carousel-item active">
@@ -108,89 +108,33 @@
         <h1 class="display-5">Professional Cleaning Services in Zanzibar</h1>
         <p class="lead">Book trusted cleaners for your home or office with just a few clicks</p>
         <a href="service.html" class="btn btn-success btn-lg mt-3">
-            <i class="fas fa-broom"></i> View Our Services
+            <i class="fas fa-broom"></i> View All Services
         </a>
     </div>
 
-    <!-- Featured Services Section - 3 premium services -->
+    <!-- Dynamic Services Section - Loaded from API -->
     <div class="container featured-services-section">
         <div class="section-header text-center">
-            <h2><i class="fas fa-star"></i> Most Popular Services</h2>
-            <p class="lead">Our customers' top choices — quality guaranteed</p>
+            <h2><i class="fas fa-star"></i> Our Premium Services</h2>
+            <p class="lead">Professional cleaning tailored to your needs</p>
         </div>
 
-        <div class="row g-4 justify-content-center">
-            <!-- Service 1: Home Cleaning Premium -->
-            <div class="col-lg-4 col-md-6">
-                <div class="service-card" data-service-id="home" data-service-name="Home Cleaning" data-service-price="50000">
-                    <div class="card-img-wrap">
-                        <img src="image/home.jpeg" alt="Home Cleaning" onerror="this.src='image/home.jpeg'">
-                    </div>
-                    <div class="card-body-inner">
-                        <div class="title">🏠 Home Cleaning</div>
-                        <div class="description">Complete home cleaning including kitchen, bathrooms, and living areas. Eco-friendly products used.</div>
-                        <div class="card-actions">
-                            <button class="btn btn-success book-service-btn" data-service-id="home" data-service-name="Home Cleaning" data-service-price="50000">
-                                <i class="fas fa-calendar-check"></i> Book
-                            </button>
-                            <button class="info-btn" data-service="home" aria-label="More info">
-                                <i class="fas fa-info"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Service 2: Office Cleaning Premium -->
-            <div class="col-lg-4 col-md-6">
-                <div class="service-card" data-service-id="office" data-service-name="Office Cleaning" data-service-price="75000">
-                    <div class="card-img-wrap">
-                        <img src="image/office.jpg" alt="Office Cleaning" onerror="this.src='image/office.jpg'">
-                    </div>
-                    <div class="card-body-inner">
-                        <div class="title">🏢 Office Cleaning</div>
-                        <div class="description">Professional office cleaning to maintain hygiene and productivity. After-hours service available.</div>
-                        <div class="card-actions">
-                            <button class="btn btn-success book-service-btn" data-service-id="office" data-service-name="Office Cleaning" data-service-price="75000">
-                                <i class="fas fa-calendar-check"></i> Book
-                            </button>
-                            <button class="info-btn" data-service="office" aria-label="More info">
-                                <i class="fas fa-info"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Service 3: Carpet Cleaning Premium -->
-            <div class="col-lg-4 col-md-6">
-                <div class="service-card" data-service-id="carpet" data-service-name="Carpet Cleaning" data-service-price="60000">
-                    <div class="card-img-wrap">
-                        <img src="image/capet.avif" alt="Carpet Cleaning" onerror="this.src='image/capet.avif'">
-                    </div>
-                    <div class="card-body-inner">
-                        <div class="title">🧺 Carpet Cleaning</div>
-                        <div class="description">Deep carpet cleaning with eco-friendly solutions. Steam cleaning available for tough stains.</div>
-                        <div class="card-actions">
-                            <button class="btn btn-success book-service-btn" data-service-id="carpet" data-service-name="Carpet Cleaning" data-service-price="60000">
-                                <i class="fas fa-calendar-check"></i> Book
-                            </button>
-                            <button class="info-btn" data-service="carpet" aria-label="More info">
-                                <i class="fas fa-info"></i>
-                            </button>
-                        </div>
-                    </div>
+        <div class="row g-4 justify-content-center" id="servicesContainer">
+            <!-- Services will be dynamically loaded here from API -->
+            <div class="col-12 text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading services...</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Features Row - Premium Promise Section (before footer) -->
+    <!-- Features Row - Premium Promise Section -->
     <div class="premium-features-row">
         <div class="container">
             <div class="row g-4 text-center">
                 <div class="col-md-3 col-sm-6">
-                    <div class="feature-item" id="featureOnTime">
+                    <div class="feature-item" data-feature="ontime">
                         <div class="feature-icon">
                             <i class="fas fa-stopwatch"></i>
                         </div>
@@ -199,7 +143,7 @@
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="feature-item" id="featureEco">
+                    <div class="feature-item" data-feature="eco">
                         <div class="feature-icon">
                             <i class="fas fa-leaf"></i>
                         </div>
@@ -208,7 +152,7 @@
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="feature-item" id="featureInsured">
+                    <div class="feature-item" data-feature="insured">
                         <div class="feature-icon">
                             <i class="fas fa-shield-alt"></i>
                         </div>
@@ -217,7 +161,7 @@
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="feature-item" id="featureSupport">
+                    <div class="feature-item" data-feature="support">
                         <div class="feature-icon">
                             <i class="fas fa-headset"></i>
                         </div>
@@ -238,18 +182,18 @@
                 <h5>About CleanSpark</h5>
                 <p>CleanSpark is Zanzibar's premier cleaning service provider, offering professional and reliable cleaning solutions for homes and businesses since 2026.</p>
                 <div class="social-links">
-                    <a href="https://www.facebook.com/CleanSparkZanzibar" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://www.twitter.com/CleanSparkTZ" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="https://www.instagram.com/CleanSparkZanzibar" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.linkedin.com/company/CleanSpark" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="https://wa.me/0621662883" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://www.facebook.com/CleanSparkZanzibar" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.twitter.com/CleanSparkTZ" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
+                    <a href="https://www.instagram.com/CleanSparkZanzibar" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.linkedin.com/company/CleanSpark" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://wa.me/0621662883" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4">
                 <h5>Quick Links</h5>
                 <ul>
                     <li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
-                    <li><a href="service.html"><i class="fas fa-chevron-right"></i> Our Services</a></li>
+                    <li><a href="service.html"><i class="fas fa-chevron-right"></i> All Services</a></li>
                     <li><a href="aboutus.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
                     <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
                     <li><a href="login.html"><i class="fas fa-chevron-right"></i> Login</a></li>
@@ -259,25 +203,63 @@
             <div class="col-lg-4 col-md-12 mb-4">
                 <h5>Contact Info</h5>
                 <ul class="contact-info">
-                    <li><i class="fas fa-map-marker-alt"></i> <a href="https://www.google.com/maps/search/Stone+Town,+Zanzibar" target="_blank" rel="noopener noreferrer">Stone Town, Zanzibar</a></li>
+                    <li><i class="fas fa-map-marker-alt"></i> Stone Town, Zanzibar</li>
                     <li><i class="fas fa-phone"></i> <a href="tel:+0621662883">+062 166 2883</a></li>
-                    <li><i class="fas fa-envelope"></i> <a href="mailto:mudrikdau@gmail.com">info@cleanspark.co.tz</a></li>
+                    <li><i class="fas fa-envelope"></i> <a href="mailto:info@cleanspark.co.tz">info@cleanspark.co.tz</a></li>
                     <li><i class="fas fa-clock"></i> Available 24/7 - Always Open</li>
                 </ul>
                 <h5 class="mt-4">Newsletter</h5>
                 <form class="newsletter-form" id="newsletterForm">
-                    <input type="email" placeholder="Your email address" required aria-label="Email for newsletter">
+                    <input type="email" id="newsletterEmail" placeholder="Your email address" required>
                     <button type="submit" aria-label="Subscribe"><i class="fas fa-paper-plane"></i></button>
                 </form>
             </div>
         </div>
         <div class="copyright">
-            <p>&copy; 2026 CleanSpark . All rights reserved.</p>
+            <p>&copy; 2026 CleanSpark. All rights reserved.</p>
         </div>
     </div>
 </footer>
 
+<!-- Service Details Modal - No price, duration, location shown -->
+<div class="modal fade" id="serviceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1a5276 0%, #2e86c1 100%);">
+                <h5 class="modal-title"><i class="fas fa-info-circle"></i> Service Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="serviceModalBody">
+                <!-- Dynamic content -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
+                <button type="button" class="btn btn-success" id="modalBookBtn"><i class="fas fa-calendar-check"></i> Book Now</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feature Modal -->
+<div class="modal fade" id="featureModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="featureModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="featureModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="service.html" class="btn btn-success">View All Services</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="js/api.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/index.js"></script>
 <script src="js/bot.js"></script>

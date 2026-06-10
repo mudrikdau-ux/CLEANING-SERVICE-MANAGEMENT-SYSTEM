@@ -369,7 +369,17 @@ function stopOTPTimer() {
 async function registerUser(userData) {
     try {
         showLoading(true);
-        const response = await API.auth.register(userData);
+        // Make sure to send all fields including phone
+        const response = await API.auth.register({
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+            email: userData.email,
+            password: userData.password,
+            confirm_password: userData.confirm_password,
+            address: userData.address,
+            gender: userData.gender,
+            phone: userData.phone  // Include phone
+        });
         showLoading(false);
         return { success: true, data: response };
     } catch (error) {
@@ -431,10 +441,12 @@ async function processRegistration(formData) {
         password: formData.password,
         confirm_password: formData.password,
         address: formData.address,
-        gender: formData.gender
+        gender: formData.gender,
+        phone: formData.phone || ''  // Add phone number
     };
     
     console.log('Registering user:', userData.email);
+    console.log('With phone:', userData.phone);
     
     const result = await registerUser(userData);
     
