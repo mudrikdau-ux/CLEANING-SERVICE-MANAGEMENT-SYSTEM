@@ -1,1906 +1,668 @@
-// ========== PROFESSIONAL BOOKING SYSTEM WITH SERVICE-SPECIFIC FORMS ==========
-// FULLY FIXED - All functionality working
+/**
+ * CleanSpark Booking System - 18 Services with Dynamic Forms
+ */
 
 let currentStep = 1;
 let selectedService = null;
 let mapInstance = null;
 let currentMarker = null;
-let bookedDates = [];
 let flatpickrInstance = null;
 
-// Service configuration with specific form templates
-const SERVICE_CONFIGS = {
-    // Residential Services
-    home_cleaning: {
-        name: 'Home Cleaning',
-        category: 'residential',
-        icon: '🏠',
-        basePrice: 50000,
-        description: 'Complete home cleaning service for your residence',
-        formTemplate: 'homeCleaning',
-        validation: validateHomeCleaning,
-        getPrice: calculateHomeCleaningPrice,
-        duration: '2-4 hours'
-    },
-    apartment_cleaning: {
-        name: 'Apartment Cleaning',
-        category: 'residential',
-        icon: '🏢',
-        basePrice: 45000,
-        description: 'Specialized cleaning for apartments and condos',
-        formTemplate: 'homeCleaning',
-        validation: validateHomeCleaning,
-        getPrice: calculateHomeCleaningPrice,
-        duration: '2-3 hours'
-    },
-    deep_cleaning: {
-        name: 'Deep Cleaning',
-        category: 'residential',
-        icon: '🔍',
-        basePrice: 75000,
-        description: 'Intensive deep cleaning for every corner',
-        formTemplate: 'deepCleaning',
-        validation: validateDeepCleaning,
-        getPrice: calculateDeepCleaningPrice,
-        duration: '4-6 hours'
-    },
-    
-    // Commercial Services
-    office_cleaning: {
-        name: 'Office Cleaning',
-        category: 'commercial',
-        icon: '🏢',
-        basePrice: 75000,
-        description: 'Professional office cleaning for workplaces',
-        formTemplate: 'officeCleaning',
-        validation: validateOfficeCleaning,
-        getPrice: calculateOfficeCleaningPrice,
-        duration: '3-4 hours'
-    },
-    hotel_cleaning: {
-        name: 'Hotel & Airbnb Cleaning',
-        category: 'commercial',
-        icon: '🏨',
-        basePrice: 100000,
-        description: 'Professional cleaning for hotels and short-stay properties',
-        formTemplate: 'hotelCleaning',
-        validation: validateHotelCleaning,
-        getPrice: calculateHotelCleaningPrice,
-        duration: '2-4 hours'
-    },
-    industrial_cleaning: {
-        name: 'Industrial Cleaning',
-        category: 'commercial',
-        icon: '🏭',
-        basePrice: 120000,
-        description: 'Heavy-duty cleaning for industrial spaces',
-        formTemplate: 'industrialCleaning',
-        validation: validateIndustrialCleaning,
-        getPrice: calculateIndustrialCleaningPrice,
-        duration: '4-8 hours'
-    },
-    
-    // Specialized Services
-    carpet_cleaning: {
-        name: 'Carpet Cleaning',
-        category: 'specialized',
-        icon: '🪑',
-        basePrice: 60000,
-        description: 'Deep carpet cleaning and stain removal',
-        formTemplate: 'carpetCleaning',
-        validation: validateCarpetCleaning,
-        getPrice: calculateCarpetCleaningPrice,
-        duration: '1-2 hours per room'
-    },
-    window_cleaning: {
-        name: 'Window Cleaning',
-        category: 'specialized',
-        icon: '🪟',
-        basePrice: 40000,
-        description: 'Professional streak-free window cleaning',
-        formTemplate: 'windowCleaning',
-        validation: validateWindowCleaning,
-        getPrice: calculateWindowCleaningPrice,
-        duration: '1-3 hours'
-    },
-    vehicle_cleaning: {
-        name: 'Vehicle Cleaning',
-        category: 'specialized',
-        icon: '🚗',
-        basePrice: 45000,
-        description: 'Complete interior and exterior vehicle cleaning',
-        formTemplate: 'vehicleCleaning',
-        validation: validateVehicleCleaning,
-        getPrice: calculateVehicleCleaningPrice,
-        duration: '1-2 hours'
-    },
-    pool_cleaning: {
-        name: 'Pool Cleaning',
-        category: 'specialized',
-        icon: '🏊',
-        basePrice: 80000,
-        description: 'Professional pool cleaning and maintenance',
-        formTemplate: 'poolCleaning',
-        validation: validatePoolCleaning,
-        getPrice: calculatePoolCleaningPrice,
-        duration: '2-3 hours'
-    },
-    mattress_cleaning: {
-        name: 'Mattress Cleaning',
-        category: 'specialized',
-        icon: '🛏️',
-        basePrice: 55000,
-        description: 'Deep mattress cleaning and sanitization',
-        formTemplate: 'mattressCleaning',
-        validation: validateMattressCleaning,
-        getPrice: calculateMattressCleaningPrice,
-        duration: '1 hour per mattress'
-    },
-    upholstery_cleaning: {
-        name: 'Upholstery Cleaning',
-        category: 'specialized',
-        icon: '🛋️',
-        basePrice: 65000,
-        description: 'Professional furniture and upholstery cleaning',
-        formTemplate: 'upholsteryCleaning',
-        validation: validateUpholsteryCleaning,
-        getPrice: calculateUpholsteryCleaningPrice,
-        duration: '2-3 hours'
-    },
-    move_cleaning: {
-        name: 'Move-In/Out Cleaning',
-        category: 'specialized',
-        icon: '🚚',
-        basePrice: 70000,
-        description: 'Complete cleaning for moving in or out',
-        formTemplate: 'moveCleaning',
-        validation: validateMoveCleaning,
-        getPrice: calculateMoveCleaningPrice,
-        duration: '3-5 hours'
-    },
-    construction_cleaning: {
-        name: 'Post Construction Cleaning',
-        category: 'specialized',
-        icon: '🏗️',
-        basePrice: 90000,
-        description: 'Complete cleaning after construction',
-        formTemplate: 'constructionCleaning',
-        validation: validateConstructionCleaning,
-        getPrice: calculateConstructionCleaningPrice,
-        duration: '4-6 hours'
-    },
-    laundry_service: {
-        name: 'Laundry & Ironing',
-        category: 'specialized',
-        icon: '👕',
-        basePrice: 54000,
-        description: 'Professional laundry and ironing service',
-        formTemplate: 'laundryCleaning',
-        validation: validateLaundryCleaning,
-        getPrice: calculateLaundryCleaningPrice,
-        duration: '24-hour turnaround'
-    },
-    pest_control: {
-        name: 'Pest Control',
-        category: 'specialized',
-        icon: '🐜',
-        basePrice: 54000,
-        description: 'Effective pest elimination and prevention',
-        formTemplate: 'pestControl',
-        validation: validatePestControl,
-        getPrice: calculatePestControlPrice,
-        duration: '1-2 hours'
-    },
-    event_cleaning: {
-        name: 'Event Setup & Cleanup',
-        category: 'commercial',
-        icon: '🎉',
-        basePrice: 90000,
-        description: 'Event setup and complete cleanup',
-        formTemplate: 'eventCleaning',
-        validation: validateEventCleaning,
-        getPrice: calculateEventCleaningPrice,
-        duration: '3-6 hours'
-    },
-    ac_cleaning: {
-        name: 'AC & Refrigerator Cleaning',
-        category: 'specialized',
-        icon: '❄️',
-        basePrice: 45000,
-        description: 'AC and refrigerator cleaning service',
-        formTemplate: 'acCleaning',
-        validation: validateAcCleaning,
-        getPrice: calculateAcCleaningPrice,
-        duration: '1-2 hours'
-    },
-    water_tank_cleaning: {
-        name: 'Water Tank Cleaning',
-        category: 'specialized',
-        icon: '💧',
-        basePrice: 70000,
-        description: 'Professional water tank cleaning',
-        formTemplate: 'waterTankCleaning',
-        validation: validateWaterTankCleaning,
-        getPrice: calculateWaterTankCleaningPrice,
-        duration: '2-3 hours'
-    },
-    curtain_cleaning: {
-        name: 'Curtain Cleaning',
-        category: 'specialized',
-        icon: '🪟',
-        basePrice: 40000,
-        description: 'Professional curtain cleaning service',
-        formTemplate: 'curtainCleaning',
-        validation: validateCurtainCleaning,
-        getPrice: calculateCurtainCleaningPrice,
-        duration: '2-3 hours'
-    },
-    garden_cleaning: {
-        name: 'Garden Cleaning',
-        category: 'specialized',
-        icon: '🌿',
-        basePrice: 55000,
-        description: 'Professional garden cleaning and maintenance',
-        formTemplate: 'gardenCleaning',
-        validation: validateGardenCleaning,
-        getPrice: calculateGardenCleaningPrice,
-        duration: '2-4 hours'
+// Mock API for demonstration
+const API = {
+    bookings: {
+        create: async (data) => {
+            console.log('Booking Data:', data);
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve({ success: true, booking: { id: 'BK' + Date.now() } });
+                }, 1000);
+            });
+        }
     }
 };
 
-// Service-specific form templates (HTML strings)
-const FORM_TEMPLATES = {
-    homeCleaning: `
-        <div class="form-group full-width">
-            <label class="form-label">Property Type <span class="required">*</span></label>
-            <div class="property-type-grid" id="propertyTypeGrid">
-                <div class="property-option" data-type="apartment">
-                    <i class="fas fa-building"></i>
-                    <span>Apartment</span>
-                </div>
-                <div class="property-option" data-type="house">
-                    <i class="fas fa-home"></i>
-                    <span>House</span>
-                </div>
-                <div class="property-option" data-type="villa">
-                    <i class="fas fa-swimming-pool"></i>
-                    <span>Villa</span>
-                </div>
-                <div class="property-option" data-type="studio">
-                    <i class="fas fa-door-open"></i>
-                    <span>Studio</span>
-                </div>
-            </div>
-            <input type="hidden" id="propertyType" value="">
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Number of Bedrooms</label>
-                <select id="bedrooms" class="form-control">
-                    <option value="0">0 (Studio/No bedroom)</option>
-                    <option value="1">1 Bedroom</option>
-                    <option value="2">2 Bedrooms</option>
-                    <option value="3">3 Bedrooms</option>
-                    <option value="4">4 Bedrooms</option>
-                    <option value="5">5+ Bedrooms</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Number of Bathrooms</label>
-                <select id="bathrooms" class="form-control">
-                    <option value="1">1 Bathroom</option>
-                    <option value="2">2 Bathrooms</option>
-                    <option value="3">3 Bathrooms</option>
-                    <option value="4">4+ Bathrooms</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group full-width">
-            <label class="form-label">Dirt Level <span class="required">*</span></label>
-            <div class="dirt-level-grid" id="dirtLevelGrid">
-                <div class="dirt-option" data-level="light">
-                    <i class="fas fa-leaf"></i>
-                    <strong>Light</strong>
-                    <small>Regular maintenance needed</small>
-                </div>
-                <div class="dirt-option" data-level="moderate">
-                    <i class="fas fa-broom"></i>
-                    <strong>Moderate</strong>
-                    <small>Some deep cleaning required</small>
-                </div>
-                <div class="dirt-option" data-level="heavy">
-                    <i class="fas fa-fire"></i>
-                    <strong>Heavy</strong>
-                    <small>Extensive deep cleaning needed</small>
-                </div>
-            </div>
-            <input type="hidden" id="dirtLevel" value="">
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Cleaning Frequency</label>
-                <select id="frequency" class="form-control">
-                    <option value="one_time">One-Time Cleaning</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly (Save 10%)</option>
-                    <option value="biweekly">Bi-Weekly (Save 15%)</option>
-                    <option value="monthly">Monthly (Save 20%)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Number of Cleaners</label>
-                <select id="cleaners" class="form-control">
-                    <option value="1">1 Cleaner</option>
-                    <option value="2">2 Cleaners</option>
-                    <option value="3">3 Cleaners</option>
-                    <option value="4">4+ Cleaners</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Special Instructions</label>
-            <textarea id="specialInstructions" class="form-control" rows="3" placeholder="Any areas needing special attention, pets, access instructions..."></textarea>
-        </div>
-    `,
-
-    officeCleaning: `
-        <div class="form-group full-width">
-            <label class="form-label">Office Type <span class="required">*</span></label>
-            <div class="office-type-grid" id="officeTypeGrid">
-                <div class="office-option" data-type="corporate">
-                    <i class="fas fa-building"></i>
-                    <span>Corporate Office</span>
-                </div>
-                <div class="office-option" data-type="small">
-                    <i class="fas fa-store"></i>
-                    <span>Small Office</span>
-                </div>
-                <div class="office-option" data-type="coworking">
-                    <i class="fas fa-users"></i>
-                    <span>Coworking Space</span>
-                </div>
-                <div class="office-option" data-type="medical">
-                    <i class="fas fa-hospital"></i>
-                    <span>Medical Office</span>
-                </div>
-            </div>
-            <input type="hidden" id="officeType" value="">
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Number of Rooms/Sections</label>
-                <select id="officeRooms" class="form-control">
-                    <option value="1">1-2 Rooms</option>
-                    <option value="2">3-4 Rooms</option>
-                    <option value="3">5-6 Rooms</option>
-                    <option value="4">7-9 Rooms</option>
-                    <option value="5">10+ Rooms</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Number of Workstations</label>
-                <select id="workstations" class="form-control">
-                    <option value="0">No dedicated workstations</option>
-                    <option value="5">1-5 Workstations</option>
-                    <option value="10">6-10 Workstations</option>
-                    <option value="15">11-15 Workstations</option>
-                    <option value="20">16-20 Workstations</option>
-                    <option value="25">20+ Workstations</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Cleaning Frequency</label>
-                <select id="frequency" class="form-control">
-                    <option value="one_time">One-Time</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="biweekly">Bi-Weekly</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Service Time</label>
-                <select id="serviceTime" class="form-control">
-                    <option value="business_hours">During Business Hours</option>
-                    <option value="after_hours">After Hours (Additional 20%)</option>
-                    <option value="weekend">Weekend (Additional 30%)</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Security/Access Notes</label>
-            <textarea id="securityNotes" class="form-control" rows="2" placeholder="Access codes, security procedures, cleaning after hours instructions..."></textarea>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Special Requirements</label>
-            <textarea id="specialRequirements" class="form-control" rows="2" placeholder="Any special cleaning requirements or areas of focus..."></textarea>
-        </div>
-    `,
-
-    carpetCleaning: `
-        <div class="form-group full-width">
-            <label class="form-label">Carpet Type <span class="required">*</span></label>
-            <div class="carpet-type-grid" id="carpetTypeGrid">
-                <div class="carpet-option" data-type="wool">
-                    <i class="fas fa-tshirt"></i>
-                    <span>Wool</span>
-                </div>
-                <div class="carpet-option" data-type="synthetic">
-                    <i class="fas fa-industry"></i>
-                    <span>Synthetic</span>
-                </div>
-                <div class="carpet-option" data-type="berber">
-                    <i class="fas fa-th-large"></i>
-                    <span>Berber</span>
-                </div>
-                <div class="carpet-option" data-type="sisal">
-                    <i class="fas fa-leaf"></i>
-                    <span>Sisal</span>
-                </div>
-            </div>
-            <input type="hidden" id="carpetType" value="">
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Number of Carpets</label>
-                <select id="carpetCount" class="form-control">
-                    <option value="1">1 Carpet</option>
-                    <option value="2">2 Carpets</option>
-                    <option value="3">3 Carpets</option>
-                    <option value="4">4 Carpets</option>
-                    <option value="5">5+ Carpets</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Carpet Size</label>
-                <select id="carpetSize" class="form-control">
-                    <option value="small">Small (under 2x3m)</option>
-                    <option value="medium">Medium (2x3m - 3x4m)</option>
-                    <option value="large">Large (3x4m - 4x5m)</option>
-                    <option value="extra_large">Extra Large (5x5m+)</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group full-width">
-            <label class="form-label">Stain Level <span class="required">*</span></label>
-            <div class="stain-level-grid" id="stainLevelGrid">
-                <div class="stain-option" data-level="none">
-                    <i class="fas fa-check-circle"></i>
-                    <strong>No Stains</strong>
-                    <small>Regular cleaning only</small>
-                </div>
-                <div class="stain-option" data-level="light">
-                    <i class="fas fa-tint"></i>
-                    <strong>Light Stains</strong>
-                    <small>Few small spots</small>
-                </div>
-                <div class="stain-option" data-level="moderate">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Moderate Stains</strong>
-                    <small>Several noticeable stains</small>
-                </div>
-                <div class="stain-option" data-level="heavy">
-                    <i class="fas fa-fire"></i>
-                    <strong>Heavy Stains</strong>
-                    <small>Extensive staining</small>
-                </div>
-            </div>
-            <input type="hidden" id="stainLevel" value="">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Additional Services</label>
-            <div class="checkbox-group">
-                <label><input type="checkbox" id="stainProtection"> Stain Protection (+TZS 15,000)</label>
-                <label><input type="checkbox" id="deodorizing"> Deep Deodorizing (+TZS 10,000)</label>
-                <label><input type="checkbox" id="petTreatment"> Pet Stain Treatment (+TZS 20,000)</label>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Special Instructions</label>
-            <textarea id="specialInstructions" class="form-control" rows="2" placeholder="Furniture to move, delicate areas, etc..."></textarea>
-        </div>
-    `,
-
-    windowCleaning: `
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Number of Windows <span class="required">*</span></label>
-                <input type="number" id="windowCount" class="form-control" placeholder="e.g., 10" min="1" value="5">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Number of Window Panes per Window</label>
-                <select id="panesPerWindow" class="form-control">
-                    <option value="1">1 Pane (Single)</option>
-                    <option value="2">2 Panes (Double)</option>
-                    <option value="3">3+ Panes (Multiple)</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Highest Floor Level</label>
-                <select id="maxFloor" class="form-control">
-                    <option value="1">Ground Floor (1st)</option>
-                    <option value="2">2nd Floor</option>
-                    <option value="3">3rd Floor</option>
-                    <option value="4">4th Floor</option>
-                    <option value="5">5th+ Floor (+30% fee)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Window Type</label>
-                <select id="windowType" class="form-control">
-                    <option value="standard">Standard</option>
-                    <option value="casement">Casement (Hinged)</option>
-                    <option value="sliding">Sliding</option>
-                    <option value="bay">Bay Window</option>
-                    <option value="skylight">Skylight</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group full-width">
-            <label class="form-label">Window Condition <span class="required">*</span></label>
-            <div class="condition-grid" id="windowConditionGrid">
-                <div class="condition-option" data-condition="clean">
-                    <i class="fas fa-check"></i>
-                    <strong>Generally Clean</strong>
-                    <small>Minor dust/dirt</small>
-                </div>
-                <div class="condition-option" data-condition="dirty">
-                    <i class="fas fa-broom"></i>
-                    <strong>Dirty</strong>
-                    <small>Visible grime</small>
-                </div>
-                <div class="condition-option" data-condition="very_dirty">
-                    <i class="fas fa-fire"></i>
-                    <strong>Very Dirty</strong>
-                    <small>Heavy build-up</small>
-                </div>
-            </div>
-            <input type="hidden" id="windowCondition" value="">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Accessibility Notes</label>
-            <textarea id="accessNotes" class="form-control" rows="2" placeholder="Ladder access, difficult to reach windows, safety considerations..."></textarea>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Screen Cleaning</label>
-            <div class="radio-group">
-                <label><input type="radio" name="screenCleaning" value="yes" checked> Yes, clean screens (+TZS 5,000)</label>
-                <label><input type="radio" name="screenCleaning" value="no"> No, skip screens</label>
-            </div>
-        </div>
-    `,
-
-    deepCleaning: `
-        <div class="form-group full-width">
-            <label class="form-label">Property Type <span class="required">*</span></label>
-            <div class="property-type-grid" id="propertyTypeGrid">
-                <div class="property-option" data-type="apartment">
-                    <i class="fas fa-building"></i>
-                    <span>Apartment</span>
-                </div>
-                <div class="property-option" data-type="house">
-                    <i class="fas fa-home"></i>
-                    <span>House</span>
-                </div>
-                <div class="property-option" data-type="villa">
-                    <i class="fas fa-swimming-pool"></i>
-                    <span>Villa</span>
-                </div>
-                <div class="property-option" data-type="mansion">
-                    <i class="fas fa-crown"></i>
-                    <span>Mansion</span>
-                </div>
-            </div>
-            <input type="hidden" id="propertyType" value="">
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Total Area (sqm)</label>
-                <input type="number" id="areaSqm" class="form-control" placeholder="e.g., 200" value="100">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Number of Rooms</label>
-                <select id="roomCount" class="form-control">
-                    <option value="1">1-2 Rooms</option>
-                    <option value="2">3-4 Rooms</option>
-                    <option value="3">5-6 Rooms</option>
-                    <option value="4">7-8 Rooms</option>
-                    <option value="5">9+ Rooms</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group full-width">
-            <label class="form-label">Deep Clean Areas <span class="required">*</span></label>
-            <div class="deep-clean-grid" id="deepCleanAreas">
-                <div class="deep-option" data-area="kitchen">
-                    <i class="fas fa-utensils"></i>
-                    <span>Kitchen</span>
-                    <small>Appliances, cabinets, grease removal</small>
-                </div>
-                <div class="deep-option" data-area="bathroom">
-                    <i class="fas fa-toilet"></i>
-                    <span>Bathroom</span>
-                    <small>Tile grout, fixtures, mold prevention</small>
-                </div>
-                <div class="deep-option" data-area="bedroom">
-                    <i class="fas fa-bed"></i>
-                    <span>Bedroom</span>
-                    <small>Closets, under beds, baseboards</small>
-                </div>
-                <div class="deep-option" data-area="living">
-                    <i class="fas fa-couch"></i>
-                    <span>Living Area</span>
-                    <small>All surfaces, behind furniture</small>
-                </div>
-            </div>
-            <input type="hidden" id="deepCleanAreasValue" value="">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Additional Deep Cleaning Services</label>
-            <div class="checkbox-group">
-                <label><input type="checkbox" id="ovenCleaning"> Oven Cleaning (+TZS 25,000)</label>
-                <label><input type="checkbox" id="fridgeCleaning"> Refrigerator Cleaning (+TZS 20,000)</label>
-                <label><input type="checkbox" id="groutCleaning"> Tile & Grout Deep Clean (+TZS 30,000)</label>
-                <label><input type="checkbox" id="baseboardCleaning"> Baseboard & Trim Detail (+TZS 15,000)</label>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Special Instructions</label>
-            <textarea id="specialInstructions" class="form-control" rows="3" placeholder="Areas needing extra attention, fragile items, access instructions..."></textarea>
-        </div>
-    `,
-
-    constructionCleaning: `
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Property Size <span class="required">*</span></label>
-                <select id="propertySize" class="form-control">
-                    <option value="small">Small (under 100 sqm)</option>
-                    <option value="medium">Medium (100-300 sqm)</option>
-                    <option value="large">Large (300-600 sqm)</option>
-                    <option value="extra_large">Extra Large (600+ sqm)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Construction Type</label>
-                <select id="constructionType" class="form-control">
-                    <option value="renovation">Renovation</option>
-                    <option value="new_build">New Build</option>
-                    <option value="commercial">Commercial Construction</option>
-                    <option value="partial">Partial Renovation</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group full-width">
-            <label class="form-label">Debris Level <span class="required">*</span></label>
-            <div class="condition-grid" id="debrisLevelGrid">
-                <div class="condition-option" data-level="light">
-                    <i class="fas fa-broom"></i>
-                    <strong>Light</strong>
-                    <small>Dust and minor debris</small>
-                </div>
-                <div class="condition-option" data-level="moderate">
-                    <i class="fas fa-dumpster"></i>
-                    <strong>Moderate</strong>
-                    <small>Construction dust and debris</small>
-                </div>
-                <div class="condition-option" data-level="heavy">
-                    <i class="fas fa-hard-hat"></i>
-                    <strong>Heavy</strong>
-                    <small>Extensive debris and residue</small>
-                </div>
-            </div>
-            <input type="hidden" id="debrisLevel" value="">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Areas to Clean</label>
-            <div class="checkbox-group">
-                <label><input type="checkbox" id="cleanWalls"> Walls & Ceilings</label>
-                <label><input type="checkbox" id="cleanFloors"> Floors</label>
-                <label><input type="checkbox" id="cleanWindows"> Windows</label>
-                <label><input type="checkbox" id="cleanCabinets"> Cabinets & Fixtures</label>
-                <label><input type="checkbox" id="cleanHVAC"> HVAC/Vents</label>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Special Requirements</label>
-            <textarea id="specialRequirements" class="form-control" rows="2" placeholder="Safety equipment needed, working hours restrictions, etc..."></textarea>
-        </div>
-    `,
-
-    hotelCleaning: `
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Number of Rooms <span class="required">*</span></label>
-                <input type="number" id="roomCount" class="form-control" placeholder="e.g., 10" min="1" value="5">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Property Type</label>
-                <select id="propertyType" class="form-control">
-                    <option value="hotel">Hotel</option>
-                    <option value="airbnb">Airbnb</option>
-                    <option value="guesthouse">Guesthouse</option>
-                    <option value="lodge">Lodge</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Room Types to Clean</label>
-            <div class="checkbox-group">
-                <label><input type="checkbox" id="cleanStandard"> Standard Rooms</label>
-                <label><input type="checkbox" id="cleanSuite"> Suites</label>
-                <label><input type="checkbox" id="cleanCommon"> Common Areas</label>
-                <label><input type="checkbox" id="cleanKitchen"> Kitchen/Kitchenette</label>
-                <label><input type="checkbox" id="cleanBathroom"> Bathrooms</label>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Turnover Type</label>
-                <select id="turnoverType" class="form-control">
-                    <option value="standard">Standard Stay-over</option>
-                    <option value="deep">Deep Clean (Check-out)</option>
-                    <option value="express">Express (Same-day turnover)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Linen Service</label>
-                <select id="linenService" class="form-control">
-                    <option value="no">No linen change needed</option>
-                    <option value="basic">Basic linen change</option>
-                    <option value="full">Full linen service (towels + bedding)</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Special Instructions</label>
-            <textarea id="specialInstructions" class="form-control" rows="2" placeholder="Guest preferences, key access, check-out times..."></textarea>
-        </div>
-    `,
-
-    // Default template for services without custom forms
-    default: `
-        <div class="form-group">
-            <label class="form-label">Service Details</label>
-            <textarea id="serviceDetails" class="form-control" rows="4" placeholder="Please describe your cleaning requirements in detail..."></textarea>
-        </div>
-        <div class="form-group">
-            <label class="form-label">Special Instructions</label>
-            <textarea id="specialInstructions" class="form-control" rows="3" placeholder="Any special requirements..."></textarea>
-        </div>
-    `
+// Service configurations
+const SERVICE_CONFIGS = {
+    1: { id: 1, name: 'Home Cleaning', basePrice: 50000, formType: 'homeCleaning' },
+    2: { id: 2, name: 'Office Cleaning', basePrice: 75000, formType: 'officeCleaning' },
+    3: { id: 3, name: 'Carpet Cleaning', basePrice: 60000, formType: 'carpetCleaning' },
+    4: { id: 4, name: 'Window Cleaning', basePrice: 40000, formType: 'windowCleaning' },
+    5: { id: 5, name: 'Vehicle Cleaning', basePrice: 45000, formType: 'vehicleCleaning' },
+    6: { id: 6, name: 'Pool Cleaning', basePrice: 80000, formType: 'poolCleaning' },
+    7: { id: 7, name: 'Mattress Cleaning', basePrice: 55000, formType: 'mattressCleaning' },
+    8: { id: 8, name: 'Upholstery Cleaning', basePrice: 65000, formType: 'upholsteryCleaning' },
+    9: { id: 9, name: 'Post-Construction Cleaning', basePrice: 90000, formType: 'constructionCleaning' },
+    10: { id: 10, name: 'Hotel & Airbnb Cleaning', basePrice: 100000, formType: 'hotelCleaning' },
+    11: { id: 11, name: 'Laundry & Ironing', basePrice: 54000, formType: 'laundryCleaning' },
+    12: { id: 12, name: 'Pest Control & Fumigation', basePrice: 54000, formType: 'pestControl' },
+    13: { id: 13, name: 'Event Setup & Cleanup', basePrice: 90000, formType: 'eventCleaning' },
+    14: { id: 14, name: 'Refrigerator & AC Cleaning', basePrice: 45000, formType: 'acCleaning' },
+    15: { id: 15, name: 'Industrial Cleaning', basePrice: 120000, formType: 'industrialCleaning' },
+    16: { id: 16, name: 'Water Tank Cleaning', basePrice: 70000, formType: 'waterTankCleaning' },
+    17: { id: 17, name: 'Curtain Cleaning', basePrice: 40000, formType: 'curtainCleaning' },
+    18: { id: 18, name: 'Garden Cleaning', basePrice: 55000, formType: 'gardenCleaning' }
 };
 
-// Helper templates for remaining services
-FORM_TEMPLATES.vehicleCleaning = FORM_TEMPLATES.default;
-FORM_TEMPLATES.poolCleaning = FORM_TEMPLATES.default;
-FORM_TEMPLATES.mattressCleaning = FORM_TEMPLATES.default;
-FORM_TEMPLATES.upholsteryCleaning = FORM_TEMPLATES.default;
-FORM_TEMPLATES.moveCleaning = FORM_TEMPLATES.default;
-FORM_TEMPLATES.laundryCleaning = FORM_TEMPLATES.default;
-FORM_TEMPLATES.pestControl = FORM_TEMPLATES.default;
-FORM_TEMPLATES.eventCleaning = FORM_TEMPLATES.default;
-FORM_TEMPLATES.acCleaning = FORM_TEMPLATES.default;
-FORM_TEMPLATES.waterTankCleaning = FORM_TEMPLATES.default;
-FORM_TEMPLATES.curtainCleaning = FORM_TEMPLATES.default;
-FORM_TEMPLATES.gardenCleaning = FORM_TEMPLATES.default;
-FORM_TEMPLATES.industrialCleaning = FORM_TEMPLATES.default;
+// ===== SERVICE-SPECIFIC FORM TEMPLATES =====
+
+const HOME_CLEANING_FORM = `
+    <div class="form-group full-width">
+        <label class="form-label">Property Type <span class="required">*</span></label>
+        <div class="option-grid" id="propertyGrid">
+            <div class="option-card" data-value="apartment"><i class="fas fa-building"></i><span>Apartment</span><small>2+ rooms</small></div>
+            <div class="option-card" data-value="house"><i class="fas fa-home"></i><span>House</span><small>Standalone</small></div>
+            <div class="option-card" data-value="villa"><i class="fas fa-swimming-pool"></i><span>Villa</span><small>Luxury</small></div>
+        </div>
+        <input type="hidden" id="property_type">
+    </div>
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Bedrooms</label><select id="bedrooms" class="form-control"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+        <div class="form-group"><label class="form-label">Bathrooms</label><select id="bathrooms" class="form-control"><option>1</option><option selected>2</option><option>3</option><option>4+</option></select></div>
+    </div>
+    <div class="form-group full-width">
+        <label class="form-label">Dirt Level <span class="required">*</span></label>
+        <div class="option-grid" id="dirtGrid">
+            <div class="option-card" data-value="light"><i class="fas fa-leaf"></i><span>Light</span><small>Regular maintenance</small></div>
+            <div class="option-card selected" data-value="moderate"><i class="fas fa-broom"></i><span>Moderate</span><small>Some deep cleaning</small></div>
+            <div class="option-card" data-value="heavy"><i class="fas fa-fire"></i><span>Heavy</span><small>Extensive cleaning</small></div>
+        </div>
+        <input type="hidden" id="dirt_level" value="moderate">
+    </div>
+    <div class="form-group"><label class="form-label">Cleaning Frequency</label><select id="cleaning_frequency" class="form-control"><option value="one_time">One-Time</option><option value="weekly">Weekly (Save 10%)</option><option value="monthly">Monthly (Save 5%)</option></select></div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Any special requirements..."></textarea></div>
+`;
+
+const OFFICE_CLEANING_FORM = `
+    <div class="form-group full-width">
+        <label class="form-label">Office Type <span class="required">*</span></label>
+        <div class="option-grid" id="officeTypeGrid">
+            <div class="option-card" data-value="corporate"><i class="fas fa-building"></i><span>Corporate</span><small>Large offices</small></div>
+            <div class="option-card" data-value="small"><i class="fas fa-store"></i><span>Small Office</span><small>1-5 rooms</small></div>
+            <div class="option-card" data-value="coworking"><i class="fas fa-users"></i><span>Coworking</span><small>Shared space</small></div>
+        </div>
+        <input type="hidden" id="office_type">
+    </div>
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Number of Rooms</label><select id="office_rooms" class="form-control"><option>1-2</option><option selected>3-4</option><option>5-6</option><option>7-9</option><option>10+</option></select></div>
+        <div class="form-group"><label class="form-label">Workstations</label><select id="workstations" class="form-control"><option>0</option><option>1-5</option><option selected>6-10</option><option>11-15</option><option>16-20</option><option>20+</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Service Time</label><select id="service_time" class="form-control"><option value="business_hours">Business Hours</option><option value="after_hours">After Hours (+20%)</option><option value="weekend">Weekend (+30%)</option></select></div>
+    <div class="form-group"><label class="form-label">Special Requirements</label><textarea id="special_instructions" rows="2" placeholder="Security codes, access instructions..."></textarea></div>
+`;
+
+const CARPET_CLEANING_FORM = `
+    <div class="form-group"><label class="form-label">Number of Carpets <span class="required">*</span></label><select id="carpet_count" class="form-control"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+    <div class="form-group"><label class="form-label">Carpet Size</label><select id="carpet_size" class="form-control"><option value="small">Small (under 2x3m)</option><option value="medium" selected>Medium (2x3m - 3x4m)</option><option value="large">Large (3x4m - 4x5m)</option><option value="extra_large">Extra Large (5x5m+)</option></select></div>
+    <div class="form-group full-width">
+        <label class="form-label">Stain Level <span class="required">*</span></label>
+        <div class="option-grid" id="stainGrid">
+            <div class="option-card" data-value="none"><i class="fas fa-check"></i><span>No Stains</span><small>Clean</small></div>
+            <div class="option-card" data-value="light"><i class="fas fa-tint"></i><span>Light Stains</span><small>Minor spots</small></div>
+            <div class="option-card selected" data-value="moderate"><i class="fas fa-exclamation-triangle"></i><span>Moderate</span><small>Visible stains</small></div>
+            <div class="option-card" data-value="heavy"><i class="fas fa-fire"></i><span>Heavy Stains</span><small>Deep set</small></div>
+        </div>
+        <input type="hidden" id="stain_level" value="moderate">
+    </div>
+    <div class="checkbox-group"><label><input type="checkbox" id="stain_protection"> Stain Protection (+TZS 15,000)</label><label><input type="checkbox" id="deodorizing"> Deep Deodorizing (+TZS 10,000)</label></div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Furniture to move, delicate areas..."></textarea></div>
+`;
+
+const WINDOW_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Number of Windows <span class="required">*</span></label><input type="number" id="window_count" class="form-control" value="5" min="1"></div>
+        <div class="form-group"><label class="form-label">Highest Floor</label><select id="max_floor" class="form-control"><option>Ground</option><option>2nd</option><option selected>3rd</option><option>4th</option><option>5th+ (+30%)</option></select></div>
+    </div>
+    <div class="form-group full-width">
+        <label class="form-label">Window Condition</label>
+        <div class="option-grid" id="windowConditionGrid">
+            <div class="option-card selected" data-value="clean"><i class="fas fa-check"></i><span>Clean</span><small>Light dust</small></div>
+            <div class="option-card" data-value="dirty"><i class="fas fa-broom"></i><span>Dirty</span><small>Visible grime</small></div>
+            <div class="option-card" data-value="very_dirty"><i class="fas fa-fire"></i><span>Very Dirty</span><small>Heavy buildup</small></div>
+        </div>
+        <input type="hidden" id="window_condition" value="clean">
+    </div>
+    <div class="checkbox-group"><label><input type="checkbox" id="screen_cleaning"> Screen Cleaning (+TZS 5,000)</label><label><input type="checkbox" id="frame_cleaning"> Frame Cleaning (+TZS 3,000)</label></div>
+    <div class="form-group"><label class="form-label">Access Notes</label><textarea id="special_instructions" rows="2" placeholder="Ladder access, hard-to-reach windows..."></textarea></div>
+`;
+
+const VEHICLE_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Vehicle Type</label><select id="vehicle_type" class="form-control"><option>Car/Sedan</option><option>SUV/4x4</option><option>Van/Minibus</option><option>Truck</option><option>Motorcycle</option></select></div>
+        <div class="form-group"><label class="form-label">Vehicle Size</label><select id="vehicle_size" class="form-control"><option>Small</option><option selected>Medium</option><option>Large</option><option>Extra Large</option></select></div>
+    </div>
+    <div class="checkbox-group">
+        <label><input type="checkbox" id="interior_cleaning" checked> Interior Cleaning</label>
+        <label><input type="checkbox" id="exterior_wash" checked> Exterior Wash</label>
+        <label><input type="checkbox" id="waxing"> Waxing (+TZS 15,000)</label>
+        <label><input type="checkbox" id="engine_bay"> Engine Bay (+TZS 10,000)</label>
+    </div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Sensitive areas, custom requests..."></textarea></div>
+`;
+
+const POOL_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Pool Type</label><select id="pool_type" class="form-control"><option>Residential</option><option>Commercial</option><option>Lap Pool</option><option>Kiddie Pool</option></select></div>
+        <div class="form-group"><label class="form-label">Pool Size</label><select id="pool_size" class="form-control"><option>Small (under 20m²)</option><option selected>Medium (20-50m²)</option><option>Large (50-100m²)</option><option>Commercial (100m²+)</option></select></div>
+    </div>
+    <div class="checkbox-group">
+        <label><input type="checkbox" id="chemical_balancing" checked> Chemical Balancing</label>
+        <label><input type="checkbox" id="filter_cleaning" checked> Filter Cleaning</label>
+        <label><input type="checkbox" id="tile_cleaning"> Tile Deep Clean (+TZS 20,000)</label>
+        <label><input type="checkbox" id="equipment_check"> Equipment Check (+TZS 15,000)</label>
+    </div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Water level, equipment issues..."></textarea></div>
+`;
+
+const MATTRESS_CLEANING_FORM = `
+    <div class="form-group"><label class="form-label">Number of Mattresses <span class="required">*</span></label><select id="mattress_count" class="form-control"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+    <div class="form-group"><label class="form-label">Mattress Size</label><select id="mattress_size" class="form-control"><option>Single</option><option selected>Double</option><option>Queen</option><option>King</option></select></div>
+    <div class="checkbox-group">
+        <label><input type="checkbox" id="stain_removal"> Stain Removal (+TZS 10,000)</label>
+        <label><input type="checkbox" id="uv_sanitization" checked> UV Sanitization</label>
+        <label><input type="checkbox" id="dust_mite"> Dust Mite Treatment (+TZS 8,000)</label>
+    </div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Allergies, specific stains..."></textarea></div>
+`;
+
+const UPHOLSTERY_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Number of Items</label><select id="upholstery_count" class="form-control"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+        <div class="form-group"><label class="form-label">Item Type</label><select id="upholstery_type" class="form-control"><option>Sofa</option><option>Armchair</option><option>Dining Chair</option><option>Sectional</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Fabric Type</label><select id="fabric_type" class="form-control"><option>Cotton</option><option>Leather</option><option>Polyester</option><option>Velvet</option><option>Microfiber</option></select></div>
+    <div class="checkbox-group"><label><input type="checkbox" id="fabric_protection"> Fabric Protection (+TZS 15,000)</label><label><input type="checkbox" id="deodorizing"> Deodorizing (+TZS 8,000)</label></div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Pet stains, delicate fabric..."></textarea></div>
+`;
+
+const CONSTRUCTION_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Property Size</label><select id="property_size" class="form-control"><option>Small (under 100m²)</option><option selected>Medium (100-300m²)</option><option>Large (300-600m²)</option><option>Extra Large (600m²+)</option></select></div>
+        <div class="form-group"><label class="form-label">Construction Type</label><select id="construction_type" class="form-control"><option>Renovation</option><option>New Build</option><option>Commercial</option></select></div>
+    </div>
+    <div class="form-group full-width">
+        <label class="form-label">Debris Level</label>
+        <div class="option-grid" id="debrisGrid">
+            <div class="option-card" data-value="light"><i class="fas fa-broom"></i><span>Light</span><small>Dust only</small></div>
+            <div class="option-card selected" data-value="moderate"><i class="fas fa-dumpster"></i><span>Moderate</span><small>Dust & debris</small></div>
+            <div class="option-card" data-value="heavy"><i class="fas fa-hard-hat"></i><span>Heavy</span><small>Extensive debris</small></div>
+        </div>
+        <input type="hidden" id="debris_level" value="moderate">
+    </div>
+    <div class="checkbox-group"><label><input type="checkbox" id="window_cleaning"> Window Cleaning</label><label><input type="checkbox" id="cabinet_cleaning"> Cabinet Cleaning</label><label><input type="checkbox" id="hvac_cleaning"> HVAC/Vent Cleaning</label></div>
+    <div class="form-group"><label class="form-label">Special Requirements</label><textarea id="special_instructions" rows="2" placeholder="Safety equipment, working hours..."></textarea></div>
+`;
+
+const HOTEL_CLEANING_FORM = `
+    <div class="form-group"><label class="form-label">Number of Rooms <span class="required">*</span></label><input type="number" id="room_count" class="form-control" value="5" min="1"></div>
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Property Type</label><select id="hotel_type" class="form-control"><option>Hotel</option><option>Airbnb</option><option>Guesthouse</option><option>Lodge</option></select></div>
+        <div class="form-group"><label class="form-label">Turnover Type</label><select id="turnover_type" class="form-control"><option value="standard">Standard Stay-over</option><option value="deep">Deep Clean (Check-out)</option><option value="express">Express Turnover</option></select></div>
+    </div>
+    <div class="checkbox-group">
+        <label><input type="checkbox" id="linen_change" checked> Linen Change</label>
+        <label><input type="checkbox" id="restock_amenities" checked> Restock Amenities</label>
+        <label><input type="checkbox" id="deep_bathroom"> Deep Bathroom Clean (+TZS 5,000/room)</label>
+    </div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Guest preferences, check-out times..."></textarea></div>
+`;
+
+const LAUNDRY_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Estimated Loads</label><select id="laundry_loads" class="form-control"><option>1-2 loads</option><option selected>3-4 loads</option><option>5-6 loads</option><option>7+ loads</option></select></div>
+        <div class="form-group"><label class="form-label">Service Type</label><select id="laundry_type" class="form-control"><option>Wash & Dry</option><option>Wash, Dry & Fold</option><option>Full Service (incl. Ironing)</option></select></div>
+    </div>
+    <div class="checkbox-group"><label><input type="checkbox" id="delicate_cycle"> Delicate Cycle (+TZS 5,000)</label><label><input type="checkbox" id="stain_treatment"> Stain Treatment (+TZS 8,000)</label></div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Fragile items, specific detergents..."></textarea></div>
+`;
+
+const PEST_CONTROL_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Property Size</label><select id="pest_property_size" class="form-control"><option>Small (1-2 rooms)</option><option selected>Medium (3-4 rooms)</option><option>Large (5-6 rooms)</option><option>Commercial</option></select></div>
+        <div class="form-group"><label class="form-label">Pest Type</label><select id="pest_type" class="form-control"><option>Cockroaches</option><option>Ants</option><option>Rodents</option><option>Termites</option><option>Bed Bugs</option><option>General</option></select></div>
+    </div>
+    <div class="checkbox-group"><label><input type="checkbox" id="preventive_treatment" checked> Preventive Treatment</label><label><input type="checkbox" id="follow_up_visit"> Follow-up Visit (+TZS 20,000)</label></div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Pets, children, infestation areas..."></textarea></div>
+`;
+
+const EVENT_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Event Type</label><select id="event_type" class="form-control"><option>Wedding</option><option>Corporate Event</option><option>Birthday Party</option><option>Conference</option><option>Private Party</option></select></div>
+        <div class="form-group"><label class="form-label">Number of Guests</label><select id="guest_count" class="form-control"><option>Under 50</option><option>50-100</option><option>100-200</option><option>200-500</option><option>500+</option></select></div>
+    </div>
+    <div class="checkbox-group">
+        <label><input type="checkbox" id="setup_service"> Setup Service</label>
+        <label><input type="checkbox" id="cleanup_service" checked> Cleanup Service</label>
+        <label><input type="checkbox" id="furniture_arrangement"> Furniture Arrangement (+TZS 15,000)</label>
+        <label><input type="checkbox" id="decoration_setup"> Decoration Setup (+TZS 20,000)</label>
+    </div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Setup time, floor plan, special requests..."></textarea></div>
+`;
+
+const AC_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Number of Units</label><input type="number" id="unit_count" class="form-control" value="2" min="1"></div>
+        <div class="form-group"><label class="form-label">Unit Type</label><select id="unit_type" class="form-control"><option>Refrigerator</option><option>AC (Split)</option><option>AC (Window)</option><option>Both</option></select></div>
+    </div>
+    <div class="checkbox-group">
+        <label><input type="checkbox" id="filter_cleaning" checked> Filter Cleaning</label>
+        <label><input type="checkbox" id="coil_cleaning"> Coil Cleaning (+TZS 15,000)</label>
+        <label><input type="checkbox" id="defrosting"> Defrosting (+TZS 10,000)</label>
+    </div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Model numbers, access issues..."></textarea></div>
+`;
+
+const INDUSTRIAL_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Facility Size</label><select id="facility_size" class="form-control"><option>Small (under 500m²)</option><option selected>Medium (500-2000m²)</option><option>Large (2000-5000m²)</option><option>Extra Large (5000m²+)</option></select></div>
+        <div class="form-group"><label class="form-label">Industry Type</label><select id="industry_type" class="form-control"><option>Manufacturing</option><option>Warehouse</option><option>Food Processing</option><option>Pharmaceutical</option></select></div>
+    </div>
+    <div class="checkbox-group">
+        <label><input type="checkbox" id="floor_degreasing"> Floor Degreasing</label>
+        <label><input type="checkbox" id="machine_cleaning"> Machine Area Cleaning</label>
+        <label><input type="checkbox" id="high_pressure"> High-Pressure Washing</label>
+    </div>
+    <div class="form-group"><label class="form-label">Special Requirements</label><textarea id="special_instructions" rows="2" placeholder="Safety protocols, hazardous areas..."></textarea></div>
+`;
+
+const WATER_TANK_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Tank Size</label><select id="tank_size" class="form-control"><option>Small (under 1000L)</option><option selected>Medium (1000-3000L)</option><option>Large (3000-5000L)</option><option>Commercial (5000L+)</option></select></div>
+        <div class="form-group"><label class="form-label">Tank Type</label><select id="tank_type" class="form-control"><option>Roof Tank</option><option>Ground Tank</option><option>Underground</option><option>Plastic</option><option>Concrete</option></select></div>
+    </div>
+    <div class="checkbox-group"><label><input type="checkbox" id="disinfection" checked> Disinfection</label><label><input type="checkbox" id="water_testing"> Water Quality Testing (+TZS 10,000)</label></div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Access to tank, water supply shutdown..."></textarea></div>
+`;
+
+const CURTAIN_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Number of Curtains</label><select id="curtain_count" class="form-control"><option>1-2</option><option selected>3-4</option><option>5-6</option><option>7-8</option><option>9+</option></select></div>
+        <div class="form-group"><label class="form-label">Curtain Type</label><select id="curtain_type" class="form-control"><option>Cotton</option><option>Polyester</option><option>Silk</option><option>Velvet</option><option>Blackout</option></select></div>
+    </div>
+    <div class="checkbox-group"><label><input type="checkbox" id="curtain_removal"> Removal & Rehanging (+TZS 15,000)</label><label><input type="checkbox" id="steam_ironing"> Steam Ironing (+TZS 10,000)</label></div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Height, rail type, delicate fabric..."></textarea></div>
+`;
+
+const GARDEN_CLEANING_FORM = `
+    <div class="form-row">
+        <div class="form-group"><label class="form-label">Garden Size</label><select id="garden_size" class="form-control"><option>Small</option><option selected>Medium</option><option>Large</option><option>Estate</option></select></div>
+        <div class="form-group"><label class="form-label">Service Type</label><select id="garden_service" class="form-control"><option>Basic Cleaning</option><option>Full Maintenance</option><option>One-Time Cleanup</option></select></div>
+    </div>
+    <div class="checkbox-group">
+        <label><input type="checkbox" id="lawn_mowing" checked> Lawn Mowing</label>
+        <label><input type="checkbox" id="weed_removal" checked> Weed Removal</label>
+        <label><input type="checkbox" id="hedge_trimming"> Hedge Trimming (+TZS 15,000)</label>
+        <label><input type="checkbox" id="waste_removal"> Waste Removal (+TZS 10,000)</label>
+    </div>
+    <div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" placeholder="Tools, specific plants, access..."></textarea></div>
+`;
+
+const DEFAULT_FORM = `<div class="form-group"><label class="form-label">Service Details</label><textarea id="service_details" rows="4" class="form-control" placeholder="Please describe your requirements..."></textarea></div><div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" class="form-control"></textarea></div>`;
+
+const FORM_TEMPLATES = {
+    homeCleaning: HOME_CLEANING_FORM,
+    officeCleaning: OFFICE_CLEANING_FORM,
+    carpetCleaning: CARPET_CLEANING_FORM,
+    windowCleaning: WINDOW_CLEANING_FORM,
+    vehicleCleaning: VEHICLE_CLEANING_FORM,
+    poolCleaning: POOL_CLEANING_FORM,
+    mattressCleaning: MATTRESS_CLEANING_FORM,
+    upholsteryCleaning: UPHOLSTERY_CLEANING_FORM,
+    constructionCleaning: CONSTRUCTION_CLEANING_FORM,
+    hotelCleaning: HOTEL_CLEANING_FORM,
+    laundryCleaning: LAUNDRY_CLEANING_FORM,
+    pestControl: PEST_CONTROL_FORM,
+    eventCleaning: EVENT_CLEANING_FORM,
+    acCleaning: AC_CLEANING_FORM,
+    industrialCleaning: INDUSTRIAL_CLEANING_FORM,
+    waterTankCleaning: WATER_TANK_CLEANING_FORM,
+    curtainCleaning: CURTAIN_CLEANING_FORM,
+    gardenCleaning: GARDEN_CLEANING_FORM
+};
 
 function getFormTemplate(serviceId) {
     const config = SERVICE_CONFIGS[serviceId];
-    if (config && FORM_TEMPLATES[config.formTemplate]) {
-        return FORM_TEMPLATES[config.formTemplate];
-    }
-    return FORM_TEMPLATES.default;
+    if (!config) return DEFAULT_FORM;
+    return FORM_TEMPLATES[config.formType] || DEFAULT_FORM;
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM fully loaded - Initializing booking system');
-    
-    loadSelectedService();
-    loadBookedDates();
-    initializeNavigationButtons();
-    initializeStepClickHandlers();
-    initializeMap();
-    attachGlobalFormListeners();
-    
-    // Initialize date picker after a short delay to ensure DOM is ready
-    setTimeout(function() {
-        initializeDatePicker();
-    }, 100);
-    
-    updatePriceEstimate();
-});
-
-// Initialize all navigation buttons
-function initializeNavigationButtons() {
-    // Phase 1 to 2
-    const nextPhase1Btn = document.getElementById('nextPhase1Btn');
-    if (nextPhase1Btn) {
-        nextPhase1Btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            nextPhase(2);
-        });
-    }
-    
-    // Phase 2 navigation
-    const prevPhase2Btn = document.getElementById('prevPhase2Btn');
-    const nextPhase2Btn = document.getElementById('nextPhase2Btn');
-    if (prevPhase2Btn) prevPhase2Btn.addEventListener('click', function(e) { e.preventDefault(); prevPhase(1); });
-    if (nextPhase2Btn) nextPhase2Btn.addEventListener('click', function(e) { e.preventDefault(); validateAndNext(2, 3); });
-    
-    // Phase 3 navigation
-    const prevPhase3Btn = document.getElementById('prevPhase3Btn');
-    const nextPhase3Btn = document.getElementById('nextPhase3Btn');
-    if (prevPhase3Btn) prevPhase3Btn.addEventListener('click', function(e) { e.preventDefault(); prevPhase(2); });
-    if (nextPhase3Btn) nextPhase3Btn.addEventListener('click', function(e) { e.preventDefault(); validateAndNext(3, 4); });
-    
-    // Phase 4 navigation
-    const prevPhase4Btn = document.getElementById('prevPhase4Btn');
-    const nextPhase4Btn = document.getElementById('nextPhase4Btn');
-    if (prevPhase4Btn) prevPhase4Btn.addEventListener('click', function(e) { e.preventDefault(); prevPhase(3); });
-    if (nextPhase4Btn) nextPhase4Btn.addEventListener('click', function(e) { e.preventDefault(); validateAndNext(4, 5); });
-    
-    // Phase 5 navigation
-    const prevPhase5Btn = document.getElementById('prevPhase5Btn');
-    const submitBtn = document.getElementById('submitBookingBtn');
-    if (prevPhase5Btn) prevPhase5Btn.addEventListener('click', function(e) { e.preventDefault(); prevPhase(4); });
-    if (submitBtn) submitBtn.addEventListener('click', function(e) { e.preventDefault(); submitBooking(); });
-}
-
-// Initialize step click handlers for progress bar
-function initializeStepClickHandlers() {
-    const steps = document.querySelectorAll('.step');
-    steps.forEach(step => {
-        step.addEventListener('click', function(e) {
-            const targetStep = parseInt(this.dataset.step);
-            if (targetStep < currentStep) {
-                // Allow going back to previous steps
-                currentStep = targetStep;
-                updatePhaseDisplay();
-                updateProgressBar();
-                if (targetStep === 5) updateReview();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else if (targetStep > currentStep) {
-                // Validate current step before proceeding
-                if (validateCurrentPhase()) {
-                    currentStep = targetStep;
-                    updatePhaseDisplay();
-                    updateProgressBar();
-                    if (targetStep === 5) updateReview();
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-            }
-        });
-    });
-}
-
-// Load selected service and render appropriate form
 function loadSelectedService() {
     const serviceData = localStorage.getItem('selectedService');
-    console.log('Loading service:', serviceData);
-    
-    if (serviceData) {
-        selectedService = JSON.parse(serviceData);
-        const serviceId = selectedService.id;
-        const config = SERVICE_CONFIGS[serviceId] || {
-            name: selectedService.name || 'Cleaning Service',
-            basePrice: 50000,
-            description: 'Professional cleaning service',
-            formTemplate: 'default'
-        };
-        
-        selectedService.config = config;
-        
-        const banner = document.getElementById('selectedServiceBanner');
-        if (banner) banner.style.display = 'flex';
-        
-        const serviceNameSpan = document.getElementById('selectedServiceName');
-        if (serviceNameSpan) serviceNameSpan.innerText = config.name;
-        
-        const phase1Title = document.getElementById('phase1Title');
-        if (phase1Title) phase1Title.innerText = config.name + ' Details';
-        
-        const phase1Desc = document.getElementById('phase1Description');
-        if (phase1Desc) phase1Desc.innerHTML = config.description;
-        
-        const step1Label = document.getElementById('step1Label');
-        if (step1Label) step1Label.innerHTML = config.name.split(' ')[0] + ' Details';
-        
-        // Load the service-specific form
-        const formHtml = getFormTemplate(serviceId);
-        const dynamicForm = document.getElementById('dynamicServiceForm');
-        if (dynamicForm) {
-            dynamicForm.innerHTML = formHtml;
-        }
-        
-        // Initialize the service-specific form elements after a short delay
-        setTimeout(function() {
-            initializeServiceSpecificForm(serviceId);
-        }, 50);
-        
-        // Update price estimate on any form changes
-        attachServiceFormListeners(serviceId);
-    } else {
-        // Fallback - try to get from URL param
-        const urlParams = new URLSearchParams(window.location.search);
-        const serviceId = urlParams.get('service');
-        if (serviceId && SERVICE_CONFIGS[serviceId]) {
-            selectedService = { id: serviceId, name: SERVICE_CONFIGS[serviceId].name, config: SERVICE_CONFIGS[serviceId] };
-            localStorage.setItem('selectedService', JSON.stringify(selectedService));
-            loadSelectedService();
-        } else {
-            showToast('Please select a service first', 'error');
-            setTimeout(function() { 
-                window.location.href = 'service.html'; 
-            }, 1500);
-        }
+    if (!serviceData) { 
+        showToast('Please select a service first', 'error'); 
+        setTimeout(() => window.location.href = 'service.html', 1500); 
+        return; 
     }
-}
-
-// Initialize service-specific form elements (grid selections, etc.)
-function initializeServiceSpecificForm(serviceId) {
-    const config = SERVICE_CONFIGS[serviceId];
-    if (!config) return;
     
-    // Initialize property type grid
-    const propertyGrids = ['propertyTypeGrid', 'officeTypeGrid', 'carpetTypeGrid', 'deepCleanAreas'];
-    propertyGrids.forEach(gridId => {
-        const grid = document.getElementById(gridId);
-        if (grid) {
-            const options = grid.querySelectorAll('.property-option, .office-option, .carpet-option, .deep-option');
-            options.forEach(opt => {
-                opt.removeEventListener('click', handleGridOptionClick);
-                opt.addEventListener('click', handleGridOptionClick);
-            });
-        }
-    });
+    selectedService = JSON.parse(serviceData);
+    const config = SERVICE_CONFIGS[selectedService.id] || { ...selectedService, basePrice: selectedService.price || 50000, formType: 'default' };
+    selectedService.config = config;
     
-    // Initialize condition/dirt/stain grids
-    const conditionGrids = ['dirtLevelGrid', 'stainLevelGrid', 'debrisLevelGrid', 'windowConditionGrid'];
-    conditionGrids.forEach(gridId => {
-        const grid = document.getElementById(gridId);
-        if (grid) {
-            const options = grid.querySelectorAll('.dirt-option, .stain-option, .condition-option');
-            options.forEach(opt => {
-                opt.removeEventListener('click', handleConditionOptionClick);
-                opt.addEventListener('click', handleConditionOptionClick);
-            });
-        }
-    });
+    document.getElementById('selectedServiceBanner').style.display = 'flex';
+    document.getElementById('selectedServiceName').innerText = config.name;
+    document.getElementById('phase1Title').innerText = config.name + ' Details';
     
-    // Initialize select listeners
-    const selects = ['bedrooms', 'bathrooms', 'frequency', 'cleaners', 'officeRooms', 'workstations', 
-                     'carpetCount', 'carpetSize', 'windowCount', 'panesPerWindow', 'maxFloor', 'roomCount', 'areaSqm', 'propertySize'];
-    selects.forEach(selectId => {
-        const select = document.getElementById(selectId);
-        if (select) {
-            select.removeEventListener('change', updatePriceEstimate);
-            select.addEventListener('change', updatePriceEstimate);
-        }
-    });
-    
-    // Initialize checkbox groups
-    const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
-    checkboxes.forEach(cb => {
-        cb.removeEventListener('change', updatePriceEstimate);
-        cb.addEventListener('change', updatePriceEstimate);
-    });
-    
-    // Initialize radio groups
-    const radios = document.querySelectorAll('.radio-group input[type="radio"]');
-    radios.forEach(radio => {
-        radio.removeEventListener('change', updatePriceEstimate);
-        radio.addEventListener('change', updatePriceEstimate);
-    });
-}
-
-// Handle grid option clicks
-function handleGridOptionClick(e) {
-    const clicked = e.currentTarget;
-    const parent = clicked.parentElement;
-    const siblings = parent.querySelectorAll('.property-option, .office-option, .carpet-option, .window-option, .deep-option, .construction-option, .dirt-option, .stain-option, .condition-option');
-    siblings.forEach(s => s.classList.remove('selected'));
-    clicked.classList.add('selected');
-    
-    // Find the hidden input
-    const hiddenInput = parent.nextElementSibling;
-    if (hiddenInput && hiddenInput.tagName === 'INPUT' && hiddenInput.type === 'hidden') {
-        hiddenInput.value = clicked.dataset.type || clicked.dataset.area || clicked.dataset.level || clicked.dataset.condition;
-    } else {
-        // Try to find by ID
-        const possibleIds = ['propertyType', 'officeType', 'carpetType', 'deepCleanAreasValue', 'dirtLevel', 'stainLevel', 'debrisLevel', 'windowCondition'];
-        for (let id of possibleIds) {
-            const hidden = document.getElementById(id);
-            if (hidden) {
-                hidden.value = clicked.dataset.type || clicked.dataset.area || clicked.dataset.level || clicked.dataset.condition;
-                break;
-            }
-        }
+    const dynamicForm = document.getElementById('dynamicServiceForm');
+    if (dynamicForm) {
+        dynamicForm.innerHTML = getFormTemplate(selectedService.id);
+        initializeFormInteractions(selectedService.id);
     }
+    
     updatePriceEstimate();
 }
 
-function handleConditionOptionClick(e) {
-    const clicked = e.currentTarget;
-    const parent = clicked.parentElement;
-    const siblings = parent.querySelectorAll('.dirt-option, .stain-option, .condition-option');
-    siblings.forEach(s => s.classList.remove('selected'));
-    clicked.classList.add('selected');
-    
-    const hiddenId = parent.id === 'dirtLevelGrid' ? 'dirtLevel' : 
-                    (parent.id === 'stainLevelGrid' ? 'stainLevel' :
-                    (parent.id === 'debrisLevelGrid' ? 'debrisLevel' :
-                    (parent.id === 'windowConditionGrid' ? 'windowCondition' : 'cleaningCondition')));
-    const hiddenInput = document.getElementById(hiddenId);
-    if (hiddenInput) {
-        hiddenInput.value = clicked.dataset.level || clicked.dataset.condition;
-    }
-    updatePriceEstimate();
-}
-
-// Attach service-specific form listeners
-function attachServiceFormListeners(serviceId) {
-    const formContainer = document.getElementById('dynamicServiceForm');
-    if (formContainer) {
-        formContainer.removeEventListener('change', updatePriceEstimate);
-        formContainer.removeEventListener('input', updatePriceEstimate);
-        formContainer.addEventListener('change', updatePriceEstimate);
-        formContainer.addEventListener('input', updatePriceEstimate);
-    }
-}
-
-// Global form listeners
-function attachGlobalFormListeners() {
-    const allInputs = document.querySelectorAll('#phase2 input, #phase2 select, #phase2 textarea, #phase3 input, #phase3 select, #phase3 textarea, #phase4 input, #phase4 select, #phase4 textarea');
-    allInputs.forEach(input => {
-        input.removeEventListener('change', updateReview);
-        input.removeEventListener('input', updateReview);
-        input.addEventListener('change', updateReview);
-        input.addEventListener('input', updateReview);
+function initializeFormInteractions(serviceId) {
+    document.querySelectorAll('.option-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const parent = this.parentElement;
+            parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            const hiddenInput = parent.nextElementSibling;
+            if (hiddenInput && hiddenInput.type === 'hidden') hiddenInput.value = this.dataset.value;
+            updatePriceEstimate();
+        });
     });
+    
+    const inputs = ['bedrooms', 'bathrooms', 'cleaning_frequency', 'carpet_count', 'carpet_size', 'window_count', 'max_floor', 'room_count', 'unit_count', 'mattress_count', 'upholstery_count', 'laundry_loads', 'guest_count', 'facility_size', 'tank_size', 'curtain_count', 'garden_size'];
+    inputs.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', updatePriceEstimate); });
+    
+    document.querySelectorAll('.checkbox-group input').forEach(cb => cb.addEventListener('change', updatePriceEstimate));
 }
 
-// Price calculation functions
-function calculateHomeCleaningPrice() {
-    let basePrice = 50000;
-    const bedrooms = parseInt(document.getElementById('bedrooms')?.value || 1);
-    const bathrooms = parseInt(document.getElementById('bathrooms')?.value || 1);
-    const dirtLevel = document.getElementById('dirtLevel')?.value || 'moderate';
-    const cleaners = parseInt(document.getElementById('cleaners')?.value || 1);
-    
-    let sizeMultiplier = 0.8 + (bedrooms * 0.15) + (bathrooms * 0.05);
-    sizeMultiplier = Math.min(sizeMultiplier, 2.0);
-    
-    let conditionMultiplier = 1;
-    if (dirtLevel === 'light') conditionMultiplier = 0.8;
-    else if (dirtLevel === 'moderate') conditionMultiplier = 1;
-    else if (dirtLevel === 'heavy') conditionMultiplier = 1.4;
-    
-    let total = basePrice * sizeMultiplier * conditionMultiplier;
-    total += (cleaners - 1) * 20000;
-    
-    return Math.round(total);
-}
-
-function calculateOfficeCleaningPrice() {
-    let basePrice = 75000;
-    const officeRooms = parseInt(document.getElementById('officeRooms')?.value || 1);
-    const workstations = parseInt(document.getElementById('workstations')?.value || 0);
-    const serviceTime = document.getElementById('serviceTime')?.value || 'business_hours';
-    
-    let roomMultiplier = 0.8 + (officeRooms * 0.15);
-    let workstationExtra = Math.floor(workstations / 5) * 5000;
-    
-    let total = basePrice * roomMultiplier + workstationExtra;
-    
-    if (serviceTime === 'after_hours') total *= 1.2;
-    else if (serviceTime === 'weekend') total *= 1.3;
-    
-    return Math.round(total);
-}
-
-function calculateCarpetCleaningPrice() {
-    let basePrice = 60000;
-    const carpetCount = parseInt(document.getElementById('carpetCount')?.value || 1);
-    const carpetSize = document.getElementById('carpetSize')?.value || 'medium';
-    const stainLevel = document.getElementById('stainLevel')?.value || 'none';
-    
-    let sizeMultiplier = 1;
-    if (carpetSize === 'small') sizeMultiplier = 0.7;
-    else if (carpetSize === 'medium') sizeMultiplier = 1;
-    else if (carpetSize === 'large') sizeMultiplier = 1.4;
-    else if (carpetSize === 'extra_large') sizeMultiplier = 1.8;
-    
-    let stainMultiplier = 1;
-    if (stainLevel === 'light') stainMultiplier = 1.1;
-    else if (stainLevel === 'moderate') stainMultiplier = 1.3;
-    else if (stainLevel === 'heavy') stainMultiplier = 1.6;
-    
-    let total = basePrice * carpetCount * sizeMultiplier * stainMultiplier;
-    
-    if (document.getElementById('stainProtection')?.checked) total += 15000;
-    if (document.getElementById('deodorizing')?.checked) total += 10000;
-    if (document.getElementById('petTreatment')?.checked) total += 20000;
-    
-    return Math.round(total);
-}
-
-function calculateWindowCleaningPrice() {
-    let basePrice = 40000;
-    let windowCount = parseInt(document.getElementById('windowCount')?.value || 5);
-    let panesPerWindow = parseInt(document.getElementById('panesPerWindow')?.value || 1);
-    let maxFloor = parseInt(document.getElementById('maxFloor')?.value || 1);
-    let windowCondition = document.getElementById('windowCondition')?.value || 'clean';
-    let screenCleaning = document.querySelector('input[name="screenCleaning"]:checked')?.value === 'yes';
-    
-    let total = basePrice + (windowCount * panesPerWindow * 2000);
-    
-    if (maxFloor >= 5) total *= 1.3;
-    else if (maxFloor >= 3) total *= 1.15;
-    
-    if (windowCondition === 'dirty') total *= 1.2;
-    else if (windowCondition === 'very_dirty') total *= 1.4;
-    
-    if (screenCleaning) total += 5000;
-    
-    return Math.round(total);
-}
-
-function calculateDeepCleaningPrice() {
-    let basePrice = 75000;
-    let areaSqm = parseInt(document.getElementById('areaSqm')?.value || 100);
-    let roomCount = parseInt(document.getElementById('roomCount')?.value || 2);
-    
-    let areaMultiplier = Math.max(0.7, Math.min(2.0, areaSqm / 100));
-    let roomMultiplier = 0.8 + (roomCount * 0.15);
-    
-    let total = basePrice * areaMultiplier * roomMultiplier;
-    
-    if (document.getElementById('ovenCleaning')?.checked) total += 25000;
-    if (document.getElementById('fridgeCleaning')?.checked) total += 20000;
-    if (document.getElementById('groutCleaning')?.checked) total += 30000;
-    if (document.getElementById('baseboardCleaning')?.checked) total += 15000;
-    
-    return Math.round(total);
-}
-
-function calculateConstructionCleaningPrice() {
-    const propertySize = document.getElementById('propertySize')?.value || 'medium';
-    const debrisLevel = document.getElementById('debrisLevel')?.value || 'moderate';
-    
-    let basePrice = 90000;
-    let sizeMultiplier = 1;
-    if (propertySize === 'small') sizeMultiplier = 0.7;
-    else if (propertySize === 'medium') sizeMultiplier = 1;
-    else if (propertySize === 'large') sizeMultiplier = 1.5;
-    else if (propertySize === 'extra_large') sizeMultiplier = 2.2;
-    
-    let debrisMultiplier = 1;
-    if (debrisLevel === 'light') debrisMultiplier = 0.8;
-    else if (debrisLevel === 'moderate') debrisMultiplier = 1;
-    else if (debrisLevel === 'heavy') debrisMultiplier = 1.4;
-    
-    return Math.round(basePrice * sizeMultiplier * debrisMultiplier);
-}
-
-function calculateHotelCleaningPrice() {
-    const roomCount = parseInt(document.getElementById('roomCount')?.value || 5);
-    const turnoverType = document.getElementById('turnoverType')?.value || 'standard';
-    const linenService = document.getElementById('linenService')?.value || 'no';
-    
-    let basePrice = 50000;
-    let pricePerRoom = 15000;
-    let total = basePrice + (roomCount * pricePerRoom);
-    
-    if (turnoverType === 'deep') total *= 1.5;
-    else if (turnoverType === 'express') total *= 1.3;
-    
-    if (linenService === 'basic') total += roomCount * 5000;
-    else if (linenService === 'full') total += roomCount * 10000;
-    
-    return Math.round(total);
-}
-
-// Simple price functions for other services
-function calculateVehicleCleaningPrice() { return 45000; }
-function calculatePoolCleaningPrice() { return 80000; }
-function calculateMattressCleaningPrice() { return 55000; }
-function calculateUpholsteryCleaningPrice() { return 65000; }
-function calculateMoveCleaningPrice() { return 70000; }
-function calculateLaundryCleaningPrice() { return 54000; }
-function calculatePestControlPrice() { return 54000; }
-function calculateEventCleaningPrice() { return 90000; }
-function calculateAcCleaningPrice() { return 45000; }
-function calculateWaterTankCleaningPrice() { return 70000; }
-function calculateCurtainCleaningPrice() { return 40000; }
-function calculateGardenCleaningPrice() { return 55000; }
-function calculateIndustrialCleaningPrice() { return 120000; }
-
-// Main price estimate update function
 function updatePriceEstimate() {
-    if (!selectedService || !selectedService.config) {
-        const totalSpan = document.getElementById('totalPrice');
-        if (totalSpan) totalSpan.innerText = 'TZS 0';
-        return 0;
-    }
+    if (!selectedService) return;
+    let total = selectedService.config.basePrice;
+    const serviceId = selectedService.id;
     
-    const config = selectedService.config;
-    let total = 0;
-    
-    if (config.getPrice) {
-        total = config.getPrice();
-    } else {
-        total = config.basePrice || 50000;
-        const frequency = document.getElementById('frequency')?.value;
+    if (serviceId == 1) {
+        const bedrooms = parseInt(document.getElementById('bedrooms')?.value || 2);
+        const bathrooms = parseInt(document.getElementById('bathrooms')?.value || 2);
+        const dirtLevel = document.getElementById('dirt_level')?.value || 'moderate';
+        const frequency = document.getElementById('cleaning_frequency')?.value || 'one_time';
+        if (bedrooms > 2) total += (bedrooms - 2) * 5000;
+        if (bathrooms > 2) total += (bathrooms - 2) * 3000;
+        if (dirtLevel === 'moderate') total += 5000;
+        if (dirtLevel === 'heavy') total += 15000;
         if (frequency === 'weekly') total *= 0.9;
-        else if (frequency === 'biweekly') total *= 0.85;
-        else if (frequency === 'monthly') total *= 0.8;
+        if (frequency === 'monthly') total *= 0.95;
     }
     
-    // Update display elements
-    const basePriceSpan = document.getElementById('basePrice');
-    const totalPriceSpan = document.getElementById('totalPrice');
-    const estimatedPriceSpan = document.getElementById('estimatedPrice');
-    const estimatedHoursSpan = document.getElementById('estimatedHours');
+    if (serviceId == 2) {
+        const officeRooms = parseInt(document.getElementById('office_rooms')?.selectedIndex + 1 || 2);
+        const workstations = parseInt(document.getElementById('workstations')?.selectedIndex + 1 || 2);
+        const serviceTime = document.getElementById('service_time')?.value || 'business_hours';
+        total += (officeRooms - 2) * 10000;
+        total += (workstations - 2) * 5000;
+        if (serviceTime === 'after_hours') total *= 1.2;
+        if (serviceTime === 'weekend') total *= 1.3;
+    }
     
-    if (basePriceSpan) basePriceSpan.innerText = `TZS ${(config.basePrice || 50000).toLocaleString()}`;
-    if (totalPriceSpan) totalPriceSpan.innerText = `TZS ${total.toLocaleString()}`;
-    if (estimatedPriceSpan) estimatedPriceSpan.innerText = `TZS ${total.toLocaleString()}`;
-    if (estimatedHoursSpan) estimatedHoursSpan.innerText = config.duration || '2-3 hours';
+    if (serviceId == 3) {
+        const carpetCount = parseInt(document.getElementById('carpet_count')?.value || 2);
+        const carpetSize = document.getElementById('carpet_size')?.value || 'medium';
+        const stainLevel = document.getElementById('stain_level')?.value || 'moderate';
+        let sizeMultiplier = carpetSize === 'small' ? 0.7 : carpetSize === 'medium' ? 1 : carpetSize === 'large' ? 1.4 : 1.8;
+        let stainMultiplier = stainLevel === 'light' ? 1.1 : stainLevel === 'moderate' ? 1.3 : stainLevel === 'heavy' ? 1.6 : 1;
+        total = 40000 * carpetCount * sizeMultiplier * stainMultiplier;
+        if (document.getElementById('stain_protection')?.checked) total += 15000;
+        if (document.getElementById('deodorizing')?.checked) total += 10000;
+    }
     
-    const sizeAdjustment = document.getElementById('sizeAdjustment');
-    const conditionAdjustment = document.getElementById('conditionAdjustment');
-    const extrasAdjustment = document.getElementById('extrasAdjustment');
+    if (serviceId == 4) {
+        const windowCount = parseInt(document.getElementById('window_count')?.value || 5);
+        const maxFloor = parseInt(document.getElementById('max_floor')?.selectedIndex + 1 || 3);
+        const condition = document.getElementById('window_condition')?.value || 'clean';
+        total = 20000 + (windowCount * 2000);
+        if (maxFloor >= 5) total *= 1.3;
+        else if (maxFloor >= 3) total *= 1.15;
+        if (condition === 'dirty') total *= 1.2;
+        if (condition === 'very_dirty') total *= 1.4;
+        if (document.getElementById('screen_cleaning')?.checked) total += 5000;
+        if (document.getElementById('frame_cleaning')?.checked) total += 3000;
+    }
     
-    if (sizeAdjustment) sizeAdjustment.innerText = `TZS ${Math.round(total * 0.1).toLocaleString()}`;
-    if (conditionAdjustment) conditionAdjustment.innerText = `TZS ${Math.round(total * 0.15).toLocaleString()}`;
-    if (extrasAdjustment) extrasAdjustment.innerText = 'TZS 0';
+    if (serviceId == 10) {
+        const roomCount = parseInt(document.getElementById('room_count')?.value || 5);
+        const turnoverType = document.getElementById('turnover_type')?.value || 'standard';
+        total = 40000 + (roomCount * 10000);
+        if (turnoverType === 'deep') total *= 1.5;
+        if (turnoverType === 'express') total *= 1.3;
+        if (document.getElementById('deep_bathroom')?.checked) total += roomCount * 5000;
+    }
     
-    return total;
-}
-
-// Validation functions
-function validateHomeCleaning() {
-    const propertyType = document.getElementById('propertyType')?.value;
-    const dirtLevel = document.getElementById('dirtLevel')?.value;
+    if (serviceId == 14) {
+        const unitCount = parseInt(document.getElementById('unit_count')?.value || 2);
+        total = 25000 + (unitCount * 10000);
+        if (document.getElementById('coil_cleaning')?.checked) total += 15000;
+        if (document.getElementById('defrosting')?.checked) total += 10000;
+    }
     
-    if (!propertyType) {
-        showToast('Please select a property type', 'error');
-        return false;
+    if (serviceId == 16) {
+        const tankSize = document.getElementById('tank_size')?.value || 'medium';
+        if (tankSize === 'small') total = 50000;
+        if (tankSize === 'medium') total = 70000;
+        if (tankSize === 'large') total = 90000;
+        if (tankSize === 'Commercial') total = 120000;
+        if (document.getElementById('water_testing')?.checked) total += 10000;
     }
-    if (!dirtLevel) {
-        showToast('Please select the dirt level', 'error');
-        return false;
-    }
-    return true;
-}
-
-function validateOfficeCleaning() {
-    const officeType = document.getElementById('officeType')?.value;
-    if (!officeType) {
-        showToast('Please select an office type', 'error');
-        return false;
-    }
-    return true;
-}
-
-function validateCarpetCleaning() {
-    const carpetType = document.getElementById('carpetType')?.value;
-    const stainLevel = document.getElementById('stainLevel')?.value;
     
-    if (!carpetType) {
-        showToast('Please select the carpet type', 'error');
-        return false;
+    if (serviceId == 18) {
+        const gardenSize = document.getElementById('garden_size')?.value || 'medium';
+        if (gardenSize === 'small') total = 35000;
+        if (gardenSize === 'medium') total = 55000;
+        if (gardenSize === 'large') total = 80000;
+        if (gardenSize === 'estate') total = 120000;
+        if (document.getElementById('hedge_trimming')?.checked) total += 15000;
+        if (document.getElementById('waste_removal')?.checked) total += 10000;
     }
-    if (!stainLevel) {
-        showToast('Please select the stain level', 'error');
-        return false;
-    }
-    return true;
-}
-
-function validateWindowCleaning() {
-    const windowCount = document.getElementById('windowCount')?.value;
-    const windowCondition = document.getElementById('windowCondition')?.value;
     
-    if (!windowCount || windowCount < 1) {
-        showToast('Please enter the number of windows', 'error');
-        return false;
-    }
-    if (!windowCondition) {
-        showToast('Please select the window condition', 'error');
-        return false;
-    }
-    return true;
+    document.getElementById('totalPrice').innerText = `TZS ${Math.round(total).toLocaleString()}`;
+    return Math.round(total);
 }
 
-function validateDeepCleaning() {
-    const propertyType = document.getElementById('propertyType')?.value;
-    if (!propertyType) {
-        showToast('Please select a property type', 'error');
-        return false;
-    }
-    return true;
-}
-
-function validateConstructionCleaning() {
-    const debrisLevel = document.getElementById('debrisLevel')?.value;
-    if (!debrisLevel) {
-        showToast('Please select the debris level', 'error');
-        return false;
-    }
-    return true;
-}
-
-function validateHotelCleaning() {
-    const roomCount = document.getElementById('roomCount')?.value;
-    if (!roomCount || roomCount < 1) {
-        showToast('Please enter the number of rooms', 'error');
-        return false;
-    }
-    return true;
-}
-
-function validateVehicleCleaning() { return true; }
-function validatePoolCleaning() { return true; }
-function validateMattressCleaning() { return true; }
-function validateUpholsteryCleaning() { return true; }
-function validateMoveCleaning() { return true; }
-function validateLaundryCleaning() { return true; }
-function validatePestControl() { return true; }
-function validateEventCleaning() { return true; }
-function validateAcCleaning() { return true; }
-function validateWaterTankCleaning() { return true; }
-function validateCurtainCleaning() { return true; }
-function validateGardenCleaning() { return true; }
-function validateIndustrialCleaning() { return true; }
-
-// Validate current phase
 function validateCurrentPhase() {
     switch(currentStep) {
         case 1:
-            if (selectedService && selectedService.config && selectedService.config.validation) {
-                return selectedService.config.validation();
-            }
-            // For services without custom validation, check if any required fields exist
-            const requiredFields = document.querySelectorAll('#dynamicServiceForm .required');
-            if (requiredFields.length > 0) {
-                let allValid = true;
-                requiredFields.forEach(field => {
-                    const parent = field.closest('.form-group');
-                    if (parent) {
-                        const select = parent.querySelector('select');
-                        const input = parent.querySelector('input:not([type="hidden"])');
-                        const textarea = parent.querySelector('textarea');
-                        const grid = parent.querySelector('[class*="-grid"]');
-                        
-                        if (select && !select.value) allValid = false;
-                        if (input && !input.value) allValid = false;
-                        if (textarea && !textarea.value) allValid = false;
-                        if (grid) {
-                            const selected = grid.querySelector('.selected');
-                            if (!selected) allValid = false;
-                        }
-                    }
-                });
-                if (!allValid) {
-                    showToast('Please fill in all required fields', 'error');
-                    return false;
-                }
-            }
+            if (selectedService?.id == 1 && !document.getElementById('property_type')?.value) { showToast('Please select property type', 'error'); return false; }
+            if (selectedService?.id == 2 && !document.getElementById('office_type')?.value) { showToast('Please select office type', 'error'); return false; }
             return true;
-            
         case 2:
-            const date = document.getElementById('preferredDate').value;
-            const time = document.getElementById('preferredTime').value;
-            
-            if (!date) {
-                showToast('Please select a preferred date', 'error');
-                return false;
-            }
-            if (!time) {
-                showToast('Please select a preferred time', 'error');
-                return false;
-            }
-            
-            const key = `${date}_${time}`;
-            if (bookedDates[key] >= 3) {
-                showToast('This time slot is fully booked. Please select another time.', 'error');
-                return false;
-            }
+            const date = document.getElementById('preferredDate')?.value;
+            const time = document.getElementById('preferredTime')?.value;
+            if (!date) { showToast('Please select a date', 'error'); return false; }
+            if (!time) { showToast('Please select a time', 'error'); return false; }
             return true;
-            
         case 3:
-            const firstName = document.getElementById('firstName')?.value.trim();
-            const lastName = document.getElementById('lastName')?.value.trim();
+            const firstName = document.getElementById('first_name')?.value.trim();
+            const lastName = document.getElementById('last_name')?.value.trim();
             const email = document.getElementById('email')?.value.trim();
             const phone = document.getElementById('phone')?.value.trim();
-            
-            if (!firstName) { showToast('Please enter your first name', 'error'); return false; }
-            if (!lastName) { showToast('Please enter your last name', 'error'); return false; }
-            if (!email) { showToast('Please enter your email address', 'error'); return false; }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('Please enter a valid email address', 'error'); return false; }
-            if (!phone) { showToast('Please enter your phone number', 'error'); return false; }
+            if (!firstName) { showToast('Enter first name', 'error'); return false; }
+            if (!lastName) { showToast('Enter last name', 'error'); return false; }
+            if (!email) { showToast('Enter email', 'error'); return false; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('Valid email required', 'error'); return false; }
+            if (!phone) { showToast('Enter phone number', 'error'); return false; }
             return true;
-            
         case 4:
-            const street = document.getElementById('streetAddress')?.value.trim();
-            const area = document.getElementById('area')?.value.trim();
+            const address = document.getElementById('address')?.value.trim();
+            const area = document.getElementById('area_district')?.value.trim();
             const city = document.getElementById('city')?.value.trim();
             const lat = document.getElementById('latitude')?.value;
-            const lng = document.getElementById('longitude')?.value;
-            
-            if (!street) { showToast('Please enter your street address', 'error'); return false; }
-            if (!area) { showToast('Please enter your area/district', 'error'); return false; }
-            if (!city) { showToast('Please enter your city', 'error'); return false; }
-            if (!lat || !lng) { showToast('Please pin your location on the map', 'error'); return false; }
+            if (!address) { showToast('Enter address', 'error'); return false; }
+            if (!area) { showToast('Enter area/district', 'error'); return false; }
+            if (!city) { showToast('Enter city', 'error'); return false; }
+            if (!lat) { showToast('Pin location on map', 'error'); return false; }
             return true;
-            
-        default:
-            return true;
+        default: return true;
     }
 }
 
-// Navigation functions
-function nextPhase(step) {
-    if (validateCurrentPhase()) {
-        currentStep = step;
-        updatePhaseDisplay();
-        updateProgressBar();
-        
-        if (step === 4 && mapInstance) {
-            setTimeout(function() { mapInstance.invalidateSize(); }, 100);
-        }
-        
-        if (step === 5) {
-            updateReview();
-        }
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+function nextPhase(step) { if (validateCurrentPhase()) { currentStep = step; updatePhaseDisplay(); updateProgressBar(); if (step === 4 && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100); if (step === 5) updateReview(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }
+function prevPhase(step) { currentStep = step; updatePhaseDisplay(); updateProgressBar(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function updatePhaseDisplay() { for (let i = 1; i <= 5; i++) { const phase = document.getElementById(`phase${i}`); const step = document.querySelector(`.step[data-step="${i}"]`); if (phase) i === currentStep ? phase.classList.add('active') : phase.classList.remove('active'); if (step) i === currentStep ? step.classList.add('active') : step.classList.remove('active'); } }
+function updateProgressBar() { document.getElementById('progressFill').style.width = `${((currentStep - 1) / 4) * 100}%`; }
+
+function updateReview() {
+    const container = document.getElementById('reviewContent');
+    if (!container) return;
+    const total = updatePriceEstimate();
+    container.innerHTML = `
+        <h4><i class="fas fa-broom"></i> ${selectedService?.config?.name}</h4>
+        <div class="review-item"><span class="review-label">Service Details:</span><span class="review-value">Provided as requested</span></div>
+        <h4 class="mt-3"><i class="fas fa-calendar"></i> Schedule</h4>
+        <div class="review-item"><span class="review-label">Date:</span><span class="review-value">${document.getElementById('preferredDate')?.value || 'Not selected'}</span></div>
+        <div class="review-item"><span class="review-label">Time:</span><span class="review-value">${document.getElementById('preferredTime')?.options[document.getElementById('preferredTime')?.selectedIndex]?.text || 'Not selected'}</span></div>
+        <h4 class="mt-3"><i class="fas fa-user"></i> Customer</h4>
+        <div class="review-item"><span class="review-label">Name:</span><span class="review-value">${document.getElementById('first_name')?.value || ''} ${document.getElementById('last_name')?.value || ''}</span></div>
+        <div class="review-item"><span class="review-label">Email:</span><span class="review-value">${document.getElementById('email')?.value || ''}</span></div>
+        <div class="review-item"><span class="review-label">Phone:</span><span class="review-value">${document.getElementById('phone')?.value || ''}</span></div>
+        <h4 class="mt-3"><i class="fas fa-map-marker-alt"></i> Location</h4>
+        <div class="review-item"><span class="review-label">Address:</span><span class="review-value">${document.getElementById('address')?.value || ''}, ${document.getElementById('area_district')?.value || ''}, ${document.getElementById('city')?.value || ''}</span></div>
+        <div class="review-item total mt-3"><span class="review-label">Total:</span><span class="review-value" style="color: var(--primary); font-weight: 800;">TZS ${total.toLocaleString()}</span></div>
+        <p class="text-muted small mt-2"><i class="fas fa-info-circle"></i> Final invoice after admin review</p>
+    `;
 }
 
-function prevPhase(step) {
-    currentStep = step;
-    updatePhaseDisplay();
-    updateProgressBar();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function validateAndNext(current, next) {
-    const tempStep = currentStep;
-    currentStep = current;
-    if (validateCurrentPhase()) {
-        currentStep = next;
-        updatePhaseDisplay();
-        updateProgressBar();
-        if (next === 5) updateReview();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-        currentStep = tempStep;
-    }
-}
-
-function updatePhaseDisplay() {
-    for (let i = 1; i <= 5; i++) {
-        const phase = document.getElementById(`phase${i}`);
-        const step = document.querySelector(`.step[data-step="${i}"]`);
-        if (phase) {
-            if (i === currentStep) {
-                phase.classList.add('active');
-                if (step) step.classList.add('active');
-            } else {
-                phase.classList.remove('active');
-                if (step) step.classList.remove('active');
-                if (i < currentStep && step) step.classList.add('completed');
-                else if (step) step.classList.remove('completed');
-            }
-        }
-    }
-}
-
-function updateProgressBar() {
-    const fillPercent = ((currentStep - 1) / 4) * 100;
-    const progressFill = document.getElementById('progressFill');
-    if (progressFill) progressFill.style.width = `${fillPercent}%`;
-}
-
-// Load booked dates
-function loadBookedDates() {
-    const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    bookings.forEach(booking => {
-        if (booking.scheduleDate && booking.status !== 'cancelled') {
-            const bookingDate = new Date(booking.scheduleDate);
-            if (bookingDate >= today) {
-                const key = `${booking.scheduleDate}_${booking.scheduleTime}`;
-                if (!bookedDates[key]) bookedDates[key] = 0;
-                bookedDates[key]++;
-            }
-        }
-    });
-}
-
-// Initialize date picker - FIXED
-function initializeDatePicker() {
-    const dateInput = document.getElementById('preferredDate');
-    if (!dateInput) {
-        console.error('Date picker element not found');
-        return;
-    }
-    
-    // Destroy existing instance if any
-    if (flatpickrInstance) {
-        flatpickrInstance.destroy();
-    }
-    
-    flatpickrInstance = flatpickr(dateInput, {
-        minDate: "today",
-        dateFormat: "Y-m-d",
-        allowInput: false,
-        disable: [
-            function(date) {
-                const dateStr = flatpickr.formatDate(date, "Y-m-d");
-                let totalBookings = 0;
-                for (let key in bookedDates) {
-                    if (key.startsWith(dateStr)) {
-                        totalBookings += bookedDates[key];
-                    }
-                }
-                return totalBookings >= 5;
-            }
-        ],
-        onChange: function(selectedDates, dateStr, instance) {
-            if (dateStr) {
-                updateTimeSlotAvailability(dateStr);
-                // Clear any validation message
-                const validationDiv = document.getElementById('dateValidation');
-                if (validationDiv) validationDiv.innerHTML = '';
-            }
-        },
-        onReady: function(selectedDates, dateStr, instance) {
-            // Force the calendar to be interactive
-            instance.calendarContainer.style.pointerEvents = 'auto';
-        }
-    });
-    
-    // Also allow clicking on the input to open calendar
-    dateInput.addEventListener('click', function(e) {
-        if (flatpickrInstance) {
-            flatpickrInstance.open();
-        }
-    });
-}
-
-function updateTimeSlotAvailability(dateStr) {
-    const timeSelect = document.getElementById('preferredTime');
-    if (!timeSelect) return;
-    
-    const slots = timeSelect.querySelectorAll('option');
-    slots.forEach(slot => {
-        if (slot.value) {
-            const key = `${dateStr}_${slot.value}`;
-            const bookingCount = bookedDates[key] || 0;
-            if (bookingCount >= 3) {
-                slot.disabled = true;
-                slot.textContent = slot.textContent.replace(/\s*\(.*\)/, '') + ' (Fully Booked)';
-            } else if (bookingCount >= 2) {
-                slot.disabled = false;
-                slot.textContent = slot.textContent.replace(/\s*\(.*\)/, '') + ' (Limited Availability)';
-            } else {
-                slot.disabled = false;
-                slot.textContent = slot.textContent.replace(/\s*\(.*\)/, '');
-            }
-        }
-    });
-}
-
-// Initialize map
 function initializeMap() {
-    const mapContainer = document.getElementById('locationMap');
-    if (!mapContainer) {
-        console.log('Map container not found yet, will initialize later');
-        return;
-    }
-    
-    const defaultLat = -6.1659;
-    const defaultLng = 39.2026;
-    
-    mapInstance = L.map('locationMap').setView([defaultLat, defaultLng], 14);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(mapInstance);
-    
-    mapInstance.on('click', function(e) {
-        placeMarker(e.latlng.lat, e.latlng.lng);
-    });
-    
-    // Try to get user location
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
-                mapInstance.setView([userLat, userLng], 15);
-                placeMarker(userLat, userLng);
-            },
-            function(error) {
-                console.log('Geolocation error:', error.message);
-            }
-        );
-    }
+    const container = document.getElementById('locationMap');
+    if (!container) return;
+    mapInstance = L.map('locationMap').setView([-6.1659, 39.2026], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
+    mapInstance.on('click', e => placeMarker(e.latlng.lat, e.latlng.lng));
+    if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => { mapInstance.setView([p.coords.latitude, p.coords.longitude], 15); placeMarker(p.coords.latitude, p.coords.longitude); }, () => {});
 }
 
 function placeMarker(lat, lng) {
-    if (currentMarker) {
-        mapInstance.removeLayer(currentMarker);
-    }
-    
-    const customIcon = L.divIcon({
-        html: `<div style="background: linear-gradient(135deg, #4361ee, #764ba2); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"><i class="fas fa-map-pin" style="color: white; font-size: 14px;"></i></div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32]
-    });
-    
-    currentMarker = L.marker([lat, lng], { icon: customIcon }).addTo(mapInstance);
-    currentMarker.bindPopup('📍 Your selected location').openPopup();
-    
-    const latInput = document.getElementById('latitude');
-    const lngInput = document.getElementById('longitude');
-    if (latInput) latInput.value = lat.toFixed(6);
-    if (lngInput) lngInput.value = lng.toFixed(6);
-    
-    const coordsDisplay = document.getElementById('coordsDisplay');
-    const coordsInfo = document.getElementById('coordinatesInfo');
-    if (coordsDisplay) coordsDisplay.innerText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-    if (coordsInfo) coordsInfo.style.display = 'flex';
-    
-    reverseGeocode(lat, lng);
+    if (currentMarker) mapInstance.removeLayer(currentMarker);
+    currentMarker = L.marker([lat, lng]).addTo(mapInstance);
+    document.getElementById('latitude').value = lat.toFixed(6);
+    document.getElementById('longitude').value = lng.toFixed(6);
+    document.getElementById('pin_latitude').value = lat.toFixed(6);
+    document.getElementById('pin_longitude').value = lng.toFixed(6);
 }
 
-function reverseGeocode(lat, lng) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.address) {
-                const road = data.address.road || data.address.path || '';
-                const houseNumber = data.address.house_number || '';
-                const suburb = data.address.suburb || data.address.village || '';
-                const city = data.address.city || data.address.town || data.address.county || '';
-                
-                const streetAddress = document.getElementById('streetAddress');
-                const areaInput = document.getElementById('area');
-                const cityInput = document.getElementById('city');
-                
-                if (streetAddress && !streetAddress.value) {
-                    streetAddress.value = (houseNumber ? houseNumber + ', ' : '') + road;
-                }
-                if (areaInput && !areaInput.value && suburb) {
-                    areaInput.value = suburb;
-                }
-                if (cityInput && !cityInput.value && city) {
-                    cityInput.value = city;
-                }
-            }
-        })
-        .catch(err => console.log('Reverse geocoding failed:', err));
+function initializeDatePicker() {
+    const input = document.getElementById('preferredDate');
+    if (!input) return;
+    if (flatpickrInstance) flatpickrInstance.destroy();
+    flatpickrInstance = flatpickr(input, { minDate: "today", dateFormat: "Y-m-d" });
 }
 
-// Update review section
-function updateReview() {
-    const reviewContainer = document.getElementById('reviewContent');
-    if (!reviewContainer) return;
-    
-    let serviceDetailsHtml = '';
-    const phase1Inputs = document.querySelectorAll('#dynamicServiceForm input, #dynamicServiceForm select, #dynamicServiceForm textarea');
-    phase1Inputs.forEach(input => {
-        if (input.type === 'checkbox') {
-            if (input.checked) {
-                const label = input.parentElement.innerText;
-                serviceDetailsHtml += `<div class="review-item"><span class="review-label">${label.split('(')[0]}:</span><span class="review-value">Yes</span></div>`;
-            }
-        } else if (input.type === 'radio') {
-            if (input.checked) {
-                const label = input.parentElement.innerText;
-                serviceDetailsHtml += `<div class="review-item"><span class="review-label">${label.split('(')[0]}:</span><span class="review-value">${input.value === 'yes' ? 'Yes' : 'No'}</span></div>`;
-            }
-        } else if (input.value && input.id) {
-            const label = input.previousElementSibling?.innerText || input.placeholder || input.id;
-            let displayValue = input.value;
-            if (input.tagName === 'SELECT' && input.options[input.selectedIndex]) {
-                displayValue = input.options[input.selectedIndex].text;
-            }
-            if (displayValue && !input.id.includes('Instructions') && displayValue !== '') {
-                serviceDetailsHtml += `<div class="review-item"><span class="review-label">${label.replace('*', '').trim()}:</span><span class="review-value">${displayValue}</span></div>`;
-            }
-        }
-    });
-    
-    const total = updatePriceEstimate();
-    const serviceName = selectedService?.config?.name || selectedService?.name || 'Service';
-    
-    reviewContainer.innerHTML = `
-        <h4><i class="fas fa-clipboard-list"></i> ${serviceName} Details</h4>
-        ${serviceDetailsHtml || '<div class="review-item"><span class="review-label">No additional details</span><span class="review-value">-</span></div>'}
-        
-        <h4 class="mt-3"><i class="fas fa-calendar"></i> Schedule</h4>
-        <div class="review-item"><span class="review-label">Preferred Date:</span><span class="review-value">${document.getElementById('preferredDate')?.value || 'Not selected'}</span></div>
-        <div class="review-item"><span class="review-label">Preferred Time:</span><span class="review-value">${document.getElementById('preferredTime')?.options[document.getElementById('preferredTime')?.selectedIndex]?.text || 'Not selected'}</span></div>
-        
-        <h4 class="mt-3"><i class="fas fa-user"></i> Customer Details</h4>
-        <div class="review-item"><span class="review-label">Full Name:</span><span class="review-value">${document.getElementById('firstName')?.value || ''} ${document.getElementById('lastName')?.value || ''}</span></div>
-        <div class="review-item"><span class="review-label">Email:</span><span class="review-value">${document.getElementById('email')?.value || ''}</span></div>
-        <div class="review-item"><span class="review-label">Phone:</span><span class="review-value">${document.getElementById('phone')?.value || ''}</span></div>
-        
-        <h4 class="mt-3"><i class="fas fa-map-marker-alt"></i> Location</h4>
-        <div class="review-item"><span class="review-label">Address:</span><span class="review-value">${document.getElementById('streetAddress')?.value || ''}, ${document.getElementById('area')?.value || ''}, ${document.getElementById('city')?.value || ''}</span></div>
-        
-        <div class="review-item total mt-3"><span class="review-label">Estimated Total:</span><span class="review-value" style="color: var(--primary); font-weight: 800;">TZS ${total.toLocaleString()}</span></div>
-        <p class="text-muted small mt-2"><i class="fas fa-info-circle"></i> Final invoice will be sent after admin review</p>
-    `;
-}
-
-// Submit booking
-function submitBooking() {
+async function submitBooking() {
     if (!validateCurrentPhase()) return;
-    
-    const serviceDetails = {};
-    const phase1Inputs = document.querySelectorAll('#dynamicServiceForm input, #dynamicServiceForm select, #dynamicServiceForm textarea');
-    phase1Inputs.forEach(input => {
-        if (input.type === 'checkbox') {
-            serviceDetails[input.id] = input.checked;
-        } else if (input.type === 'radio' && input.checked) {
-            serviceDetails[input.name] = input.value;
-        } else if (input.value && input.id) {
-            serviceDetails[input.id] = input.value;
-        }
-    });
-    
+    showLoading(true);
+    const total = updatePriceEstimate();
     const bookingData = {
-        bookingId: 'BK' + Date.now() + Math.floor(Math.random() * 1000),
-        serviceId: selectedService?.id || 'unknown',
-        serviceName: selectedService?.config?.name || selectedService?.name || 'Cleaning Service',
-        serviceCategory: selectedService?.config?.category || 'general',
-        serviceDetails: serviceDetails,
-        scheduleDate: document.getElementById('preferredDate')?.value || '',
-        scheduleTime: document.getElementById('preferredTime')?.value || '',
-        scheduleInstructions: document.getElementById('scheduleInstructions')?.value || '',
-        firstName: document.getElementById('firstName')?.value || '',
-        lastName: document.getElementById('lastName')?.value || '',
-        email: document.getElementById('email')?.value || '',
-        phone: document.getElementById('phone')?.value || '',
-        altPhone: document.getElementById('altPhone')?.value || '',
-        preferredCommunication: document.getElementById('prefComm')?.value || 'email',
-        streetAddress: document.getElementById('streetAddress')?.value || '',
-        area: document.getElementById('area')?.value || '',
-        city: document.getElementById('city')?.value || '',
-        region: document.getElementById('region')?.value || '',
-        landmark: document.getElementById('landmark')?.value || '',
-        buildingName: document.getElementById('buildingName')?.value || '',
-        floorNumber: document.getElementById('floorNumber')?.value || '',
-        latitude: document.getElementById('latitude')?.value || '',
-        longitude: document.getElementById('longitude')?.value || '',
-        estimatedTotal: updatePriceEstimate(),
-        paymentStatus: 'pending',
-        bookingStatus: 'pending_review',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        service_id: selectedService.id, 
+        first_name: document.getElementById('first_name')?.value.trim(), 
+        last_name: document.getElementById('last_name')?.value.trim(),
+        email: document.getElementById('email')?.value.trim(), 
+        phone: document.getElementById('phone')?.value.trim(),
+        alternative_phone: document.getElementById('alternative_phone')?.value.trim() || null,
+        preferred_communication: document.getElementById('preferred_communication')?.value || 'email',
+        address: document.getElementById('address')?.value.trim(), 
+        area_district: document.getElementById('area_district')?.value.trim(),
+        city: document.getElementById('city')?.value.trim(), 
+        region: document.getElementById('region')?.value || null,
+        landmark: document.getElementById('landmark')?.value.trim() || null,
+        service_date: document.getElementById('preferredDate')?.value, 
+        service_time: document.getElementById('preferredTime')?.value,
+        instructions: document.getElementById('instructions')?.value.trim() || null,
+        special_instructions_cleaners: document.getElementById('special_instructions')?.value.trim() || null,
+        payment_method: 'cash', 
+        total_price: total, 
+        base_price: selectedService.config.basePrice, 
+        extras: total - selectedService.config.basePrice, 
+        discount: 0,
+        latitude: parseFloat(document.getElementById('latitude')?.value) || null, 
+        longitude: parseFloat(document.getElementById('longitude')?.value) || null,
+        pin_latitude: parseFloat(document.getElementById('pin_latitude')?.value) || null, 
+        pin_longitude: parseFloat(document.getElementById('pin_longitude')?.value) || null
     };
-    
-    const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-    bookings.push(bookingData);
-    localStorage.setItem('bookings', JSON.stringify(bookings));
-    localStorage.removeItem('selectedService');
-    
-    const bookingIdDisplay = document.getElementById('bookingIdDisplay');
-    if (bookingIdDisplay) bookingIdDisplay.innerText = `Booking ID: ${bookingData.bookingId}`;
-    
-    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-    successModal.show();
+    try {
+        const response = await API.bookings.create(bookingData);
+        showLoading(false);
+        if (response.success || response.booking) {
+            localStorage.removeItem('selectedService');
+            new bootstrap.Modal(document.getElementById('successModal')).show();
+        } else showToast(response.message || 'Booking failed', 'error');
+    } catch (error) { showLoading(false); showToast(error.message || 'Submission failed', 'error'); }
 }
 
-// Toast notification
-function showToast(message, type = 'info') {
-    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
-    
-    const toast = document.createElement('div');
-    toast.className = `custom-toast toast-${type}`;
-    toast.innerHTML = `
-        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
-    `;
-    
-    toastContainer.appendChild(toast);
-    
-    setTimeout(() => {
-        if (toast.parentElement) toast.remove();
-    }, 5000);
+function showLoading(show) { 
+    let s = document.getElementById('loading-spinner'); 
+    if (!s && show) { 
+        s = document.createElement('div'); 
+        s.id = 'loading-spinner'; 
+        s.innerHTML = '<div class="spinner-border text-primary"></div>'; 
+        s.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:rgba(0,0,0,0.5);width:100%;height:100%;display:flex;align-items:center;justify-content:center;'; 
+        document.body.appendChild(s); 
+    } 
+    if (s) s.style.display = show ? 'flex' : 'none'; 
 }
 
-function createToastContainer() {
-    const container = document.createElement('div');
-    container.id = 'toastContainer';
-    container.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 10000;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    `;
-    document.body.appendChild(container);
-    return container;
+function showToast(msg, type) { 
+    const c = document.querySelector('.toast-container') || (() => { 
+        const d = document.createElement('div'); 
+        d.className = 'toast-container'; 
+        d.style.cssText = 'position:fixed;top:20px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:10px;'; 
+        document.body.appendChild(d); 
+        return d; 
+    })(); 
+    const t = document.createElement('div'); 
+    t.className = `custom-toast toast-${type}`; 
+    t.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i><span>${msg}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`; 
+    c.appendChild(t); 
+    setTimeout(() => t.remove(), 5000); 
 }
 
-// Add toast styles if not already present
-if (!document.querySelector('#toastStyles')) {
-    const toastStyles = document.createElement('style');
-    toastStyles.id = 'toastStyles';
-    toastStyles.textContent = `
-        .custom-toast {
-            background: var(--bg-white);
-            border-left: 4px solid;
-            border-radius: 8px;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            animation: slideIn 0.3s ease;
-            min-width: 280px;
-        }
-        .custom-toast.toast-error { border-left-color: #ef4444; }
-        .custom-toast.toast-error i { color: #ef4444; }
-        .custom-toast i:first-child { font-size: 1.2rem; }
-        .custom-toast span { flex: 1; font-size: 0.9rem; }
-        .custom-toast button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #94a3b8;
-        }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-    `;
-    document.head.appendChild(toastStyles);
+// Theme Toggle
+function initTheme() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    }
 }
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    loadSelectedService(); 
+    initializeDatePicker(); 
+    initializeMap();
+    
+    const nav = [
+        ['nextPhase1Btn', () => nextPhase(2)],
+        ['prevPhase2Btn', () => prevPhase(1)],
+        ['nextPhase2Btn', () => nextPhase(3)],
+        ['prevPhase3Btn', () => prevPhase(2)],
+        ['nextPhase3Btn', () => nextPhase(4)],
+        ['prevPhase4Btn', () => prevPhase(3)],
+        ['nextPhase4Btn', () => nextPhase(5)],
+        ['prevPhase5Btn', () => prevPhase(4)],
+        ['submitBookingBtn', submitBooking]
+    ];
+    nav.forEach(([id, fn]) => { const btn = document.getElementById(id); if(btn) btn.addEventListener('click', fn); });
+    
+    document.querySelectorAll('.step').forEach(step => step.addEventListener('click', function() { 
+        const t = parseInt(this.dataset.step); 
+        if (t < currentStep) { 
+            currentStep = t; 
+            updatePhaseDisplay(); 
+            updateProgressBar(); 
+            if(t===5) updateReview(); 
+            window.scrollTo({top:0}); 
+        } else if (t > currentStep && validateCurrentPhase()) { 
+            currentStep = t; 
+            updatePhaseDisplay(); 
+            updateProgressBar(); 
+            if(t===5) updateReview(); 
+            window.scrollTo({top:0}); 
+        } 
+    }));
+});
