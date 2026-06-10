@@ -1,7 +1,11 @@
-// ===== CLEANSPARK SERVICES PAGE - FULLY FUNCTIONAL =====
+/**
+ * CleanSpark Services Page - Fully Integrated with Backend API
+ */
 
-// Global variables
-let currentModalInstance = null;
+// Store all services globally for filtering
+let allServices = [];
+let currentLocationFilter = 'all';
+let currentSearchTerm = '';
 
 // ===== SIDEBAR FUNCTIONS =====
 function openSidebar() {
@@ -20,20 +24,14 @@ function closeSidebar() {
     document.body.style.overflow = '';
 }
 
-// ===== LOADING OVERLAY =====
-function showLoading() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) overlay.classList.add('active');
-}
-
-function hideLoading() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) overlay.classList.remove('active');
+// Close sidebar on overlay click
+if (document.getElementById('sidebarOverlay')) {
+    document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
 }
 
 // ===== AUTH HELPERS =====
 function isLoggedIn() {
-    return localStorage.getItem('isLoggedIn') === 'true';
+    return !!API.getAuthToken() && localStorage.getItem('isLoggedIn') === 'true';
 }
 
 function getCurrentUser() {
@@ -41,13 +39,22 @@ function getCurrentUser() {
     return user ? JSON.parse(user) : null;
 }
 
-function logout() {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('currentUser');
-    showNotification('Logged out successfully', 'success');
-    setTimeout(() => { 
-        window.location.href = 'index.html'; 
-    }, 1000);
+async function logout() {
+    try {
+        await API.auth.logout();
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        API.clearAuthToken();
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('currentUser');
+        sessionStorage.removeItem('adminLoggedIn');
+        sessionStorage.removeItem('staffLoggedIn');
+        showNotification('Logged out successfully', 'success');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1000);
+    }
 }
 
 function updateUIBasedOnLogin() {
@@ -55,16 +62,17 @@ function updateUIBasedOnLogin() {
     if (!loginBtn) return;
 
     if (isLoggedIn()) {
-        loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> <span class="btn-text">Logout</span>';
-        loginBtn.href = 'javascript:void(0);';
-        loginBtn.onclick = function(e) {
-            e.preventDefault();
-            logout();
-        };
+        const user = getCurrentUser();
+        const userName = user?.first_name || 'Account';
+        loginBtn.innerHTML = `<i class="fas fa-user-check"></i> <span class="btn-text">Hi, ${userName}</span>`;
+        loginBtn.href = 'account.html';
+        loginBtn.onclick = null;
+        loginBtn.classList.add('logged-in');
     } else {
         loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span class="btn-text">Login</span>';
         loginBtn.href = 'login.html';
         loginBtn.onclick = null;
+        loginBtn.classList.remove('logged-in');
     }
 }
 
@@ -75,532 +83,411 @@ function savePendingBooking(serviceData) {
     }
 }
 
-function handleBookClick(serviceId, serviceName, servicePrice) {
-    console.log('Book clicked:', serviceId, serviceName, servicePrice);
-    
+function handleBookClick(serviceId, serviceName) {
     const serviceData = { 
         id: serviceId, 
-        name: serviceName, 
-        price: servicePrice 
+        name: serviceName
     };
 
     if (isLoggedIn()) {
         localStorage.setItem('selectedService', JSON.stringify(serviceData));
         showNotification('Redirecting to booking...', 'info');
-        setTimeout(() => { 
-            window.location.href = 'booking.html'; 
+        setTimeout(() => {
+            window.location.href = 'booking.html';
         }, 600);
     } else {
         savePendingBooking(serviceData);
         showNotification('Please login to continue with booking', 'info');
-        setTimeout(() => { 
-            window.location.href = 'login.html'; 
+        setTimeout(() => {
+            window.location.href = 'login.html';
         }, 1000);
     }
 }
 
-// ===== SERVICE DETAILS DATA =====
-const SERVICE_DETAILS = {
-    home_cleaning: {
-        title: 'Home Cleaning', 
-        price: 'TZS 50,000',
-        description: 'Complete home cleaning service for your residence. Our professional cleaners ensure every corner of your home is spotless.',
-        features: ['Kitchen deep cleaning', 'Bathroom sanitization', 'Living area dusting', 'Bedroom cleaning', 'Floor mopping & vacuuming', 'Eco-friendly products used'],
-        duration: '2–3 hours', 
-        image: 'image/home.jpeg'
-    },
-    office_cleaning: {
-        title: 'Office Cleaning', 
-        price: 'TZS 75,000',
-        description: 'Professional office cleaning to maintain a hygienic and productive work environment.',
-        features: ['Workstation cleaning', 'Conference room sanitization', 'Kitchen/break room cleaning', 'Waste removal', 'Floor maintenance', 'After-hours service available'],
-        duration: '3–4 hours', 
-        image: 'image/office.jpg'
-    },
-    deep_cleaning: {
-        title: 'Deep Cleaning', 
-        price: 'TZS 75,000',
-        description: 'Intensive deep cleaning for every corner. Perfect for spring cleaning or special occasions.',
-        features: ['Complete home deep clean', 'Behind appliances cleaning', 'Inside cabinets & drawers', 'Baseboards & trim', 'Light fixtures & fans', 'Detailed dusting everywhere'],
-        duration: '4–6 hours', 
-        image: 'image/deepcleaning.jpg'
-    },
-    apartment_cleaning: {
-        title: 'Apartment Cleaning', 
-        price: 'TZS 45,000',
-        description: 'Specialized cleaning for apartments and condos. Fast, efficient, and thorough service.',
-        features: ['Full apartment cleaning', 'Kitchen & bathroom focus', 'Living area cleaning', 'Bedroom cleaning', 'Floor care', 'Quick turnaround'],
-        duration: '2–3 hours', 
-        image: 'image/apartment.jpg'
-    },
-    move_cleaning: {
-        title: 'Move-In/Out Cleaning', 
-        price: 'TZS 70,000',
-        description: 'Complete cleaning for moving in or out. Ensure your deposit return or fresh start.',
-        features: ['Deep clean all rooms', 'Inside cabinets & closets', 'Appliance cleaning', 'Floor deep cleaning', 'Wall spot cleaning', 'Ready for inspection'],
-        duration: '3–5 hours', 
-        image: 'image/move.jpg'
-    },
-    construction_cleaning: {
-        title: 'Post Construction Cleaning', 
-        price: 'TZS 90,000',
-        description: 'Complete cleaning after construction or renovation. Dust removal and debris cleanup.',
-        features: ['Dust removal from all surfaces', 'Debris cleanup', 'Window & frame cleaning', 'Floor deep cleaning', 'HVAC vent cleaning', 'Final polish'],
-        duration: '4–6 hours', 
-        image: 'image/post.jpeg'
-    },
-    carpet_cleaning: {
-        title: 'Carpet Cleaning', 
-        price: 'TZS 60,000',
-        description: 'Deep carpet cleaning with eco-friendly solutions. Remove tough stains and allergens effectively.',
-        features: ['Deep steam cleaning', 'Stain removal treatment', 'Deodorizing', 'Quick-dry technology', 'Pet stain specialist', 'Eco-friendly solutions'],
-        duration: '1–2 hours per room', 
-        image: 'image/s.avif'
-    },
-    window_cleaning: {
-        title: 'Window Cleaning', 
-        price: 'TZS 40,000',
-        description: 'Professional window cleaning for streak-free shine on all types of windows.',
-        features: ['Interior window cleaning', 'Exterior window cleaning', 'Frame and sill wiping', 'Streak-free guarantee', 'Safety equipment used', 'Screens cleaned'],
-        duration: '1–2 hours', 
-        image: 'image/window.jpg'
-    },
-    vehicle_cleaning: {
-        title: 'Vehicle Cleaning', 
-        price: 'TZS 45,000',
-        description: 'Complete interior and exterior vehicle cleaning for a showroom-ready finish.',
-        features: ['Exterior wash and wax', 'Interior vacuuming', 'Dashboard cleaning', 'Window cleaning', 'Tire shine', 'Air freshener included'],
-        duration: '1–2 hours', 
-        image: 'image/vehicle.jpg'
-    },
-    pool_cleaning: {
-        title: 'Pool Cleaning', 
-        price: 'TZS 80,000',
-        description: 'Professional pool cleaning and maintenance to keep your pool crystal clear.',
-        features: ['Surface skimming', 'Wall and floor brushing', 'Filter cleaning', 'Chemical balancing', 'Water testing', 'Equipment check'],
-        duration: '2–3 hours', 
-        image: 'image/pool.jpeg'
-    },
-    mattress_cleaning: {
-        title: 'Mattress Cleaning', 
-        price: 'TZS 55,000',
-        description: 'Deep mattress cleaning to remove dust mites, allergens, and stains for better sleep.',
-        features: ['Deep vacuuming', 'Stain treatment', 'UV sanitization', 'Deodorizing', 'Allergen removal', 'Quick drying'],
-        duration: '1 hour per mattress', 
-        image: 'image/matres.jpg'
-    },
-    upholstery_cleaning: {
-        title: 'Upholstery Cleaning', 
-        price: 'TZS 65,000',
-        description: 'Professional cleaning for sofas, chairs, and all types of furniture.',
-        features: ['Deep fabric cleaning', 'Stain removal', 'Deodorizing', 'Fabric protection', 'Quick drying', 'Eco-friendly solutions'],
-        duration: '2–3 hours', 
-        image: 'image/upholstrey (2).jpg'
-    },
-    hotel_cleaning: {
-        title: 'Hotel & Airbnb Cleaning', 
-        price: 'TZS 100,000',
-        description: 'Fast and professional cleaning services for hotels and short-stay apartments to maintain high guest standards.',
-        features: ['Room turnover cleaning', 'Linen change', 'Bathroom deep clean', 'Kitchen cleaning', 'Restocking amenities', 'Same-day service available'],
-        duration: '2–4 hours', 
-        image: 'image/hotel.jpg'
-    },
-    laundry_service: {
-        title: 'Laundry & Ironing', 
-        price: 'TZS 54,000',
-        description: 'Professional laundry washing, drying, and ironing to save you time and effort.',
-        features: ['Wash and dry', 'Ironing service', 'Fold and pack', 'Stain treatment', 'Delicate fabric care', 'Free pickup & delivery'],
-        duration: '24-hour turnaround', 
-        image: 'image/iron.jpg'
-    },
-    pest_control: {
-        title: 'Pest Control', 
-        price: 'TZS 54,000',
-        description: 'Effective elimination of pests and prevention of infestations for a clean, healthy environment.',
-        features: ['Comprehensive inspection', 'Safe treatment application', 'Preventive measures', 'Child & pet safe', 'Follow-up visit included', '6-month guarantee'],
-        duration: '1–2 hours', 
-        image: 'image/pest.jpg'
-    },
-    event_cleaning: {
-        title: 'Event Setup & Cleanup', 
-        price: 'TZS 90,000',
-        description: 'Full event support — arrangement of chairs, tables, and decorations, plus complete cleanup after.',
-        features: ['Furniture arrangement', 'Decoration setup', 'Post-event cleanup', 'Waste disposal', 'Floor cleaning', 'Fast turnaround'],
-        duration: '3–6 hours', 
-        image: 'image/event.jpg'
-    },
-    ac_cleaning: {
-        title: 'AC & Refrigerator Cleaning', 
-        price: 'TZS 45,000',
-        description: 'Thorough cleaning and maintenance of refrigerators and air conditioning units for optimal performance.',
-        features: ['AC filter cleaning', 'Coil cleaning', 'Drain line check', 'Fridge interior clean', 'Performance check', 'Energy efficiency optimization'],
-        duration: '1–2 hours', 
-        image: 'image/ac.avif'
-    },
-    industrial_cleaning: {
-        title: 'Industrial Cleaning', 
-        price: 'TZS 120,000',
-        description: 'Heavy-duty cleaning for factories, warehouses, and large commercial spaces including machinery areas.',
-        features: ['Floor degreasing', 'Machinery area cleaning', 'High-pressure washing', 'Waste disposal', 'Safety-compliant methods', 'Large space specialists'],
-        duration: '4–8 hours', 
-        image: 'image/industry.avif'
-    },
-    water_tank_cleaning: {
-        title: 'Water Tank Cleaning', 
-        price: 'TZS 70,000',
-        description: 'Professional water tank cleaning and sanitization to ensure a safe and clean water supply.',
-        features: ['Complete draining', 'Sludge removal', 'Pressure washing', 'Disinfection', 'Full inspection', 'Water quality testing'],
-        duration: '2–3 hours', 
-        image: 'image/tank.jpeg'
-    },
-    curtain_cleaning: {
-        title: 'Curtain Cleaning', 
-        price: 'TZS 40,000',
-        description: 'Professional curtain cleaning, washing, and ironing service for all curtain types.',
-        features: ['Gentle machine washing', 'Stain removal', 'Steam ironing', 'Rehanging service', 'Fabric protection', 'All curtain types accepted'],
-        duration: '2–3 hours', 
-        image: 'image/curtel.jpeg'
-    },
-    garden_cleaning: {
-        title: 'Garden Cleaning', 
-        price: 'TZS 55,000',
-        description: 'Professional garden cleaning and maintenance — from mowing to full garden tidying.',
-        features: ['Lawn mowing', 'Weed removal', 'Leaf blowing', 'Hedge trimming', 'Waste disposal', 'Garden furniture cleaning'],
-        duration: '2–4 hours', 
-        image: 'image/gaden.jpg'
+// ===== FILTER AND DISPLAY SERVICES =====
+function filterAndDisplayServices() {
+    let filteredServices = [...allServices];
+    
+    if (currentLocationFilter !== 'all') {
+        filteredServices = filteredServices.filter(service => 
+            service.location === currentLocationFilter
+        );
     }
-};
-
-// ===== MODAL FUNCTIONS =====
-let modalOpen = false;
-
-function showServiceModal(serviceId) {
-    if (modalOpen) return;
-    modalOpen = true;
-
-    // Clean up any existing modals
-    const existing = document.getElementById('serviceModal');
-    if (existing) {
-        if (currentModalInstance) {
-            currentModalInstance.hide();
+    
+    if (currentSearchTerm) {
+        const searchLower = currentSearchTerm.toLowerCase();
+        filteredServices = filteredServices.filter(service => 
+            service.name.toLowerCase().includes(searchLower) ||
+            (service.description && service.description.toLowerCase().includes(searchLower))
+        );
+    }
+    
+    renderServices(filteredServices);
+    
+    if (filteredServices.length === 0) {
+        const container = document.getElementById('servicesContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="col-12 text-center">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No services found matching your criteria.
+                        <br><small>Try changing your location filter or search term.</small>
+                    </div>
+                </div>
+            `;
         }
-        existing.remove();
     }
-    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+}
 
-    // Get service details
-    const details = SERVICE_DETAILS[serviceId];
-    if (!details) {
-        console.error('Service details not found for:', serviceId);
-        modalOpen = false;
+// ===== LOAD SERVICES FROM BACKEND API =====
+async function loadServicesFromAPI() {
+    const container = document.getElementById('servicesContainer');
+    if (!container) return;
+
+    try {
+        showLoading(true);
+        const response = await API.services.getAll();
+        showLoading(false);
+
+        if (response.services && response.services.length > 0) {
+            allServices = response.services;
+            filterAndDisplayServices();
+        } else {
+            container.innerHTML = `
+                <div class="col-12 text-center">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No services available at the moment.
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Error loading services:', error);
+        container.innerHTML = `
+            <div class="col-12 text-center">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Failed to load services. Please refresh the page.
+                </div>
+            </div>
+        `;
+    }
+}
+
+function renderServices(services) {
+    const container = document.getElementById('servicesContainer');
+    if (!container) return;
+
+    if (services.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 text-center">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No services available at the moment.
+                </div>
+            </div>
+        `;
         return;
     }
-
-    // Create modal HTML
-    const modal = document.createElement('div');
-    modal.className = 'modal fade';
-    modal.id = 'serviceModal';
-    modal.setAttribute('tabindex', '-1');
-    modal.setAttribute('aria-labelledby', 'serviceModalLabel');
-    modal.setAttribute('aria-hidden', 'true');
-
-    modal.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="serviceModalLabel"><i class="fas fa-info-circle"></i> Service Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    
+    const icons = ['🏠', '🏢', '🧺', '🚽', '🪟', '✨', '🧼', '🔧', '💧'];
+    
+    container.innerHTML = services.map((service, index) => `
+        <div class="col-lg-4 col-md-6">
+            <div class="service-card" data-service-id="${service.id}" data-service-name="${escapeHtml(service.name)}">
+                <div class="card-img-wrap">
+                    ${service.image ? 
+                        `<img src="${service.image}" alt="${escapeHtml(service.name)}" onerror="this.src='image/s4.jpeg'">` : 
+                        `<div class="no-image"><i class="fas fa-broom fa-3x"></i></div>`
+                    }
                 </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-5">
-                            <img src="${details.image}" alt="${details.title}" class="modal-service-img" onerror="this.src='image/logo.jpeg'">
-                        </div>
-                        <div class="col-md-7">
-                            <div class="service-detail-title">${details.title}</div>
-                            <div class="service-detail-price">${details.price}</div>
-                            <p class="service-detail-description">${details.description}</p>
-                            <div class="duration-box">
-                                <i class="far fa-clock"></i> <strong>Duration:</strong> ${details.duration}
-                            </div>
-                        </div>
+                <div class="card-body-inner">
+                    <div class="title">${icons[index % icons.length]} ${escapeHtml(service.name)}</div>
+                    <div class="description">${escapeHtml(service.description || 'Professional cleaning service tailored to your needs.')}</div>
+                    <div class="service-location-badge">
+                        <i class="fas fa-map-marker-alt"></i> ${escapeHtml(service.location || 'Zanzibar')}
                     </div>
-                    <div class="mt-4">
-                        <p class="service-features-title"><i class="fas fa-check-circle text-success"></i> What's Included:</p>
-                        <ul class="service-features">
-                            ${details.features.map(f => `<li><i class="fas fa-check"></i> ${f}</li>`).join('')}
-                        </ul>
+                    <div class="card-actions">
+                        <button class="btn btn-success book-service-btn" 
+                            data-service-id="${service.id}" 
+                            data-service-name="${escapeHtml(service.name)}">
+                            <i class="fas fa-calendar-check"></i> Book Now
+                        </button>
+                        <button class="info-btn" data-service-id="${service.id}" aria-label="More info">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
-                    <button type="button" class="btn btn-success" id="modalBookBtn"><i class="fas fa-calendar-check"></i> Book Now</button>
                 </div>
             </div>
         </div>
-    `;
+    `).join('');
 
-    document.body.appendChild(modal);
+    attachServiceEventListeners();
+}
 
-    // Initialize modal with Bootstrap
-    currentModalInstance = new bootstrap.Modal(modal, { backdrop: true, keyboard: true });
-    currentModalInstance.show();
+function attachServiceEventListeners() {
+    document.querySelectorAll('.book-service-btn').forEach(btn => {
+        btn.removeEventListener('click', handleBookButtonClick);
+        btn.addEventListener('click', handleBookButtonClick);
+    });
 
-    // Handle book button click
-    const bookBtn = modal.querySelector('#modalBookBtn');
-    if (bookBtn) {
-        bookBtn.addEventListener('click', function() {
-            currentModalInstance.hide();
-            setTimeout(() => {
-                handleBookClick(serviceId, details.title, details.price);
-            }, 400);
-        });
+    document.querySelectorAll('.info-btn').forEach(btn => {
+        btn.removeEventListener('click', handleInfoButtonClick);
+        btn.addEventListener('click', handleInfoButtonClick);
+    });
+
+    document.querySelectorAll('.service-card').forEach(card => {
+        card.removeEventListener('click', handleCardClick);
+        card.addEventListener('click', handleCardClick);
+    });
+}
+
+function handleBookButtonClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const serviceId = this.dataset.serviceId;
+    const serviceName = this.dataset.serviceName;
+    handleBookClick(serviceId, serviceName);
+}
+
+async function handleInfoButtonClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const serviceId = this.dataset.serviceId;
+    await showServiceModal(serviceId);
+}
+
+function handleCardClick(e) {
+    if (e.target.closest('.btn') || e.target.closest('.info-btn')) return;
+    const serviceId = this.dataset.serviceId;
+    if (serviceId) showServiceModal(serviceId);
+}
+
+// ===== SERVICE MODAL (EXACT SAME AS INDEX PAGE) =====
+let currentModal = null;
+
+async function showServiceModal(serviceId) {
+    if (currentModal) {
+        currentModal.hide();
+        currentModal = null;
     }
 
-    // Clean up on modal hide
-    modal.addEventListener('hidden.bs.modal', function() {
-        modal.remove();
-        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-        modalOpen = false;
-        currentModalInstance = null;
-    });
+    try {
+        showLoading(true);
+        const response = await API.services.getById(serviceId);
+        showLoading(false);
+
+        if (!response.service) {
+            showNotification('Service details not found', 'danger');
+            return;
+        }
+
+        const service = response.service;
+        const includes = service.includes || ['Professional service', 'Quality guaranteed', 'Eco-friendly products'];
+        
+        const modalBody = document.getElementById('serviceModalBody');
+        if (modalBody) {
+            modalBody.innerHTML = `
+                <div class="text-center mb-3">
+                    ${service.image ? 
+                        `<img src="${service.image}" alt="${escapeHtml(service.name)}" class="img-fluid rounded-3" style="max-height: 200px; width: auto; margin: 0 auto;">` :
+                        `<div class="no-image-big text-center p-4 bg-light rounded-3"><i class="fas fa-broom fa-4x text-muted"></i></div>`
+                    }
+                </div>
+                <div class="service-detail-title text-center" style="font-size:1.5rem; font-weight:700; margin-bottom: 15px;">
+                    ${escapeHtml(service.name)}
+                </div>
+                <p style="color:#6c757d; text-align: center; margin-bottom: 20px;">
+                    ${escapeHtml(service.description || 'Professional cleaning service tailored to your needs.')}
+                </p>
+                <div class="mt-3">
+                    <p style="font-weight:600; margin-bottom: 10px;">
+                        <i class="fas fa-check-circle text-success"></i> What's Included:
+                    </p>
+                    <ul class="list-unstyled row g-2">
+                        ${includes.map(item => `
+                            <li class="col-12"><i class="fas fa-check text-success me-2"></i> ${escapeHtml(item)}</li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        const modalElement = document.getElementById('serviceModal');
+        if (modalElement) {
+            currentModal = new bootstrap.Modal(modalElement);
+            currentModal.show();
+
+            const bookBtn = document.getElementById('modalBookBtn');
+            if (bookBtn) {
+                bookBtn.onclick = () => {
+                    currentModal.hide();
+                    setTimeout(() => handleBookClick(service.id, service.name), 400);
+                };
+            }
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Error loading service details:', error);
+        showNotification('Failed to load service details', 'danger');
+    }
 }
 
 // ===== SEARCH FUNCTIONALITY =====
 function performSearch() {
-    const input = document.getElementById('searchInput');
-    const term = input ? input.value.trim().toLowerCase() : '';
+    const searchInput = document.getElementById('searchInput');
+    currentSearchTerm = searchInput ? searchInput.value.trim() : '';
+    filterAndDisplayServices();
     
-    const cards = document.querySelectorAll('.service-card');
-    let found = 0;
-    
-    cards.forEach(card => {
-        const col = card.closest('.col-lg-4, .col-md-6');
-        const title = card.querySelector('.title')?.textContent.toLowerCase() || '';
-        const desc = card.querySelector('.description')?.textContent.toLowerCase() || '';
-        
-        if (term === '' || title.includes(term) || desc.includes(term)) {
-            if (col) col.style.display = '';
-            found++;
-        } else {
-            if (col) col.style.display = 'none';
-        }
-    });
-
-    if (term !== '') {
-        if (found === 0) {
-            showNotification('No services found for "' + term + '"', 'warning');
-        } else {
-            showNotification(`Found ${found} service(s) matching "${term}"`, 'success');
-        }
+    if (currentSearchTerm) {
+        showNotification(`Searching for "${currentSearchTerm}"...`, 'info');
+    } else {
+        showNotification('Showing all services', 'info');
     }
 }
 
 function resetSearch() {
-    const input = document.getElementById('searchInput');
-    if (input && input.value === '') {
-        const cards = document.querySelectorAll('.service-card');
-        cards.forEach(card => {
-            const col = card.closest('.col-lg-4, .col-md-6');
-            if (col) col.style.display = '';
-        });
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput && searchInput.value === '') {
+        currentSearchTerm = '';
+        filterAndDisplayServices();
     }
 }
 
-// ===== NOTIFICATION SYSTEM =====
+function handleLocationChange() {
+    const locationSelect = document.getElementById('locationSelect');
+    currentLocationFilter = locationSelect ? locationSelect.value : 'all';
+    filterAndDisplayServices();
+    const selectedText = locationSelect?.options[locationSelect.selectedIndex]?.text || 'All Islands';
+    showNotification(`Filtering services for ${selectedText}`, 'info');
+}
+
+// ===== NEWSLETTER SUBSCRIPTION =====
+async function subscribeNewsletter(email) {
+    try {
+        const result = await API.contact.submit({
+            full_name: 'Newsletter Subscriber',
+            email: email,
+            phone: '0000000000',
+            service_type: 'Newsletter',
+            subject: 'Newsletter Subscription',
+            message: 'I would like to subscribe to the CleanSpark newsletter.',
+            subscribe: true
+        });
+        return { success: true, message: result.message };
+    } catch (error) {
+        return { success: false, message: error.message };
+    }
+}
+
+// ===== NOTIFICATION =====
 function showNotification(message, type = 'info') {
-    const existing = document.querySelector('.alert-notification');
+    const existing = document.querySelector('.alert');
     if (existing) existing.remove();
 
-    const n = document.createElement('div');
-    n.className = `alert alert-${type} alert-dismissible fade show alert-notification`;
-    n.role = 'alert';
-    n.style.cssText = `
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        z-index: 9999;
-        min-width: 280px;
-        max-width: 400px;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        animation: slideInRight 0.3s ease;
-    `;
-    n.innerHTML = `
-        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.role = 'alert';
+    notification.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
     
-    document.body.appendChild(n);
+    if (window.innerWidth <= 576) {
+        notification.style.cssText = 'position: fixed; top: 10px; left: 10px; right: 10px; z-index: 9999;';
+    } else {
+        notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 90vw;';
+    }
     
-    // Auto remove after 5 seconds
+    document.body.appendChild(notification);
     setTimeout(() => {
-        if (n.parentNode) {
-            n.classList.remove('show');
-            setTimeout(() => {
-                if (n.parentNode) n.remove();
-            }, 300);
-        }
+        if (notification.parentNode) notification.remove();
     }, 5000);
 }
 
-// Add animation style
-const notificationStyle = document.createElement('style');
-notificationStyle.textContent = `
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+function showLoading(show) {
+    let spinner = document.getElementById('loading-spinner');
+    if (!spinner && show) {
+        spinner = document.createElement('div');
+        spinner.id = 'loading-spinner';
+        spinner.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+        spinner.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background: rgba(0,0,0,0.5); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;';
+        document.body.appendChild(spinner);
     }
-    .alert-notification {
-        animation: slideInRight 0.3s ease !important;
+    if (spinner) {
+        spinner.style.display = show ? 'flex' : 'none';
     }
-`;
-document.head.appendChild(notificationStyle);
+}
 
-// ===== UTILITY FUNCTIONS =====
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 // ===== INITIALIZATION =====
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Services page initialized');
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Services page initializing...');
     
-    // Update UI based on login status
     updateUIBasedOnLogin();
     
-    // Initialize sidebar button
+    await loadServicesFromAPI();
+    
+    const searchBtn = document.getElementById('searchBtn');
+    const searchInput = document.getElementById('searchInput');
+    if (searchBtn) searchBtn.addEventListener('click', performSearch);
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+        searchInput.addEventListener('input', resetSearch);
+    }
+    
+    const locationSelect = document.getElementById('locationSelect');
+    if (locationSelect) {
+        locationSelect.addEventListener('change', handleLocationChange);
+    }
+    
+    const newsletterForm = document.getElementById('newsletterForm');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('newsletterEmail');
+            if (emailInput && emailInput.value) {
+                if (validateEmail(emailInput.value)) {
+                    showLoading(true);
+                    const result = await subscribeNewsletter(emailInput.value);
+                    showLoading(false);
+                    if (result.success) {
+                        showNotification('Thank you for subscribing!', 'success');
+                        emailInput.value = '';
+                    } else {
+                        showNotification(result.message || 'Subscription failed', 'danger');
+                    }
+                } else {
+                    showNotification('Please enter a valid email address', 'danger');
+                }
+            }
+        });
+    }
+    
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     if (hamburgerBtn) {
         hamburgerBtn.addEventListener('click', openSidebar);
     }
     
-    // Close sidebar when clicking overlay
     const overlay = document.getElementById('sidebarOverlay');
     if (overlay) {
         overlay.addEventListener('click', closeSidebar);
     }
     
-    // Initialize Book buttons
-    const bookButtons = document.querySelectorAll('.book-service-btn');
-    bookButtons.forEach(btn => {
-        btn.removeEventListener('click', handleBookButtonClick);
-        btn.addEventListener('click', handleBookButtonClick);
-    });
-    
-    // Initialize Info buttons
-    const infoButtons = document.querySelectorAll('.info-btn');
-    infoButtons.forEach(btn => {
-        btn.removeEventListener('click', handleInfoButtonClick);
-        btn.addEventListener('click', handleInfoButtonClick);
-    });
-    
-    // Initialize Card clicks (excluding button clicks)
-    const serviceCards = document.querySelectorAll('.service-card');
-    serviceCards.forEach(card => {
-        card.removeEventListener('click', handleCardClick);
-        card.addEventListener('click', handleCardClick);
-    });
-    
-    // Initialize Search
-    const searchBtn = document.getElementById('searchBtn');
-    const searchInput = document.getElementById('searchInput');
-    
-    if (searchBtn) {
-        searchBtn.removeEventListener('click', performSearch);
-        searchBtn.addEventListener('click', performSearch);
-    }
-    
-    if (searchInput) {
-        searchInput.removeEventListener('keypress', handleSearchKeypress);
-        searchInput.removeEventListener('input', resetSearch);
-        searchInput.addEventListener('keypress', handleSearchKeypress);
-        searchInput.addEventListener('input', resetSearch);
-    }
-    
-    // Initialize Location select
-    const locationSelect = document.querySelector('.location-select');
-    if (locationSelect) {
-        locationSelect.removeEventListener('change', handleLocationChange);
-        locationSelect.addEventListener('change', handleLocationChange);
-    }
-    
-    // Initialize Newsletter form
-    const newsletterForm = document.getElementById('newsletterForm');
-    if (newsletterForm) {
-        newsletterForm.removeEventListener('submit', handleNewsletterSubmit);
-        newsletterForm.addEventListener('submit', handleNewsletterSubmit);
-    }
-    
-    // Initialize Tooltips
-    if (typeof bootstrap !== 'undefined') {
-        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
-            new bootstrap.Tooltip(el);
-        });
-    }
+    console.log('Services page initialized successfully');
+    console.log(`Total services loaded: ${allServices.length}`);
 });
 
-// Event handler functions
-function handleBookButtonClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const btn = e.currentTarget;
-    handleBookClick(
-        btn.dataset.serviceId,
-        btn.dataset.serviceName,
-        btn.dataset.servicePrice
-    );
-}
-
-function handleInfoButtonClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const btn = e.currentTarget;
-    const serviceId = btn.dataset.service;
-    if (serviceId) showServiceModal(serviceId);
-}
-
-function handleCardClick(e) {
-    if (e.target.closest('.btn') || e.target.closest('.info-btn')) return;
-    const card = e.currentTarget;
-    const serviceId = card.dataset.serviceId;
-    if (serviceId) showServiceModal(serviceId);
-}
-
-function handleSearchKeypress(e) {
-    if (e.key === 'Enter') {
-        performSearch();
-    }
-}
-
-function handleLocationChange(e) {
-    showNotification('Showing services in ' + e.target.value, 'info');
-}
-
-function handleNewsletterSubmit(e) {
-    e.preventDefault();
-    const emailInput = this.querySelector('input[type="email"]');
-    if (emailInput && emailInput.value) {
-        if (validateEmail(emailInput.value)) {
-            let subscribers = JSON.parse(localStorage.getItem('cleanspark_newsletter_subscribers') || '[]');
-            if (!subscribers.includes(emailInput.value)) {
-                subscribers.push(emailInput.value);
-                localStorage.setItem('cleanspark_newsletter_subscribers', JSON.stringify(subscribers));
-            }
-            showNotification('Thank you for subscribing to CleanSpark newsletter!', 'success');
-            emailInput.value = '';
-        } else {
-            showNotification('Please enter a valid email address', 'error');
-        }
-    }
-}
+window.openSidebar = openSidebar;
+window.closeSidebar = closeSidebar;
