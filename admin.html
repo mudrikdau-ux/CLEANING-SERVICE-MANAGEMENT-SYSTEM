@@ -1,5 +1,3 @@
-//admin.html
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -117,7 +115,7 @@
         </form>
 
         <div class="login-footer">
-            <a href="#" onclick="showDemoCredentials()">Demo Credentials</a>
+            <a href="#" onclick="showDemoCredentials()"></a>
         </div>
     </div>
 </div>
@@ -293,7 +291,7 @@
                             <input type="number" id="contractorWorkers" class="form-control" placeholder="e.g. 10" min="0">
                         </div>
                         <div class="col-md-6 col-sm-12">
-                            <label class="form-label field-label">Contractor Worker Names <span class="text-danger">*</span></label>
+                            <label class="form-label field-label">Contractor Worker Names</label>
                             <textarea id="contractorWorkerNames" class="form-control" rows="3" placeholder="Enter worker names (one per line)&#10;e.g.:&#10;Ahmed Hassan&#10;Fatma Ali&#10;John Mwangi"></textarea>
                             <small class="text-muted" style="font-size:11px;">Enter each worker name on a new line</small>
                         </div>
@@ -639,8 +637,8 @@
                             <input type="number" id="invoiceWorkCost" class="form-control" placeholder="0" onchange="calculateInvoiceTotal()">
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label field-label">Workers Cost (TZS)</label>
-                            <input type="number" id="invoiceWorkersCost" class="form-control" placeholder="0" onchange="calculateInvoiceTotal()">
+                            <label class="form-label field-label">Labor Cost (TZS)</label>
+                            <input type="number" id="invoiceLaborCost" class="form-control" placeholder="0" onchange="calculateInvoiceTotal()">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label field-label">Equipment Cost (TZS)</label>
@@ -649,6 +647,10 @@
                         <div class="col-md-2">
                             <label class="form-label field-label">Total (TZS)</label>
                             <div class="form-control" style="background:#f7fafc; font-weight:700; color:var(--primary);" id="invoiceTotalDisplay">0</div>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label field-label">Notes (Optional)</label>
+                            <textarea id="invoiceNotes" class="form-control" rows="2" placeholder="Additional notes or payment instructions..."></textarea>
                         </div>
                     </div>
                     <div class="mt-3">
@@ -680,7 +682,7 @@
                 </div>
             </div>
 
-            <!-- ALL BOOKINGS SECTION - UPDATED -->
+            <!-- ALL BOOKINGS SECTION -->
             <div id="bookingsSection" class="admin-section">
                 <div class="section-header">
                     <h2><i class="bi bi-calendar-check-fill"></i> All Bookings</h2>
@@ -698,21 +700,20 @@
                     </div>
                     <select id="bookingStatusFilter" class="form-select filter-select" onchange="filterBookings()" style="width:auto;">
                         <option value="all">All Status</option>
-                        <option value="pending_review">Pending Review</option>
+                        <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>
-                        <option value="not_confirmed">Not Confirmed</option>
                         <option value="in_progress">In Progress</option>
                         <option value="completed">Completed</option>
                         <option value="cancelled">Cancelled</option>
                     </select>
                     <select id="paymentStatusFilter" class="form-select filter-select" onchange="filterBookings()" style="width:auto;">
                         <option value="all">All Payment</option>
-                        <option value="unpaid">Unpaid</option>
                         <option value="paid">Paid</option>
-                        <option value="partially_paid">Partially Paid</option>
-                        <option value="pending_verification">Pending Verification</option>
+                        <option value="unpaid">Unpaid</option>
                     </select>
-                    <select id="serviceFilter" class="form-select filter-select" onchange="filterBookings()" style="width:auto;"></select>
+                    <select id="bookingStaffFilter" class="form-select filter-select" onchange="filterBookings()" style="width:auto;">
+                        <option value="all">All Staff</option>
+                    </select>
                     <input type="date" id="bookingDateFilter" class="form-control filter-date" onchange="filterBookings()" style="width:auto;">
                 </div>
 
@@ -728,12 +729,12 @@
                                     <th>Booking ID</th>
                                     <th>Customer</th>
                                     <th>Service</th>
-                                    <th>Actual Location</th>
+                                    <th>Location</th>
                                     <th>Date & Time</th>
                                     <th>Booking Status</th>
                                     <th>Payment Status</th>
-                                    <th>Priority</th>
-                                    <th style="width:120px; text-align:center;">Actions</th>
+                                    <th>Staff</th>
+                                    <th style="width:140px; text-align:center;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="bookingList"></tbody>
@@ -753,8 +754,12 @@
                     <h5><i class="bi bi-person-plus me-2"></i>Add New Staff Member</h5>
                     <div class="row g-3">
                         <div class="col-md-3 col-sm-6">
-                            <label class="form-label field-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" id="staffName" class="form-control" placeholder="e.g. Fatma Ali">
+                            <label class="form-label field-label">First Name <span class="text-danger">*</span></label>
+                            <input type="text" id="staffFirstName" class="form-control" placeholder="e.g. Fatma">
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label field-label">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" id="staffLastName" class="form-control" placeholder="e.g. Ali">
                         </div>
                         <div class="col-md-3 col-sm-6">
                             <label class="form-label field-label">Email Address <span class="text-danger">*</span></label>
@@ -769,7 +774,7 @@
                             </select>
                         </div>
                         <div class="col-md-2 col-sm-6">
-                            <label class="form-label field-label">Phone Number <span class="text-danger">*</span></label>
+                            <label class="form-label field-label">Phone Number</label>
                             <input type="tel" id="staffPhone" class="form-control" placeholder="+255 7xx xxx xxx">
                         </div>
                         <div class="col-md-2 col-sm-6">
@@ -813,9 +818,8 @@
                                     <th style="width:50px">Photo</th>
                                     <th>Full Name</th>
                                     <th>Email Address</th>
-                                    <th>Status</th>
                                     <th>Staff Type</th>
-                                    <th>Availability</th>
+                                    <th>Phone</th>
                                     <th style="width:120px; text-align:center;">Actions</th>
                                 </tr>
                             </thead>
@@ -825,61 +829,42 @@
                 </div>
             </div>
 
-            <!-- NEW: STAFF INFO SECTION -->
+            <!-- STAFF INFO SECTION (Issues) -->
             <div id="staffInfoSection" class="admin-section">
                 <div class="section-header">
                     <h2><i class="bi bi-exclamation-triangle-fill"></i> Staff Issues & Requests</h2>
                     <p>Manage staff work-related issues, leave requests, and replacements</p>
                 </div>
 
-                <!-- Staff Info Statistics Cards -->
                 <div class="stats-grid" id="staffInfoStatsGrid"></div>
 
-                <!-- Filter Bar -->
                 <div class="filter-bar">
                     <div class="search-box">
                         <i class="bi bi-search"></i>
                         <input type="text" id="staffInfoSearch" placeholder="Search by staff name..." oninput="filterStaffIssues()" class="search-input">
                     </div>
-                    <select id="staffIssueTypeFilter" class="form-select filter-select" onchange="filterStaffIssues()" style="width:auto;">
-                        <option value="all">All Issues</option>
-                        <option value="Sick">Sick</option>
-                        <option value="Running Late">Running Late</option>
-                        <option value="Emergency">Emergency</option>
-                        <option value="Unable To Attend">Unable To Attend</option>
-                        <option value="Family Issue">Family Issue</option>
-                        <option value="Need Replacement">Need Replacement</option>
-                        <option value="Other">Other</option>
-                    </select>
                     <select id="staffIssueStatusFilter" class="form-select filter-select" onchange="filterStaffIssues()" style="width:auto;">
                         <option value="all">All Status</option>
-                        <option value="New">New</option>
-                        <option value="Under Review">Under Review</option>
-                        <option value="Replacement Assigned">Replacement Assigned</option>
-                        <option value="Approved Leave">Approved Leave</option>
-                        <option value="Rejected">Rejected</option>
-                        <option value="Resolved">Resolved</option>
+                        <option value="pending">Pending</option>
+                        <option value="reviewed">Under Review</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="rejected">Rejected</option>
                     </select>
                 </div>
 
                 <div class="table-container">
                     <div class="table-header-bar">
                         <span class="table-title">Staff Issue Reports</span>
-                        <span class="badge-currency">Request ID</span>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover" id="staffIssuesTable">
                             <thead>
                                 <tr>
-                                    <th>Request ID</th>
+                                    <th>ID</th>
                                     <th>Staff Name</th>
-                                    <th>Employee ID</th>
-                                    <th>Assigned Job</th>
-                                    <th>Assigned Location</th>
-                                    <th>Supervisor</th>
                                     <th>Issue Type</th>
+                                    <th>Title</th>
                                     <th>Description</th>
-                                    <th>Submitted Date</th>
                                     <th>Expected Return</th>
                                     <th>Status</th>
                                     <th style="width:140px; text-align:center;">Actions</th>
@@ -925,8 +910,9 @@
                     </div>
                     <button class="filter-btn active" onclick="filterApplicationStatus('all', this)"><i class="bi bi-list-ul"></i> All</button>
                     <button class="filter-btn" onclick="filterApplicationStatus('pending', this)"><i class="bi bi-clock"></i> Pending</button>
-                    <button class="filter-btn" onclick="filterApplicationStatus('under_review', this)"><i class="bi bi-eye"></i> Under Review</button>
-                    <button class="filter-btn" onclick="filterApplicationStatus('approved', this)"><i class="bi bi-check-circle"></i> Approved</button>
+                    <button class="filter-btn" onclick="filterApplicationStatus('reviewed', this)"><i class="bi bi-eye"></i> Under Review</button>
+                    <button class="filter-btn" onclick="filterApplicationStatus('shortlisted', this)"><i class="bi bi-star"></i> Shortlisted</button>
+                    <button class="filter-btn" onclick="filterApplicationStatus('hired', this)"><i class="bi bi-check-circle"></i> Hired</button>
                     <button class="filter-btn" onclick="filterApplicationStatus('rejected', this)"><i class="bi bi-x-circle"></i> Rejected</button>
                 </div>
 
@@ -941,6 +927,7 @@
                         <table class="table table-hover" id="applicationsTable">
                             <thead>
                                 <tr>
+                                    <th>Reference</th>
                                     <th>Applicant</th>
                                     <th>Position</th>
                                     <th>Phone</th>
@@ -956,117 +943,44 @@
                 </div>
             </div>
 
-            <!-- MESSAGES SECTION - ENHANCED WITH SUPERVISOR CHAT -->
+            <!-- MESSAGES SECTION (Contact Inquiries) -->
             <div id="messagesSection" class="admin-section">
                 <div class="section-header">
                     <h2><i class="bi bi-envelope-fill"></i> Messages & Communication</h2>
-                    <p>View and respond to customer and supervisor inquiries</p>
+                    <p>View and respond to customer inquiries</p>
                 </div>
 
-                <!-- Message Tabs -->
-                <div class="message-tabs">
-                    <button class="message-tab-btn active" data-msg-tab="customers" onclick="switchMessageTab('customers', this)">
-                        <i class="bi bi-people-fill"></i> Customers
-                        <span id="customerMsgCount" class="msg-count-badge">0</span>
-                    </button>
-                    <button class="message-tab-btn" data-msg-tab="supervisors" onclick="switchMessageTab('supervisors', this)">
-                        <i class="bi bi-person-badge-fill"></i> Supervisors
-                        <span id="supervisorMsgCount" class="msg-count-badge">0</span>
-                    </button>
-                    <button class="message-tab-btn" data-msg-tab="general" onclick="switchMessageTab('general', this)">
-                        <i class="bi bi-chat-dots-fill"></i> General Supervisors
-                        <span id="generalMsgCount" class="msg-count-badge">0</span>
-                    </button>
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="messageSearch" placeholder="Search messages..." oninput="loadAllMessages()" class="search-input">
+                    </div>
+                    <select id="messageStatusFilter" class="form-select filter-select" onchange="loadAllMessages()" style="width:auto;">
+                        <option value="all">All Status</option>
+                        <option value="unread">Unread</option>
+                        <option value="read">Read</option>
+                        <option value="replied">Replied</option>
+                    </select>
                 </div>
 
-                <!-- Customer Messages Tab -->
-                <div id="msg-customers-tab" class="message-tab-content active">
-                    <div class="filter-bar">
-                        <div class="search-box">
-                            <i class="bi bi-search"></i>
-                            <input type="text" id="customerMsgSearch" placeholder="Search messages..." oninput="filterMessagesByType('customers')" class="search-input">
-                        </div>
+                <div class="table-container">
+                    <div class="table-header-bar">
+                        <span class="table-title">Customer Messages</span>
                     </div>
-                    <div class="table-container">
-                        <div class="table-header-bar">
-                            <span class="table-title">Customer Messages</span>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover" id="customerMessagesTable">
-                                <thead>
-                                    <tr>
-                                        <th>From</th>
-                                        <th>Subject</th>
-                                        <th>Preview</th>
-                                        <th>Date</th>
-                                        <th style="width:100px; text-align:center;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="customerMessageList"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Supervisor Messages Tab -->
-                <div id="msg-supervisors-tab" class="message-tab-content">
-                    <div class="filter-bar">
-                        <div class="search-box">
-                            <i class="bi bi-search"></i>
-                            <input type="text" id="supervisorMsgSearch" placeholder="Search messages..." oninput="filterMessagesByType('supervisors')" class="search-input">
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <div class="table-header-bar">
-                            <span class="table-title">Supervisor Messages & Alerts</span>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover" id="supervisorMessagesTable">
-                                <thead>
-                                    <tr>
-                                        <th>From</th>
-                                        <th>Type</th>
-                                        <th>Subject/Alert</th>
-                                        <th>Message</th>
-                                        <th>Date</th>
-                                        <th style="width:100px; text-align:center;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="supervisorMessageList"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- General Supervisors Chat Tab -->
-                <div id="msg-general-tab" class="message-tab-content">
-                    <div class="general-chat-container">
-                        <div class="chat-sidebar">
-                            <div class="chat-sidebar-header">
-                                <i class="bi bi-people-fill"></i> General Supervisors
-                                <input type="text" id="chatSearch" placeholder="Search..." class="chat-search" oninput="filterChatContacts()">
-                            </div>
-                            <div class="chat-contacts-list" id="chatContactsList"></div>
-                        </div>
-                        <div class="chat-main">
-                            <div class="chat-header" id="chatHeader">
-                                <i class="bi bi-chat-dots"></i> Select a supervisor to start chatting
-                            </div>
-                            <div class="chat-messages" id="chatMessages">
-                                <div class="chat-placeholder">
-                                    <i class="bi bi-chat-square-text-fill"></i>
-                                    <p>Select a supervisor from the list to view conversation</p>
-                                </div>
-                            </div>
-                            <div class="chat-input-area" id="chatInputArea" style="display:none;">
-                                <div class="chat-attachment">
-                                    <button onclick="openChatAttachment()" class="attach-btn"><i class="bi bi-paperclip"></i></button>
-                                    <input type="file" id="chatFileInput" accept="image/*,.pdf,.doc,.docx" style="display:none;" onchange="attachChatFile(this)">
-                                </div>
-                                <textarea id="chatMessageInput" placeholder="Type your message..." rows="2"></textarea>
-                                <button onclick="sendChatMessage()" class="send-msg-btn"><i class="bi bi-send-fill"></i></button>
-                            </div>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="messagesTable">
+                            <thead>
+                                <tr>
+                                    <th>From</th>
+                                    <th>Subject</th>
+                                    <th>Message</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th style="width:140px; text-align:center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="messageList"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1092,10 +1006,10 @@
                         <div class="col-md-2">
                             <label class="form-label field-label">Report Type</label>
                             <select id="reportType" class="form-select">
-                                <option value="all">Comprehensive</option>
-                                <option value="bookings">Bookings</option>
+                                <option value="comprehensive">Comprehensive</option>
+                                <option value="booking">Bookings</option>
                                 <option value="revenue">Revenue</option>
-                                <option value="staff">Staff Performance</option>
+                                <option value="staff_report">Staff Performance</option>
                                 <option value="contractors">Contractors</option>
                             </select>
                         </div>
@@ -1107,13 +1021,8 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <button onclick="generateProfessionalReport()" class="btn btn-primary w-100">
+                            <button onclick="generateReport()" class="btn btn-primary w-100">
                                 <i class="bi bi-graph-up me-1"></i>Generate
-                            </button>
-                        </div>
-                        <div class="col-md-2">
-                            <button onclick="downloadReportAsPDF()" class="btn btn-success w-100">
-                                <i class="bi bi-file-earmark-pdf me-1"></i>Download PDF
                             </button>
                         </div>
                     </div>
@@ -1133,8 +1042,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <div id="reportPDFTemplate" style="display:none;"></div>
             </div>
 
             <!-- SETTINGS SECTION -->
@@ -1162,24 +1069,6 @@
                             <input class="form-check-input" type="checkbox" id="autoAssignStaff">
                         </div>
                     </div>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <h6>Booking Reminders</h6>
-                            <p>Send SMS reminders for upcoming bookings</p>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="bookingReminders" checked>
-                        </div>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <h6>Audit Log</h6>
-                            <p>Record all system actions for audit trail</p>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="auditLog" checked>
-                        </div>
-                    </div>
                     <button class="btn btn-primary mt-3" onclick="saveSettings()">
                         <i class="bi bi-save"></i> Save Settings
                     </button>
@@ -1201,7 +1090,6 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="paymentsHistoryBody">
-                <div class="payments-summary" id="paymentsSummary"></div>
                 <div class="table-responsive mt-3">
                     <table class="table table-hover" id="paymentsHistoryTable">
                         <thead>
@@ -1222,7 +1110,6 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" onclick="exportPaymentsHistory()"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV</button>
             </div>
         </div>
     </div>
@@ -1239,7 +1126,6 @@
             <div class="modal-body" id="viewBookingBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="generateBookingInvoice()"><i class="bi bi-receipt me-1"></i>Generate Invoice</button>
             </div>
         </div>
     </div>
@@ -1273,7 +1159,7 @@
                         <input type="number" id="estEquipmentCost" class="form-control" placeholder="0" onchange="calculateEstimationTotal()">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label field-label">Tax (%)</label>
+                        <label class="form-label field-label">Tax Rate (%)</label>
                         <input type="number" id="estTax" class="form-control" placeholder="0" step="0.1" onchange="calculateEstimationTotal()">
                     </div>
                     <div class="col-md-6">
@@ -1305,30 +1191,35 @@
             <div class="modal-body" id="viewStaffIssueBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="contactStaffFromIssue()"><i class="bi bi-telephone-fill me-1"></i>Contact Staff</button>
-                <button type="button" class="btn btn-warning" onclick="openAssignReplacementModal()"><i class="bi bi-person-plus-fill me-1"></i>Assign Replacement</button>
+                <button type="button" class="btn btn-primary" onclick="openUpdateIssueStatusModal()"><i class="bi bi-pencil-fill me-1"></i>Update Status</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ASSIGN REPLACEMENT MODAL -->
-<div class="modal fade" id="assignReplacementModal" tabindex="-1" aria-hidden="true">
+<!-- UPDATE ISSUE STATUS MODAL -->
+<div class="modal fade" id="updateIssueStatusModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content modal-styled">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-person-plus-fill me-2"></i>Assign Replacement Staff</h5>
+                <h5 class="modal-title"><i class="bi bi-pencil-fill me-2"></i>Update Issue Status</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="replacementIssueId">
-                <div id="replacementJobInfo" class="mb-3"></div>
-                <label class="form-label field-label">Select Available Staff</label>
-                <div id="availableStaffList" class="available-staff-list"></div>
+                <input type="hidden" id="updateIssueId">
+                <label class="form-label field-label">Status</label>
+                <select id="updateIssueStatus" class="form-select mb-3">
+                    <option value="pending">Pending</option>
+                    <option value="reviewed">Under Review</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+                <label class="form-label field-label">Admin Response (Optional)</label>
+                <textarea id="updateIssueResponse" class="form-control" rows="3" placeholder="Add response notes..."></textarea>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="confirmAssignReplacement()"><i class="bi bi-check-circle me-1"></i>Confirm Replacement</button>
+                <button type="button" class="btn btn-primary" onclick="confirmUpdateIssueStatus()"><i class="bi bi-save me-1"></i>Update</button>
             </div>
         </div>
     </div>
@@ -1346,12 +1237,6 @@
                 <div class="send-invoice-info" id="sendInvoiceInfo"></div>
                 <label class="form-label field-label">Customer Email</label>
                 <input type="email" id="customerEmail" class="form-control" placeholder="customer@example.com">
-                <div class="mt-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="includePaymentLink">
-                        <label class="form-check-label">Include payment link in email</label>
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
@@ -1400,7 +1285,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="editServiceIndex">
+                <input type="hidden" id="editServiceId">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label field-label">Service Name</label>
@@ -1467,20 +1352,15 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="editStaffIndex">
+                <input type="hidden" id="editStaffId">
                 <div class="row g-3">
-                    <div class="col-12 d-flex justify-content-center mb-2">
-                        <div style="position:relative; display:inline-block;">
-                            <div id="editStaffAvatarWrapper" class="staff-avatar-lg">
-                                <span id="editStaffInitials" class="staff-initials-lg"></span>
-                                <img id="editStaffPhotoPreview" src="" alt="" class="staff-photo-lg" style="display:none;">
-                            </div>
-                            <button type="button" onclick="openImageUploadModal('editStaff')" class="staff-photo-change-btn" title="Change Photo"><i class="bi bi-camera-fill"></i></button>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label field-label">First Name</label>
+                        <input type="text" id="editStaffFirstName" class="form-control">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label field-label">Full Name</label>
-                        <input type="text" id="editStaffName" class="form-control">
+                        <label class="form-label field-label">Last Name</label>
+                        <input type="text" id="editStaffLastName" class="form-control">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label field-label">Email</label>
@@ -1488,7 +1368,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label field-label">Staff Type</label>
-                        <select id="editstaffType" class="form-select">
+                        <select id="editStaffType" class="form-select">
                             <option value="normal">Normal</option>
                             <option value="supervisor">Supervisor</option>
                             <option value="general_supervisor">General Supervisor</option>
@@ -1498,11 +1378,20 @@
                         <label class="form-label field-label">Phone</label>
                         <input type="tel" id="editStaffPhone" class="form-control">
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-6">
                         <label class="form-label field-label">New Password</label>
                         <div class="password-field">
                             <input type="password" id="editStaffPassword" class="form-control" placeholder="Leave blank to keep">
                             <button type="button" class="pw-toggle" onclick="togglePassword('editStaffPassword', this)"><i class="bi bi-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-12 d-flex justify-content-center">
+                        <div style="position:relative; display:inline-block;">
+                            <div id="editStaffAvatarWrapper" class="staff-avatar-lg">
+                                <span id="editStaffInitials" class="staff-initials-lg"></span>
+                                <img id="editStaffPhotoPreview" src="" alt="" class="staff-photo-lg" style="display:none;">
+                            </div>
+                            <button type="button" onclick="openImageUploadModal('editStaff')" class="staff-photo-change-btn" title="Change Photo"><i class="bi bi-camera-fill"></i></button>
                         </div>
                     </div>
                 </div>
@@ -1527,6 +1416,28 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" onclick="replyToMessage()"><i class="bi bi-reply-fill me-1"></i>Reply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reply Message Modal -->
+<div class="modal fade" id="replyMessageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-reply-fill me-2"></i>Reply to Message</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="replyMessageId">
+                <div id="replyMessageOriginal" class="mb-3 p-3" style="background:#f7fafc; border-radius:var(--radius-sm); border:1px solid var(--border);"></div>
+                <label class="form-label field-label">Your Reply</label>
+                <textarea id="replyMessageText" class="form-control" rows="4" placeholder="Type your reply..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendReply()"><i class="bi bi-send-fill me-1"></i>Send Reply</button>
             </div>
         </div>
     </div>
@@ -1581,7 +1492,7 @@
             <div class="modal-body" id="contractorDetailsBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="generateContractorInvoice()"><i class="bi bi-receipt me-1"></i>Generate Invoice</button>
+                <button type="button" class="btn btn-primary" onclick="generateInvoiceForContractor()"><i class="bi bi-receipt me-1"></i>Generate Invoice</button>
             </div>
         </div>
     </div>
@@ -1599,46 +1510,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-success" onclick="downloadInvoicePDF()"><i class="bi bi-file-earmark-pdf me-1"></i>Download PDF</button>
-                <button type="button" class="btn btn-primary" onclick="shareInvoice()"><i class="bi bi-share-fill me-1"></i>Share</button>
-                <button type="button" class="btn btn-info" onclick="openSendInvoiceModal()"><i class="bi bi-envelope-paper-fill me-1"></i>Send to Customer</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Dashboard Detail Modal -->
-<div class="modal fade" id="dashboardDetailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content modal-styled">
-            <div class="modal-header">
-                <h5 class="modal-title" id="dashboardDetailTitle"><i class="bi bi-info-circle me-2"></i>Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="dashboardDetailBody"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Reply Message Modal -->
-<div class="modal fade" id="replyMessageModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content modal-styled">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-reply-fill me-2"></i>Reply to Message</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="replyMessageIndex">
-                <div id="replyMessageOriginal" class="mb-3 p-3" style="background:#f7fafc; border-radius:var(--radius-sm); border:1px solid var(--border);"></div>
-                <label class="form-label field-label">Your Reply</label>
-                <textarea id="replyMessageText" class="form-control" rows="4" placeholder="Type your reply..."></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="sendReply()"><i class="bi bi-send-fill me-1"></i>Send Reply</button>
+                <button type="button" class="btn btn-primary" onclick="openSendInvoiceModal()"><i class="bi bi-envelope-paper-fill me-1"></i>Send to Customer</button>
             </div>
         </div>
     </div>
@@ -1654,7 +1526,7 @@
                         <i class="bi bi-person-vcard"></i>
                     </div>
                     <div class="app-modal-header-text">
-                        <h5 class="modal-title" id="applicationDetailModalTitle">Application Details</h5>
+                        <h5 class="modal-title">Application Details</h5>
                         <p class="app-modal-header-subtitle">Comprehensive applicant profile and documents</p>
                     </div>
                 </div>
@@ -1663,95 +1535,36 @@
             <div class="modal-body app-detail-modal-body" id="applicationDetailBody"></div>
             <div class="modal-footer app-detail-modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" onclick="downloadApplicationPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>Download PDF</button>
-                <button type="button" class="btn btn-primary" onclick="shareApplication()"><i class="bi bi-share-fill me-1"></i>Share</button>
+                <button type="button" class="btn btn-primary" onclick="reviewApplicationFromModal()"><i class="bi bi-check-circle me-1"></i>Review</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- REJECTION REASON MODAL -->
-<div class="modal fade" id="rejectionReasonModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-        <div class="modal-content modal-styled rejection-modal-content">
-            <div class="modal-header rejection-modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-x-octagon-fill"></i>
-                    Reject Application
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body rejection-modal-body">
-                <div class="rejection-warning-box">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    <div class="warning-text">
-                        <strong>Confirm Rejection</strong>
-                        <p>This action will mark the application as rejected. The applicant will be notified.</p>
-                    </div>
-                </div>
-                
-                <label class="rejection-reason-label">
-                    Rejection Reason 
-                    <span class="rejection-optional-badge">
-                        <i class="bi bi-info-circle me-1"></i>Optional
-                    </span>
-                </label>
-                <textarea id="rejectionReasonText" class="rejection-reason-textarea" 
-                    placeholder="Optional: Enter a reason for rejection...
-                    
-Examples:
-• Missing passport-size photo
-• Incomplete documents
-• Missing National ID
-• Insufficient qualifications
-• Position already filled"></textarea>
-                
-                <div class="rejection-quick-reasons">
-                    <div class="rejection-quick-label">
-                        <i class="bi bi-lightning-charge me-1"></i>Quick Options (Click to insert)
-                    </div>
-                    <div class="rejection-quick-buttons">
-                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Missing passport-size photo')">📷 Missing Passport Photo</button>
-                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Incomplete documents - missing required fields')">📄 Incomplete Documents</button>
-                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Missing National ID copy')">🪪 Missing National ID</button>
-                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Missing introduction letter from local government')">✉️ Missing Introduction Letter</button>
-                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Insufficient qualifications for the position')">🎓 Insufficient Qualifications</button>
-                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Position has already been filled')">✅ Position Already Filled</button>
-                        <button type="button" class="rejection-quick-btn" onclick="insertRejectionReason('Other: ')">📝 Other Reason</button>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer rejection-modal-footer">
-                <button type="button" class="btn-reject-cancel" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg me-1"></i>Cancel
-                </button>
-                <button type="button" class="btn-reject-confirm" onclick="confirmRejectApplication()">
-                    <i class="bi bi-check-lg me-1"></i>Confirm Rejection
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Hidden invoice template for PDF generation -->
-<div id="invoicePDFTemplate" style="position:absolute; left:-9999px; top:0; width:800px; background:#ffffff; font-family:'Inter',sans-serif; padding:40px;"></div>
-
-<!-- Hidden application template for PDF generation -->
-<div id="applicationPDFTemplate" style="position:absolute; left:-9999px; top:0; width:800px; background:#ffffff; font-family:'Inter',sans-serif; padding:40px;"></div>
-
-<!-- Report Preview Modal -->
-<div class="modal fade" id="reportPreviewModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
+<!-- Review Application Modal -->
+<div class="modal fade" id="reviewApplicationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content modal-styled">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-file-earmark-bar-graph me-2"></i>Generated Report</h5>
+                <h5 class="modal-title"><i class="bi bi-clipboard-check me-2"></i>Review Application</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="reportPreviewBody"></div>
+            <div class="modal-body">
+                <input type="hidden" id="reviewApplicationId">
+                <label class="form-label field-label">Status</label>
+                <select id="reviewStatus" class="form-select mb-3">
+                    <option value="pending">Pending</option>
+                    <option value="reviewed">Under Review</option>
+                    <option value="shortlisted">Shortlisted</option>
+                    <option value="hired">Hired</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+                <label class="form-label field-label">Review Notes</label>
+                <textarea id="reviewNotes" class="form-control" rows="3" placeholder="Enter review notes..."></textarea>
+            </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" onclick="downloadReportAsPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>Download PDF</button>
-                <button type="button" class="btn btn-primary" onclick="shareGeneratedReport()"><i class="bi bi-share-fill me-1"></i>Share Report</button>
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="confirmReviewApplication()"><i class="bi bi-save me-1"></i>Save Review</button>
             </div>
         </div>
     </div>
@@ -1763,6 +1576,7 @@ Examples:
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="js/theme.js"></script>
+<script src="js/api.js"></script>
 <script src="js/admin.js"></script>
 </body>
 </html>

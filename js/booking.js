@@ -1,5 +1,6 @@
 /**
- * CleanSpark Booking System - 18 Services with Dynamic Forms
+ * CleanSpark Booking System - Dynamic Service Forms
+ * Fully integrated with backend API
  */
 
 let currentStep = 1;
@@ -8,44 +9,67 @@ let mapInstance = null;
 let currentMarker = null;
 let flatpickrInstance = null;
 
-// Mock API for demonstration
-const API = {
-    bookings: {
-        create: async (data) => {
-            console.log('Booking Data:', data);
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve({ success: true, booking: { id: 'BK' + Date.now() } });
-                }, 1000);
-            });
-        }
-    }
-};
+// ===== HELPER FUNCTIONS =====
+function showLoading(show) { 
+    let s = document.getElementById('loading-spinner'); 
+    if (!s && show) { 
+        s = document.createElement('div'); 
+        s.id = 'loading-spinner'; 
+        s.innerHTML = '<div class="spinner-border text-primary"></div><p style="color:white;margin-top:10px;">Processing...</p>'; 
+        s.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:rgba(0,0,0,0.7);width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;'; 
+        document.body.appendChild(s); 
+    } 
+    if (s) s.style.display = show ? 'flex' : 'none'; 
+}
 
-// Service configurations
-const SERVICE_CONFIGS = {
-    1: { id: 1, name: 'Home Cleaning', basePrice: 50000, formType: 'homeCleaning' },
-    2: { id: 2, name: 'Office Cleaning', basePrice: 75000, formType: 'officeCleaning' },
-    3: { id: 3, name: 'Carpet Cleaning', basePrice: 60000, formType: 'carpetCleaning' },
-    4: { id: 4, name: 'Window Cleaning', basePrice: 40000, formType: 'windowCleaning' },
-    5: { id: 5, name: 'Vehicle Cleaning', basePrice: 45000, formType: 'vehicleCleaning' },
-    6: { id: 6, name: 'Pool Cleaning', basePrice: 80000, formType: 'poolCleaning' },
-    7: { id: 7, name: 'Mattress Cleaning', basePrice: 55000, formType: 'mattressCleaning' },
-    8: { id: 8, name: 'Upholstery Cleaning', basePrice: 65000, formType: 'upholsteryCleaning' },
-    9: { id: 9, name: 'Post-Construction Cleaning', basePrice: 90000, formType: 'constructionCleaning' },
-    10: { id: 10, name: 'Hotel & Airbnb Cleaning', basePrice: 100000, formType: 'hotelCleaning' },
-    11: { id: 11, name: 'Laundry & Ironing', basePrice: 54000, formType: 'laundryCleaning' },
-    12: { id: 12, name: 'Pest Control & Fumigation', basePrice: 54000, formType: 'pestControl' },
-    13: { id: 13, name: 'Event Setup & Cleanup', basePrice: 90000, formType: 'eventCleaning' },
-    14: { id: 14, name: 'Refrigerator & AC Cleaning', basePrice: 45000, formType: 'acCleaning' },
-    15: { id: 15, name: 'Industrial Cleaning', basePrice: 120000, formType: 'industrialCleaning' },
-    16: { id: 16, name: 'Water Tank Cleaning', basePrice: 70000, formType: 'waterTankCleaning' },
-    17: { id: 17, name: 'Curtain Cleaning', basePrice: 40000, formType: 'curtainCleaning' },
-    18: { id: 18, name: 'Garden Cleaning', basePrice: 55000, formType: 'gardenCleaning' }
-};
+function showToast(msg, type) { 
+    const c = document.querySelector('.toast-container') || (() => { 
+        const d = document.createElement('div'); 
+        d.className = 'toast-container'; 
+        d.style.cssText = 'position:fixed;top:20px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:10px;'; 
+        document.body.appendChild(d); 
+        return d; 
+    })(); 
+    const t = document.createElement('div'); 
+    t.className = `custom-toast toast-${type}`; 
+    t.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i><span>${msg}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`; 
+    c.appendChild(t); 
+    setTimeout(() => t.remove(), 5000); 
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 
 // ===== SERVICE-SPECIFIC FORM TEMPLATES =====
 
+function getFormTemplateByServiceName(serviceName) {
+    const name = serviceName.toLowerCase();
+    
+    if (name.includes('home') || name.includes('house') || name.includes('residential')) return HOME_CLEANING_FORM;
+    if (name.includes('office') || name.includes('corporate') || name.includes('commercial')) return OFFICE_CLEANING_FORM;
+    if (name.includes('carpet')) return CARPET_CLEANING_FORM;
+    if (name.includes('window')) return WINDOW_CLEANING_FORM;
+    if (name.includes('vehicle') || name.includes('car') || name.includes('auto')) return VEHICLE_CLEANING_FORM;
+    if (name.includes('pool')) return POOL_CLEANING_FORM;
+    if (name.includes('mattress')) return MATTRESS_CLEANING_FORM;
+    if (name.includes('upholstery') || name.includes('sofa') || name.includes('furniture')) return UPHOLSTERY_CLEANING_FORM;
+    if (name.includes('construction') || name.includes('post-construction') || name.includes('renovation')) return CONSTRUCTION_CLEANING_FORM;
+    if (name.includes('hotel') || name.includes('airbnb') || name.includes('guest')) return HOTEL_CLEANING_FORM;
+    if (name.includes('laundry') || name.includes('ironing')) return LAUNDRY_CLEANING_FORM;
+    if (name.includes('pest') || name.includes('fumigation')) return PEST_CONTROL_FORM;
+    if (name.includes('event') || name.includes('party') || name.includes('wedding')) return EVENT_CLEANING_FORM;
+    if ((name.includes('refrigerator') || name.includes('ac') || name.includes('air conditioner')) && !name.includes('industrial')) return AC_CLEANING_FORM;
+    if (name.includes('industrial') || name.includes('factory') || name.includes('warehouse')) return INDUSTRIAL_CLEANING_FORM;
+    if (name.includes('water tank') || name.includes('tank cleaning')) return WATER_TANK_CLEANING_FORM;
+    if (name.includes('curtain') || name.includes('drape') || name.includes('blind')) return CURTAIN_CLEANING_FORM;
+    if (name.includes('garden') || name.includes('yard') || name.includes('lawn')) return GARDEN_CLEANING_FORM;
+    
+    return DEFAULT_FORM;
+}
+
+// Form Templates (keep all your existing form templates - same as before)
 const HOME_CLEANING_FORM = `
     <div class="form-group full-width">
         <label class="form-label">Property Type <span class="required">*</span></label>
@@ -299,34 +323,8 @@ const GARDEN_CLEANING_FORM = `
 
 const DEFAULT_FORM = `<div class="form-group"><label class="form-label">Service Details</label><textarea id="service_details" rows="4" class="form-control" placeholder="Please describe your requirements..."></textarea></div><div class="form-group"><label class="form-label">Special Instructions</label><textarea id="special_instructions" rows="2" class="form-control"></textarea></div>`;
 
-const FORM_TEMPLATES = {
-    homeCleaning: HOME_CLEANING_FORM,
-    officeCleaning: OFFICE_CLEANING_FORM,
-    carpetCleaning: CARPET_CLEANING_FORM,
-    windowCleaning: WINDOW_CLEANING_FORM,
-    vehicleCleaning: VEHICLE_CLEANING_FORM,
-    poolCleaning: POOL_CLEANING_FORM,
-    mattressCleaning: MATTRESS_CLEANING_FORM,
-    upholsteryCleaning: UPHOLSTERY_CLEANING_FORM,
-    constructionCleaning: CONSTRUCTION_CLEANING_FORM,
-    hotelCleaning: HOTEL_CLEANING_FORM,
-    laundryCleaning: LAUNDRY_CLEANING_FORM,
-    pestControl: PEST_CONTROL_FORM,
-    eventCleaning: EVENT_CLEANING_FORM,
-    acCleaning: AC_CLEANING_FORM,
-    industrialCleaning: INDUSTRIAL_CLEANING_FORM,
-    waterTankCleaning: WATER_TANK_CLEANING_FORM,
-    curtainCleaning: CURTAIN_CLEANING_FORM,
-    gardenCleaning: GARDEN_CLEANING_FORM
-};
-
-function getFormTemplate(serviceId) {
-    const config = SERVICE_CONFIGS[serviceId];
-    if (!config) return DEFAULT_FORM;
-    return FORM_TEMPLATES[config.formType] || DEFAULT_FORM;
-}
-
-function loadSelectedService() {
+// ===== LOAD SELECTED SERVICE =====
+async function loadSelectedService() {
     const serviceData = localStorage.getItem('selectedService');
     if (!serviceData) { 
         showToast('Please select a service first', 'error'); 
@@ -335,23 +333,46 @@ function loadSelectedService() {
     }
     
     selectedService = JSON.parse(serviceData);
-    const config = SERVICE_CONFIGS[selectedService.id] || { ...selectedService, basePrice: selectedService.price || 50000, formType: 'default' };
-    selectedService.config = config;
+    
+    try {
+        showLoading(true);
+        const response = await API.services.getById(selectedService.id);
+        showLoading(false);
+        
+        if (response.service) {
+            selectedService.name = response.service.name;
+            selectedService.description = response.service.description;
+            selectedService.location = response.service.location;
+            selectedService.basePrice = 50000;
+        } else {
+            selectedService.basePrice = 50000;
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Error fetching service details:', error);
+        selectedService.basePrice = 50000;
+    }
+    
+    // Ensure basePrice is a valid number
+    if (isNaN(selectedService.basePrice) || selectedService.basePrice === undefined) {
+        selectedService.basePrice = 50000;
+    }
     
     document.getElementById('selectedServiceBanner').style.display = 'flex';
-    document.getElementById('selectedServiceName').innerText = config.name;
-    document.getElementById('phase1Title').innerText = config.name + ' Details';
+    document.getElementById('selectedServiceName').innerText = selectedService.name;
+    document.getElementById('phase1Title').innerText = selectedService.name + ' Details';
     
     const dynamicForm = document.getElementById('dynamicServiceForm');
     if (dynamicForm) {
-        dynamicForm.innerHTML = getFormTemplate(selectedService.id);
-        initializeFormInteractions(selectedService.id);
+        const formTemplate = getFormTemplateByServiceName(selectedService.name);
+        dynamicForm.innerHTML = formTemplate;
+        initializeFormInteractions();
     }
     
     updatePriceEstimate();
 }
 
-function initializeFormInteractions(serviceId) {
+function initializeFormInteractions() {
     document.querySelectorAll('.option-card').forEach(card => {
         card.addEventListener('click', function() {
             const parent = this.parentElement;
@@ -370,11 +391,11 @@ function initializeFormInteractions(serviceId) {
 }
 
 function updatePriceEstimate() {
-    if (!selectedService) return;
-    let total = selectedService.config.basePrice;
-    const serviceId = selectedService.id;
+    if (!selectedService) return 50000;
+    let total = selectedService.basePrice || 50000;
+    const serviceName = selectedService.name.toLowerCase();
     
-    if (serviceId == 1) {
+    if (serviceName.includes('home') || serviceName.includes('house')) {
         const bedrooms = parseInt(document.getElementById('bedrooms')?.value || 2);
         const bathrooms = parseInt(document.getElementById('bathrooms')?.value || 2);
         const dirtLevel = document.getElementById('dirt_level')?.value || 'moderate';
@@ -387,7 +408,7 @@ function updatePriceEstimate() {
         if (frequency === 'monthly') total *= 0.95;
     }
     
-    if (serviceId == 2) {
+    if (serviceName.includes('office') || serviceName.includes('corporate')) {
         const officeRooms = parseInt(document.getElementById('office_rooms')?.selectedIndex + 1 || 2);
         const workstations = parseInt(document.getElementById('workstations')?.selectedIndex + 1 || 2);
         const serviceTime = document.getElementById('service_time')?.value || 'business_hours';
@@ -397,7 +418,7 @@ function updatePriceEstimate() {
         if (serviceTime === 'weekend') total *= 1.3;
     }
     
-    if (serviceId == 3) {
+    if (serviceName.includes('carpet')) {
         const carpetCount = parseInt(document.getElementById('carpet_count')?.value || 2);
         const carpetSize = document.getElementById('carpet_size')?.value || 'medium';
         const stainLevel = document.getElementById('stain_level')?.value || 'moderate';
@@ -408,7 +429,7 @@ function updatePriceEstimate() {
         if (document.getElementById('deodorizing')?.checked) total += 10000;
     }
     
-    if (serviceId == 4) {
+    if (serviceName.includes('window')) {
         const windowCount = parseInt(document.getElementById('window_count')?.value || 5);
         const maxFloor = parseInt(document.getElementById('max_floor')?.selectedIndex + 1 || 3);
         const condition = document.getElementById('window_condition')?.value || 'clean';
@@ -421,7 +442,7 @@ function updatePriceEstimate() {
         if (document.getElementById('frame_cleaning')?.checked) total += 3000;
     }
     
-    if (serviceId == 10) {
+    if (serviceName.includes('hotel') || serviceName.includes('airbnb')) {
         const roomCount = parseInt(document.getElementById('room_count')?.value || 5);
         const turnoverType = document.getElementById('turnover_type')?.value || 'standard';
         total = 40000 + (roomCount * 10000);
@@ -430,14 +451,14 @@ function updatePriceEstimate() {
         if (document.getElementById('deep_bathroom')?.checked) total += roomCount * 5000;
     }
     
-    if (serviceId == 14) {
+    if ((serviceName.includes('refrigerator') || serviceName.includes('ac')) && !serviceName.includes('industrial')) {
         const unitCount = parseInt(document.getElementById('unit_count')?.value || 2);
         total = 25000 + (unitCount * 10000);
         if (document.getElementById('coil_cleaning')?.checked) total += 15000;
         if (document.getElementById('defrosting')?.checked) total += 10000;
     }
     
-    if (serviceId == 16) {
+    if (serviceName.includes('water tank')) {
         const tankSize = document.getElementById('tank_size')?.value || 'medium';
         if (tankSize === 'small') total = 50000;
         if (tankSize === 'medium') total = 70000;
@@ -446,7 +467,7 @@ function updatePriceEstimate() {
         if (document.getElementById('water_testing')?.checked) total += 10000;
     }
     
-    if (serviceId == 18) {
+    if (serviceName.includes('garden') || serviceName.includes('yard')) {
         const gardenSize = document.getElementById('garden_size')?.value || 'medium';
         if (gardenSize === 'small') total = 35000;
         if (gardenSize === 'medium') total = 55000;
@@ -456,15 +477,15 @@ function updatePriceEstimate() {
         if (document.getElementById('waste_removal')?.checked) total += 10000;
     }
     
-    document.getElementById('totalPrice').innerText = `TZS ${Math.round(total).toLocaleString()}`;
-    return Math.round(total);
+    total = Math.round(total);
+    document.getElementById('totalPrice').innerText = `TZS ${total.toLocaleString()}`;
+    return total;
 }
 
+// ===== VALIDATION =====
 function validateCurrentPhase() {
     switch(currentStep) {
         case 1:
-            if (selectedService?.id == 1 && !document.getElementById('property_type')?.value) { showToast('Please select property type', 'error'); return false; }
-            if (selectedService?.id == 2 && !document.getElementById('office_type')?.value) { showToast('Please select office type', 'error'); return false; }
             return true;
         case 2:
             const date = document.getElementById('preferredDate')?.value;
@@ -497,32 +518,65 @@ function validateCurrentPhase() {
     }
 }
 
-function nextPhase(step) { if (validateCurrentPhase()) { currentStep = step; updatePhaseDisplay(); updateProgressBar(); if (step === 4 && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100); if (step === 5) updateReview(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }
-function prevPhase(step) { currentStep = step; updatePhaseDisplay(); updateProgressBar(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-function updatePhaseDisplay() { for (let i = 1; i <= 5; i++) { const phase = document.getElementById(`phase${i}`); const step = document.querySelector(`.step[data-step="${i}"]`); if (phase) i === currentStep ? phase.classList.add('active') : phase.classList.remove('active'); if (step) i === currentStep ? step.classList.add('active') : step.classList.remove('active'); } }
-function updateProgressBar() { document.getElementById('progressFill').style.width = `${((currentStep - 1) / 4) * 100}%`; }
+// ===== PHASE NAVIGATION =====
+function nextPhase() { 
+    if (currentStep < 5 && validateCurrentPhase()) {
+        currentStep++;
+        updatePhaseDisplay();
+        updateProgressBar();
+        if (currentStep === 5) updateReview();
+        if (currentStep === 4 && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function prevPhase() { 
+    if (currentStep > 1) {
+        currentStep--;
+        updatePhaseDisplay();
+        updateProgressBar();
+        if (currentStep === 5) updateReview();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function updatePhaseDisplay() { 
+    for (let i = 1; i <= 5; i++) { 
+        const phase = document.getElementById(`phase${i}`); 
+        const step = document.querySelector(`.step[data-step="${i}"]`); 
+        if (phase) i === currentStep ? phase.classList.add('active') : phase.classList.remove('active'); 
+        if (step) i === currentStep ? step.classList.add('active') : step.classList.remove('active'); 
+    } 
+}
+
+function updateProgressBar() { 
+    const progress = ((currentStep - 1) / 4) * 100;
+    document.getElementById('progressFill').style.width = `${progress}%`; 
+}
 
 function updateReview() {
     const container = document.getElementById('reviewContent');
     if (!container) return;
     const total = updatePriceEstimate();
+    
     container.innerHTML = `
-        <h4><i class="fas fa-broom"></i> ${selectedService?.config?.name}</h4>
-        <div class="review-item"><span class="review-label">Service Details:</span><span class="review-value">Provided as requested</span></div>
+        <h4><i class="fas fa-broom"></i> ${escapeHtml(selectedService?.name || 'Service')}</h4>
         <h4 class="mt-3"><i class="fas fa-calendar"></i> Schedule</h4>
         <div class="review-item"><span class="review-label">Date:</span><span class="review-value">${document.getElementById('preferredDate')?.value || 'Not selected'}</span></div>
         <div class="review-item"><span class="review-label">Time:</span><span class="review-value">${document.getElementById('preferredTime')?.options[document.getElementById('preferredTime')?.selectedIndex]?.text || 'Not selected'}</span></div>
+        <div class="review-item"><span class="review-label">Instructions:</span><span class="review-value">${escapeHtml(document.getElementById('instructions')?.value || 'None')}</span></div>
         <h4 class="mt-3"><i class="fas fa-user"></i> Customer</h4>
-        <div class="review-item"><span class="review-label">Name:</span><span class="review-value">${document.getElementById('first_name')?.value || ''} ${document.getElementById('last_name')?.value || ''}</span></div>
-        <div class="review-item"><span class="review-label">Email:</span><span class="review-value">${document.getElementById('email')?.value || ''}</span></div>
-        <div class="review-item"><span class="review-label">Phone:</span><span class="review-value">${document.getElementById('phone')?.value || ''}</span></div>
+        <div class="review-item"><span class="review-label">Name:</span><span class="review-value">${escapeHtml(document.getElementById('first_name')?.value || '')} ${escapeHtml(document.getElementById('last_name')?.value || '')}</span></div>
+        <div class="review-item"><span class="review-label">Email:</span><span class="review-value">${escapeHtml(document.getElementById('email')?.value || '')}</span></div>
+        <div class="review-item"><span class="review-label">Phone:</span><span class="review-value">${escapeHtml(document.getElementById('phone')?.value || '')}</span></div>
         <h4 class="mt-3"><i class="fas fa-map-marker-alt"></i> Location</h4>
-        <div class="review-item"><span class="review-label">Address:</span><span class="review-value">${document.getElementById('address')?.value || ''}, ${document.getElementById('area_district')?.value || ''}, ${document.getElementById('city')?.value || ''}</span></div>
+        <div class="review-item"><span class="review-label">Address:</span><span class="review-value">${escapeHtml(document.getElementById('address')?.value || '')}, ${escapeHtml(document.getElementById('area_district')?.value || '')}, ${escapeHtml(document.getElementById('city')?.value || '')}</span></div>
         <div class="review-item total mt-3"><span class="review-label">Total:</span><span class="review-value" style="color: var(--primary); font-weight: 800;">TZS ${total.toLocaleString()}</span></div>
         <p class="text-muted small mt-2"><i class="fas fa-info-circle"></i> Final invoice after admin review</p>
     `;
 }
 
+// ===== MAP =====
 function initializeMap() {
     const container = document.getElementById('locationMap');
     if (!container) return;
@@ -548,75 +602,88 @@ function initializeDatePicker() {
     flatpickrInstance = flatpickr(input, { minDate: "today", dateFormat: "Y-m-d" });
 }
 
+// ===== SUBMIT BOOKING TO BACKEND API =====
 async function submitBooking() {
     if (!validateCurrentPhase()) return;
     showLoading(true);
+    
     const total = updatePriceEstimate();
+    const basePrice = 50000;
+    const extras = Math.max(0, total - basePrice);
+    
     const bookingData = {
-        service_id: selectedService.id, 
-        first_name: document.getElementById('first_name')?.value.trim(), 
-        last_name: document.getElementById('last_name')?.value.trim(),
-        email: document.getElementById('email')?.value.trim(), 
-        phone: document.getElementById('phone')?.value.trim(),
-        alternative_phone: document.getElementById('alternative_phone')?.value.trim() || null,
-        preferred_communication: document.getElementById('preferred_communication')?.value || 'email',
-        address: document.getElementById('address')?.value.trim(), 
-        area_district: document.getElementById('area_district')?.value.trim(),
-        city: document.getElementById('city')?.value.trim(), 
+        service_id: parseInt(selectedService.id),
+        cleaners: 2,
+        hours: 3,
+        frequency: 'one-time',
+        materials: false,
+        property_type: document.getElementById('property_type')?.value || 'apartment',
+        property_type_detail: null,
+        bedrooms: parseInt(document.getElementById('bedrooms')?.value) || null,
+        bathrooms: parseInt(document.getElementById('bathrooms')?.value) || null,
+        dirt_level: document.getElementById('dirt_level')?.value || 'moderate',
+        cleaning_frequency: document.getElementById('cleaning_frequency')?.value || 'one_time',
+        address: document.getElementById('address')?.value.trim(),
+        area_district: document.getElementById('area_district')?.value.trim() || '',
+        city: document.getElementById('city')?.value.trim(),
         region: document.getElementById('region')?.value || null,
         landmark: document.getElementById('landmark')?.value.trim() || null,
-        service_date: document.getElementById('preferredDate')?.value, 
+        building_name: null,
+        floor_number: null,
+        latitude: parseFloat(document.getElementById('latitude')?.value) || null,
+        longitude: parseFloat(document.getElementById('longitude')?.value) || null,
+        pin_latitude: parseFloat(document.getElementById('pin_latitude')?.value) || null,
+        pin_longitude: parseFloat(document.getElementById('pin_longitude')?.value) || null,
+        service_date: document.getElementById('preferredDate')?.value,
         service_time: document.getElementById('preferredTime')?.value,
         instructions: document.getElementById('instructions')?.value.trim() || null,
         special_instructions_cleaners: document.getElementById('special_instructions')?.value.trim() || null,
-        payment_method: 'cash', 
-        total_price: total, 
-        base_price: selectedService.config.basePrice, 
-        extras: total - selectedService.config.basePrice, 
+        first_name: document.getElementById('first_name')?.value.trim(),
+        last_name: document.getElementById('last_name')?.value.trim(),
+        email: document.getElementById('email')?.value.trim(),
+        phone: document.getElementById('phone')?.value.trim(),
+        alternative_phone: document.getElementById('alternative_phone')?.value.trim() || null,
+        preferred_communication: document.getElementById('preferred_communication')?.value || 'email',
+        payment_method: 'cash',
+        base_price: basePrice,
+        extras: extras,
         discount: 0,
-        latitude: parseFloat(document.getElementById('latitude')?.value) || null, 
-        longitude: parseFloat(document.getElementById('longitude')?.value) || null,
-        pin_latitude: parseFloat(document.getElementById('pin_latitude')?.value) || null, 
-        pin_longitude: parseFloat(document.getElementById('pin_longitude')?.value) || null
+        total_price: total,
+        estimated_service_cost: null,
+        labor_cost: null,
+        transport_cost: null,
+        equipment_cost_admin: null,
+        tax_rate_admin: null,
+        tax_amount_admin: null,
+        discount_admin: null,
+        final_total: null,
+        status: 'pending',
+        payment_status: 'unpaid',
+        estimation_status: 'pending'
     };
+    
+    console.log('Submitting booking:', bookingData);
+    
     try {
         const response = await API.bookings.create(bookingData);
         showLoading(false);
-        if (response.success || response.booking) {
+        console.log('Response:', response);
+        
+        if (response.success === true || response.booking || response.message === 'Booking created successfully' || (response.message && response.message.includes('Booking created'))) {
             localStorage.removeItem('selectedService');
-            new bootstrap.Modal(document.getElementById('successModal')).show();
-        } else showToast(response.message || 'Booking failed', 'error');
-    } catch (error) { showLoading(false); showToast(error.message || 'Submission failed', 'error'); }
+            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            successModal.show();
+        } else {
+            showToast(response.message || 'Booking failed', 'error');
+        }
+    } catch (error) {
+        showLoading(false);
+        console.error('Booking error:', error);
+        showToast(error.message || 'Submission failed. Please try again.', 'error');
+    }
 }
 
-function showLoading(show) { 
-    let s = document.getElementById('loading-spinner'); 
-    if (!s && show) { 
-        s = document.createElement('div'); 
-        s.id = 'loading-spinner'; 
-        s.innerHTML = '<div class="spinner-border text-primary"></div>'; 
-        s.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:rgba(0,0,0,0.5);width:100%;height:100%;display:flex;align-items:center;justify-content:center;'; 
-        document.body.appendChild(s); 
-    } 
-    if (s) s.style.display = show ? 'flex' : 'none'; 
-}
-
-function showToast(msg, type) { 
-    const c = document.querySelector('.toast-container') || (() => { 
-        const d = document.createElement('div'); 
-        d.className = 'toast-container'; 
-        d.style.cssText = 'position:fixed;top:20px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:10px;'; 
-        document.body.appendChild(d); 
-        return d; 
-    })(); 
-    const t = document.createElement('div'); 
-    t.className = `custom-toast toast-${type}`; 
-    t.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i><span>${msg}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`; 
-    c.appendChild(t); 
-    setTimeout(() => t.remove(), 5000); 
-}
-
-// Theme Toggle
+// ===== THEME TOGGLE =====
 function initTheme() {
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
@@ -629,40 +696,41 @@ function initTheme() {
     }
 }
 
-// Initialize
+// ===== INITIALIZE =====
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
-    loadSelectedService(); 
-    initializeDatePicker(); 
+    loadSelectedService();
+    initializeDatePicker();
     initializeMap();
     
-    const nav = [
-        ['nextPhase1Btn', () => nextPhase(2)],
-        ['prevPhase2Btn', () => prevPhase(1)],
-        ['nextPhase2Btn', () => nextPhase(3)],
-        ['prevPhase3Btn', () => prevPhase(2)],
-        ['nextPhase3Btn', () => nextPhase(4)],
-        ['prevPhase4Btn', () => prevPhase(3)],
-        ['nextPhase4Btn', () => nextPhase(5)],
-        ['prevPhase5Btn', () => prevPhase(4)],
-        ['submitBookingBtn', submitBooking]
-    ];
-    nav.forEach(([id, fn]) => { const btn = document.getElementById(id); if(btn) btn.addEventListener('click', fn); });
+    document.getElementById('nextPhase1Btn')?.addEventListener('click', nextPhase);
+    document.getElementById('prevPhase2Btn')?.addEventListener('click', prevPhase);
+    document.getElementById('nextPhase2Btn')?.addEventListener('click', nextPhase);
+    document.getElementById('prevPhase3Btn')?.addEventListener('click', prevPhase);
+    document.getElementById('nextPhase3Btn')?.addEventListener('click', nextPhase);
+    document.getElementById('prevPhase4Btn')?.addEventListener('click', prevPhase);
+    document.getElementById('nextPhase4Btn')?.addEventListener('click', nextPhase);
+    document.getElementById('prevPhase5Btn')?.addEventListener('click', prevPhase);
+    document.getElementById('submitBookingBtn')?.addEventListener('click', submitBooking);
     
-    document.querySelectorAll('.step').forEach(step => step.addEventListener('click', function() { 
-        const t = parseInt(this.dataset.step); 
-        if (t < currentStep) { 
-            currentStep = t; 
-            updatePhaseDisplay(); 
-            updateProgressBar(); 
-            if(t===5) updateReview(); 
-            window.scrollTo({top:0}); 
-        } else if (t > currentStep && validateCurrentPhase()) { 
-            currentStep = t; 
-            updatePhaseDisplay(); 
-            updateProgressBar(); 
-            if(t===5) updateReview(); 
-            window.scrollTo({top:0}); 
-        } 
-    }));
+    document.querySelectorAll('.step').forEach(step => {
+        step.addEventListener('click', function() { 
+            const targetStep = parseInt(this.dataset.step);
+            if (targetStep < currentStep) {
+                currentStep = targetStep;
+                updatePhaseDisplay();
+                updateProgressBar();
+                if (targetStep === 5) updateReview();
+                if (targetStep === 4 && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (targetStep === currentStep + 1 && validateCurrentPhase()) {
+                currentStep = targetStep;
+                updatePhaseDisplay();
+                updateProgressBar();
+                if (targetStep === 5) updateReview();
+                if (targetStep === 4 && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    });
 });
