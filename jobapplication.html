@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>CleanSpark · Job Application</title>
   
-  <!-- Apply saved theme immediately to prevent flash of wrong theme -->
   <script>
       (function() {
           const savedTheme = localStorage.getItem('theme') || 'light';
@@ -13,20 +12,16 @@
       })();
   </script>
   
-  <!-- External resources for icons & fonts (professional clean look) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- Separate CSS file -->
   <link rel="stylesheet" href="css/jobapplication.css">
 </head>
 <body>
-  <!-- Toast notification container -->
   <div class="toast-container" id="toastContainer"></div>
   
   <div class="app-container">
-    <!-- CleanSpark brand header -->
     <header class="brand-header">
       <div class="logo-area">
         <div class="logo-icon">
@@ -38,16 +33,15 @@
         </div>
       </div>
       <div class="header-actions">
-        <!-- Theme Toggle Button -->
-        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light mode" title="Toggle dark/light mode">
+        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light mode">
           <i class="fas fa-moon"></i>
           <i class="fas fa-sun"></i>
         </button>
-        <button class="tracking-btn" id="trackingBtn" title="Track Application" aria-label="Track Application">
+        <button class="tracking-btn" id="trackingBtn" title="Track Application">
           <i class="fas fa-search"></i>
           <span class="tracking-btn-text">Track Application</span>
         </button>
-        <a href="index.html" class="home-icon-btn" title="Go to Homepage" aria-label="Home">
+        <a href="index.html" class="home-icon-btn" title="Go to Homepage">
           <i class="fas fa-home"></i>
         </a>
         <span class="status-badge" id="globalStatusBadge">
@@ -56,25 +50,19 @@
       </div>
     </header>
 
-    <!-- Main content area -->
     <main class="main-content">
-      <div id="dynamicPanel" class="panel-container">
-        <!-- Content will be injected by JavaScript based on window status -->
-      </div>
+      <div id="dynamicPanel" class="panel-container"></div>
     </main>
 
-    <!-- Footer note -->
     <footer class="app-footer">
       <p>© <span id="currentYear"></span> CleanSpark Inc. All rights reserved. Equal opportunity employer.</p>
     </footer>
   </div>
 
-  <!-- Hidden canvas for confetti animation -->
   <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
 
-  <!-- Theme JS -->
   <script src="js/theme.js"></script>
-  <!-- Separate JavaScript file -->
+  <script src="js/api.js"></script>
   <script src="js/jobapplication.js"></script>
 </body>
 </html>

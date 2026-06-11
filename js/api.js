@@ -750,7 +750,6 @@ const API = (function() {
     // ========================================
     // CONTACT ENDPOINTS
     // ========================================
-    
     const contact = {
         // Submit inquiry (public)
         submit: (inquiryData) => request('/contact', {

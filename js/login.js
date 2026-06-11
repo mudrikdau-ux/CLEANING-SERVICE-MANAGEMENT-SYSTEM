@@ -311,16 +311,22 @@ async function handleGoogleLoginResponse(response) {
         showLoading(false);
         
         if (result.token && result.user) {
+            // Store token in BOTH locations for consistency
+            localStorage.setItem('cleanspark_token', result.token);
+            sessionStorage.setItem('cleanspark_token', result.token);
             API.setAuthToken(result.token, true);
+            
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('currentUser', JSON.stringify(result.user));
+            sessionStorage.setItem('cleanspark_loggedIn', 'true');
+            sessionStorage.setItem('cleanspark_user', JSON.stringify(result.user));
             
             launchCelebration();
             showNotification(`Welcome ${result.user.first_name}! Login successful.`, 'success');
             
             const pendingBooking = getPendingBooking();
             setTimeout(() => {
-                window.location.href = pendingBooking ? 'booking.html' : 'index.html';
+                window.location.href = pendingBooking ? 'booking.html' : 'tracking.html';
             }, 1500);
         } else {
             throw new Error(result.message || 'Google login failed');
@@ -504,11 +510,16 @@ function handleLoginSuccess(response) {
     const { token, user } = response;
     
     if (token) {
+        // Store token in BOTH locations for consistency
+        localStorage.setItem('cleanspark_token', token);
+        sessionStorage.setItem('cleanspark_token', token);
         API.setAuthToken(token, true);
     }
     
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('currentUser', JSON.stringify(user));
+    sessionStorage.setItem('cleanspark_loggedIn', 'true');
+    sessionStorage.setItem('cleanspark_user', JSON.stringify(user));
     
     localStorage.removeItem('otpEmail');
     stopOTPTimer();
@@ -524,10 +535,11 @@ function handleLoginSuccess(response) {
     } else {
         showNotification('Login successful!', 'success');
         setTimeout(() => {
-            window.location.href = 'index.html';
+            window.location.href = 'tracking.html';
         }, 1500);
     }
 }
+
 
 // ===== DOM CONTENT LOADED =====
 document.addEventListener('DOMContentLoaded', function() {
