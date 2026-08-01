@@ -189,7 +189,7 @@ function renderServices(services) {
         return;
     }
     
-    const icons = ['🏠', '🏢', '🧺', '🚽', '🪟', '✨', '🧼', '🔧', '💧'];
+    const icons = ['🏠', '🏢', '🧺', '', '🪟', '✨', '🧼', '🔧', '💧'];
     
     container.innerHTML = services.map((service, index) => `
         <div class="col-lg-4 col-md-6">

@@ -5011,6 +5011,25 @@ textarea.form-control {
     border-top: 2px solid var(--grad-start);
 }
 
+/* Refresh Button Animation */
+.refresh-bookings-btn .spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.refresh-bookings-btn {
+    transition: all 0.2s ease;
+}
+
+.refresh-bookings-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+}
+
 /* ========================================
    PROFESSIONAL INVOICE PDF STYLES
    ======================================== */
@@ -5237,6 +5256,260 @@ textarea.form-control {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
+}
+
+/* ============================================================
+   BOOKING STATS GRID & REFRESH BUTTON - ADDITIONS
+   ============================================================ */
+
+/* Booking Stats Grid */
+.booking-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.booking-stats-grid .stat-card {
+    background: var(--bg-card);
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border-color);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.booking-stats-grid .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border-color: var(--grad-start);
+}
+
+.booking-stats-grid .stat-card:active {
+    transform: translateY(0);
+}
+
+.booking-stats-grid .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--grad-start);
+    transition: color 0.3s ease;
+}
+
+.booking-stats-grid .stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+/* Refresh Button */
+.refresh-bookings-btn {
+    transition: all 0.3s ease;
+    padding: 8px 20px;
+    font-size: 14px;
+    border-radius: 25px;
+    background: transparent;
+    border: 1.5px solid var(--grad-start);
+    color: var(--grad-start);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.refresh-bookings-btn:hover {
+    background: var(--gradient-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35);
+}
+
+.refresh-bookings-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.refresh-bookings-btn .spinner-border {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+}
+
+/* Section Header with Refresh Button */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.section-header .page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.3s ease;
+}
+
+.section-header .page-title i {
+    color: var(--grad-start);
+}
+
+.section-header .text-muted {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 13px;
+    transition: color 0.3s ease;
+}
+
+/* Filters Row */
+.filters-row {
+    margin-bottom: 16px;
+}
+
+.filters-row .form-control,
+.filters-row .form-select {
+    border-radius: 10px;
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 13px;
+    padding: 8px 14px;
+    transition: all 0.2s, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.filters-row .form-control:focus,
+.filters-row .form-select:focus {
+    border-color: var(--grad-start);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+}
+
+.filters-row .form-control::placeholder {
+    color: var(--text-light);
+}
+
+/* Admin Table */
+.admin-table {
+    background: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    width: 100%;
+    margin-bottom: 0;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.admin-table thead {
+    background: var(--bg-section-alt);
+}
+
+.admin-table th {
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.admin-table td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-primary);
+    font-size: 13px;
+    transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.admin-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.admin-table tbody tr:hover {
+    background: var(--bg-filter-btn-hover);
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ============================================================
+   RESPONSIVE BOOKINGS
+   ============================================================ */
+@media (max-width: 768px) {
+    .booking-stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+    }
+    
+    .booking-stats-grid .stat-card {
+        padding: 8px 10px;
+    }
+    
+    .booking-stats-grid .stat-value {
+        font-size: 16px;
+    }
+    
+    .booking-stats-grid .stat-label {
+        font-size: 8px;
+    }
+    
+    .admin-table {
+        font-size: 12px;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 6px 8px;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .section-header .page-title {
+        font-size: 18px;
+    }
+    
+    .refresh-bookings-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 576px) {
+    .booking-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .filters-row .row {
+        gap: 6px;
+    }
+    
+    .filters-row .col-md-3,
+    .filters-row .col-md-2 {
+        padding: 0 4px;
+    }
 }
 
 .worker-name-tag {
@@ -5542,4 +5815,173 @@ textarea.form-control {
     }
     .theme-toggle-btn { width: 28px; height: 28px; }
     .theme-toggle-btn i { font-size: 0.8rem; }
+}
+
+/* Status color coding for assignment section */
+.status-badge-assigned {
+    background: #22c55e;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.status-badge-not-assigned {
+    background: #ef4444;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.status-badge-in-progress {
+    background: #3b82f6;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.status-badge-just-started {
+    background: #f59e0b;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.status-badge-completed {
+    background: #22c55e;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+/* Staff type badges */
+.staff-type-supervisor {
+    color: #1f2937;
+    background: #e5e7eb;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+}
+
+.staff-type-general-supervisor {
+    color: #7c3aed;
+    background: #ede9fe;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+}
+
+.staff-type-normal {
+    color: #db2777;
+    background: #fce7f3;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+}
+
+/* Staff type badges */
+.staff-type-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.staff-type-normal {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.staff-type-supervisor {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.staff-type-general_supervisor {
+    background: #f3e5f5;
+    color: #6a1b9a;
+}
+
+/* Supervisor status */
+.supervisor-assigned {
+    color: #27ae60;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.supervisor-warning {
+    color: #e74c3c;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Staff avatar */
+.staff-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
+}
+
+.staff-initials {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+/* Action buttons */
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px;
+}
+
+.action-btn-edit {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.action-btn-edit:hover {
+    background: #bbdefb;
+    transform: scale(1.05);
+}
+
+.action-btn-delete {
+    background: #fce4ec;
+    color: #c62828;
+}
+
+.action-btn-delete:hover {
+    background: #f8bbd0;
+    transform: scale(1.05);
+}
+
+/* Table column alignment */
+#staffTable td,
+#staffTable th {
+    vertical-align: middle;
+}
+
+#staffTable .text-center {
+    text-align: center;
 }

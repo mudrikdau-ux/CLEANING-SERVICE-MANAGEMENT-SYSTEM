@@ -151,27 +151,21 @@ function updateUserProfile(userData) {
     if (nameEl) nameEl.textContent = name;
     if (emailEl) emailEl.innerHTML = `<i class="bi bi-envelope"></i> ${escapeHtml(email)}`;
     
-    // Update avatar with profile picture support
     if (avatarEl) {
-        // Check for profile photo in various possible fields
         const profilePhoto = userData.profile_photo || userData.photo || userData.avatar;
         
         if (profilePhoto && profilePhoto !== 'null' && profilePhoto !== 'undefined') {
-            // Construct full URL for the profile photo
             let photoUrl = profilePhoto;
             if (!photoUrl.startsWith('http') && !photoUrl.startsWith('data:')) {
-                // Remove leading slash if present to avoid double slashes
                 const cleanPath = profilePhoto.startsWith('/') ? profilePhoto.substring(1) : profilePhoto;
                 photoUrl = `${API.BASE_URL.replace('/api', '')}/${cleanPath}`;
             }
             
-            // Create image element for avatar
             avatarEl.innerHTML = `<img src="${photoUrl}" alt="${escapeHtml(name)}" onerror="this.parentElement.innerHTML='${getInitials(name)}'; this.parentElement.style.display='flex'; this.parentElement.style.alignItems='center'; this.parentElement.style.justifyContent='center';">`;
             avatarEl.style.display = 'flex';
             avatarEl.style.alignItems = 'center';
             avatarEl.style.justifyContent = 'center';
         } else {
-            // Fallback to initials
             avatarEl.innerHTML = getInitials(name);
             avatarEl.style.display = 'flex';
             avatarEl.style.alignItems = 'center';
@@ -511,9 +505,7 @@ async function openRatingModal(bookingId) {
     }
 }
 
-// ----------------------------- BOOKINGS -----------------------------
-
-let allBookings = [];
+// ==================== FIXED: BOOKINGS LOAD FUNCTION ====================
 
 async function loadBookings(type) {
     const bookingListEl = document.getElementById('bookingList');
@@ -532,8 +524,6 @@ async function loadBookings(type) {
             filteredBookings = allBookings.filter(b => b.status === 'completed');
         } else if (type === 'cancelled') {
             filteredBookings = allBookings.filter(b => b.status === 'cancelled');
-        } else if (type === 'unpaid') {
-            filteredBookings = allBookings.filter(b => b.payment?.payment_status === 'unpaid');
         }
         
         if (filteredBookings.length === 0) {
@@ -562,16 +552,61 @@ async function loadBookings(type) {
             } else if (status === 'cancelled') {
                 badgeClass = 'badge-cancelled';
                 badgeText = 'Cancelled';
-            } else if (booking.payment?.payment_status === 'unpaid') {
-                badgeClass = 'badge-unpaid';
-                badgeText = 'Unpaid';
             }
             
             const serviceName = booking.service?.name || 'Cleaning Service';
             const serviceDate = booking.schedule?.date || 'Date TBD';
-            const address = booking.location?.address || booking.property?.address || 'Address provided';
-            const price = formatPrice(booking.payment?.total_price || 0);
+            
+            // ✅ FIX 1: Get correct address
+            let address = 'Address not provided';
+            if (booking.location?.address) {
+                address = booking.location.address;
+            } else if (booking.property?.address) {
+                address = booking.property.address;
+            } else if (booking.address) {
+                address = booking.address;
+            } else if (booking.location?.city) {
+                address = booking.location.city;
+            } else if (booking.city) {
+                address = booking.city;
+            }
+            
+            // ✅ FIX 2: Get correct price - USE THE FLAT FIELDS
+            let price = 0;
+            
+            // Check all possible price locations - PRIORITIZE final_price from admin estimation
+            if (booking.final_price && parseFloat(booking.final_price) > 0) {
+                price = booking.final_price;
+            } else if (booking.total_price && parseFloat(booking.total_price) > 0) {
+                price = booking.total_price;
+            } else if (booking.payment?.display_price && parseFloat(booking.payment.display_price) > 0) {
+                price = booking.payment.display_price;
+            } else if (booking.payment?.total_price && parseFloat(booking.payment.total_price) > 0) {
+                price = booking.payment.total_price;
+            } else if (booking.base_price && parseFloat(booking.base_price) > 0) {
+                price = booking.base_price;
+            } else if (booking.service?.price && parseFloat(booking.service.price) > 0) {
+                price = booking.service.price;
+            } else if (booking.estimation?.final_total && parseFloat(booking.estimation.final_total) > 0) {
+                price = booking.estimation.final_total;
+            }
+            
+            // Debug log to see what's happening
+            console.log(`Booking #${booking.id} - Price: ${price}, final_price: ${booking.final_price}, total_price: ${booking.total_price}`);
+            
+            const formattedPrice = formatPrice(price);
+            
             const isPaid = booking.payment?.payment_status === 'paid';
+            const estimationStatus = booking.estimation?.status || 'pending';
+            
+            let statusBadge = '';
+            if (estimationStatus === 'invoiced' && !isPaid) {
+                statusBadge = `<span class="badge bg-warning ms-2">Invoice Ready</span>`;
+            } else if (isPaid) {
+                statusBadge = `<span class="badge bg-success ms-2">Paid ✅</span>`;
+            } else if (estimationStatus === 'estimated') {
+                statusBadge = `<span class="badge bg-info ms-2">Estimating</span>`;
+            }
             
             html += `
                 <div class="booking-card clickable" data-booking-id="${booking.id}" title="Click to view details">
@@ -583,15 +618,13 @@ async function loadBookings(type) {
                                 <div class="d-flex flex-wrap gap-3 mt-1">
                                     <span><i class="bi bi-calendar3 me-1 text-secondary"></i> ${formatDate(serviceDate)}</span>
                                     <span><i class="bi bi-pin-map-fill me-1 text-secondary"></i> ${escapeHtml(address)}</span>
-                                    <span><i class="bi bi-cash-stack me-1 text-secondary"></i> ${price}</span>
+                                    <span><i class="bi bi-cash-stack me-1 text-secondary"></i> ${formattedPrice}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="mt-2 mt-sm-0 d-flex align-items-center flex-wrap gap-1">
                             <span class="booking-badge ${badgeClass}">${badgeText.toUpperCase()}</span>
-                            ${!isPaid && status !== 'cancelled' && status !== 'completed' ? `
-                                <button class="btn btn-sm btn-danger ms-2 rounded-pill pay-now-btn" data-booking-id="${booking.id}">Pay Now</button>
-                            ` : ''}
+                            ${statusBadge}
                         </div>
                     </div>
                     <hr>
@@ -608,21 +641,8 @@ async function loadBookings(type) {
         
         bookingListEl.querySelectorAll('.booking-card.clickable').forEach(card => {
             card.addEventListener('click', function(e) {
-                if (e.target.closest('.pay-now-btn')) return;
                 const bookingId = parseInt(this.dataset.bookingId);
                 openStaffModal(bookingId);
-            });
-        });
-        
-        bookingListEl.querySelectorAll('.pay-now-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const bookingId = parseInt(btn.dataset.bookingId);
-                const booking = allBookings.find(b => b.id === bookingId);
-                if (booking) {
-                    const amount = formatPrice(booking.payment?.total_price || 0);
-                    showPaymentMethods(amount, bookingId);
-                }
             });
         });
         
@@ -639,7 +659,18 @@ async function loadBookings(type) {
     }
 }
 
-// ----------------------------- PAYMENTS -----------------------------
+// ==================== COMPLETE PAYMENT FLOW ====================
+
+// Store payment state
+let paymentState = {
+    amount: 0,
+    bookingId: null,
+    invoiceId: null,
+    payAll: false,
+    selectedMethod: null,
+    accountNumber: '',
+    pin: ''
+};
 
 async function loadOutstandingPayments() {
     const outstandingList = document.getElementById('outstandingList');
@@ -734,85 +765,391 @@ async function loadPaymentHistory() {
     }
 }
 
-function showPaymentMethods(amount, specificBookingId = null, payAll = false) {
+function showPaymentMethods(amount, specificBookingId = null, payAll = false, invoiceId = null) {
+    paymentState.amount = amount;
+    paymentState.bookingId = specificBookingId;
+    paymentState.invoiceId = invoiceId;
+    paymentState.payAll = payAll;
+    paymentState.selectedMethod = null;
+    paymentState.accountNumber = '';
+    paymentState.pin = '';
+    
     const title = `<i class="bi bi-credit-card me-2"></i>Pay ${amount}`;
     
     const bodyHtml = `
         <div style="margin-bottom: 20px;">
             <div style="font-size: 1.8rem; font-weight: 800; color: var(--dark-color);">${amount}</div>
-            <div style="font-size: 0.85rem; color: var(--gray-color);">Select a payment method below</div>
+            <div style="font-size: 0.85rem; color: var(--gray-color);">Select a payment method and complete the payment</div>
         </div>
-        <div id="paymentMethodsList">
-            <div class="payment-method-option" data-method="mobile_money">
-                <div class="payment-method-icon"><i class="fas fa-mobile-alt"></i></div>
-                <div><strong>Mobile Money</strong><br><span style="font-size:0.8rem;">M-Pesa, Airtel, Tigo, HaloPesa</span></div>
+        
+        <!-- Step 1: Payment Method -->
+        <div class="payment-step" id="paymentStep1">
+            <div class="payment-step-label"><i class="bi bi-1-circle-fill text-primary"></i> Choose Payment Method</div>
+            <div id="paymentMethodsList">
+                <div class="payment-method-option" data-method="mobile_money">
+                    <div class="payment-method-icon"><i class="fas fa-mobile-alt"></i></div>
+                    <div><strong>Mobile Money</strong><br><span style="font-size:0.8rem;">M-Pesa, Airtel, Tigo, HaloPesa</span></div>
+                </div>
+                <div class="payment-method-option" data-method="card">
+                    <div class="payment-method-icon"><i class="fas fa-credit-card"></i></div>
+                    <div><strong>Card Payment</strong><br><span style="font-size:0.8rem;">Visa, Mastercard, Amex</span></div>
+                </div>
+                <div class="payment-method-option" data-method="bank_transfer">
+                    <div class="payment-method-icon"><i class="fas fa-university"></i></div>
+                    <div><strong>Bank Transfer</strong><br><span style="font-size:0.8rem;">Direct bank transfer</span></div>
+                </div>
             </div>
-            <div class="payment-method-option" data-method="card">
-                <div class="payment-method-icon"><i class="fas fa-credit-card"></i></div>
-                <div><strong>Card Payment</strong><br><span style="font-size:0.8rem;">Visa, Mastercard, Amex</span></div>
+            <p id="paymentMethodError" class="text-danger mt-2" style="font-size:0.85rem;display:none;">Please select a payment method.</p>
+            <button class="btn btn-primary rounded-pill px-4 mt-3" id="paymentStep1Next" disabled>
+                Next <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+        
+        <!-- Step 2: Account Details -->
+        <div class="payment-step" id="paymentStep2" style="display:none;">
+            <div class="payment-step-label"><i class="bi bi-2-circle-fill text-primary"></i> Enter Payment Details</div>
+            <div id="accountDetailsContainer">
+                <!-- Dynamic content based on method -->
             </div>
-            <div class="payment-method-option" data-method="bank_transfer">
-                <div class="payment-method-icon"><i class="fas fa-university"></i></div>
-                <div><strong>Bank Transfer</strong><br><span style="font-size:0.8rem;">Direct bank transfer</span></div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-outline-secondary rounded-pill px-4" id="paymentStep2Back">
+                    <i class="bi bi-chevron-left"></i> Back
+                </button>
+                <button class="btn btn-primary rounded-pill px-4" id="paymentStep2Next">
+                    Next <i class="bi bi-chevron-right"></i>
+                </button>
             </div>
         </div>
-        <p id="paymentMethodError" class="text-danger mt-2" style="font-size:0.85rem;display:none;">Please select a payment method.</p>
+        
+        <!-- Step 3: PIN Confirmation -->
+        <div class="payment-step" id="paymentStep3" style="display:none;">
+            <div class="payment-step-label"><i class="bi bi-3-circle-fill text-primary"></i> Confirm Payment</div>
+            <div class="payment-summary-box">
+                <div class="d-flex justify-content-between">
+                    <span>Amount:</span>
+                    <span class="fw-bold">${amount}</span>
+                </div>
+                <div class="d-flex justify-content-between mt-1">
+                    <span>Method:</span>
+                    <span id="paymentMethodDisplay">-</span>
+                </div>
+                <div class="d-flex justify-content-between mt-1">
+                    <span>Account:</span>
+                    <span id="accountDisplay">-</span>
+                </div>
+            </div>
+            <div class="pin-input-container">
+                <label class="fw-bold mb-2">Enter your 4-digit PIN</label>
+                <div class="pin-input-group">
+                    <input type="password" maxlength="1" class="pin-input" data-index="0" autofocus>
+                    <input type="password" maxlength="1" class="pin-input" data-index="1">
+                    <input type="password" maxlength="1" class="pin-input" data-index="2">
+                    <input type="password" maxlength="1" class="pin-input" data-index="3">
+                </div>
+                <div id="pinError" class="text-danger mt-2" style="font-size:0.85rem;display:none;">Please enter your 4-digit PIN</div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-outline-secondary rounded-pill px-4" id="paymentStep3Back">
+                    <i class="bi bi-chevron-left"></i> Back
+                </button>
+                <button class="btn btn-success rounded-pill px-4" id="paymentStep3Confirm">
+                    <i class="bi bi-check-circle-fill me-2"></i> Confirm Payment
+                </button>
+            </div>
+        </div>
     `;
     
     const footerHtml = `
         <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary rounded-pill px-4" id="proceedPaymentBtn">Proceed</button>
     `;
     
     const modal = openGlobalModal(title, bodyHtml, footerHtml);
     const modalEl = document.getElementById('globalActionModal');
-    let selectedMethod = null;
     
-    if (modalEl) {
-        modalEl.querySelectorAll('.payment-method-option').forEach(option => {
-            option.addEventListener('click', function() {
-                modalEl.querySelectorAll('.payment-method-option').forEach(o => o.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedMethod = this.dataset.method;
-                const errorEl = document.getElementById('paymentMethodError');
-                if (errorEl) errorEl.style.display = 'none';
-            });
+    if (!modalEl) return;
+    
+    // STEP 1: Payment Method Selection
+    const methodOptions = modalEl.querySelectorAll('.payment-method-option');
+    const step1Next = document.getElementById('paymentStep1Next');
+    const methodError = document.getElementById('paymentMethodError');
+    
+    methodOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            methodOptions.forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+            paymentState.selectedMethod = this.dataset.method;
+            if (methodError) methodError.style.display = 'none';
+            if (step1Next) step1Next.disabled = false;
+        });
+    });
+    
+    if (step1Next) {
+        step1Next.addEventListener('click', function() {
+            if (!paymentState.selectedMethod) {
+                if (methodError) methodError.style.display = 'block';
+                return;
+            }
+            showPaymentStep(2);
+            populateAccountDetails(paymentState.selectedMethod);
+        });
+    }
+    
+    // STEP 2: Account Details
+    const step2Back = document.getElementById('paymentStep2Back');
+    const step2Next = document.getElementById('paymentStep2Next');
+    
+    if (step2Back) {
+        step2Back.addEventListener('click', function() {
+            showPaymentStep(1);
+        });
+    }
+    
+    if (step2Next) {
+        step2Next.addEventListener('click', function() {
+            const accountInput = document.getElementById('paymentAccountInput');
+            if (accountInput && !accountInput.value.trim()) {
+                showNotification('Please enter your account/phone number', 'warning');
+                return;
+            }
+            paymentState.accountNumber = accountInput ? accountInput.value.trim() : '';
+            showPaymentStep(3);
+            updatePaymentSummary();
+        });
+    }
+    
+    // STEP 3: PIN Confirmation
+    const step3Back = document.getElementById('paymentStep3Back');
+    const step3Confirm = document.getElementById('paymentStep3Confirm');
+    const pinInputs = modalEl.querySelectorAll('.pin-input');
+    const pinError = document.getElementById('pinError');
+    
+    if (step3Back) {
+        step3Back.addEventListener('click', function() {
+            showPaymentStep(2);
+        });
+    }
+    
+    pinInputs.forEach((input, index) => {
+        input.addEventListener('input', function() {
+            if (this.value.length === 1) {
+                if (pinError) pinError.style.display = 'none';
+                if (index < pinInputs.length - 1) {
+                    pinInputs[index + 1].focus();
+                }
+            }
         });
         
-        const proceedBtn = document.getElementById('proceedPaymentBtn');
-        if (proceedBtn) {
-            proceedBtn.addEventListener('click', async () => {
-                if (!selectedMethod) {
-                    document.getElementById('paymentMethodError').style.display = 'block';
-                    return;
-                }
-                if (modal) modal.hide();
-                
-                showNotification('Processing payment...', 'info');
-                
-                try {
-                    if (payAll) {
-                        await API.payments.payAll(selectedMethod);
-                        showNotification('Payment successful! All outstanding balances paid.', 'success');
-                    } else if (specificBookingId) {
-                        const amountNum = parseFloat(amount.replace(/[^0-9.-]/g, ''));
-                        await API.payments.makePayment({
-                            booking_id: specificBookingId,
-                            amount: amountNum,
-                            payment_method: selectedMethod
-                        });
-                        showNotification('Payment successful!', 'success');
-                    }
-                    
-                    await loadOutstandingPayments();
-                    await loadPaymentHistory();
-                    await loadBookings('unpaid');
-                    
-                } catch (error) {
-                    console.error('Payment error:', error);
-                    showNotification(error.message || 'Payment failed', 'danger');
-                }
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && this.value.length === 0 && index > 0) {
+                pinInputs[index - 1].focus();
+            }
+        });
+        
+        input.addEventListener('keypress', function(e) {
+            if (!/^\d$/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    if (step3Confirm) {
+        step3Confirm.addEventListener('click', async function() {
+            let pin = '';
+            pinInputs.forEach(input => pin += input.value);
+            
+            if (pin.length !== 4) {
+                if (pinError) pinError.style.display = 'block';
+                return;
+            }
+            
+            paymentState.pin = pin;
+            
+            await processPayment(modal);
+        });
+    }
+}
+
+function showPaymentStep(step) {
+    const modalEl = document.getElementById('globalActionModal');
+    if (!modalEl) return;
+    
+    for (let i = 1; i <= 3; i++) {
+        const stepEl = document.getElementById(`paymentStep${i}`);
+        if (stepEl) {
+            stepEl.style.display = i === step ? 'block' : 'none';
+        }
+    }
+}
+
+function populateAccountDetails(method) {
+    const container = document.getElementById('accountDetailsContainer');
+    if (!container) return;
+    
+    let html = '';
+    switch(method) {
+        case 'mobile_money':
+            html = `
+                <div class="mb-3">
+                    <label class="fw-bold mb-2"><i class="fas fa-phone me-2"></i>Mobile Money Number</label>
+                    <input type="tel" class="form-control form-control-lg" id="paymentAccountInput" placeholder="Enter your M-Pesa/Airtel/Tigo number" maxlength="15">
+                    <small class="text-muted">Example: 0712345678</small>
+                </div>
+                <div class="payment-provider-logos">
+                    <span>M-Pesa</span>
+                    <span>Airtel Money</span>
+                    <span>Tigo Pesa</span>
+                    <span>HaloPesa</span>
+                </div>
+            `;
+            break;
+        case 'card':
+            html = `
+                <div class="mb-3">
+                    <label class="fw-bold mb-2"><i class="fas fa-credit-card me-2"></i>Card Number</label>
+                    <input type="text" class="form-control form-control-lg" id="paymentAccountInput" placeholder="1234 5678 9012 3456" maxlength="19">
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="fw-bold mb-2">Expiry Date</label>
+                        <input type="text" class="form-control" placeholder="MM/YY">
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="fw-bold mb-2">CVV</label>
+                        <input type="password" class="form-control" placeholder="***" maxlength="3">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold mb-2">Cardholder Name</label>
+                    <input type="text" class="form-control" placeholder="Name on card">
+                </div>
+            `;
+            break;
+        case 'bank_transfer':
+            html = `
+                <div class="mb-3">
+                    <label class="fw-bold mb-2"><i class="fas fa-university me-2"></i>Bank Name</label>
+                    <select class="form-control form-control-lg" id="paymentAccountInput">
+                        <option value="">Select Bank</option>
+                        <option value="CRDB">CRDB Bank</option>
+                        <option value="NMB">NMB Bank</option>
+                        <option value="NBC">NBC Bank</option>
+                        <option value="Access Bank">Access Bank</option>
+                        <option value="Standard Chartered">Standard Chartered</option>
+                        <option value="Equity Bank">Equity Bank</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold mb-2">Account Number</label>
+                    <input type="text" class="form-control form-control-lg" placeholder="Enter your account number">
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold mb-2">Account Holder Name</label>
+                    <input type="text" class="form-control form-control-lg" placeholder="Full name on account">
+                </div>
+            `;
+            break;
+    }
+    container.innerHTML = html;
+}
+
+function updatePaymentSummary() {
+    const methodDisplay = document.getElementById('paymentMethodDisplay');
+    const accountDisplay = document.getElementById('accountDisplay');
+    
+    if (methodDisplay) {
+        const methodLabels = {
+            'mobile_money': 'Mobile Money',
+            'card': 'Card Payment',
+            'bank_transfer': 'Bank Transfer'
+        };
+        methodDisplay.textContent = methodLabels[paymentState.selectedMethod] || paymentState.selectedMethod;
+    }
+    
+    if (accountDisplay) {
+        accountDisplay.textContent = paymentState.accountNumber || 'N/A';
+    }
+}
+
+async function processPayment(modal) {
+    try {
+        showNotification('Processing payment...', 'info');
+        
+        const confirmBtn = document.getElementById('paymentStep3Confirm');
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processing...';
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        let result;
+        if (paymentState.payAll) {
+            result = await API.payments.payAll(paymentState.selectedMethod);
+        } else if (paymentState.bookingId) {
+            const amountNum = parseFloat(paymentState.amount.replace(/[^0-9.-]/g, ''));
+            result = await API.payments.makePayment({
+                booking_id: paymentState.bookingId,
+                amount: amountNum,
+                payment_method: paymentState.selectedMethod,
+                transaction_id: `TXN-${Date.now()}`,
+                reference: paymentState.accountNumber || `REF-${Date.now()}`
             });
+        }
+        
+        if (modal) modal.hide();
+        
+        if (result && result.booking_updated) {
+            showNotification('✅ Payment successful! Booking status updated to PAID.', 'success');
+            
+            try {
+                await API.contact.submit({
+                    full_name: 'Payment Notification',
+                    email: 'admin@cleanspark.co.tz',
+                    phone: '0000000000',
+                    service_type: 'Payment',
+                    subject: `Payment Received - Booking #${paymentState.bookingId}`,
+                    message: `Payment of ${paymentState.amount} has been received for booking #${paymentState.bookingId}. Status has been updated to PAID.`,
+                    subscribe: false
+                });
+                console.log('✅ Admin notified about payment');
+            } catch (err) {
+                console.log('Admin notification failed:', err.message);
+            }
+            
+            if (window.socket) {
+                window.socket.emit('payment_updated', {
+                    booking_id: paymentState.bookingId,
+                    payment_status: 'paid',
+                    amount: paymentState.amount
+                });
+            }
+        } else {
+            showNotification('✅ Payment successful!', 'success');
+        }
+        
+        await loadOutstandingPayments();
+        await loadPaymentHistory();
+        await loadBookings('upcoming');
+        await loadInvoices();
+        
+        paymentState = {
+            amount: 0,
+            bookingId: null,
+            invoiceId: null,
+            payAll: false,
+            selectedMethod: null,
+            accountNumber: '',
+            pin: ''
+        };
+        
+    } catch (error) {
+        console.error('Payment error:', error);
+        showNotification(error.message || 'Payment failed. Please try again.', 'danger');
+        
+        const confirmBtn = document.getElementById('paymentStep3Confirm');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Confirm Payment';
         }
     }
 }
@@ -886,7 +1223,7 @@ function openPaymentDetailsModal(payment) {
     });
 }
 
-// ----------------------------- INVOICES -----------------------------
+// ==================== FIXED: INVOICES LOAD FUNCTION ====================
 
 async function loadInvoices() {
     const invoiceListEl = document.getElementById('invoiceList');
@@ -913,16 +1250,18 @@ async function loadInvoices() {
         invoices.forEach(invoice => {
             let statusClass = 'invoice-status-pending';
             let statusText = 'Pending';
+            let isPaid = false;
             if (invoice.status === 'paid') {
                 statusClass = 'invoice-status-paid';
-                statusText = 'Paid';
+                statusText = 'Paid ✅';
+                isPaid = true;
             } else if (invoice.status === 'unpaid') {
                 statusClass = 'invoice-status-unpaid';
                 statusText = 'Unpaid';
             }
             
             html += `
-                <div class="invoice-card" data-invoice-id="${invoice.id}">
+                <div class="invoice-card" data-invoice-id="${invoice.id}" data-booking-id="${invoice.booking_id}">
                     <div class="invoice-card-header">
                         <div>
                             <span class="invoice-number"><i class="bi bi-receipt me-1"></i> ${escapeHtml(invoice.invoice_number)}</span>
@@ -943,8 +1282,8 @@ async function loadInvoices() {
                         <button class="btn-invoice-action btn-invoice-download" data-invoice-id="${invoice.id}" data-action="download">
                             <i class="bi bi-download"></i> Download
                         </button>
-                        ${invoice.status !== 'paid' ? `
-                            <button class="btn-invoice-action" data-invoice-id="${invoice.id}" data-action="pay" style="color: #dc3545;">
+                        ${!isPaid ? `
+                            <button class="btn-invoice-action btn-pay-invoice" data-invoice-id="${invoice.id}" data-booking-id="${invoice.booking_id}" data-amount="${invoice.total_amount}" style="color: #dc3545; font-weight: 600;">
                                 <i class="bi bi-credit-card"></i> Pay Now
                             </button>
                         ` : ''}
@@ -955,23 +1294,72 @@ async function loadInvoices() {
         html += '</div>';
         invoiceListEl.innerHTML = html;
         
+        // Download button handler
         invoiceListEl.querySelectorAll('.btn-invoice-download').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const invoiceId = btn.dataset.invoiceId;
-                const url = API.bookings.downloadInvoice(invoiceId);
-                window.open(url, '_blank');
-                showNotification('Download started', 'success');
+                
+                const token = localStorage.getItem('cleanspark_token') || sessionStorage.getItem('cleanspark_token');
+                
+                if (!token) {
+                    showNotification('Please login first', 'error');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const url = API.BASE_URL + `/bookings/invoices/${invoiceId}/download`;
+                
+                try {
+                    showNotification('Downloading invoice...', 'info');
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                            showNotification('Session expired. Please login again.', 'error');
+                            window.location.href = 'login.html';
+                            return;
+                        }
+                        throw new Error('Download failed');
+                    }
+                    
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = `invoice_${invoiceId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(downloadUrl);
+                    showNotification('Invoice downloaded successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error('Download error:', error);
+                    showNotification(error.message || 'Failed to download invoice', 'error');
+                }
             });
         });
         
-        invoiceListEl.querySelectorAll('[data-action="pay"]').forEach(btn => {
+        // ✅ FIX: Pay Now button in invoice menu - passes booking_id correctly
+        invoiceListEl.querySelectorAll('.btn-pay-invoice').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const invoiceId = btn.dataset.invoiceId;
+                const bookingId = btn.dataset.bookingId;
+                const amount = btn.dataset.amount;
                 const invoice = invoices.find(i => i.id == invoiceId);
                 if (invoice) {
-                    showPaymentMethods(formatPrice(invoice.total_amount), null, false);
+                    // ✅ FIX: Pass the actual booking_id from the invoice
+                    const actualBookingId = invoice.booking_id || bookingId;
+                    console.log('💰 Pay Invoice clicked:', { invoiceId, bookingId: actualBookingId, amount });
+                    showPaymentMethodsWithInvoice(formatPrice(amount), actualBookingId, invoiceId);
                 }
             });
         });
@@ -979,6 +1367,354 @@ async function loadInvoices() {
     } catch (error) {
         console.error('Load invoices error:', error);
         invoiceListEl.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>Error loading invoices</p></div>`;
+    }
+}
+
+// ==================== SHOW PAYMENT METHODS WITH INVOICE (FIXED) ====================
+
+function showPaymentMethodsWithInvoice(amount, bookingId, invoiceId) {
+    // ✅ FIX: Ensure bookingId is properly handled - convert 'undefined' string to null
+    let safeBookingId = bookingId;
+    if (safeBookingId === 'undefined' || safeBookingId === 'null' || safeBookingId === undefined || safeBookingId === null) {
+        safeBookingId = null;
+    } else {
+        safeBookingId = parseInt(safeBookingId);
+        if (isNaN(safeBookingId)) {
+            safeBookingId = null;
+        }
+    }
+    
+    paymentState.amount = amount;
+    paymentState.bookingId = safeBookingId;
+    paymentState.invoiceId = invoiceId;
+    paymentState.payAll = false;
+    paymentState.selectedMethod = null;
+    paymentState.accountNumber = '';
+    paymentState.pin = '';
+    
+    console.log('💰 Payment initiated with:', { amount, bookingId: safeBookingId, invoiceId });
+    
+    const title = `<i class="bi bi-credit-card me-2"></i>Pay Invoice ${amount}`;
+    
+    const bodyHtml = `
+        <div style="margin-bottom: 20px;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--dark-color);">${amount}</div>
+            <div style="font-size: 0.85rem; color: var(--gray-color);">Select a payment method to pay this invoice</div>
+        </div>
+        
+        <!-- Step 1: Payment Method -->
+        <div class="payment-step" id="paymentStep1">
+            <div class="payment-step-label"><i class="bi bi-1-circle-fill text-primary"></i> Choose Payment Method</div>
+            <div id="paymentMethodsList">
+                <div class="payment-method-option" data-method="mobile_money">
+                    <div class="payment-method-icon"><i class="fas fa-mobile-alt"></i></div>
+                    <div><strong>Mobile Money</strong><br><span style="font-size:0.8rem;">M-Pesa, Airtel, Tigo, HaloPesa</span></div>
+                </div>
+                <div class="payment-method-option" data-method="card">
+                    <div class="payment-method-icon"><i class="fas fa-credit-card"></i></div>
+                    <div><strong>Card Payment</strong><br><span style="font-size:0.8rem;">Visa, Mastercard, Amex</span></div>
+                </div>
+                <div class="payment-method-option" data-method="bank_transfer">
+                    <div class="payment-method-icon"><i class="fas fa-university"></i></div>
+                    <div><strong>Bank Transfer</strong><br><span style="font-size:0.8rem;">Direct bank transfer</span></div>
+                </div>
+            </div>
+            <p id="paymentMethodError" class="text-danger mt-2" style="font-size:0.85rem;display:none;">Please select a payment method.</p>
+            <button class="btn btn-primary rounded-pill px-4 mt-3" id="paymentStep1Next" disabled>
+                Next <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+        
+        <!-- Step 2: Account Details -->
+        <div class="payment-step" id="paymentStep2" style="display:none;">
+            <div class="payment-step-label"><i class="bi bi-2-circle-fill text-primary"></i> Enter Payment Details</div>
+            <div id="accountDetailsContainer">
+                <!-- Dynamic content based on method -->
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-outline-secondary rounded-pill px-4" id="paymentStep2Back">
+                    <i class="bi bi-chevron-left"></i> Back
+                </button>
+                <button class="btn btn-primary rounded-pill px-4" id="paymentStep2Next">
+                    Next <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Step 3: PIN Confirmation -->
+        <div class="payment-step" id="paymentStep3" style="display:none;">
+            <div class="payment-step-label"><i class="bi bi-3-circle-fill text-primary"></i> Confirm Payment</div>
+            <div class="payment-summary-box">
+                <div class="d-flex justify-content-between">
+                    <span>Amount:</span>
+                    <span class="fw-bold">${amount}</span>
+                </div>
+                <div class="d-flex justify-content-between mt-1">
+                    <span>Method:</span>
+                    <span id="paymentMethodDisplay">-</span>
+                </div>
+                <div class="d-flex justify-content-between mt-1">
+                    <span>Account:</span>
+                    <span id="accountDisplay">-</span>
+                </div>
+            </div>
+            <div class="pin-input-container">
+                <label class="fw-bold mb-2">Enter your 4-digit PIN</label>
+                <div class="pin-input-group">
+                    <input type="password" maxlength="1" class="pin-input" data-index="0" autofocus>
+                    <input type="password" maxlength="1" class="pin-input" data-index="1">
+                    <input type="password" maxlength="1" class="pin-input" data-index="2">
+                    <input type="password" maxlength="1" class="pin-input" data-index="3">
+                </div>
+                <div id="pinError" class="text-danger mt-2" style="font-size:0.85rem;display:none;">Please enter your 4-digit PIN</div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-outline-secondary rounded-pill px-4" id="paymentStep3Back">
+                    <i class="bi bi-chevron-left"></i> Back
+                </button>
+                <button class="btn btn-success rounded-pill px-4" id="paymentStep3Confirm">
+                    <i class="bi bi-check-circle-fill me-2"></i> Confirm Payment
+                </button>
+            </div>
+        </div>
+    `;
+    
+    const footerHtml = `
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+    `;
+    
+    const modal = openGlobalModal(title, bodyHtml, footerHtml);
+    const modalEl = document.getElementById('globalActionModal');
+    
+    if (!modalEl) return;
+    
+    // STEP 1: Payment Method Selection
+    const methodOptions = modalEl.querySelectorAll('.payment-method-option');
+    const step1Next = document.getElementById('paymentStep1Next');
+    const methodError = document.getElementById('paymentMethodError');
+    
+    methodOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            methodOptions.forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+            paymentState.selectedMethod = this.dataset.method;
+            if (methodError) methodError.style.display = 'none';
+            if (step1Next) step1Next.disabled = false;
+        });
+    });
+    
+    if (step1Next) {
+        step1Next.addEventListener('click', function() {
+            if (!paymentState.selectedMethod) {
+                if (methodError) methodError.style.display = 'block';
+                return;
+            }
+            showPaymentStep(2);
+            populateAccountDetails(paymentState.selectedMethod);
+        });
+    }
+    
+    // STEP 2: Account Details
+    const step2Back = document.getElementById('paymentStep2Back');
+    const step2Next = document.getElementById('paymentStep2Next');
+    
+    if (step2Back) {
+        step2Back.addEventListener('click', function() {
+            showPaymentStep(1);
+        });
+    }
+    
+    if (step2Next) {
+        step2Next.addEventListener('click', function() {
+            const accountInput = document.getElementById('paymentAccountInput');
+            if (accountInput && !accountInput.value.trim()) {
+                showNotification('Please enter your account/phone number', 'warning');
+                return;
+            }
+            paymentState.accountNumber = accountInput ? accountInput.value.trim() : '';
+            showPaymentStep(3);
+            updatePaymentSummary();
+        });
+    }
+    
+    // STEP 3: PIN Confirmation
+    const step3Back = document.getElementById('paymentStep3Back');
+    const step3Confirm = document.getElementById('paymentStep3Confirm');
+    const pinInputs = modalEl.querySelectorAll('.pin-input');
+    const pinError = document.getElementById('pinError');
+    
+    if (step3Back) {
+        step3Back.addEventListener('click', function() {
+            showPaymentStep(2);
+        });
+    }
+    
+    pinInputs.forEach((input, index) => {
+        input.addEventListener('input', function() {
+            if (this.value.length === 1) {
+                if (pinError) pinError.style.display = 'none';
+                if (index < pinInputs.length - 1) {
+                    pinInputs[index + 1].focus();
+                }
+            }
+        });
+        
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && this.value.length === 0 && index > 0) {
+                pinInputs[index - 1].focus();
+            }
+        });
+        
+        input.addEventListener('keypress', function(e) {
+            if (!/^\d$/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    if (step3Confirm) {
+        step3Confirm.addEventListener('click', async function() {
+            let pin = '';
+            pinInputs.forEach(input => pin += input.value);
+            
+            if (pin.length !== 4) {
+                if (pinError) pinError.style.display = 'block';
+                return;
+            }
+            
+            paymentState.pin = pin;
+            
+            await processInvoicePayment(modal);
+        });
+    }
+}
+
+// ==================== PROCESS INVOICE PAYMENT (FIXED) ====================
+
+async function processInvoicePayment(modal) {
+    try {
+        showNotification('Processing payment...', 'info');
+        
+        const confirmBtn = document.getElementById('paymentStep3Confirm');
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processing...';
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // ✅ FIX: Get booking_id from the invoice
+        let bookingId = paymentState.bookingId;
+        
+        // If bookingId is undefined or null, try to get it from the invoice
+        if (!bookingId || bookingId === 'undefined' || bookingId === 'null') {
+            try {
+                const invoiceResponse = await API.bookings.getMyInvoices();
+                const invoices = invoiceResponse.invoices || [];
+                const invoice = invoices.find(i => i.id == paymentState.invoiceId);
+                if (invoice && invoice.booking_id) {
+                    bookingId = parseInt(invoice.booking_id);
+                    if (!isNaN(bookingId)) {
+                        paymentState.bookingId = bookingId;
+                        console.log('✅ Retrieved booking_id from invoice:', bookingId);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to get booking from invoice:', err);
+            }
+        }
+        
+        // If still no bookingId, try to get it from the booking list
+        if (!bookingId || bookingId === 'undefined' || bookingId === 'null' || isNaN(bookingId)) {
+            try {
+                const bookingsResponse = await API.bookings.getMyBookings();
+                const bookings = bookingsResponse.bookings || [];
+                const booking = bookings.find(b => b.invoice && b.invoice.id == paymentState.invoiceId);
+                if (booking) {
+                    bookingId = parseInt(booking.id);
+                    if (!isNaN(bookingId)) {
+                        paymentState.bookingId = bookingId;
+                        console.log('✅ Retrieved booking_id from bookings list:', bookingId);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to get booking from bookings list:', err);
+            }
+        }
+        
+        // If still no bookingId, use null (allow NULL in database)
+        if (!bookingId || bookingId === 'undefined' || bookingId === 'null' || isNaN(bookingId)) {
+            bookingId = null;
+            console.log('⚠️ No valid booking_id found, using NULL');
+        }
+        
+        // Update the invoice status to paid
+        if (paymentState.invoiceId) {
+            try {
+                await API.invoices.updateStatus(paymentState.invoiceId, 'paid');
+                console.log(`✅ Invoice #${paymentState.invoiceId} status updated to PAID`);
+            } catch (err) {
+                console.error('Failed to update invoice status:', err);
+            }
+        }
+        
+        // Process payment with the correct booking_id
+        let result;
+        if (bookingId) {
+            const amountNum = parseFloat(paymentState.amount.replace(/[^0-9.-]/g, ''));
+            result = await API.payments.makePayment({
+                booking_id: bookingId,
+                amount: amountNum,
+                payment_method: paymentState.selectedMethod,
+                transaction_id: `TXN-${Date.now()}`,
+                reference: paymentState.accountNumber || `REF-${Date.now()}`
+            });
+        } else {
+            // If no booking_id, create payment without booking_id
+            const amountNum = parseFloat(paymentState.amount.replace(/[^0-9.-]/g, ''));
+            result = await API.payments.makePayment({
+                booking_id: null,
+                amount: amountNum,
+                payment_method: paymentState.selectedMethod,
+                transaction_id: `TXN-${Date.now()}`,
+                reference: paymentState.accountNumber || `REF-${Date.now()}`
+            });
+        }
+        
+        if (modal) modal.hide();
+        
+        if (result && result.booking_updated) {
+            showNotification('✅ Payment successful! Invoice marked as PAID.', 'success');
+        } else {
+            showNotification('✅ Payment successful!', 'success');
+        }
+        
+        // Refresh all data
+        await loadOutstandingPayments();
+        await loadPaymentHistory();
+        await loadBookings('upcoming');
+        await loadInvoices();
+        
+        // Reset payment state
+        paymentState = {
+            amount: 0,
+            bookingId: null,
+            invoiceId: null,
+            payAll: false,
+            selectedMethod: null,
+            accountNumber: '',
+            pin: ''
+        };
+        
+    } catch (error) {
+        console.error('Payment error:', error);
+        showNotification(error.message || 'Payment failed. Please try again.', 'danger');
+        
+        const confirmBtn = document.getElementById('paymentStep3Confirm');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Confirm Payment';
+        }
     }
 }
 
@@ -1028,7 +1764,6 @@ const panelRenderers = {
             <button class="tab active" data-type="upcoming"><i class="bi bi-calendar-week"></i> Upcoming</button>
             <button class="tab" data-type="delivered"><i class="bi bi-truck"></i> Delivered</button>
             <button class="tab" data-type="cancelled"><i class="bi bi-x-circle"></i> Cancelled</button>
-            <button class="tab" data-type="unpaid"><i class="bi bi-exclamation-triangle"></i> Unpaid</button>
         </div>
         <div id="bookingList" class="booking-box"></div>
     `,
@@ -1377,6 +2112,7 @@ window.closeSidebar = closeSidebar;
 window.openSidebar = openSidebar;
 window.openGlobalModal = openGlobalModal;
 window.showPaymentMethods = showPaymentMethods;
+window.showPaymentMethodsWithInvoice = showPaymentMethodsWithInvoice;
 window.logoutUser = logoutUser;
 window.openChatbot = openChatbot;
 window.renderPanel = renderPanel;

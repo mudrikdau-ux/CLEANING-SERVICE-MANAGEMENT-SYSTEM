@@ -504,7 +504,7 @@
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Status</th>
-                                        <th>Progress</th>
+                                        <th>Supervisor</th>
                                         <th style="text-align:center;">Services</th>
                                     </tr>
                                 </thead>
@@ -526,7 +526,7 @@
                                         <th style="width:50px">Photo</th>
                                         <th>Name</th>
                                         <th>Email</th>
-                                        <th>Progress</th>
+                                        <th>Supervisor</th>
                                         <th style="text-align:center;">Total</th>
                                         <th style="text-align:center;">Actions</th>
                                     </tr>
@@ -683,151 +683,174 @@
             </div>
 
             <!-- ALL BOOKINGS SECTION -->
-            <div id="bookingsSection" class="admin-section">
-                <div class="section-header">
-                    <h2><i class="bi bi-calendar-check-fill"></i> All Bookings</h2>
-                    <p>View and manage customer bookings with complete workflow</p>
-                </div>
-                
-                <!-- Booking Statistics Cards -->
-                <div class="stats-grid" id="bookingStatsGrid"></div>
-                
-                <!-- Filter Bar -->
-                <div class="filter-bar">
-                    <div class="search-box">
-                        <i class="bi bi-search"></i>
-                        <input type="text" id="bookingSearch" placeholder="Search bookings..." oninput="filterBookings()" class="search-input">
+            <div id="bookingsSection" class="admin-section active">
+                <div class="section-header d-flex align-items-center justify-content-between">
+                    <div>
+                        <h1 class="page-title"><i class="bi bi-journal-bookmark-fill text-primary me-2"></i>Bookings</h1>
+                        <p class="text-muted mb-0">View and manage customer bookings with complete workflow</p>
                     </div>
-                    <select id="bookingStatusFilter" class="form-select filter-select" onchange="filterBookings()" style="width:auto;">
-                        <option value="all">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                    <select id="paymentStatusFilter" class="form-select filter-select" onchange="filterBookings()" style="width:auto;">
-                        <option value="all">All Payment</option>
-                        <option value="paid">Paid</option>
-                        <option value="unpaid">Unpaid</option>
-                    </select>
-                    <select id="bookingStaffFilter" class="form-select filter-select" onchange="filterBookings()" style="width:auto;">
-                        <option value="all">All Staff</option>
-                    </select>
-                    <input type="date" id="bookingDateFilter" class="form-control filter-date" onchange="filterBookings()" style="width:auto;">
+                    <button class="btn btn-outline-primary rounded-pill px-4 refresh-bookings-btn" onclick="forceRefreshBookings()" style="font-size:14px; cursor: pointer;">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                    </button>
                 </div>
 
-                <div class="table-container">
-                    <div class="table-header-bar">
-                        <span class="table-title">Booking Records</span>
-                        <span class="badge-currency">Complete Workflow Management</span>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="bookingsTable">
-                            <thead>
-                                <tr>
-                                    <th>Booking ID</th>
-                                    <th>Customer</th>
-                                    <th>Service</th>
-                                    <th>Location</th>
-                                    <th>Date & Time</th>
-                                    <th>Booking Status</th>
-                                    <th>Payment Status</th>
-                                    <th>Staff</th>
-                                    <th style="width:140px; text-align:center;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bookingList"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- STAFF MANAGEMENT SECTION -->
-            <div id="staffSection" class="admin-section">
-                <div class="section-header">
-                    <h2><i class="bi bi-people-fill"></i> Staff Management</h2>
-                    <p>Manage staff accounts and assignments</p>
-                </div>
-
-                <div class="form-card">
-                    <h5><i class="bi bi-person-plus me-2"></i>Add New Staff Member</h5>
-                    <div class="row g-3">
-                        <div class="col-md-3 col-sm-6">
-                            <label class="form-label field-label">First Name <span class="text-danger">*</span></label>
-                            <input type="text" id="staffFirstName" class="form-control" placeholder="e.g. Fatma">
+                <!-- Filters Row -->
+                <div class="filters-row mt-3 mb-3">
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" id="bookingSearch" placeholder="Search bookings..." onkeyup="filterBookings()">
                         </div>
-                        <div class="col-md-3 col-sm-6">
-                            <label class="form-label field-label">Last Name <span class="text-danger">*</span></label>
-                            <input type="text" id="staffLastName" class="form-control" placeholder="e.g. Ali">
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <label class="form-label field-label">Email Address <span class="text-danger">*</span></label>
-                            <input type="email" id="staffEmail" class="form-control" placeholder="staff@CleanSpark.co.tz">
-                        </div>
-                        <div class="col-md-2 col-sm-6">
-                            <label class="form-label field-label">Staff Type <span class="text-danger">*</span></label>
-                            <select id="staffType" class="form-select">
-                                <option value="normal">Normal</option>
-                                <option value="supervisor">Supervisor</option>
-                                <option value="general_supervisor">General Supervisor</option>
+                        <div class="col-md-2">
+                            <select class="form-select" id="bookingStatusFilter" onchange="filterBookings()">
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
                             </select>
                         </div>
-                        <div class="col-md-2 col-sm-6">
-                            <label class="form-label field-label">Phone Number</label>
-                            <input type="tel" id="staffPhone" class="form-control" placeholder="+255 7xx xxx xxx">
+                        <div class="col-md-2">
+                            <select class="form-select" id="paymentStatusFilter" onchange="filterBookings()">
+                                <option value="all">All Payment</option>
+                                <option value="paid">Paid</option>
+                                <option value="unpaid">Unpaid</option>
+                            </select>
                         </div>
-                        <div class="col-md-2 col-sm-6">
-                            <label class="form-label field-label">Password <span class="text-danger">*</span></label>
-                            <div class="password-field">
-                                <input type="password" id="staffPass" class="form-control" placeholder="Set password">
-                                <button type="button" class="pw-toggle" onclick="togglePassword('staffPass', this)">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
+                        <div class="col-md-2">
+                            <input type="date" class="form-control" id="bookingDateFilter" onchange="filterBookings()">
                         </div>
-                        <div class="col-md-2 col-sm-6">
-                            <label class="form-label field-label">Staff Photo</label>
-                            <button type="button" onclick="openImageUploadModal('staff')" class="btn btn-outline-secondary w-100 image-upload-trigger" id="staffImageTrigger">
-                                <i class="bi bi-person-badge me-1"></i>
-                                <span id="staffImageLabel">Upload Photo</span>
-                            </button>
-                        </div>
-                        <div class="col-12 d-flex align-items-center gap-3">
-                            <div id="staffImagePreviewContainer" style="display:none; align-items:center; gap:8px;">
-                                <img id="staffImagePreview" src="" alt="Staff Preview" class="staff-img-preview">
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearStaffImage()">
-                                    <i class="bi bi-x-circle"></i> Remove
-                                </button>
-                            </div>
-                            <button onclick="addStaff()" class="btn btn-primary">
-                                <i class="bi bi-plus-lg me-1"></i> Add Staff Member
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-secondary w-100" onclick="filterBookings()">
+                                <i class="bi bi-search me-1"></i> Apply Filters
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="table-container">
-                    <div class="table-header-bar">
-                        <span class="table-title">Staff Directory</span>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="staffTable">
-                            <thead>
-                                <tr>
-                                    <th style="width:50px">Photo</th>
-                                    <th>Full Name</th>
-                                    <th>Email Address</th>
-                                    <th>Staff Type</th>
-                                    <th>Phone</th>
-                                    <th style="width:120px; text-align:center;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="staffList"></tbody>
-                        </table>
-                    </div>
+                <!-- Booking Stats -->
+                <div id="bookingStatsGrid" class="booking-stats-grid mb-3"></div>
+
+                <!-- Bookings Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Service</th>
+                                <th>Location</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Price</th>
+                                <th>Staff</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingList">
+                            <!-- Rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
+            
+           <!-- STAFF MANAGEMENT SECTION -->
+<div id="staffSection" class="admin-section">
+    <div class="section-header">
+        <h2><i class="bi bi-people-fill"></i> Staff Management</h2>
+        <p>Manage staff accounts and assignments</p>
+    </div>
+
+    <div class="form-card">
+        <h5><i class="bi bi-person-plus me-2"></i>Add New Staff Member</h5>
+        <div class="row g-3">
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label field-label">First Name <span class="text-danger">*</span></label>
+                <input type="text" id="staffFirstName" class="form-control" placeholder="e.g. Fatma">
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label field-label">Last Name <span class="text-danger">*</span></label>
+                <input type="text" id="staffLastName" class="form-control" placeholder="e.g. Ali">
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label field-label">Email Address <span class="text-danger">*</span></label>
+                <input type="email" id="staffEmail" class="form-control" placeholder="staff@CleanSpark.co.tz">
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label class="form-label field-label">Staff Type <span class="text-danger">*</span></label>
+                <select id="staffType" class="form-select">
+                    <option value="normal">Normal</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="general_supervisor">General Supervisor</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label class="form-label field-label">Phone Number</label>
+                <input type="tel" id="staffPhone" class="form-control" placeholder="+255 7xx xxx xxx">
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label class="form-label field-label">Password <span class="text-danger">*</span></label>
+                <div class="password-field">
+                    <input type="password" id="staffPass" class="form-control" placeholder="Set password">
+                    <button type="button" class="pw-toggle" onclick="togglePassword('staffPass', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Supervisor Assignment Field for Add Staff -->
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label field-label">General Supervisor</label>
+                <select id="supervisorSelect" class="form-select">
+                    <option value="">-- Select General Supervisor --</option>
+                </select>
+                <small class="text-muted" style="font-size:10px;">Required for Normal Staff</small>
+            </div>
+            
+            <div class="col-md-2 col-sm-6">
+                <label class="form-label field-label">Staff Photo</label>
+                <button type="button" onclick="openImageUploadModal('staff')" class="btn btn-outline-secondary w-100 image-upload-trigger" id="staffImageTrigger">
+                    <i class="bi bi-person-badge me-1"></i>
+                    <span id="staffImageLabel">Upload Photo</span>
+                </button>
+            </div>
+            <div class="col-12 d-flex align-items-center gap-3">
+                <div id="staffImagePreviewContainer" style="display:none; align-items:center; gap:8px;">
+                    <img id="staffImagePreview" src="" alt="Staff Preview" class="staff-img-preview">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearStaffImage()">
+                        <i class="bi bi-x-circle"></i> Remove
+                    </button>
+                </div>
+                <button onclick="addStaff()" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Add Staff Member
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header-bar">
+            <span class="table-title">Staff Directory</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover" id="staffTable">
+                <thead>
+                    <tr>
+                        <th style="width:50px">Photo</th>
+                        <th>Full Name</th>
+                        <th>Email Address</th>
+                        <th>Staff Type</th>
+                        <th>Phone</th>
+                        <th>Supervisor</th>
+                        <th style="width:120px; text-align:center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="staffList"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
             <!-- STAFF INFO SECTION (Issues) -->
             <div id="staffInfoSection" class="admin-section">
@@ -1385,6 +1408,16 @@
                             <button type="button" class="pw-toggle" onclick="togglePassword('editStaffPassword', this)"><i class="bi bi-eye"></i></button>
                         </div>
                     </div>
+                    
+                    <!-- Supervisor Assignment Field -->
+                    <div class="col-12">
+                        <label class="form-label field-label">General Supervisor</label>
+                        <select id="editSupervisorSelect" class="form-select">
+                            <option value="">-- Select General Supervisor --</option>
+                        </select>
+                        <small class="text-muted">Required for Normal Staff members</small>
+                    </div>
+                    
                     <div class="col-12 d-flex justify-content-center">
                         <div style="position:relative; display:inline-block;">
                             <div id="editStaffAvatarWrapper" class="staff-avatar-lg">
@@ -1565,6 +1598,87 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="confirmReviewApplication()"><i class="bi bi-save me-1"></i>Save Review</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Contractor Modal -->
+<div class="modal fade" id="editContractorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-styled">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-fill me-2"></i>Edit Contractor</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editContractorId">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label field-label">Contractor Name <span class="text-danger">*</span></label>
+                        <input type="text" id="editContractorName" class="form-control" placeholder="e.g. Zanzibar Beach Resort">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label field-label">Type <span class="text-danger">*</span></label>
+                        <select id="editContractorType" class="form-select">
+                            <option value="private">Private</option>
+                            <option value="government">Government</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label field-label">Status</label>
+                        <select id="editContractorStatus" class="form-select">
+                            <option value="active">Active</option>
+                            <option value="expired">Expired</option>
+                            <option value="terminated">Terminated</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label field-label">Location <span class="text-danger">*</span></label>
+                        <input type="text" id="editContractorLocation" class="form-control" placeholder="e.g. Stone Town, Zanzibar">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label field-label">Workers Count</label>
+                        <input type="number" id="editContractorWorkers" class="form-control" placeholder="e.g. 10" min="0">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label field-label">Worker Names</label>
+                        <textarea id="editContractorWorkerNames" class="form-control" rows="3" placeholder="Enter worker names (one per line)"></textarea>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label field-label">Contract Start</label>
+                        <input type="date" id="editContractorStartDate" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label field-label">Contract End</label>
+                        <input type="date" id="editContractorEndDate" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label field-label">Contract Value (TZS)</label>
+                        <input type="number" id="editContractorValue" class="form-control" placeholder="e.g. 24000000" min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label field-label">Contact Person</label>
+                        <input type="text" id="editContractorContactPerson" class="form-control" placeholder="e.g. Ahmed Hassan">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label field-label">Email</label>
+                        <input type="email" id="editContractorEmail" class="form-control" placeholder="email@company.com">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label field-label">Phone</label>
+                        <input type="tel" id="editContractorPhone" class="form-control" placeholder="+255 7xx xxx xxx">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label field-label">Services Provided</label>
+                        <input type="text" id="editContractorServices" class="form-control" placeholder="e.g. Office Cleaning, Waste Management">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveEditedContractor()"><i class="bi bi-save me-1"></i>Save Changes</button>
             </div>
         </div>
     </div>

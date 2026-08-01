@@ -9,6 +9,187 @@ let gsCurrentEditingMessageId = null;
 let selectedJobForPayment = null;
 let gsSelectedJobForPayment = null;
 
+// ========== STAFF JOB MANAGER ==========
+const StaffJobManager = {
+    /**
+     * Load all assigned jobs for the current staff member
+     */
+    async loadMyJobs() {
+        try {
+            const data = await API.staffJobs.getAssignedJobs();
+            const container = document.getElementById('myJobsList') || document.getElementById('jobsContainer');
+            if (!container) return;
+            
+            const jobs = data.jobs || [];
+            
+            if (jobs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <h4>No Active Jobs</h4>
+                        <p>You have no pending or in-progress jobs at the moment.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            jobs.forEach(job => {
+                const statusClass = job.status === 'pending' ? 'status-pending' : 
+                                   job.status === 'in_progress' ? 'status-in-progress' : 
+                                   job.status === 'confirmed' ? 'status-confirmed' : '';
+                const statusText = getStatusLabel(job.status);
+                const customerName = job.customer?.name || job.customer?.full_name || 'N/A';
+                const serviceName = job.service?.name || 'Cleaning Service';
+                const address = job.location?.address || job.location || 'N/A';
+                const scheduleDate = job.schedule?.date || job.service_date;
+                const scheduleTime = job.schedule?.time || job.service_time || 'N/A';
+                const pendingVerification = job.pending_verification || false;
+                
+                let actionButtons = '';
+                let verificationBadge = '';
+                
+                if (pendingVerification) {
+                    verificationBadge = `<span class="verification-badge pending"><i class="bi bi-clock-history"></i> Awaiting Verification</span>`;
+                } else if (job.customer_confirmed_start) {
+                    verificationBadge = `<span class="verification-badge confirmed"><i class="bi bi-check-circle"></i> Verified</span>`;
+                }
+                
+                if ((job.status === 'confirmed' || job.status === 'pending') && !pendingVerification) {
+                    actionButtons = `
+                        <button class="btn btn-primary btn-sm" onclick="StaffJobManager.requestStart(${job.id})">
+                            <i class="bi bi-play-fill"></i> Request Start
+                        </button>
+                    `;
+                } else if (job.status === 'in_progress' && !pendingVerification) {
+                    actionButtons = `
+                        <button class="btn btn-success btn-sm" onclick="StaffJobManager.requestComplete(${job.id})">
+                            <i class="bi bi-check-circle-fill"></i> Request Complete
+                        </button>
+                    `;
+                } else if (pendingVerification) {
+                    actionButtons = `
+                        <button class="btn btn-warning btn-sm" disabled>
+                            <i class="bi bi-hourglass-split"></i> Pending Verification
+                        </button>
+                    `;
+                }
+                
+                html += `
+                    <div class="job-card" data-id="${job.id}" onclick="StaffJobManager.viewJobDetail(${job.id})">
+                        <div class="job-header">
+                            <div class="job-icon"><i class="bi bi-brush-fill"></i></div>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        <h4 class="job-title">${escapeHtml(serviceName)}</h4>
+                        <div class="job-details">
+                            <div class="job-detail-item"><i class="bi bi-geo-alt-fill"></i><span>${escapeHtml(address)}</span></div>
+                            <div class="job-detail-item"><i class="bi bi-person-fill"></i><span>Client: ${escapeHtml(customerName)}</span></div>
+                            <div class="job-detail-item"><i class="bi bi-calendar3"></i><span>Date: ${formatDate(scheduleDate)}</span></div>
+                            <div class="job-detail-item"><i class="bi bi-clock"></i><span>Time: ${escapeHtml(scheduleTime)}</span></div>
+                            ${verificationBadge ? `<div class="job-detail-item verification-item">${verificationBadge}</div>` : ''}
+                        </div>
+                        <div class="job-actions" onclick="event.stopPropagation()">
+                            ${actionButtons}
+                            <button class="btn btn-outline btn-sm" onclick="StaffJobManager.viewJobDetail(${job.id})">
+                                <i class="bi bi-eye"></i> Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        } catch (error) {
+            console.error('Load jobs error:', error);
+            const container = document.getElementById('myJobsList') || document.getElementById('jobsContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <h4>Error Loading Jobs</h4>
+                        <p>${escapeHtml(error.message)}</p>
+                    </div>
+                `;
+            }
+        }
+    },
+    
+    /**
+     * Request to start a job
+     * @param {number} bookingId - The booking/job ID
+     */
+    async requestStart(bookingId) {
+        if (!confirm('Have you arrived at the customer location and are you ready to start the job?')) {
+            return;
+        }
+        
+        try {
+            showLoading(true);
+            const response = await API.jobVerification.requestStart(bookingId);
+            showLoading(false);
+            
+            if (response.success) {
+                showNotification('✅ Start request sent to your General Supervisor. Wait for verification.', 'success');
+                await this.loadMyJobs();
+            } else {
+                showNotification(response.message || 'Failed to request job start', 'error');
+            }
+        } catch (error) {
+            showLoading(false);
+            showNotification(error.message || 'Failed to request job start', 'error');
+        }
+    },
+    
+    /**
+     * Request to complete a job
+     * @param {number} bookingId - The booking/job ID
+     */
+    async requestComplete(bookingId) {
+        if (!confirm('Have you completed the job and is the customer satisfied with the work?')) {
+            return;
+        }
+        
+        try {
+            showLoading(true);
+            const response = await API.jobVerification.requestComplete(bookingId);
+            showLoading(false);
+            
+            if (response.success) {
+                showNotification('✅ Completion request sent to your General Supervisor. Wait for verification.', 'success');
+                await this.loadMyJobs();
+            } else {
+                showNotification(response.message || 'Failed to report job completion', 'error');
+            }
+        } catch (error) {
+            showLoading(false);
+            showNotification(error.message || 'Failed to report job completion', 'error');
+        }
+    },
+    
+    /**
+     * View job details in a modal
+     * @param {number} jobId - The job ID
+     */
+    async viewJobDetail(jobId) {
+        await showJobDetailModal(jobId);
+    },
+    
+    /**
+     * Get verification status for a job
+     * @param {number} bookingId - The booking ID
+     */
+    async getVerificationStatus(bookingId) {
+        try {
+            const response = await API.jobVerification.getStatus(bookingId);
+            return response;
+        } catch (error) {
+            console.error('Get verification status error:', error);
+            return null;
+        }
+    }
+};
+
 // ========== UTILITY FUNCTIONS ==========
 function showNotification(message, type = 'info') {
     const toastContainer = document.querySelector('.toast-container');
@@ -26,20 +207,49 @@ function showNotification(message, type = 'info') {
 }
 
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+
 function formatNumber(num) { if (num === undefined || num === null) return '0'; return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+
 function formatDate(dateStr) { if (!dateStr) return 'N/A'; return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); }
 
+function formatDateTime(dateStr) { if (!dateStr) return 'N/A'; return new Date(dateStr).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+
 function getStatusLabel(status) {
-    const labels = { 'pending': 'Pending', 'confirmed': 'Confirmed', 'in_progress': 'In Progress', 'completed': 'Completed', 'cancelled': 'Cancelled' };
+    const labels = { 
+        'pending': 'Pending', 
+        'confirmed': 'Confirmed', 
+        'in_progress': 'In Progress', 
+        'completed': 'Completed', 
+        'cancelled': 'Cancelled',
+        'assigned': 'Assigned',
+        'started': 'Started',
+        'pending_start_approval': 'Pending Start Approval',
+        'pending_complete_approval': 'Pending Complete Approval'
+    };
     return labels[status] || status;
+}
+
+function showLoading(show) {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = show ? 'flex' : 'none';
+    }
 }
 
 // ========== SETTINGS ==========
 function getSettings() {
     const stored = localStorage.getItem('staff_settings');
-    return stored ? JSON.parse(stored) : { notifications: true, darkMode: localStorage.getItem('theme') === 'dark', notificationSound: false, availabilityStatus: 'available', language: 'en' };
+    return stored ? JSON.parse(stored) : { 
+        notifications: true, 
+        darkMode: localStorage.getItem('theme') === 'dark', 
+        notificationSound: false, 
+        availabilityStatus: 'available', 
+        language: 'en' 
+    };
 }
+
 function saveSettings(settings) { localStorage.setItem('staff_settings', JSON.stringify(settings)); }
+
 function initThemeToggle() {
     const currentTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', currentTheme);
@@ -47,6 +257,7 @@ function initThemeToggle() {
     settings.darkMode = currentTheme === 'dark';
     saveSettings(settings);
 }
+
 function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -56,6 +267,7 @@ function toggleTheme() {
     settings.darkMode = newTheme === 'dark';
     saveSettings(settings);
 }
+
 function toggleThemeFromSettings(enableDark) {
     const newTheme = enableDark ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', newTheme);
@@ -65,6 +277,7 @@ function toggleThemeFromSettings(enableDark) {
     saveSettings(settings);
     showNotification(`Theme switched to ${newTheme} mode`, 'success');
 }
+
 function updateSetting(key, value) {
     const settings = getSettings();
     settings[key] = value;
@@ -82,12 +295,15 @@ async function loginStaff() {
     if (!email || !password) { showNotification('Please enter both email and password', 'error'); return; }
     
     try {
+        showLoading(true);
         const response = await API.auth.staffLogin(email, password);
+        showLoading(false);
         if (response && response.token) {
             currentStaff = response.staff;
             showDashboard();
         }
     } catch (error) {
+        showLoading(false);
         showNotification('Invalid email or password!', 'error');
         const loginCard = document.querySelector('.login-card');
         if (loginCard) { loginCard.style.animation = 'shake 0.5s'; setTimeout(() => { loginCard.style.animation = ''; }, 500); }
@@ -125,7 +341,7 @@ function showDashboard() {
     
     updateCurrentDate();
     loadStaffData();
-    loadJobs();
+    StaffJobManager.loadMyJobs();
     loadJobHistory();
     loadStats();
     loadProfile();
@@ -164,43 +380,20 @@ function loadStaffData() {
     if (topBarUserName && currentStaff) topBarUserName.textContent = currentStaff.first_name + ' ' + (currentStaff.last_name || '');
 }
 
-// ========== ASSIGNED JOBS (API: /staff/jobs) ==========
+// ========== ASSIGNED JOBS (API: /staff/jobs) - Legacy support ==========
 async function loadJobs() {
-    try {
-        const response = await API.staffJobs.getAssignedJobs();
-        const jobs = response.jobs || [];
-        const container = document.getElementById('jobsContainer');
-        if (!container) return;
-        
-        if (jobs.length === 0) {
-            container.innerHTML = `<div class="empty-state"><i class="bi bi-check-circle-fill"></i><h4>No Active Jobs</h4><p>You have no pending or in-progress jobs at the moment.</p></div>`;
-            return;
-        }
-        
-        let html = '';
-        jobs.forEach(job => {
-            const statusClass = job.status === 'pending' ? 'status-pending' : 'status-in-progress';
-            const statusText = getStatusLabel(job.status);
-            html += `<div class="job-card clickable-indicator" data-id="${job.id}" onclick="showJobDetailModal(${job.id})">
-                <div class="job-header"><div class="job-icon"><i class="bi bi-brush-fill"></i></div><span class="status-badge ${statusClass}">${statusText}</span></div>
-                <h4 class="job-title">${escapeHtml(job.service?.name || 'Cleaning Service')}</h4>
-                <div class="job-details">
-                    <div class="job-detail-item"><i class="bi bi-geo-alt-fill"></i><span>${escapeHtml(job.location?.address || job.location || 'N/A')}</span></div>
-                    <div class="job-detail-item"><i class="bi bi-person-fill"></i><span>Client: ${escapeHtml(job.customer?.name || job.customer?.full_name || 'N/A')}</span></div>
-                    <div class="job-detail-item"><i class="bi bi-calendar3"></i><span>Date: ${formatDate(job.schedule?.date || job.service_date)}</span></div>
-                    <div class="job-detail-item"><i class="bi bi-clock"></i><span>Time: ${job.schedule?.time || job.service_time || 'N/A'}</span></div>
-                </div>
-                <div class="job-actions" onclick="event.stopPropagation()">
-                    <button class="btn-action btn-action-report" onclick="openActionModal(${job.id})"><i class="bi bi-exclamation-triangle-fill"></i> Report Issue</button>
-                    <button class="btn-action btn-view" onclick="showJobDetailModal(${job.id})"><i class="bi bi-eye"></i> Details</button>
-                </div>
-            </div>`;
-        });
-        container.innerHTML = html;
-    } catch (error) {
-        console.error('Load jobs error:', error);
-        document.getElementById('jobsContainer').innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle-fill"></i><h4>Error Loading Jobs</h4><p>${error.message}</p></div>`;
-    }
+    // Use the new StaffJobManager
+    await StaffJobManager.loadMyJobs();
+}
+
+// ========== REQUEST START JOB (API: /staff/jobs/:bookingId/request-start) - Legacy support ==========
+async function requestStartJob(jobId) {
+    await StaffJobManager.requestStart(jobId);
+}
+
+// ========== REQUEST COMPLETE JOB (API: /staff/jobs/:bookingId/request-complete) - Legacy support ==========
+async function requestCompleteJob(jobId) {
+    await StaffJobManager.requestComplete(jobId);
 }
 
 // ========== JOB HISTORY (API: /staff/jobs/history) ==========
@@ -218,7 +411,7 @@ async function loadJobHistory() {
         
         let html = '';
         jobs.forEach(job => {
-            html += `<div class="job-card clickable-indicator" data-id="${job.id}" onclick="showJobDetailModal(${job.id})">
+            html += `<div class="job-card clickable-indicator" data-id="${job.id}" onclick="StaffJobManager.viewJobDetail(${job.id})">
                 <div class="job-header"><div class="job-icon"><i class="bi bi-check-circle-fill" style="color: #1e7b48;"></i></div><span class="status-badge status-completed">Completed</span></div>
                 <h4 class="job-title">${escapeHtml(job.service?.name || 'Cleaning Service')}</h4>
                 <div class="job-details">
@@ -227,7 +420,7 @@ async function loadJobHistory() {
                     <div class="job-detail-item"><i class="bi bi-calendar-check"></i><span>Completed: ${formatDate(job.completed_date || job.completedDate)}</span></div>
                 </div>
                 <div class="job-actions" onclick="event.stopPropagation()">
-                    <button class="btn-action btn-view" style="width: 100%;" onclick="showJobDetailModal(${job.id})"><i class="bi bi-eye"></i> View Full Details</button>
+                    <button class="btn-action btn-view" style="width: 100%;" onclick="StaffJobManager.viewJobDetail(${job.id})"><i class="bi bi-eye"></i> View Full Details</button>
                 </div>
             </div>`;
         });
@@ -355,11 +548,28 @@ async function showJobDetailModal(jobId) {
         if (title) title.textContent = job.service?.name || 'Job Details';
         
         const statusClass = job.status === 'pending' ? 'pending' : job.status === 'in_progress' ? 'in-progress' : 'completed';
+        const supervisorName = job.supervisor?.name || job.supervisor_name || 'Not assigned';
+        const customerConfirmedStart = job.customer_confirmed_start ? '✅ Confirmed' : '⏳ Pending';
+        const customerConfirmedComplete = job.customer_confirmed_complete ? '✅ Confirmed' : '⏳ Pending';
+        const pendingVerification = job.pending_verification || false;
+        
         let html = `<div class="detail-group"><div class="detail-group-header"><i class="bi bi-info-circle-fill"></i><h4>Job Overview</h4></div>
             <div class="detail-item"><span class="detail-label"><i class="bi bi-tag"></i> Job ID</span><span class="detail-value">#${job.id}</span></div>
             <div class="detail-item"><span class="detail-label"><i class="bi bi-brush"></i> Service</span><span class="detail-value">${escapeHtml(job.service?.name || 'N/A')}</span></div>
-            <div class="detail-item"><span class="detail-label"><i class="bi bi-geo-alt"></i> Status</span><span class="detail-value"><span class="status-badge-large ${statusClass}">${job.status.toUpperCase()}</span></span></div></div>
-            <div class="detail-group"><div class="detail-group-header"><i class="bi bi-person-fill"></i><h4>Client Information</h4></div>
+            <div class="detail-item"><span class="detail-label"><i class="bi bi-geo-alt"></i> Status</span><span class="detail-value"><span class="status-badge-large ${statusClass}">${job.status.toUpperCase()}</span></span></div>
+            <div class="detail-item"><span class="detail-label"><i class="bi bi-person-badge"></i> Supervisor</span><span class="detail-value">${escapeHtml(supervisorName)}</span></div>
+            <div class="detail-item"><span class="detail-label"><i class="bi bi-check-circle"></i> Customer Start</span><span class="detail-value">${customerConfirmedStart}</span></div>
+            ${job.status === 'started' || job.status === 'in_progress' ? `
+                <div class="detail-item"><span class="detail-label"><i class="bi bi-check-circle"></i> Customer Complete</span><span class="detail-value">${customerConfirmedComplete}</span></div>
+            ` : ''}
+            ${pendingVerification ? `
+                <div class="detail-item" style="background: #fef3c7; padding: 8px 12px; border-radius: 8px;">
+                    <span class="detail-label"><i class="bi bi-clock-history" style="color: #d97706;"></i> Status</span>
+                    <span class="detail-value" style="color: #d97706; font-weight: 600;">⏳ Pending Supervisor Verification</span>
+                </div>
+            ` : ''}
+        </div>
+        <div class="detail-group"><div class="detail-group-header"><i class="bi bi-person-fill"></i><h4>Client Information</h4></div>
             <div class="detail-item"><span class="detail-label"><i class="bi bi-person"></i> Name</span><span class="detail-value">${escapeHtml(job.customer?.name || job.customer?.full_name || 'N/A')}</span></div>
             <div class="detail-item"><span class="detail-label"><i class="bi bi-telephone"></i> Phone</span><span class="detail-value">${escapeHtml(job.customer?.phone || 'N/A')}</span></div></div>
             <div class="detail-group"><div class="detail-group-header"><i class="bi bi-geo-alt-fill"></i><h4>Location & Schedule</h4></div>
@@ -372,6 +582,31 @@ async function showJobDetailModal(jobId) {
             <p style="color: var(--text-secondary); line-height: 1.6; padding: 12px; background: var(--bg-section-alt); border-radius: 10px;">${escapeHtml(job.booking_details?.instructions || job.instructions)}</p></div>`;
         }
         
+        // Add action buttons based on status
+        html += `<div class="detail-group" style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">`;
+        
+        if ((job.status === 'pending' || job.status === 'confirmed') && !pendingVerification) {
+            html += `<button class="btn-action btn-action-start" onclick="StaffJobManager.requestStart(${job.id})" style="flex:1;">
+                <i class="bi bi-play-fill"></i> Request Start
+            </button>`;
+        }
+        if (job.status === 'in_progress' && !pendingVerification) {
+            html += `<button class="btn-action btn-action-complete" onclick="StaffJobManager.requestComplete(${job.id})" style="flex:1;">
+                <i class="bi bi-check-circle-fill"></i> Report Complete
+            </button>`;
+        }
+        if (pendingVerification) {
+            html += `<button class="btn-action btn-action-pending" disabled style="flex:1; background: #fef3c7; color: #92400e; cursor: not-allowed;">
+                <i class="bi bi-hourglass-split"></i> Pending Verification
+            </button>`;
+        }
+        
+        html += `<button class="btn-action btn-view" onclick="closeJobDetailModalFn()" style="flex:1;">
+            <i class="bi bi-x-circle"></i> Close
+        </button>
+        </div></div>`;
+        
         content.innerHTML = html;
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
@@ -379,6 +614,7 @@ async function showJobDetailModal(jobId) {
         showNotification('Failed to load job details', 'error');
     }
 }
+
 function closeJobDetailModalFn() { const modal = document.getElementById('jobDetailModal'); if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; } }
 
 // ========== ACTION / ISSUE REPORT (API: /staff-issues) ==========
@@ -393,6 +629,7 @@ function openActionModal(jobId) {
         document.getElementById('actionReturnDate').value = '';
     }
 }
+
 function closeActionModalFn() { const modal = document.getElementById('actionModal'); if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; } }
 
 async function submitActionReport() {
@@ -436,6 +673,7 @@ function showStatsDetail(statId) {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
+
 function closeStatsDetailModalFn() { const modal = document.getElementById('statsDetailModal'); if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; } }
 
 // ========== SUPERVISOR MENU TOGGLES ==========
@@ -447,6 +685,7 @@ function toggleSupervisorMenu() {
         if (supervisorBtn) supervisorBtn.style.display = 'none';
     }
 }
+
 function toggleGeneralSupervisorMenu() {
     const gsBtn = document.getElementById('generalSupervisorSidebarBtn');
     if (currentStaff && currentStaff.staff_type === 'general_supervisor') {
@@ -559,7 +798,6 @@ async function generateWeeklyReport() {
     }
 }
 
-// FIXED: Download report with authentication token using fetch/blob
 async function downloadReport() {
     if (!currentGeneratedReport) { showNotification('No report to download', 'error'); return; }
     const token = API.getAuthToken();
@@ -957,7 +1195,6 @@ async function generateGSWeeklyReport() {
     }
 }
 
-// FIXED: Download GS report with authentication token using fetch/blob
 async function downloadGSReport() {
     if (!gsCurrentGeneratedReport) { showNotification('No report to download', 'error'); return; }
     const token = API.getAuthToken();
@@ -1042,7 +1279,15 @@ function hideLogoutConfirmation() { document.getElementById('logoutConfirmModal'
 function setupSidebarNav() {
     const navButtons = document.querySelectorAll('.sidebar-nav-btn');
     const views = ['jobs', 'history', 'stats', 'profile', 'settings', 'supervisor', 'generalSupervisor'];
-    const viewTitles = { jobs: 'Assigned Jobs', history: 'Job History', stats: 'My Stats', profile: 'My Profile', settings: 'Settings', supervisor: 'Supervisor Panel', generalSupervisor: 'General Supervisor' };
+    const viewTitles = { 
+        jobs: 'Assigned Jobs', 
+        history: 'Job History', 
+        stats: 'My Stats', 
+        profile: 'My Profile', 
+        settings: 'Settings', 
+        supervisor: 'Supervisor Panel', 
+        generalSupervisor: 'General Supervisor' 
+    };
     
     navButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1058,7 +1303,7 @@ function setupSidebarNav() {
                 if (view === 'supervisor') { loadSupervisorContractors(); loadSupervisorChat(); }
                 else if (view === 'generalSupervisor') { loadGeneralSupervisorData(); }
                 else if (view === 'settings') loadSettings();
-                else if (view === 'jobs') loadJobs();
+                else if (view === 'jobs') StaffJobManager.loadMyJobs();
                 else if (view === 'history') loadJobHistory();
                 else if (view === 'stats') loadStats();
                 else if (view === 'profile') loadProfile();
@@ -1076,6 +1321,7 @@ function setupMobileMenu() {
     if (overlay) overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; });
     if (closeBtn) closeBtn.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; });
 }
+
 function closeSidebar() { const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('sidebarOverlay'); if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('active'); document.body.style.overflow = ''; }
 
 // ========== EVENT LISTENERS ==========
@@ -1148,3 +1394,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+// ========== EXPOSE GLOBALLY ==========
+window.StaffJobManager = StaffJobManager;
+window.loadJobs = loadJobs;
+window.requestStartJob = requestStartJob;
+window.requestCompleteJob = requestCompleteJob;
+window.showJobDetailModal = showJobDetailModal;
+window.closeJobDetailModalFn = closeJobDetailModalFn;
+window.openActionModal = openActionModal;
+window.closeActionModalFn = closeActionModalFn;
+window.submitActionReport = submitActionReport;
+window.showStatsDetail = showStatsDetail;
+window.closeStatsDetailModalFn = closeStatsDetailModalFn;
+window.showLogoutConfirmation = showLogoutConfirmation;
+window.hideLogoutConfirmation = hideLogoutConfirmation;
+window.showNotification = showNotification;
+window.formatDate = formatDate;
+window.formatDateTime = formatDateTime;
+window.escapeHtml = escapeHtml;
+window.getStatusLabel = getStatusLabel;
+window.filterGSJobs = filterGSJobs;
+window.closeReceiptModal = closeReceiptModal;
+window.printReceipt = printReceipt;
+window.closeReportModal = closeReportModal;
+window.downloadGSReportById = downloadGSReportById;
+window.downloadGSReport = downloadGSReport;
+window.submitGSReportToAdmin = submitGSReportToAdmin;
+window.validateGSCashPayment = validateGSCashPayment;
+
+console.log('✅ Staff page loaded successfully with StaffJobManager!');

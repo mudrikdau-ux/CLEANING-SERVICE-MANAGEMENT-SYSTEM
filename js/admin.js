@@ -1,7 +1,6 @@
 // ============================================================
 //  CleanSpark ADMIN PANEL — admin.js (COMPLETE FULL VERSION)
 //  All prices in TZS | Full Backend Integration
-//  Fully connected to API with no mock data
 // ============================================================
 
 // ========== GLOBAL VARIABLES ==========
@@ -15,6 +14,7 @@ let modalImageBase64 = null;
 let currentImageTarget = null;
 let selectedAssignStaffId = null;
 let currentAssignServiceId = null;
+let currentAssignBookingId = null;
 let currentMessageId = null;
 let currentContractorId = null;
 let currentInvoiceData = null;
@@ -24,10 +24,15 @@ let currentApplicationId = null;
 let currentBookingId = null;
 let currentStaffIssueId = null;
 let currentUserId = null;
+let currentReportId = null;
 let bookingChart = null;
 let revenueChart = null;
 let logoutTimer = null;
 let notificationCheckInterval = null;
+let isAdminLoggedIn = false;
+let paymentPollingInterval = null;
+let isRefreshing = false;
+let allSupervisors = [];
 
 const MAX_INCLUDED = 6;
 
@@ -114,6 +119,26 @@ function sendOTP(email) {
     return true;
 }
 
+// ========== DEBUG TOKEN FUNCTION ==========
+function debugToken() {
+    const token = localStorage.getItem('cleanspark_token') || sessionStorage.getItem('cleanspark_token');
+    console.log('Token exists:', !!token);
+    if (token) {
+        try {
+            const parts = token.split('.');
+            const payload = JSON.parse(atob(parts[1]));
+            console.log('Token payload:', payload);
+            console.log('Role in token:', payload.role);
+            console.log('Token expiry:', new Date(payload.exp * 1000).toLocaleString());
+            return payload;
+        } catch (e) {
+            console.error('Error decoding token:', e);
+            return null;
+        }
+    }
+    return null;
+}
+
 // ========== LOGIN FUNCTIONS ==========
 async function verifyCredentials() {
     var emailInput = document.getElementById('adminEmail');
@@ -176,6 +201,13 @@ async function verifyOTP() {
         const result = await API.auth.adminVerifyOTP(email, enteredOTP);
         
         if (result.token) {
+            localStorage.setItem('cleanspark_token', result.token);
+            sessionStorage.setItem('cleanspark_token', result.token);
+            sessionStorage.setItem('adminLoggedIn', 'true');
+            isAdminLoggedIn = true;
+            
+            debugToken();
+            
             var loginSection = document.getElementById('loginSection');
             var dashboard = document.getElementById('dashboard');
             if (loginSection) loginSection.style.display = 'none';
@@ -278,6 +310,16 @@ async function performLogout() {
         console.error('Logout API error:', error);
     }
     
+    localStorage.removeItem('cleanspark_token');
+    sessionStorage.removeItem('cleanspark_token');
+    sessionStorage.removeItem('adminLoggedIn');
+    isAdminLoggedIn = false;
+    
+    if (paymentPollingInterval) {
+        clearInterval(paymentPollingInterval);
+        paymentPollingInterval = null;
+    }
+    
     setTimeout(function() {
         var loadingOverlay = document.getElementById('logoutLoading');
         if (loadingOverlay) loadingOverlay.style.display = 'none';
@@ -347,10 +389,17 @@ function showSection(sectionId) {
     }
     if (sectionId === 'staff') {
         loadStaff();
+        loadSupervisorsForDropdown();
     }
     if (sectionId === 'invoice') {
         loadInvoices();
         populateInvoiceContractors();
+    }
+    if (sectionId === 'reports') {
+        loadReportsHistory();
+    }
+    if (sectionId === 'supervisor') {
+        renderSupervisorDashboard();
     }
 }
 
@@ -369,12 +418,603 @@ function setupMenuClickHandlers() {
     }
 }
 
+// ========== SUPERVISOR ASSIGNMENT FUNCTIONS ==========
+
+/**
+ * Load supervisors for dropdown in staff management
+ */
+async function loadSupervisorsForDropdown() {
+    try {
+        const data = await API.adminStaff.getAll();
+        const supervisors = data.staff ? data.staff.filter(s => s.staff_type === 'general_supervisor') : [];
+        allSupervisors = supervisors;
+        
+        // Add dropdown for new staff
+        const select = document.getElementById('supervisorSelect');
+        if (select) {
+            select.innerHTML = '<option value="">-- Select General Supervisor --</option>' +
+                supervisors.map(s => `<option value="${s.id}">${escapeHtml(s.full_name)}</option>`).join('');
+        }
+        
+        // Also update edit modal dropdown
+        const editSelect = document.getElementById('editSupervisorSelect');
+        if (editSelect) {
+            editSelect.innerHTML = '<option value="">-- Select General Supervisor --</option>' +
+                supervisors.map(s => `<option value="${s.id}">${escapeHtml(s.full_name)}</option>`).join('');
+        }
+    } catch (error) {
+        console.error('Load supervisors for dropdown error:', error);
+    }
+}
+
+// ========== STAFF FUNCTIONS (WITH SUPERVISOR ASSIGNMENT) ==========
+async function loadStaff() {
+    try {
+        const result = await API.adminStaff.getAll();
+        var staff = result.staff || [];
+        var html = '';
+        if (staff.length === 0) {
+            html = '<tr><td colspan="7" class="text-center text-muted py-4">No staff members added yet</td></tr>';
+        } else {
+            for (var i = 0; i < staff.length; i++) {
+                var member = staff[i];
+                var initials = (member.first_name ? member.first_name.charAt(0) : '') + (member.last_name ? member.last_name.charAt(0) : '');
+                initials = initials.toUpperCase() || '?';
+                var avatarHtml = member.photo ? '<img src="' + escapeHtml(member.photo) + '" alt="' + escapeHtml(member.full_name) + '" class="staff-avatar">' : '<div class="staff-initials">' + escapeHtml(initials) + '</div>';
+                
+                // Staff type label with badge
+                var staffTypeLabel = member.staff_type === 'supervisor' ? 'Supervisor' : (member.staff_type === 'general_supervisor' ? 'General Supervisor' : 'Normal');
+                var staffTypeClass = member.staff_type === 'supervisor' ? 'staff-type-supervisor' : (member.staff_type === 'general_supervisor' ? 'staff-type-general_supervisor' : 'staff-type-normal');
+                
+                // SUPERVISOR COLUMN - Display supervisor name or status
+                var supervisorDisplay = '';
+                if (member.staff_type === 'normal') {
+                    if (member.general_supervisor_id) {
+                        // Find supervisor in the allSupervisors array
+                        var supervisorFound = allSupervisors.find(function(s) { 
+                            return s.id === member.general_supervisor_id; 
+                        });
+                        if (supervisorFound) {
+                            supervisorDisplay = '<span class="supervisor-assigned">' + escapeHtml(supervisorFound.full_name) + '</span>';
+                        } else {
+                            supervisorDisplay = '<span class="supervisor-assigned">Assigned</span>';
+                        }
+                    } else {
+                        supervisorDisplay = '<span class="supervisor-warning">⚠️ Not Assigned</span>';
+                    }
+                } else {
+                    // For supervisors and general supervisors, show their role
+                    supervisorDisplay = '<span class="text-muted" style="font-size:12px;">—</span>';
+                }
+                
+                // ACTIONS COLUMN - Only Edit and Delete buttons
+                var actionsHtml = `
+                    <button class="action-btn action-btn-edit" onclick="openEditStaffModal(${member.id})" title="Edit">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <button class="action-btn action-btn-delete" onclick="deleteStaff(${member.id})" title="Remove">
+                        <i class="bi bi-trash3-fill"></i>
+                    </button>
+                `;
+                
+                html += '<tr>' +
+                    '<td class="align-middle">' + avatarHtml + '</td>' +
+                    '<td class="align-middle"><strong>' + escapeHtml(member.full_name) + '</strong></td>' +
+                    '<td class="align-middle">' + escapeHtml(member.email) + '</td>' +
+                    '<td class="align-middle"><span class="staff-type-badge ' + staffTypeClass + '">' + staffTypeLabel + '</span></td>' +
+                    '<td class="align-middle">' + escapeHtml(member.phone || '—') + '</td>' +
+                    '<td class="align-middle">' + supervisorDisplay + '</td>' +  <!-- SUPERVISOR COLUMN -->
+                    '<td class="align-middle text-center">' + actionsHtml + '</td>' +  <!-- ACTIONS COLUMN -->
+                '</tr>';
+            }
+        }
+        var staffList = document.getElementById('staffList');
+        if (staffList) staffList.innerHTML = html;
+        loadSupervisorsForDropdown();
+    } catch (error) {
+        console.error('Load staff error:', error);
+        showNotification('Failed to load staff', 'error');
+    }
+}
+
+async function addStaff() {
+    var firstName = document.getElementById('staffFirstName') ? document.getElementById('staffFirstName').value.trim() : '';
+    var lastName = document.getElementById('staffLastName') ? document.getElementById('staffLastName').value.trim() : '';
+    var email = document.getElementById('staffEmail') ? document.getElementById('staffEmail').value.trim() : '';
+    var staffType = document.getElementById('staffType') ? document.getElementById('staffType').value : 'normal';
+    var phone = document.getElementById('staffPhone') ? document.getElementById('staffPhone').value.trim() : '';
+    var password = document.getElementById('staffPass') ? document.getElementById('staffPass').value : '';
+    var supervisorSelect = document.getElementById('supervisorSelect');
+    var supervisorId = supervisorSelect ? supervisorSelect.value : '';
+    
+    if (!firstName || !lastName || !email || !password) {
+        showNotification('Please fill in all required staff details', 'error');
+        return;
+    }
+    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showNotification('Please enter a valid email address', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showNotification('Password must be at least 6 characters', 'error');
+        return;
+    }
+    
+    // Validate supervisor assignment for normal staff
+    if (staffType === 'normal' && !supervisorId) {
+        showNotification('Every Normal Staff must have a General Supervisor assigned!', 'error');
+        return;
+    }
+
+    var formData = new FormData();
+    formData.append('full_name', firstName + ' ' + lastName);
+    formData.append('first_name', firstName);
+    formData.append('last_name', lastName);
+    formData.append('email', email);
+    formData.append('staff_type', staffType);
+    formData.append('phone', phone);
+    formData.append('password', password);
+    formData.append('general_supervisor_id', supervisorId || null);
+    if (pendingStaffImage) {
+        var blob = dataURLtoBlob(pendingStaffImage);
+        formData.append('photo', blob, 'staff_photo.jpg');
+    }
+
+    try {
+        await API.adminStaff.add(formData);
+        showNotification('Staff member added successfully!', 'success');
+        
+        if (document.getElementById('staffFirstName')) document.getElementById('staffFirstName').value = '';
+        if (document.getElementById('staffLastName')) document.getElementById('staffLastName').value = '';
+        if (document.getElementById('staffEmail')) document.getElementById('staffEmail').value = '';
+        if (document.getElementById('staffPhone')) document.getElementById('staffPhone').value = '';
+        if (document.getElementById('staffPass')) document.getElementById('staffPass').value = '';
+        if (supervisorSelect) supervisorSelect.value = '';
+        clearStaffImage();
+        
+        loadStaff();
+        loadDashboardStats();
+        loadSupervisorsForDropdown();
+    } catch (error) {
+        showNotification(error.message || 'Failed to add staff member', 'error');
+    }
+}
+
+async function deleteStaff(staffId) {
+    if (!confirm('Remove this staff member?')) return;
+    try {
+        await API.adminStaff.delete(staffId);
+        loadStaff();
+        loadDashboardStats();
+        showNotification('Staff member removed.', 'success');
+    } catch (error) {
+        showNotification(error.message || 'Failed to delete staff', 'error');
+    }
+}
+
+async function openEditStaffModal(staffId) {
+    try {
+        const result = await API.adminStaff.getById(staffId);
+        var member = result.staff;
+        if (!member) return;
+        
+        pendingEditStaffImage = null;
+        document.getElementById('editStaffId').value = staffId;
+        document.getElementById('editStaffFirstName').value = member.first_name || '';
+        document.getElementById('editStaffLastName').value = member.last_name || '';
+        document.getElementById('editStaffEmail').value = member.email || '';
+        document.getElementById('editStaffType').value = member.staff_type || 'normal';
+        document.getElementById('editStaffPhone').value = member.phone || '';
+        document.getElementById('editStaffPassword').value = '';
+        
+        // SAFE: Set supervisor value with null check
+        var editSupervisorSelect = document.getElementById('editSupervisorSelect');
+        if (editSupervisorSelect) {
+            // Make sure dropdown is populated first
+            await loadSupervisorsForDropdown();
+            editSupervisorSelect.value = member.general_supervisor_id || '';
+        }
+        
+        var initials = (member.first_name ? member.first_name.charAt(0) : '') + (member.last_name ? member.last_name.charAt(0) : '');
+        initials = initials.toUpperCase() || '?';
+        var photoEl = document.getElementById('editStaffPhotoPreview');
+        var initialsEl = document.getElementById('editStaffInitials');
+        if (member.photo) {
+            if (photoEl) {
+                photoEl.src = member.photo;
+                photoEl.style.display = 'block';
+            }
+            if (initialsEl) initialsEl.style.display = 'none';
+            pendingEditStaffImage = member.photo;
+        } else {
+            if (photoEl) {
+                photoEl.style.display = 'none';
+                photoEl.src = '';
+            }
+            if (initialsEl) {
+                initialsEl.textContent = initials;
+                initialsEl.style.display = 'flex';
+            }
+        }
+        
+        var modal = document.getElementById('editStaffModal');
+        if (modal) new bootstrap.Modal(modal).show();
+    } catch (error) {
+        showNotification(error.message || 'Failed to load staff', 'error');
+    }
+}
+
+async function saveEditedStaff() {
+    var staffId = parseInt(document.getElementById('editStaffId').value);
+    var firstName = document.getElementById('editStaffFirstName').value.trim();
+    var lastName = document.getElementById('editStaffLastName').value.trim();
+    var email = document.getElementById('editStaffEmail').value.trim();
+    var staffType = document.getElementById('editStaffType').value;
+    var phone = document.getElementById('editStaffPhone').value.trim();
+    var newPass = document.getElementById('editStaffPassword').value;
+    
+    // SAFE: Get supervisor value with null check
+    var editSupervisorSelect = document.getElementById('editSupervisorSelect');
+    var supervisorId = editSupervisorSelect ? editSupervisorSelect.value : '';
+    
+    if (!firstName || !lastName || !email) {
+        showNotification('Name and email are required', 'error');
+        return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showNotification('Please enter a valid email address', 'error');
+        return;
+    }
+    
+    // Validate supervisor assignment for normal staff
+    if (staffType === 'normal' && !supervisorId) {
+        showNotification('Every Normal Staff must have a General Supervisor assigned!', 'error');
+        return;
+    }
+
+    var formData = new FormData();
+    formData.append('full_name', firstName + ' ' + lastName);
+    formData.append('first_name', firstName);
+    formData.append('last_name', lastName);
+    formData.append('email', email);
+    formData.append('staff_type', staffType);
+    formData.append('phone', phone);
+    formData.append('general_supervisor_id', supervisorId || null);
+    if (newPass) formData.append('password', newPass);
+    if (pendingEditStaffImage && pendingEditStaffImage.startsWith('data:image')) {
+        var blob = dataURLtoBlob(pendingEditStaffImage);
+        formData.append('photo', blob, 'staff_photo.jpg');
+    }
+
+    try {
+        await API.adminStaff.update(staffId, formData);
+        var modalEl = document.getElementById('editStaffModal');
+        var bsModal = bootstrap.Modal.getInstance(modalEl);
+        if (bsModal) bsModal.hide();
+        loadStaff();
+        loadDashboardStats();
+        loadSupervisorsForDropdown();
+        showNotification('Staff member updated successfully!', 'success');
+    } catch (error) {
+        showNotification(error.message || 'Failed to update staff', 'error');
+    }
+}
+
+// ========== SUPERVISOR DASHBOARD FUNCTIONS ==========
+
+/**
+ * Render Supervisor Dashboard
+ */
+async function renderSupervisorDashboard() {
+    const panel = document.getElementById('supervisorDashboard');
+    if (!panel) return;
+
+    try {
+        // Load stats
+        const statsResponse = await API.generalSupervisor.getDashboardStats();
+        const stats = statsResponse.stats || {};
+        const statsContainer = document.getElementById('supervisorStats');
+        if (statsContainer) {
+            statsContainer.innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total_staff || 0}</div>
+                        <div class="stat-label">Total Staff</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.assigned_jobs || 0}</div>
+                        <div class="stat-label">Assigned Jobs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.started_jobs || 0}</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.pending_verification || 0}</div>
+                        <div class="stat-label">Pending Verification</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.completed_jobs || 0}</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load staff list
+        const staffResponse = await API.generalSupervisor.getSupervisedStaff();
+        const staff = staffResponse.staff || [];
+        const staffListContainer = document.getElementById('supervisorStaffList');
+        if (staffListContainer) {
+            if (staff.length === 0) {
+                staffListContainer.innerHTML = '<p class="text-muted text-center py-4">No staff members found</p>';
+            } else {
+                staffListContainer.innerHTML = staff.map(s => `
+                    <div class="staff-item">
+                        <div class="staff-avatar">
+                            ${s.first_name?.charAt(0) || 'S'}${s.last_name?.charAt(0) || ''}
+                        </div>
+                        <div class="staff-info">
+                            <div class="staff-name">${escapeHtml(s.full_name || s.first_name + ' ' + s.last_name)}</div>
+                            <div class="staff-details">${escapeHtml(s.phone || 'No phone')} · ${s.active_jobs || 0} active jobs</div>
+                        </div>
+                        <div class="staff-status ${s.active_jobs > 0 ? 'active' : 'available'}">
+                            ${s.active_jobs > 0 ? 'Busy' : 'Available'}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Load jobs
+        const jobsResponse = await API.generalSupervisor.getSupervisedJobs({});
+        const jobs = jobsResponse.jobs || [];
+        const jobsListContainer = document.getElementById('supervisorJobsList');
+        if (jobsListContainer) {
+            if (jobs.length === 0) {
+                jobsListContainer.innerHTML = '<p class="text-muted text-center py-4">No jobs to monitor</p>';
+            } else {
+                jobsListContainer.innerHTML = jobs.map(j => `
+                    <div class="job-item" data-assignment-id="${j.assignment_id}">
+                        <div class="job-header">
+                            <span class="job-id">#${j.booking_id}</span>
+                            <span class="job-status status-${j.status}">${j.status.toUpperCase()}</span>
+                        </div>
+                        <div class="job-details">
+                            <div class="job-customer">${escapeHtml(j.customer_name || 'Customer')}</div>
+                            <div class="job-service">${escapeHtml(j.service_name || 'Cleaning Service')}</div>
+                            <div class="job-staff">Staff: ${escapeHtml(j.staff_name || 'Unassigned')}</div>
+                            <div class="job-date">${formatDate(j.service_date)} at ${escapeHtml(j.service_time || 'TBD')}</div>
+                        </div>
+                        <div class="job-actions">
+                            ${j.status === 'assigned' && !j.customer_confirmed_start ? `
+                                <button class="btn-confirm-start" onclick="confirmCustomerStart(${j.assignment_id})">
+                                    <i class="fas fa-check"></i> Confirm Start
+                                </button>
+                            ` : ''}
+                            ${j.status === 'assigned' && j.customer_confirmed_start ? `
+                                <button class="btn-start-job" onclick="startJob(${j.assignment_id})">
+                                    <i class="fas fa-play"></i> Start Job
+                                </button>
+                            ` : ''}
+                            ${j.status === 'started' && !j.customer_confirmed_complete ? `
+                                <button class="btn-confirm-complete" onclick="confirmCustomerComplete(${j.assignment_id})">
+                                    <i class="fas fa-check"></i> Confirm Completion
+                                </button>
+                            ` : ''}
+                            ${j.status === 'started' && j.customer_confirmed_complete ? `
+                                <button class="btn-complete-job" onclick="completeJob(${j.assignment_id})">
+                                    <i class="fas fa-check-circle"></i> Complete Job
+                                </button>
+                            ` : ''}
+                            <button class="btn-view-logs" onclick="viewJobLogs(${j.assignment_id})">
+                                <i class="fas fa-history"></i> Logs
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Load notifications
+        const notifResponse = await API.generalSupervisor.getNotifications({ unread_only: false });
+        const notifications = notifResponse.notifications || [];
+        const notifContainer = document.getElementById('supervisorNotifications');
+        if (notifContainer) {
+            if (notifications.length === 0) {
+                notifContainer.innerHTML = '<p class="text-muted text-center py-4">No notifications</p>';
+            } else {
+                notifContainer.innerHTML = notifications.map(n => `
+                    <div class="notification-item ${n.is_read ? 'read' : 'unread'}" onclick="markNotificationRead(${n.id})">
+                        <div class="notification-icon">
+                            <i class="fas ${n.type === 'new_job' ? 'fa-briefcase' : n.type === 'staff_start_request' ? 'fa-play' : 'fa-check'}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-message">${escapeHtml(n.message)}</div>
+                            <div class="notification-time">${formatDateTime(n.created_at)}</div>
+                        </div>
+                        ${!n.is_read ? '<span class="notification-badge">New</span>' : ''}
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Render supervisor dashboard error:', error);
+        showNotification('Failed to load supervisor dashboard', 'error');
+    }
+}
+
+/**
+ * Confirm customer start
+ */
+async function confirmCustomerStart(assignmentId) {
+    if (!confirm('Have you confirmed with the customer that the staff has arrived and started the service?')) {
+        return;
+    }
+
+    try {
+        await API.generalSupervisor.confirmCustomerStart(assignmentId, true, 'Customer confirmed start via phone');
+        showNotification('Customer start confirmed! You can now mark the job as started.', 'success');
+        renderSupervisorDashboard();
+    } catch (error) {
+        showNotification(error.message || 'Failed to confirm customer start', 'error');
+    }
+}
+
+/**
+ * Start job (Supervisor)
+ */
+async function startJob(assignmentId) {
+    if (!confirm('Are you sure you want to mark this job as started?')) {
+        return;
+    }
+
+    try {
+        await API.generalSupervisor.markJobStarted(assignmentId);
+        showNotification('Job marked as started successfully!', 'success');
+        renderSupervisorDashboard();
+    } catch (error) {
+        showNotification(error.message || 'Failed to start job', 'error');
+    }
+}
+
+/**
+ * Confirm customer completion
+ */
+async function confirmCustomerComplete(assignmentId) {
+    if (!confirm('Have you confirmed with the customer that the job has been completed successfully?')) {
+        return;
+    }
+
+    try {
+        await API.generalSupervisor.confirmCustomerCompletion(assignmentId, true, 'Customer confirmed completion via phone');
+        showNotification('Customer completion confirmed! You can now mark the job as completed.', 'success');
+        renderSupervisorDashboard();
+    } catch (error) {
+        showNotification(error.message || 'Failed to confirm customer completion', 'error');
+    }
+}
+
+/**
+ * Complete job (Supervisor)
+ */
+async function completeJob(assignmentId) {
+    if (!confirm('Are you sure you want to mark this job as completed?')) {
+        return;
+    }
+
+    try {
+        await API.generalSupervisor.markJobCompleted(assignmentId);
+        showNotification('Job marked as completed successfully!', 'success');
+        renderSupervisorDashboard();
+    } catch (error) {
+        showNotification(error.message || 'Failed to complete job', 'error');
+    }
+}
+
+/**
+ * View job activity logs
+ */
+async function viewJobLogs(assignmentId) {
+    try {
+        const response = await API.generalSupervisor.getJobLogs(assignmentId);
+        const logs = response.logs || [];
+
+        let html = '<div class="logs-container">';
+        if (logs.length === 0) {
+            html += '<p class="text-muted text-center">No logs available for this job</p>';
+        } else {
+            logs.forEach(log => {
+                html += `
+                    <div class="log-item">
+                        <div class="log-time">${formatDateTime(log.created_at)}</div>
+                        <div class="log-action">${escapeHtml(log.action)}</div>
+                        <div class="log-user">${escapeHtml(log.performed_by_name || 'System')}</div>
+                        ${log.notes ? `<div class="log-notes">${escapeHtml(log.notes)}</div>` : ''}
+                    </div>
+                `;
+            });
+        }
+        html += '</div>';
+
+        openGlobalModal('Job Activity Log', html);
+    } catch (error) {
+        showNotification(error.message || 'Failed to load logs', 'error');
+    }
+}
+
+/**
+ * Mark notification as read
+ */
+async function markNotificationRead(notificationId) {
+    try {
+        await API.generalSupervisor.markNotificationRead(notificationId);
+        renderSupervisorDashboard();
+    } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+    }
+}
+
+/**
+ * Open global modal for dynamic content
+ */
+function openGlobalModal(title, contentHtml) {
+    const modalId = 'globalModal';
+    let modal = document.getElementById(modalId);
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal fade';
+        modal.setAttribute('tabindex', '-1');
+        modal.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content modal-styled">
+                    <div class="modal-header">
+                        <h5 class="modal-title"></h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    modal.querySelector('.modal-title').textContent = title;
+    modal.querySelector('.modal-body').innerHTML = contentHtml;
+    
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    return bsModal;
+}
+
 // ========== DASHBOARD INIT ==========
 async function initDashboard() {
+    const token = API.getAuthToken();
+    if (!token) {
+        showNotification('Session expired. Please login again.', 'error');
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    const payload = debugToken();
+    if (!payload || payload.role !== 'admin') {
+        showNotification('Invalid admin session. Please login again.', 'error');
+        API.clearAuthToken();
+        window.location.href = '/login.html';
+        return;
+    }
+    
     loadDashboardStats();
     loadServices();
     loadBookings();
     loadStaff();
+    loadSupervisorsForDropdown();
     loadAllMessages();
     loadContractors();
     loadInvoices();
@@ -383,14 +1023,27 @@ async function initDashboard() {
     loadSettings();
     loadApplicationWindowStatus();
     loadStaffIssues();
+    loadReportsHistory();
     setupMenuClickHandlers();
     populateInvoiceContractors();
     loadAssignmentSection();
+    
+    // ✅ START PAYMENT STATUS POLLING
+    startPaymentStatusPolling();
     
     var includedContainer = document.getElementById('includedManualEntry');
     if (includedContainer) {
         initIncludedManualEntry('includedManualEntry', 'addIncludedItemBtn', []);
     }
+    
+    if (notificationCheckInterval) clearInterval(notificationCheckInterval);
+    notificationCheckInterval = setInterval(function() {
+        checkForNewNotifications();
+    }, 30000);
+}
+
+function checkForNewNotifications() {
+    updateNotificationBadge();
 }
 
 // ========== DASHBOARD FUNCTIONS ==========
@@ -439,7 +1092,683 @@ async function loadRecentBookings() {
     }
 }
 
+// ========== BOOKING FUNCTIONS ==========
+
+function getBookingStatusConfig(status) {
+    var configs = {
+        pending: { class: 'status-pending-review', icon: '⏳', label: 'Pending' },
+        confirmed: { class: 'status-confirmed', icon: '✅', label: 'Confirmed' },
+        in_progress: { class: 'status-in-progress', icon: '🔄', label: 'In Progress' },
+        completed: { class: 'status-completed', icon: '✔️', label: 'Completed' },
+        cancelled: { class: 'status-cancelled', icon: '🚫', label: 'Cancelled' }
+    };
+    return configs[status] || configs.pending;
+}
+
+function getPaymentStatusConfig(status) {
+    var configs = {
+        paid: { class: 'payment-status-paid', icon: '✅', label: 'Paid' },
+        unpaid: { class: 'payment-status-unpaid', icon: '❌', label: 'Unpaid' }
+    };
+    return configs[status] || configs.unpaid;
+}
+
+function updateBookingStats(bookings) {
+    var statsGrid = document.getElementById('bookingStatsGrid');
+    if (!statsGrid) return;
+    
+    var total = bookings.length;
+    var pending = 0;
+    var confirmed = 0;
+    var inProgress = 0;
+    var completed = 0;
+    var cancelled = 0;
+    var estimated = 0;
+    var invoiced = 0;
+    
+    for (var i = 0; i < bookings.length; i++) {
+        var b = bookings[i];
+        if (b.status === 'pending') pending++;
+        else if (b.status === 'confirmed') confirmed++;
+        else if (b.status === 'in_progress') inProgress++;
+        else if (b.status === 'completed') completed++;
+        else if (b.status === 'cancelled') cancelled++;
+        
+        if (b.estimation && b.estimation.status === 'estimated') estimated++;
+        if (b.estimation && b.estimation.status === 'invoiced') invoiced++;
+    }
+    
+    statsGrid.innerHTML = 
+        '<div class="stat-card" onclick="filterBookingsByStatus(\'all\')">' +
+            '<div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>' +
+            '<div class="stat-value">' + total + '</div>' +
+            '<div class="stat-label">Total Bookings</div>' +
+        '</div>' +
+        '<div class="stat-card" onclick="filterBookingsByStatus(\'pending\')">' +
+            '<div class="stat-icon" style="background:rgba(245,158,11,0.1);"><i class="bi bi-clock-fill" style="color:#d97706;"></i></div>' +
+            '<div class="stat-value">' + pending + '</div>' +
+            '<div class="stat-label">Pending</div>' +
+        '</div>' +
+        '<div class="stat-card" onclick="filterBookingsByStatus(\'confirmed\')">' +
+            '<div class="stat-icon" style="background:rgba(22,163,74,0.1);"><i class="bi bi-check-circle-fill" style="color:#16a34a;"></i></div>' +
+            '<div class="stat-value">' + confirmed + '</div>' +
+            '<div class="stat-label">Confirmed</div>' +
+        '</div>' +
+        '<div class="stat-card" onclick="filterBookingsByStatus(\'in_progress\')">' +
+            '<div class="stat-icon" style="background:rgba(59,130,246,0.1);"><i class="bi bi-arrow-repeat" style="color:#3b82f6;"></i></div>' +
+            '<div class="stat-value">' + inProgress + '</div>' +
+            '<div class="stat-label">In Progress</div>' +
+        '</div>' +
+        '<div class="stat-card" onclick="filterBookingsByStatus(\'completed\')">' +
+            '<div class="stat-icon" style="background:rgba(139,92,246,0.1);"><i class="bi bi-check2-all" style="color:#8b5cf6;"></i></div>' +
+            '<div class="stat-value">' + completed + '</div>' +
+            '<div class="stat-label">Completed</div>' +
+        '</div>' +
+        '<div class="stat-card" onclick="filterBookingsByStatus(\'cancelled\')">' +
+            '<div class="stat-icon" style="background:rgba(220,38,38,0.1);"><i class="bi bi-x-circle-fill" style="color:#dc2626;"></i></div>' +
+            '<div class="stat-value">' + cancelled + '</div>' +
+            '<div class="stat-label">Cancelled</div>' +
+        '</div>' +
+        '<div class="stat-card">' +
+            '<div class="stat-icon" style="background:rgba(22,163,74,0.1);"><i class="bi bi-calculator-fill" style="color:#16a34a;"></i></div>' +
+            '<div class="stat-value">' + estimated + '</div>' +
+            '<div class="stat-label">Estimated</div>' +
+        '</div>' +
+        '<div class="stat-card">' +
+            '<div class="stat-icon" style="background:rgba(59,130,246,0.1);"><i class="bi bi-receipt" style="color:#3b82f6;"></i></div>' +
+            '<div class="stat-value">' + invoiced + '</div>' +
+            '<div class="stat-label">Invoiced</div>' +
+        '</div>';
+}
+
+// ========== LOAD BOOKINGS - MAIN FUNCTION ==========
+async function loadBookings() {
+    if (isRefreshing) {
+        console.log('⏳ Refresh already in progress, skipping...');
+        return;
+    }
+    
+    isRefreshing = true;
+    
+    try {
+        var bookingListEl = document.getElementById('bookingList');
+        if (!bookingListEl) {
+            isRefreshing = false;
+            return;
+        }
+        
+        bookingListEl.innerHTML = '<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2 text-muted">Loading bookings...</p></td></tr>';
+        
+        var filters = {};
+        var searchTerm = document.getElementById('bookingSearch') ? document.getElementById('bookingSearch').value.trim() : '';
+        var statusFilter = document.getElementById('bookingStatusFilter') ? document.getElementById('bookingStatusFilter').value : 'all';
+        var paymentFilter = document.getElementById('paymentStatusFilter') ? document.getElementById('paymentStatusFilter').value : 'all';
+        var dateFilter = document.getElementById('bookingDateFilter') ? document.getElementById('bookingDateFilter').value : '';
+        
+        if (statusFilter !== 'all') filters.status = statusFilter;
+        if (paymentFilter !== 'all') filters.payment_status = paymentFilter;
+        if (dateFilter) filters.date_from = dateFilter;
+        
+        const result = await API.bookings.getAll(filters);
+        var bookings = result.bookings || [];
+        
+        if (searchTerm) {
+            bookings = bookings.filter(function(b) {
+                var customerName = (b.customer ? b.customer.name : '');
+                return customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (b.service && b.service.name && b.service.name.toLowerCase().includes(searchTerm.toLowerCase()));
+            });
+        }
+        
+        updateBookingStats(bookings);
+        
+        var html = '';
+        if (bookings.length === 0) {
+            html = '<tr><td colspan="10" class="text-center text-muted py-4">No bookings found</td></tr>';
+        } else {
+            for (var i = 0; i < bookings.length; i++) {
+                var b = bookings[i];
+                var customerName = b.customer ? (b.customer.name || b.customer.first_name + ' ' + (b.customer.last_name || '')) : 'N/A';
+                var serviceName = b.service ? b.service.name : 'N/A';
+                
+                var address = b.location ? (b.location.address || b.location.city || 'N/A') : 'N/A';
+                if (address === 'N/A' && b.property) {
+                    address = b.property.address || b.property.city || 'N/A';
+                }
+                
+                var staffName = b.assigned_staff ? b.assigned_staff.name : '—';
+                
+                var statusConfig = getBookingStatusConfig(b.status);
+                var paymentConfig = getPaymentStatusConfig(b.payment ? b.payment.payment_status : 'unpaid');
+                
+                var displayPrice = b.payment ? (b.payment.display_price || b.payment.total_price || 0) : 0;
+                var estimationStatus = b.estimation ? b.estimation.status : 'pending';
+                var estimationBadge = '';
+                if (estimationStatus === 'estimated') {
+                    estimationBadge = '<span class="badge bg-success" style="font-size:10px;">Estimated</span>';
+                } else if (estimationStatus === 'invoiced') {
+                    estimationBadge = '<span class="badge bg-primary" style="font-size:10px;">Invoiced</span>';
+                } else {
+                    estimationBadge = '<span class="badge bg-secondary" style="font-size:10px;">Pending</span>';
+                }
+                
+                var hasInvoice = b.invoice && b.invoice.pdf_url;
+                var invoiceBtn = hasInvoice ? 
+                    '<button class="action-btn action-btn-download" onclick="downloadCustomerInvoice(' + b.invoice.id + ')" title="Download Invoice"><i class="bi bi-file-earmark-pdf"></i></button>' : 
+                    '';
+                
+                // Check if staff has supervisor
+                var supervisorInfo = b.assigned_staff && b.assigned_staff.supervisor_name ? 
+                    '<br><small style="color:#7f8c8d;">Supervisor: ' + escapeHtml(b.assigned_staff.supervisor_name) + '</small>' : '';
+                
+                html += '<tr data-booking-id="' + b.id + '">' +
+                    '<td class="align-middle"><strong>#' + escapeHtml(String(b.id)) + '</strong><br><small>' + estimationBadge + '</small></td>' +
+                    '<td class="align-middle">' + escapeHtml(customerName) + '</td>' +
+                    '<td class="align-middle">' + escapeHtml(serviceName) + '</td>' +
+                    '<td class="align-middle">' + escapeHtml(address) + '</td>' +
+                    '<td class="align-middle">' + formatDate(b.schedule ? b.schedule.date : null) + (b.schedule && b.schedule.time ? ' <small>' + escapeHtml(b.schedule.time) + '</small>' : '') + '</td>' +
+                    '<td class="align-middle"><span class="booking-status-badge ' + statusConfig.class + '">' + statusConfig.icon + ' ' + statusConfig.label + '</span></td>' +
+                    '<td class="align-middle"><span class="payment-status-badge ' + paymentConfig.class + '" data-payment-status="' + (b.payment ? b.payment.payment_status : 'unpaid') + '">' + paymentConfig.icon + ' ' + paymentConfig.label + '</span></td>' +
+                    '<td class="align-middle"><strong style="color:var(--primary);font-size:14px;">' + formatTZS(displayPrice) + '</strong></td>' +
+                    '<td class="align-middle">' + escapeHtml(staffName) + supervisorInfo + '</td>' +
+                    '<td class="align-middle text-center">' +
+                        '<button class="action-btn action-btn-view" onclick="viewFullBooking(' + b.id + ')" title="View Details"><i class="bi bi-eye-fill"></i></button>' +
+                        '<button class="action-btn action-btn-edit" onclick="openPriceEstimation(' + b.id + ')" title="Price Estimation"><i class="bi bi-calculator-fill"></i></button>' +
+                        '<button class="action-btn action-btn-reply" onclick="openBookingStatusUpdate(' + b.id + ')" title="Update Status"><i class="bi bi-pencil-fill"></i></button>' +
+                        invoiceBtn +
+                    '</td>' +
+                '</tr>';
+            }
+        }
+        bookingListEl.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Load bookings error:', error);
+        var bookingListEl = document.getElementById('bookingList');
+        if (bookingListEl) {
+            bookingListEl.innerHTML = '<tr><td colspan="10" class="text-center text-danger py-4">Failed to load bookings: ' + escapeHtml(error.message) + '</td></tr>';
+        }
+        showNotification('Failed to load bookings: ' + error.message, 'error');
+    } finally {
+        isRefreshing = false;
+    }
+}
+
+function filterBookings() {
+    loadBookings();
+}
+
+function filterBookingsByStatus(status) {
+    var statusSelect = document.getElementById('bookingStatusFilter');
+    if (statusSelect) statusSelect.value = status;
+    loadBookings();
+}
+
+async function viewFullBooking(bookingId) {
+    try {
+        const result = await API.bookings.getById(bookingId);
+        var booking = result.booking;
+        if (!booking) return;
+        
+        currentBookingId = bookingId;
+        var paymentStatus = booking.payment ? booking.payment.payment_status : 'unpaid';
+        var paymentConfig = getPaymentStatusConfig(paymentStatus);
+        var customerName = booking.customer ? (booking.customer.name || (booking.customer.first_name + ' ' + (booking.customer.last_name || ''))) : 'N/A';
+        
+        var displayPrice = booking.payment ? (booking.payment.display_price || booking.payment.total_price || 0) : 0;
+        var estimation = booking.estimation || {};
+        var invoice = booking.invoice || null;
+        
+        var estimationHtml = '';
+        if (estimation.status && estimation.status !== 'pending') {
+            estimationHtml = `
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <h6><i class="bi bi-calculator-fill"></i> Estimation Details</h6>
+                        <p><strong>Service Cost:</strong> ${formatTZS(estimation.estimated_service_cost || 0)}</p>
+                        <p><strong>Labor Cost:</strong> ${formatTZS(estimation.labor_cost || 0)}</p>
+                        <p><strong>Transport Cost:</strong> ${formatTZS(estimation.transport_cost || 0)}</p>
+                        <p><strong>Equipment Cost:</strong> ${formatTZS(estimation.equipment_cost || 0)}</p>
+                        <p><strong>Tax Rate:</strong> ${(estimation.tax_rate || 0)}%</p>
+                        <p><strong>Tax Amount:</strong> ${formatTZS(estimation.tax_amount || 0)}</p>
+                        <p><strong>Discount:</strong> ${formatTZS(estimation.discount || 0)}</p>
+                        <p><strong>Final Total:</strong> <strong style="color:var(--primary);font-size:18px;">${formatTZS(estimation.final_total || 0)}</strong></p>
+                        <p><strong>Status:</strong> <span class="badge bg-success">${estimation.status || 'Pending'}</span></p>
+                    </div>
+                </div>
+            `;
+        } else {
+            estimationHtml = `
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <h6><i class="bi bi-calculator-fill"></i> Estimation Details</h6>
+                        <p class="text-muted">No estimation yet. Click "Price Estimation" to add one.</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        var invoiceHtml = '';
+        if (invoice) {
+            invoiceHtml = `
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="info-card">
+                            <h6><i class="bi bi-receipt"></i> Invoice</h6>
+                            <p><strong>Invoice #:</strong> ${escapeHtml(invoice.invoice_number || 'N/A')}</p>
+                            <p><strong>Total:</strong> ${formatTZS(invoice.total_amount || 0)}</p>
+                            <p><strong>Status:</strong> <span class="badge bg-info">${(invoice.status || 'N/A')}</span></p>
+                            <button class="btn btn-sm btn-primary" onclick="downloadCustomerInvoice(${invoice.id})"><i class="bi bi-file-earmark-pdf me-1"></i>Download Invoice</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        var bodyEl = document.getElementById('viewBookingBody');
+        if (bodyEl) {
+            bodyEl.innerHTML = `
+                <div class="booking-detail">
+                    <h4>Booking #${escapeHtml(String(booking.id))}</h4>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <h6><i class="bi bi-person-fill"></i> Customer Information</h6>
+                                <p><strong>Name:</strong> ${escapeHtml(customerName)}</p>
+                                <p><strong>Email:</strong> ${escapeHtml(booking.customer ? booking.customer.email : 'N/A')}</p>
+                                <p><strong>Phone:</strong> ${escapeHtml(booking.customer ? booking.customer.phone : 'N/A')}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <h6><i class="bi bi-briefcase-fill"></i> Service Details</h6>
+                                <p><strong>Service:</strong> ${escapeHtml(booking.service ? booking.service.name : 'N/A')}</p>
+                                <p><strong>Location:</strong> ${escapeHtml(booking.location ? (booking.location.address || booking.location.city || 'N/A') : 'N/A')}</p>
+                                <p><strong>Date:</strong> ${formatDate(booking.schedule ? booking.schedule.date : null)}</p>
+                                <p><strong>Time:</strong> ${escapeHtml(booking.schedule ? booking.schedule.time : 'N/A')}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <h6><i class="bi bi-cash-stack"></i> Payment Information</h6>
+                                <p><strong>Base Price:</strong> ${formatTZS(booking.payment ? booking.payment.base_price : 0)}</p>
+                                <p><strong>Extras:</strong> ${formatTZS(booking.payment ? booking.payment.extras : 0)}</p>
+                                <p><strong>Discount:</strong> ${formatTZS(booking.payment ? booking.payment.discount : 0)}</p>
+                                <p><strong>Total Price:</strong> ${formatTZS(displayPrice)}</p>
+                                <p><strong>Payment Status:</strong> <span class="payment-status-badge ${paymentConfig.class}">${paymentConfig.icon} ${paymentConfig.label}</span></p>
+                            </div>
+                        </div>
+                        ${estimationHtml}
+                    </div>
+                    ${invoiceHtml}
+                </div>
+            `;
+        }
+        
+        var modal = document.getElementById('viewBookingModal');
+        if (modal) new bootstrap.Modal(modal).show();
+    } catch (error) {
+        showNotification(error.message || 'Failed to load booking', 'error');
+    }
+}
+
+function openPriceEstimation(bookingId) {
+    currentBookingId = bookingId;
+    document.getElementById('estimationBookingId').value = bookingId;
+    document.getElementById('estServiceCost').value = '';
+    document.getElementById('estLaborCost').value = '';
+    document.getElementById('estTransportCost').value = '';
+    document.getElementById('estEquipmentCost').value = '';
+    document.getElementById('estTax').value = '';
+    document.getElementById('estDiscount').value = '';
+    
+    API.bookings.getById(bookingId).then(function(result) {
+        var booking = result.booking;
+        if (booking && booking.estimation && booking.estimation.status !== 'pending') {
+            var est = booking.estimation;
+            document.getElementById('estServiceCost').value = est.estimated_service_cost || 0;
+            document.getElementById('estLaborCost').value = est.labor_cost || 0;
+            document.getElementById('estTransportCost').value = est.transport_cost || 0;
+            document.getElementById('estEquipmentCost').value = est.equipment_cost || 0;
+            document.getElementById('estTax').value = est.tax_rate || 0;
+            document.getElementById('estDiscount').value = est.discount || 0;
+        }
+        calculateEstimationTotal();
+    }).catch(console.error);
+    
+    var modal = document.getElementById('priceEstimationModal');
+    if (modal) new bootstrap.Modal(modal).show();
+}
+
+function calculateEstimationTotal() {
+    var serviceCost = Number(document.getElementById('estServiceCost').value) || 0;
+    var laborCost = Number(document.getElementById('estLaborCost').value) || 0;
+    var transportCost = Number(document.getElementById('estTransportCost').value) || 0;
+    var equipmentCost = Number(document.getElementById('estEquipmentCost').value) || 0;
+    var taxPercent = Number(document.getElementById('estTax').value) || 0;
+    var discount = Number(document.getElementById('estDiscount').value) || 0;
+    
+    var subtotal = serviceCost + laborCost + transportCost + equipmentCost;
+    var taxAmount = subtotal * (taxPercent / 100);
+    var total = subtotal + taxAmount - discount;
+    
+    var totalDisplay = document.getElementById('estimationTotalDisplay');
+    if (totalDisplay) {
+        totalDisplay.innerHTML = '<strong>Total: ' + formatTZS(total) + '</strong>' +
+            '<br><small style="color:var(--text-muted);font-size:11px;">Subtotal: ' + formatTZS(subtotal) + 
+            ' | Tax: ' + formatTZS(taxAmount) + 
+            ' | Discount: ' + formatTZS(discount) + '</small>';
+    }
+    return { subtotal: subtotal, taxAmount: taxAmount, total: total };
+}
+
+async function saveEstimationAndGenerateInvoice() {
+    var bookingId = document.getElementById('estimationBookingId').value;
+    var serviceCost = Number(document.getElementById('estServiceCost').value) || 0;
+    var laborCost = Number(document.getElementById('estLaborCost').value) || 0;
+    var transportCost = Number(document.getElementById('estTransportCost').value) || 0;
+    var equipmentCost = Number(document.getElementById('estEquipmentCost').value) || 0;
+    var taxPercent = Number(document.getElementById('estTax').value) || 0;
+    var discount = Number(document.getElementById('estDiscount').value) || 0;
+    
+    if (serviceCost <= 0 && laborCost <= 0 && transportCost <= 0 && equipmentCost <= 0) {
+        showNotification('Please enter at least one cost value', 'error');
+        return;
+    }
+    
+    try {
+        showNotification('Saving estimation...', 'info');
+        const result = await API.bookings.updateEstimation(bookingId, {
+            service_cost: serviceCost,
+            labor_cost: laborCost,
+            transport_cost: transportCost,
+            equipment_cost: equipmentCost,
+            tax_rate: taxPercent,
+            discount: discount
+        });
+        
+        var modalEl = document.getElementById('priceEstimationModal');
+        var bsModal = bootstrap.Modal.getInstance(modalEl);
+        if (bsModal) bsModal.hide();
+        
+        if (result.invoice && result.invoice.email_sent) {
+            showNotification('✅ Estimation saved! Invoice has been generated and sent to customer.', 'success');
+        } else if (result.invoice) {
+            showNotification('✅ Estimation saved! Invoice generated but email could not be sent.', 'warning');
+        } else {
+            showNotification('✅ Estimation saved successfully!', 'success');
+        }
+        
+        loadBookings();
+        loadDashboardStats();
+    } catch (error) {
+        showNotification(error.message || 'Failed to save estimation', 'error');
+    }
+}
+
+function downloadCustomerInvoice(invoiceId) {
+    const token = API.getAuthToken();
+    if (!token) {
+        showNotification('Please login again', 'error');
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    showNotification('Preparing download...', 'info');
+    
+    const url = API.bookings.downloadInvoice(invoiceId);
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                showNotification('Session expired. Please login again.', 'error');
+                window.location.href = '/login.html';
+                return Promise.reject(new Error('Authentication failed'));
+            }
+            return response.json().then(err => {
+                throw new Error(err.message || 'Download failed');
+            });
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `invoice_${invoiceId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(downloadUrl);
+        showNotification('Invoice downloaded successfully!', 'success');
+    })
+    .catch(error => {
+        console.error('Download error:', error);
+        showNotification(error.message || 'Failed to download invoice', 'error');
+    });
+}
+
+function openBookingStatusUpdate(bookingId) {
+    var statuses = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'];
+    var statusLabels = {
+        pending: 'Pending',
+        confirmed: 'Confirmed',
+        in_progress: 'In Progress',
+        completed: 'Completed',
+        cancelled: 'Cancelled'
+    };
+    
+    var selectHtml = '<select id="statusSelect" class="form-select mb-3">';
+    for (var i = 0; i < statuses.length; i++) {
+        selectHtml += '<option value="' + statuses[i] + '">' + statusLabels[statuses[i]] + '</option>';
+    }
+    selectHtml += '</select>';
+    
+    showNotificationWithCallback('Update Booking Status', selectHtml, async function(confirmed) {
+        if (confirmed) {
+            var newStatus = document.getElementById('statusSelect').value;
+            try {
+                await API.bookings.updateStatus(bookingId, newStatus);
+                showNotification('Booking status updated to ' + statusLabels[newStatus], 'success');
+                loadBookings();
+                loadDashboardStats();
+            } catch (error) {
+                showNotification(error.message || 'Failed to update status', 'error');
+            }
+        }
+    });
+}
+
+function showNotificationWithCallback(title, contentHtml, callback) {
+    var modalId = 'dynamicConfirmModal';
+    var modal = document.getElementById(modalId);
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal fade';
+        modal.setAttribute('tabindex', '-1');
+        modal.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content modal-styled"><div class="modal-header"><h5 class="modal-title"></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"></div><div class="modal-footer"><button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="confirmActionBtn">Confirm</button></div></div></div>';
+        document.body.appendChild(modal);
+    }
+    
+    modal.querySelector('.modal-title').innerHTML = title;
+    modal.querySelector('.modal-body').innerHTML = contentHtml;
+    
+    var confirmBtn = modal.querySelector('#confirmActionBtn');
+    var newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    
+    var bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    newConfirmBtn.addEventListener('click', function() {
+        bsModal.hide();
+        if (callback) callback(true);
+    });
+    
+    modal.addEventListener('hidden.bs.modal', function() { if (callback) callback(false); });
+}
+
+// ================================================================
+// PAYMENT STATUS AUTO-REFRESH - REAL-TIME UPDATES
+// ================================================================
+
+function startPaymentStatusPolling() {
+    if (paymentPollingInterval) {
+        clearInterval(paymentPollingInterval);
+        paymentPollingInterval = null;
+    }
+    
+    // Check every 5 seconds
+    paymentPollingInterval = setInterval(function() {
+        var bookingsSection = document.getElementById('bookingsSection');
+        if (bookingsSection && bookingsSection.classList.contains('active')) {
+            var unpaidBadges = document.querySelectorAll('.payment-status-unpaid');
+            if (unpaidBadges.length > 0) {
+                console.log('🔄 Checking for payment updates...');
+                loadBookings();
+            }
+        }
+    }, 5000);
+    
+    console.log('✅ Real-time payment monitoring started (every 5 seconds)');
+}
+
+// ========== FORCE REFRESH BOOKINGS ==========
+function forceRefreshBookings() {
+    var btn = document.querySelector('.refresh-bookings-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Refreshing...';
+    }
+    
+    loadBookings();
+    
+    setTimeout(function() {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> Refresh';
+            showNotification('Bookings refreshed!', 'success');
+        }
+    }, 1500);
+}
+
+// ================================================================
+// ULTIMATE PAYMENT STATUS FIX - FORCE REFRESH EVERY 3 SECONDS
+// ================================================================
+
+async function checkPaymentStatus() {
+    try {
+        const bookingsSection = document.getElementById('bookingsSection');
+        if (!bookingsSection || !bookingsSection.classList.contains('active')) {
+            return;
+        }
+        
+        const rows = document.querySelectorAll('#bookingList tr');
+        let hasUnpaid = false;
+        const unpaidIds = [];
+        
+        for (const row of rows) {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 7) {
+                const paymentCell = cells[6];
+                if (paymentCell && paymentCell.textContent.includes('Unpaid')) {
+                    const idCell = cells[0];
+                    const match = idCell ? idCell.textContent.match(/#(\d+)/) : null;
+                    if (match) {
+                        unpaidIds.push(parseInt(match[1]));
+                        hasUnpaid = true;
+                    }
+                }
+            }
+        }
+        
+        if (!hasUnpaid || unpaidIds.length === 0) {
+            return;
+        }
+        
+        let updated = false;
+        for (const id of unpaidIds) {
+            try {
+                const result = await API.bookings.getById(id);
+                if (result && result.booking) {
+                    const booking = result.booking;
+                    const paymentStatus = booking.payment ? booking.payment.payment_status : 'unpaid';
+                    
+                    if (paymentStatus === 'paid') {
+                        for (const row of rows) {
+                            const idCell = row.querySelector('td:first-child');
+                            if (idCell && idCell.textContent.includes(`#${id}`)) {
+                                const cells = row.querySelectorAll('td');
+                                if (cells.length >= 7) {
+                                    const paymentConfig = getPaymentStatusConfig('paid');
+                                    cells[6].innerHTML = `<span class="payment-status-badge ${paymentConfig.class}">${paymentConfig.icon} ${paymentConfig.label}</span>`;
+                                    
+                                    if (booking.status === 'completed') {
+                                        const statusConfig = getBookingStatusConfig('completed');
+                                        cells[5].innerHTML = `<span class="booking-status-badge ${statusConfig.class}">${statusConfig.icon} ${statusConfig.label}</span>`;
+                                    }
+                                    
+                                    updated = true;
+                                    showNotification(`💳 Booking #${id} has been paid!`, 'success');
+                                    console.log(`✅ Booking #${id} payment status updated to PAID`);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                // Silent fail
+            }
+        }
+        
+        if (updated) {
+            const result = await API.bookings.getAll();
+            if (result && result.bookings) {
+                updateBookingStats(result.bookings);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Payment check error:', error);
+    }
+}
+
+function startAggressivePolling() {
+    if (window._paymentPollInterval) {
+        clearInterval(window._paymentPollInterval);
+    }
+    
+    window._paymentPollInterval = setInterval(() => {
+        checkPaymentStatus();
+    }, 3000);
+    
+    console.log('✅ Aggressive payment polling started (every 3 seconds)');
+}
+
 // ========== SERVICE FUNCTIONS ==========
+
+function mapLocationToEnum(location) {
+    const locationMap = {
+        'Unguja': 'Unguja Island',
+        'Unguja Island': 'Unguja Island',
+        'Pemba': 'Pemba Island',
+        'Pemba Island': 'Pemba Island',
+        'Both': 'Both Islands',
+        'Both Islands': 'Both Islands'
+    };
+    return locationMap[location] || location;
+}
+
 async function loadServices() {
     try {
         const result = await API.services.getAll();
@@ -451,10 +1780,11 @@ async function loadServices() {
             for (var i = 0; i < services.length; i++) {
                 var service = services[i];
                 var imgHtml = service.image ? '<img src="' + escapeHtml(service.image) + '" alt="' + escapeHtml(service.name) + '" class="service-thumb">' : '<div class="no-image-thumb"><i class="bi bi-image"></i></div>';
-                var locIcon = service.location === 'Unguja' ? '🏝' : (service.location === 'Pemba' ? '🌿' : '🗺');
-                var locClass = service.location === 'Unguja' ? 'location-unguja' : (service.location === 'Pemba' ? 'location-pemba' : 'location-both');
+                var displayLocation = service.location || 'Unknown';
+                var locIcon = displayLocation === 'Unguja Island' ? '🏝' : (displayLocation === 'Pemba Island' ? '🌿' : '🗺');
+                var locClass = displayLocation === 'Unguja Island' ? 'location-unguja' : (displayLocation === 'Pemba Island' ? 'location-pemba' : 'location-both');
                 
-                html += '<tr><td class="align-middle">' + imgHtml + '</td><td class="align-middle"><strong>' + escapeHtml(service.name) + '</strong>' + (service.description ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + escapeHtml(service.description.substring(0, 60)) + (service.description.length > 60 ? '…' : '') + '</div>' : '') + '</td><td class="align-middle"><strong style="color:var(--primary)">' + formatTZS(service.price) + '</strong></td><td class="align-middle">' + escapeHtml(service.duration || '—') + '</td><td class="align-middle"><span class="location-badge ' + locClass + '">' + locIcon + ' ' + escapeHtml(service.location) + '</span></td><td class="align-middle text-center"><button class="action-btn action-btn-edit" onclick="openEditServiceModal(' + service.id + ')" title="Edit"><i class="bi bi-pencil-fill"></i></button><button class="action-btn action-btn-delete" onclick="deleteService(' + service.id + ')" title="Delete"><i class="bi bi-trash3-fill"></i></button></td></tr>';
+                html += '<tr><td class="align-middle">' + imgHtml + '</td><td class="align-middle"><strong>' + escapeHtml(service.name) + '</strong>' + (service.description ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + escapeHtml(service.description.substring(0, 60)) + (service.description.length > 60 ? '…' : '') + '</div>' : '') + '</td><td class="align-middle"><strong style="color:var(--primary)">' + formatTZS(service.price) + '</strong></td><td class="align-middle">' + escapeHtml(service.duration || '—') + '</td><td class="align-middle"><span class="location-badge ' + locClass + '">' + locIcon + ' ' + escapeHtml(displayLocation) + '</span></td><td class="align-middle text-center"><button class="action-btn action-btn-edit" onclick="openEditServiceModal(' + service.id + ')" title="Edit"><i class="bi bi-pencil-fill"></i></button><button class="action-btn action-btn-delete" onclick="deleteService(' + service.id + ')" title="Delete"><i class="bi bi-trash3-fill"></i></button></td></tr>';
             }
         }
         var serviceList = document.getElementById('serviceList');
@@ -474,7 +1804,7 @@ async function addService() {
     var name = nameInput.value.trim();
     var price = priceInput.value.trim();
     var duration = document.getElementById('serviceDuration') ? document.getElementById('serviceDuration').value.trim() : '';
-    var location = document.getElementById('serviceLocation') ? document.getElementById('serviceLocation').value : 'Unguja';
+    var location = document.getElementById('serviceLocation') ? document.getElementById('serviceLocation').value : 'Unguja Island';
     var description = document.getElementById('serviceDescription') ? document.getElementById('serviceDescription').value.trim() : '';
     var included = getIncludedItems('includedManualEntry');
 
@@ -487,11 +1817,13 @@ async function addService() {
         return;
     }
 
+    var mappedLocation = mapLocationToEnum(location);
+
     var formData = new FormData();
     formData.append('name', name);
     formData.append('price', price);
     formData.append('duration', duration || '2 hours');
-    formData.append('location', location);
+    formData.append('location', mappedLocation);
     formData.append('description', description);
     formData.append('includes', JSON.stringify(included));
     if (pendingServiceImage) {
@@ -500,6 +1832,7 @@ async function addService() {
     }
 
     try {
+        showNotification('Adding service...', 'info');
         await API.services.add(formData);
         showNotification('Service added successfully!', 'success');
         
@@ -515,6 +1848,7 @@ async function addService() {
         loadServices();
         loadDashboardStats();
     } catch (error) {
+        console.error('Add service error:', error);
         showNotification(error.message || 'Failed to add service', 'error');
     }
 }
@@ -542,7 +1876,11 @@ async function openEditServiceModal(serviceId) {
         document.getElementById('editServiceName').value = service.name || '';
         document.getElementById('editServicePrice').value = service.price || '';
         document.getElementById('editServiceDuration').value = service.duration || '';
-        document.getElementById('editServiceLocation').value = service.location || 'Unguja';
+        var displayLocation = service.location || 'Unguja Island';
+        if (displayLocation === 'Unguja Island') displayLocation = 'Unguja';
+        else if (displayLocation === 'Pemba Island') displayLocation = 'Pemba';
+        else if (displayLocation === 'Both Islands') displayLocation = 'Both';
+        document.getElementById('editServiceLocation').value = displayLocation;
         document.getElementById('editServiceDescription').value = service.description || '';
         
         var editBtn = document.getElementById('editServiceImageTrigger');
@@ -583,11 +1921,13 @@ async function saveEditedService() {
         return;
     }
 
+    var mappedLocation = mapLocationToEnum(location);
+
     var formData = new FormData();
     formData.append('name', name);
     formData.append('price', price);
     formData.append('duration', duration);
-    formData.append('location', location);
+    formData.append('location', mappedLocation);
     formData.append('description', description);
     formData.append('includes', JSON.stringify(included));
     if (pendingEditServiceImage && pendingEditServiceImage.startsWith('data:image')) {
@@ -843,433 +2183,6 @@ function confirmImageUpload() {
     showNotification('Image selected successfully!', 'success');
 }
 
-// ========== STAFF FUNCTIONS ==========
-async function loadStaff() {
-    try {
-        const result = await API.adminStaff.getAll();
-        var staff = result.staff || [];
-        var html = '';
-        if (staff.length === 0) {
-            html = '<tr><td colspan="6" class="text-center text-muted py-4">No staff members added yet</div></tr>';
-        } else {
-            for (var i = 0; i < staff.length; i++) {
-                var member = staff[i];
-                var initials = (member.first_name ? member.first_name.charAt(0) : '') + (member.last_name ? member.last_name.charAt(0) : '');
-                initials = initials.toUpperCase() || '?';
-                var avatarHtml = member.photo ? '<img src="' + escapeHtml(member.photo) + '" alt="' + escapeHtml(member.full_name) + '" class="staff-avatar">' : '<div class="staff-initials">' + escapeHtml(initials) + '</div>';
-                var staffTypeLabel = member.staff_type === 'supervisor' ? 'Supervisor' : (member.staff_type === 'general_supervisor' ? 'General Supervisor' : 'Normal');
-                
-                html += '<tr><td class="align-middle">' + avatarHtml + '</div><td class="align-middle"><strong>' + escapeHtml(member.full_name) + '</strong></div><td class="align-middle">' + escapeHtml(member.email) + '</div><td class="align-middle">' + staffTypeLabel + '</div><td class="align-middle">' + escapeHtml(member.phone || '—') + '</div><td class="align-middle text-center"><button class="action-btn action-btn-edit" onclick="openEditStaffModal(' + member.id + ')" title="Edit"><i class="bi bi-pencil-fill"></i></button><button class="action-btn action-btn-delete" onclick="deleteStaff(' + member.id + ')" title="Remove"><i class="bi bi-trash3-fill"></i></button></div></tr>';
-            }
-        }
-        var staffList = document.getElementById('staffList');
-        if (staffList) staffList.innerHTML = html;
-    } catch (error) {
-        console.error('Load staff error:', error);
-        showNotification('Failed to load staff', 'error');
-    }
-}
-
-async function addStaff() {
-    var firstName = document.getElementById('staffFirstName') ? document.getElementById('staffFirstName').value.trim() : '';
-    var lastName = document.getElementById('staffLastName') ? document.getElementById('staffLastName').value.trim() : '';
-    var email = document.getElementById('staffEmail') ? document.getElementById('staffEmail').value.trim() : '';
-    var staffType = document.getElementById('staffType') ? document.getElementById('staffType').value : 'normal';
-    var phone = document.getElementById('staffPhone') ? document.getElementById('staffPhone').value.trim() : '';
-    var password = document.getElementById('staffPass') ? document.getElementById('staffPass').value : '';
-    
-    if (!firstName || !lastName || !email || !password) {
-        showNotification('Please fill in all required staff details', 'error');
-        return;
-    }
-    
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showNotification('Please enter a valid email address', 'error');
-        return;
-    }
-    
-    if (password.length < 6) {
-        showNotification('Password must be at least 6 characters', 'error');
-        return;
-    }
-
-    var formData = new FormData();
-    formData.append('full_name', firstName + ' ' + lastName);
-    formData.append('first_name', firstName);
-    formData.append('last_name', lastName);
-    formData.append('email', email);
-    formData.append('staff_type', staffType);
-    formData.append('phone', phone);
-    formData.append('password', password);
-    if (pendingStaffImage) {
-        var blob = dataURLtoBlob(pendingStaffImage);
-        formData.append('photo', blob, 'staff_photo.jpg');
-    }
-
-    try {
-        await API.adminStaff.add(formData);
-        showNotification('Staff member added successfully!', 'success');
-        
-        if (document.getElementById('staffFirstName')) document.getElementById('staffFirstName').value = '';
-        if (document.getElementById('staffLastName')) document.getElementById('staffLastName').value = '';
-        if (document.getElementById('staffEmail')) document.getElementById('staffEmail').value = '';
-        if (document.getElementById('staffPhone')) document.getElementById('staffPhone').value = '';
-        if (document.getElementById('staffPass')) document.getElementById('staffPass').value = '';
-        clearStaffImage();
-        
-        loadStaff();
-        loadDashboardStats();
-    } catch (error) {
-        showNotification(error.message || 'Failed to add staff member', 'error');
-    }
-}
-
-async function deleteStaff(staffId) {
-    if (!confirm('Remove this staff member?')) return;
-    try {
-        await API.adminStaff.delete(staffId);
-        loadStaff();
-        loadDashboardStats();
-        showNotification('Staff member removed.', 'success');
-    } catch (error) {
-        showNotification(error.message || 'Failed to delete staff', 'error');
-    }
-}
-
-async function openEditStaffModal(staffId) {
-    try {
-        const result = await API.adminStaff.getById(staffId);
-        var member = result.staff;
-        if (!member) return;
-        
-        pendingEditStaffImage = null;
-        document.getElementById('editStaffId').value = staffId;
-        document.getElementById('editStaffFirstName').value = member.first_name || '';
-        document.getElementById('editStaffLastName').value = member.last_name || '';
-        document.getElementById('editStaffEmail').value = member.email || '';
-        document.getElementById('editStaffType').value = member.staff_type || 'normal';
-        document.getElementById('editStaffPhone').value = member.phone || '';
-        document.getElementById('editStaffPassword').value = '';
-        
-        var initials = (member.first_name ? member.first_name.charAt(0) : '') + (member.last_name ? member.last_name.charAt(0) : '');
-        initials = initials.toUpperCase() || '?';
-        var photoEl = document.getElementById('editStaffPhotoPreview');
-        var initialsEl = document.getElementById('editStaffInitials');
-        if (member.photo) {
-            if (photoEl) {
-                photoEl.src = member.photo;
-                photoEl.style.display = 'block';
-            }
-            if (initialsEl) initialsEl.style.display = 'none';
-            pendingEditStaffImage = member.photo;
-        } else {
-            if (photoEl) {
-                photoEl.style.display = 'none';
-                photoEl.src = '';
-            }
-            if (initialsEl) {
-                initialsEl.textContent = initials;
-                initialsEl.style.display = 'flex';
-            }
-        }
-        
-        var modal = document.getElementById('editStaffModal');
-        if (modal) new bootstrap.Modal(modal).show();
-    } catch (error) {
-        showNotification(error.message || 'Failed to load staff', 'error');
-    }
-}
-
-async function saveEditedStaff() {
-    var staffId = parseInt(document.getElementById('editStaffId').value);
-    var firstName = document.getElementById('editStaffFirstName').value.trim();
-    var lastName = document.getElementById('editStaffLastName').value.trim();
-    var email = document.getElementById('editStaffEmail').value.trim();
-    var staffType = document.getElementById('editStaffType').value;
-    var phone = document.getElementById('editStaffPhone').value.trim();
-    var newPass = document.getElementById('editStaffPassword').value;
-    
-    if (!firstName || !lastName || !email) {
-        showNotification('Name and email are required', 'error');
-        return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showNotification('Please enter a valid email address', 'error');
-        return;
-    }
-
-    var formData = new FormData();
-    formData.append('full_name', firstName + ' ' + lastName);
-    formData.append('first_name', firstName);
-    formData.append('last_name', lastName);
-    formData.append('email', email);
-    formData.append('staff_type', staffType);
-    formData.append('phone', phone);
-    if (newPass) formData.append('password', newPass);
-    if (pendingEditStaffImage && pendingEditStaffImage.startsWith('data:image')) {
-        var blob = dataURLtoBlob(pendingEditStaffImage);
-        formData.append('photo', blob, 'staff_photo.jpg');
-    }
-
-    try {
-        await API.adminStaff.update(staffId, formData);
-        var modalEl = document.getElementById('editStaffModal');
-        var bsModal = bootstrap.Modal.getInstance(modalEl);
-        if (bsModal) bsModal.hide();
-        loadStaff();
-        loadDashboardStats();
-        showNotification('Staff member updated successfully!', 'success');
-    } catch (error) {
-        showNotification(error.message || 'Failed to update staff', 'error');
-    }
-}
-
-// ========== BOOKING FUNCTIONS ==========
-async function loadBookings() {
-    try {
-        var filters = {};
-        var searchTerm = document.getElementById('bookingSearch') ? document.getElementById('bookingSearch').value.trim() : '';
-        var statusFilter = document.getElementById('bookingStatusFilter') ? document.getElementById('bookingStatusFilter').value : 'all';
-        var paymentFilter = document.getElementById('paymentStatusFilter') ? document.getElementById('paymentStatusFilter').value : 'all';
-        var dateFilter = document.getElementById('bookingDateFilter') ? document.getElementById('bookingDateFilter').value : '';
-        
-        if (statusFilter !== 'all') filters.status = statusFilter;
-        if (paymentFilter !== 'all') filters.payment_status = paymentFilter;
-        if (dateFilter) filters.date_from = dateFilter;
-        
-        const result = await API.bookings.getAll(filters);
-        var bookings = result.bookings || [];
-        
-        // Filter by search term
-        if (searchTerm) {
-            bookings = bookings.filter(function(b) {
-                var customerName = (b.customer ? b.customer.name : '');
-                return customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (b.service && b.service.name && b.service.name.toLowerCase().includes(searchTerm.toLowerCase()));
-            });
-        }
-        
-        updateBookingStats(bookings);
-        
-        var html = '';
-        if (bookings.length === 0) {
-            html = '<tr><td colspan="9" class="text-center text-muted py-4">No bookings found</div></tr>';
-        } else {
-            for (var i = 0; i < bookings.length; i++) {
-                var b = bookings[i];
-                var customerName = b.customer ? (b.customer.name || b.customer.first_name + ' ' + (b.customer.last_name || '')) : 'N/A';
-                var serviceName = b.service ? b.service.name : 'N/A';
-                var location = b.location ? (b.location.address || b.location.city || 'N/A') : 'N/A';
-                var staffName = b.assigned_staff ? b.assigned_staff.name : '—';
-                
-                var statusConfig = getBookingStatusConfig(b.status);
-                var paymentConfig = getPaymentStatusConfig(b.payment ? b.payment.payment_status : 'unpaid');
-                
-                html += '<tr><td class="align-middle"><strong>#' + escapeHtml(String(b.id)) + '</strong></td><td class="align-middle">' + escapeHtml(customerName) + '</div><td class="align-middle">' + escapeHtml(serviceName) + '</div><td class="align-middle">' + escapeHtml(location) + '</div><td class="align-middle">' + formatDate(b.schedule ? b.schedule.date : null) + (b.schedule && b.schedule.time ? ' <small>' + escapeHtml(b.schedule.time) + '</small>' : '') + '</div><td class="align-middle"><span class="booking-status-badge ' + statusConfig.class + '">' + statusConfig.icon + ' ' + statusConfig.label + '</span></div><td class="align-middle"><span class="payment-status-badge ' + paymentConfig.class + '">' + paymentConfig.icon + ' ' + paymentConfig.label + '</span></div><td class="align-middle">' + escapeHtml(staffName) + '</div><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="viewFullBooking(' + b.id + ')" title="View Details"><i class="bi bi-eye-fill"></i></button><button class="action-btn action-btn-edit" onclick="openPriceEstimation(' + b.id + ')" title="Price Estimation"><i class="bi bi-calculator-fill"></i></button><button class="action-btn action-btn-reply" onclick="openBookingStatusUpdate(' + b.id + ')" title="Update Status"><i class="bi bi-pencil-fill"></i></button></div></tr>';
-            }
-        }
-        var bookingList = document.getElementById('bookingList');
-        if (bookingList) bookingList.innerHTML = html;
-    } catch (error) {
-        console.error('Load bookings error:', error);
-        showNotification('Failed to load bookings', 'error');
-    }
-}
-
-function getBookingStatusConfig(status) {
-    var configs = {
-        pending: { class: 'status-pending-review', icon: '⏳', label: 'Pending' },
-        confirmed: { class: 'status-confirmed', icon: '✅', label: 'Confirmed' },
-        in_progress: { class: 'status-in-progress', icon: '🔄', label: 'In Progress' },
-        completed: { class: 'status-completed', icon: '✔️', label: 'Completed' },
-        cancelled: { class: 'status-cancelled', icon: '🚫', label: 'Cancelled' }
-    };
-    return configs[status] || configs.pending;
-}
-
-function getPaymentStatusConfig(status) {
-    var configs = {
-        paid: { class: 'payment-status-paid', icon: '✅', label: 'Paid' },
-        unpaid: { class: 'payment-status-unpaid', icon: '❌', label: 'Unpaid' }
-    };
-    return configs[status] || configs.unpaid;
-}
-
-function updateBookingStats(bookings) {
-    var statsGrid = document.getElementById('bookingStatsGrid');
-    if (!statsGrid) return;
-    
-    var total = bookings.length;
-    var pending = 0;
-    var confirmed = 0;
-    var completed = 0;
-    for (var i = 0; i < bookings.length; i++) {
-        if (bookings[i].status === 'pending') pending++;
-        else if (bookings[i].status === 'confirmed') confirmed++;
-        else if (bookings[i].status === 'completed') completed++;
-    }
-    
-    statsGrid.innerHTML = '<div class="stat-card" onclick="filterBookingsByStatus(\'all\')"><div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div><div class="stat-value">' + total + '</div><div class="stat-label">Total Bookings</div></div>' +
-        '<div class="stat-card" onclick="filterBookingsByStatus(\'pending\')"><div class="stat-icon" style="background:rgba(245,158,11,0.1);"><i class="bi bi-clock-fill" style="color:#d97706;"></i></div><div class="stat-value">' + pending + '</div><div class="stat-label">Pending</div></div>' +
-        '<div class="stat-card" onclick="filterBookingsByStatus(\'confirmed\')"><div class="stat-icon" style="background:rgba(22,163,74,0.1);"><i class="bi bi-check-circle-fill" style="color:#16a34a;"></i></div><div class="stat-value">' + confirmed + '</div><div class="stat-label">Confirmed</div></div>' +
-        '<div class="stat-card" onclick="filterBookingsByStatus(\'completed\')"><div class="stat-icon" style="background:rgba(139,92,246,0.1);"><i class="bi bi-check2-all" style="color:#8b5cf6;"></i></div><div class="stat-value">' + completed + '</div><div class="stat-label">Completed</div></div>';
-}
-
-function filterBookings() {
-    loadBookings();
-}
-
-function filterBookingsByStatus(status) {
-    var statusSelect = document.getElementById('bookingStatusFilter');
-    if (statusSelect) statusSelect.value = status;
-    loadBookings();
-}
-
-async function viewFullBooking(bookingId) {
-    try {
-        const result = await API.bookings.getById(bookingId);
-        var booking = result.booking;
-        if (!booking) return;
-        
-        currentBookingId = bookingId;
-        var paymentStatus = booking.payment ? booking.payment.payment_status : 'unpaid';
-        var paymentConfig = getPaymentStatusConfig(paymentStatus);
-        var customerName = booking.customer ? (booking.customer.name || (booking.customer.first_name + ' ' + (booking.customer.last_name || ''))) : 'N/A';
-        
-        var bodyEl = document.getElementById('viewBookingBody');
-        if (bodyEl) {
-            bodyEl.innerHTML = '<div class="booking-detail"><h4>Booking #' + escapeHtml(String(booking.id)) + '</h4><div class="row mt-3"><div class="col-md-6"><div class="info-card"><h6><i class="bi bi-person-fill"></i> Customer Information</h6><p><strong>Name:</strong> ' + escapeHtml(customerName) + '</p><p><strong>Email:</strong> ' + escapeHtml(booking.customer ? booking.customer.email : 'N/A') + '</p><p><strong>Phone:</strong> ' + escapeHtml(booking.customer ? booking.customer.phone : 'N/A') + '</p></div></div><div class="col-md-6"><div class="info-card"><h6><i class="bi bi-briefcase-fill"></i> Service Details</h6><p><strong>Service:</strong> ' + escapeHtml(booking.service ? booking.service.name : 'N/A') + '</p><p><strong>Location:</strong> ' + escapeHtml(booking.location ? (booking.location.address || booking.location.city || 'N/A') : 'N/A') + '</p><p><strong>Date:</strong> ' + formatDate(booking.schedule ? booking.schedule.date : null) + '</p><p><strong>Time:</strong> ' + escapeHtml(booking.schedule ? booking.schedule.time : 'N/A') + '</p></div></div></div><div class="row mt-3"><div class="col-md-6"><div class="info-card"><h6><i class="bi bi-cash-stack"></i> Payment Information</h6><p><strong>Total Price:</strong> ' + formatTZS(booking.payment ? booking.payment.total_price : 0) + '</p><p><strong>Payment Status:</strong> <span class="payment-status-badge ' + paymentConfig.class + '">' + paymentConfig.icon + ' ' + paymentConfig.label + '</span></p></div></div><div class="col-md-6"><div class="info-card"><h6><i class="bi bi-chat-text-fill"></i> Notes</h6><p>' + escapeHtml(booking.instructions || 'No additional notes') + '</p></div></div></div></div>';
-        }
-        
-        var modal = document.getElementById('viewBookingModal');
-        if (modal) new bootstrap.Modal(modal).show();
-    } catch (error) {
-        showNotification(error.message || 'Failed to load booking', 'error');
-    }
-}
-
-function openPriceEstimation(bookingId) {
-    currentBookingId = bookingId;
-    document.getElementById('estimationBookingId').value = bookingId;
-    document.getElementById('estServiceCost').value = 0;
-    document.getElementById('estLaborCost').value = 0;
-    document.getElementById('estTransportCost').value = 0;
-    document.getElementById('estEquipmentCost').value = 0;
-    document.getElementById('estTax').value = 0;
-    document.getElementById('estDiscount').value = 0;
-    
-    calculateEstimationTotal();
-    var modal = document.getElementById('priceEstimationModal');
-    if (modal) new bootstrap.Modal(modal).show();
-}
-
-function calculateEstimationTotal() {
-    var serviceCost = Number(document.getElementById('estServiceCost').value) || 0;
-    var laborCost = Number(document.getElementById('estLaborCost').value) || 0;
-    var transportCost = Number(document.getElementById('estTransportCost').value) || 0;
-    var equipmentCost = Number(document.getElementById('estEquipmentCost').value) || 0;
-    var taxPercent = Number(document.getElementById('estTax').value) || 0;
-    var discount = Number(document.getElementById('estDiscount').value) || 0;
-    
-    var subtotal = serviceCost + laborCost + transportCost + equipmentCost;
-    var taxAmount = subtotal * (taxPercent / 100);
-    var total = subtotal + taxAmount - discount;
-    
-    var totalDisplay = document.getElementById('estimationTotalDisplay');
-    if (totalDisplay) totalDisplay.innerHTML = 'Total: ' + formatTZS(total);
-    return { subtotal: subtotal, taxAmount: taxAmount, total: total };
-}
-
-async function saveEstimationAndGenerateInvoice() {
-    var bookingId = document.getElementById('estimationBookingId').value;
-    var serviceCost = Number(document.getElementById('estServiceCost').value) || 0;
-    var laborCost = Number(document.getElementById('estLaborCost').value) || 0;
-    var transportCost = Number(document.getElementById('estTransportCost').value) || 0;
-    var equipmentCost = Number(document.getElementById('estEquipmentCost').value) || 0;
-    var taxPercent = Number(document.getElementById('estTax').value) || 0;
-    var discount = Number(document.getElementById('estDiscount').value) || 0;
-    
-    try {
-        await API.bookings.updateEstimation(bookingId, {
-            service_cost: serviceCost,
-            labor_cost: laborCost,
-            transport_cost: transportCost,
-            equipment_cost: equipmentCost,
-            tax_rate: taxPercent,
-            discount: discount
-        });
-        
-        var modalEl = document.getElementById('priceEstimationModal');
-        var bsModal = bootstrap.Modal.getInstance(modalEl);
-        if (bsModal) bsModal.hide();
-        
-        showNotification('Estimation saved! You can now generate an invoice.', 'success');
-    } catch (error) {
-        showNotification(error.message || 'Failed to save estimation', 'error');
-    }
-}
-
-function openBookingStatusUpdate(bookingId) {
-    var statuses = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'];
-    var statusLabels = {
-        pending: 'Pending',
-        confirmed: 'Confirmed',
-        in_progress: 'In Progress',
-        completed: 'Completed',
-        cancelled: 'Cancelled'
-    };
-    
-    var selectHtml = '<select id="statusSelect" class="form-select mb-3">';
-    for (var i = 0; i < statuses.length; i++) {
-        selectHtml += '<option value="' + statuses[i] + '">' + statusLabels[statuses[i]] + '</option>';
-    }
-    selectHtml += '</select>';
-    
-    showNotificationWithCallback('Update Booking Status', selectHtml, async function(confirmed) {
-        if (confirmed) {
-            var newStatus = document.getElementById('statusSelect').value;
-            try {
-                await API.bookings.updateStatus(bookingId, newStatus);
-                showNotification('Booking status updated to ' + statusLabels[newStatus], 'success');
-                loadBookings();
-                loadDashboardStats();
-            } catch (error) {
-                showNotification(error.message || 'Failed to update status', 'error');
-            }
-        }
-    });
-}
-
-function showNotificationWithCallback(title, contentHtml, callback) {
-    var modalId = 'dynamicConfirmModal';
-    var modal = document.getElementById(modalId);
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = modalId;
-        modal.className = 'modal fade';
-        modal.setAttribute('tabindex', '-1');
-        modal.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content modal-styled"><div class="modal-header"><h5 class="modal-title"></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"></div><div class="modal-footer"><button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="confirmActionBtn">Confirm</button></div></div></div>';
-        document.body.appendChild(modal);
-    }
-    
-    modal.querySelector('.modal-title').innerHTML = title;
-    modal.querySelector('.modal-body').innerHTML = contentHtml;
-    
-    var confirmBtn = modal.querySelector('#confirmActionBtn');
-    var newConfirmBtn = confirmBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-    
-    var bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
-    
-    newConfirmBtn.addEventListener('click', function() {
-        bsModal.hide();
-        if (callback) callback(true);
-    });
-    
-    modal.addEventListener('hidden.bs.modal', function() { if (callback) callback(false); });
-}
-
 // ========== CONTRACTOR FUNCTIONS ==========
 async function loadContractors() {
     try {
@@ -1279,7 +2192,7 @@ async function loadContractors() {
         var contractors = result.contractors || [];
         var html = '';
         if (contractors.length === 0) {
-            html = '<tr><td colspan="7" class="text-center text-muted py-4">No contractors found</div></tr>';
+            html = '<tr><td colspan="7" class="text-center text-muted py-4">No contractors found</td></tr>';
         } else {
             for (var i = 0; i < contractors.length; i++) {
                 var contractor = contractors[i];
@@ -1287,7 +2200,37 @@ async function loadContractors() {
                     '<span class="contractor-type-badge contractor-private"><i class="bi bi-briefcase me-1"></i>Private</span>' : 
                     '<span class="contractor-type-badge contractor-government"><i class="bi bi-building-fill me-1"></i>Government</span>';
                 
-                html += '<tr><td class="align-middle"><strong>' + escapeHtml(contractor.company_name) + '</strong><div style="font-size:11px;color:var(--text-muted);">' + escapeHtml(contractor.contact_person || '') + '</div></div><td class="align-middle">' + typeBadge + '</div><td class="align-middle">' + escapeHtml(contractor.location || '—') + '</div><td class="align-middle"><span class="badge bg-primary" style="font-size:12px;">' + (contractor.workers_count || 0) + ' workers</span></div><td class="align-middle" style="font-size:12px;"><i class="bi bi-calendar3 me-1"></i>' + formatDate(contractor.contract_start_date) + ' — ' + formatDate(contractor.contract_end_date) + '</div><td class="align-middle"><span class="badge bg-success">' + (contractor.status || 'active') + '</span></div><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="viewContractorDetails(' + contractor.id + ')" title="View Details"><i class="bi bi-eye-fill"></i></button><button class="action-btn action-btn-edit" onclick="generateInvoiceForContractorById(' + contractor.id + ')" title="Generate Invoice"><i class="bi bi-receipt"></i></button></div></tr>';
+                var statusClass = contractor.status === 'active' ? 'bg-success' : 
+                                 (contractor.status === 'expired' ? 'bg-danger' : 
+                                 (contractor.status === 'terminated' ? 'bg-dark' : 'bg-secondary'));
+                
+                var workerNamesDisplay = '';
+                if (contractor.workers && contractor.workers.names && contractor.workers.names.length > 0) {
+                    workerNamesDisplay = '<div class="worker-names-list">';
+                    for (var w = 0; w < Math.min(contractor.workers.names.length, 3); w++) {
+                        workerNamesDisplay += '<span class="worker-name-tag"><i class="bi bi-person"></i> ' + escapeHtml(contractor.workers.names[w]) + '</span>';
+                    }
+                    if (contractor.workers.names.length > 3) {
+                        workerNamesDisplay += '<span class="worker-name-tag">+' + (contractor.workers.names.length - 3) + ' more</span>';
+                    }
+                    workerNamesDisplay += '</div>';
+                } else {
+                    workerNamesDisplay = '<span class="text-muted" style="font-size:11px;">No workers listed</span>';
+                }
+                
+                html += '<tr>' +
+                    '<td class="align-middle"><strong>' + escapeHtml(contractor.company_name) + '</strong><div style="font-size:11px;color:var(--text-muted);">' + escapeHtml(contractor.contact.person || '') + '</div></td>' +
+                    '<td class="align-middle">' + typeBadge + '</td>' +
+                    '<td class="align-middle">' + escapeHtml(contractor.location || '—') + '</td>' +
+                    '<td class="align-middle"><span class="badge bg-primary" style="font-size:12px;">' + (contractor.workers.count || 0) + ' workers</span><div style="margin-top:4px;">' + workerNamesDisplay + '</div></td>' +
+                    '<td class="align-middle" style="font-size:12px;"><i class="bi bi-calendar3 me-1"></i>' + formatDate(contractor.contract_period.start) + ' — ' + formatDate(contractor.contract_period.end) + '</td>' +
+                    '<td class="align-middle"><span class="badge ' + statusClass + '">' + (contractor.status || 'active') + '</span></td>' +
+                    '<td class="align-middle text-center">' +
+                        '<button class="action-btn action-btn-view" onclick="viewContractorDetails(' + contractor.id + ')" title="View Details"><i class="bi bi-eye-fill"></i></button>' +
+                        '<button class="action-btn action-btn-edit" onclick="openEditContractorModal(' + contractor.id + ')" title="Edit Contractor"><i class="bi bi-pencil-fill"></i></button>' +
+                        '<button class="action-btn action-btn-reply" onclick="generateInvoiceForContractorById(' + contractor.id + ')" title="Generate Invoice"><i class="bi bi-receipt"></i></button>' +
+                    '</td>' +
+                '</tr>';
             }
         }
         var contractorsList = document.getElementById('contractorsList');
@@ -1298,19 +2241,105 @@ async function loadContractors() {
     }
 }
 
-async function addContractor() {
-    var name = document.getElementById('contractorName') ? document.getElementById('contractorName').value.trim() : '';
-    var type = document.getElementById('contractorType') ? document.getElementById('contractorType').value : 'private';
-    var location = document.getElementById('contractorLocation') ? document.getElementById('contractorLocation').value.trim() : '';
-    var workers = parseInt(document.getElementById('contractorWorkers') ? document.getElementById('contractorWorkers').value : 0) || 0;
-    var workerNamesText = document.getElementById('contractorWorkerNames') ? document.getElementById('contractorWorkerNames').value.trim() : '';
-    var startDate = document.getElementById('contractorStartDate') ? document.getElementById('contractorStartDate').value : '';
-    var endDate = document.getElementById('contractorEndDate') ? document.getElementById('contractorEndDate').value : '';
-    var contractValue = parseInt(document.getElementById('contractorValue') ? document.getElementById('contractorValue').value : 0) || 0;
-    var contactPerson = document.getElementById('contractorContactPerson') ? document.getElementById('contractorContactPerson').value.trim() : '';
-    var email = document.getElementById('contractorEmail') ? document.getElementById('contractorEmail').value.trim() : '';
-    var phone = document.getElementById('contractorPhone') ? document.getElementById('contractorPhone').value.trim() : '';
-    var servicesStr = document.getElementById('contractorServices') ? document.getElementById('contractorServices').value.trim() : '';
+async function viewContractorDetails(contractorId) {
+    currentContractorId = contractorId;
+    try {
+        const result = await API.contractors.getById(contractorId);
+        var contractor = result.contractor;
+        if (!contractor) return;
+
+        var bodyEl = document.getElementById('contractorDetailsBody');
+        if (bodyEl) {
+            bodyEl.innerHTML = '<div class="contractor-detail-section"><h6><i class="bi bi-info-circle me-1"></i>Company Information</h6><div class="contractor-info-grid"><div class="contractor-info-item"><div class="label">Company Name</div><div class="value">' + escapeHtml(contractor.company_name) + '</div></div><div class="contractor-info-item"><div class="label">Type</div><div class="value">' + (contractor.contractor_type === 'private' ? 'Private Company' : 'Government Organization') + '</div></div><div class="contractor-info-item"><div class="label">Location</div><div class="value">' + escapeHtml(contractor.location || 'N/A') + '</div></div><div class="contractor-info-item"><div class="label">Contact Person</div><div class="value">' + escapeHtml(contractor.contact_person || 'N/A') + '</div></div><div class="contractor-info-item"><div class="label">Email</div><div class="value">' + escapeHtml(contractor.contact_email || 'N/A') + '</div></div><div class="contractor-info-item"><div class="label">Phone</div><div class="value">' + escapeHtml(contractor.contact_phone || 'N/A') + '</div></div><div class="contractor-info-item"><div class="label">Workers Count</div><div class="value">' + (contractor.workers_count || 0) + '</div></div></div></div><div class="contractor-detail-section"><h6><i class="bi bi-file-text me-1"></i>Contract Details</h6><div class="contractor-info-grid"><div class="contractor-info-item"><div class="label">Start Date</div><div class="value">' + formatDate(contractor.contract_start_date) + '</div></div><div class="contractor-info-item"><div class="label">End Date</div><div class="value">' + formatDate(contractor.contract_end_date) + '</div></div><div class="contractor-info-item"><div class="label">Contract Value</div><div class="value">' + formatTZS(contractor.contract_value) + '</div></div><div class="contractor-info-item"><div class="label">Status</div><div class="value"><span class="badge bg-success">' + contractor.status + '</span></div></div></div></div>';
+        }
+        
+        var modal = document.getElementById('contractorDetailsModal');
+        if (modal) new bootstrap.Modal(modal).show();
+    } catch (error) {
+        showNotification(error.message || 'Failed to load contractor', 'error');
+    }
+}
+
+async function generateInvoiceForContractor() {
+    if (currentContractorId) await generateInvoiceForContractorById(currentContractorId);
+}
+
+async function generateInvoiceForContractorById(contractorId) {
+    var modalEl = document.getElementById('contractorDetailsModal');
+    var bsModal = bootstrap.Modal.getInstance(modalEl);
+    if (bsModal) bsModal.hide();
+    
+    showSection('invoice');
+    var select = document.getElementById('invoiceContractor');
+    if (select) select.value = contractorId;
+}
+
+function filterContractors(type, btnEl) {
+    currentContractorFilter = type;
+    var btns = document.querySelectorAll('#contractorsSection .filter-btn');
+    for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.remove('active');
+    }
+    if (btnEl) btnEl.classList.add('active');
+    loadContractors();
+}
+
+// ========== CONTRACTOR EDIT FUNCTIONS ==========
+
+async function openEditContractorModal(contractorId) {
+    try {
+        const result = await API.contractors.getById(contractorId);
+        var contractor = result.contractor;
+        if (!contractor) return;
+
+        document.getElementById('editContractorId').value = contractorId;
+        document.getElementById('editContractorName').value = contractor.company_name || '';
+        document.getElementById('editContractorType').value = contractor.contractor_type || 'private';
+        document.getElementById('editContractorLocation').value = contractor.location || '';
+        document.getElementById('editContractorWorkers').value = contractor.workers_count || 0;
+        
+        var workerNames = contractor.workers_names || [];
+        if (typeof workerNames === 'string') {
+            workerNames = workerNames.split(', ').filter(function(w) { return w.trim(); });
+        }
+        document.getElementById('editContractorWorkerNames').value = workerNames.join('\n');
+        
+        document.getElementById('editContractorStartDate').value = contractor.contract_start_date || '';
+        document.getElementById('editContractorEndDate').value = contractor.contract_end_date || '';
+        document.getElementById('editContractorValue').value = contractor.contract_value || 0;
+        document.getElementById('editContractorContactPerson').value = contractor.contact_person || '';
+        document.getElementById('editContractorEmail').value = contractor.contact_email || '';
+        document.getElementById('editContractorPhone').value = contractor.contact_phone || '';
+        
+        var services = contractor.services || [];
+        if (typeof services === 'string') {
+            services = services.split(', ').filter(function(s) { return s.trim(); });
+        }
+        document.getElementById('editContractorServices').value = services.join(', ');
+        document.getElementById('editContractorStatus').value = contractor.status || 'active';
+
+        var modal = document.getElementById('editContractorModal');
+        if (modal) new bootstrap.Modal(modal).show();
+    } catch (error) {
+        showNotification(error.message || 'Failed to load contractor details', 'error');
+    }
+}
+
+async function saveEditedContractor() {
+    var contractorId = parseInt(document.getElementById('editContractorId').value);
+    var name = document.getElementById('editContractorName').value.trim();
+    var type = document.getElementById('editContractorType').value;
+    var location = document.getElementById('editContractorLocation').value.trim();
+    var workers = parseInt(document.getElementById('editContractorWorkers').value) || 0;
+    var workerNamesText = document.getElementById('editContractorWorkerNames').value.trim();
+    var startDate = document.getElementById('editContractorStartDate').value;
+    var endDate = document.getElementById('editContractorEndDate').value;
+    var contractValue = parseFloat(document.getElementById('editContractorValue').value) || 0;
+    var contactPerson = document.getElementById('editContractorContactPerson').value.trim();
+    var email = document.getElementById('editContractorEmail').value.trim();
+    var phone = document.getElementById('editContractorPhone').value.trim();
+    var servicesStr = document.getElementById('editContractorServices').value.trim();
+    var status = document.getElementById('editContractorStatus').value;
 
     if (!name || !location) {
         showNotification('Contractor name and location are required', 'error');
@@ -1347,75 +2376,20 @@ async function addContractor() {
         contact_person: contactPerson,
         contact_email: email,
         contact_phone: phone,
-        services_provided: servicesList
+        services_provided: servicesList,
+        status: status
     };
 
     try {
-        await API.contractors.add(contractorData);
-        
-        if (document.getElementById('contractorName')) document.getElementById('contractorName').value = '';
-        if (document.getElementById('contractorLocation')) document.getElementById('contractorLocation').value = '';
-        if (document.getElementById('contractorWorkers')) document.getElementById('contractorWorkers').value = '';
-        if (document.getElementById('contractorWorkerNames')) document.getElementById('contractorWorkerNames').value = '';
-        if (document.getElementById('contractorStartDate')) document.getElementById('contractorStartDate').value = '';
-        if (document.getElementById('contractorEndDate')) document.getElementById('contractorEndDate').value = '';
-        if (document.getElementById('contractorValue')) document.getElementById('contractorValue').value = '';
-        if (document.getElementById('contractorContactPerson')) document.getElementById('contractorContactPerson').value = '';
-        if (document.getElementById('contractorEmail')) document.getElementById('contractorEmail').value = '';
-        if (document.getElementById('contractorPhone')) document.getElementById('contractorPhone').value = '';
-        if (document.getElementById('contractorServices')) document.getElementById('contractorServices').value = '';
-
+        await API.contractors.update(contractorId, contractorData);
+        var modalEl = document.getElementById('editContractorModal');
+        var bsModal = bootstrap.Modal.getInstance(modalEl);
+        if (bsModal) bsModal.hide();
         loadContractors();
-        populateInvoiceContractors();
-        loadDashboardStats();
-        showNotification('Contractor added successfully!', 'success');
+        showNotification('Contractor updated successfully!', 'success');
     } catch (error) {
-        showNotification(error.message || 'Failed to add contractor', 'error');
+        showNotification(error.message || 'Failed to update contractor', 'error');
     }
-}
-
-async function viewContractorDetails(contractorId) {
-    currentContractorId = contractorId;
-    try {
-        const result = await API.contractors.getById(contractorId);
-        var contractor = result.contractor;
-        if (!contractor) return;
-
-        var bodyEl = document.getElementById('contractorDetailsBody');
-        if (bodyEl) {
-            bodyEl.innerHTML = '<div class="contractor-detail-section"><h6><i class="bi bi-info-circle me-1"></i>Company Information</h6><div class="contractor-info-grid"><div class="contractor-info-item"><div class="label">Company Name</div><div class="value">' + escapeHtml(contractor.company_name) + '</div></div><div class="contractor-info-item"><div class="label">Type</div><div class="value">' + (contractor.contractor_type === 'private' ? 'Private Company' : 'Government Organization') + '</div></div><div class="contractor-info-item"><div class="label">Location</div><div class="value">' + escapeHtml(contractor.location || 'N/A') + '</div></div><div class="contractor-info-item"><div class="label">Contact Person</div><div class="value">' + escapeHtml(contractor.contact_person || 'N/A') + '</div></div><div class="contractor-info-item"><div class="label">Email</div><div class="value">' + escapeHtml(contractor.contact_email || 'N/A') + '</div></div><div class="contractor-info-item"><div class="label">Phone</div><div class="value">' + escapeHtml(contractor.contact_phone || 'N/A') + '</div></div><div class="contractor-info-item"><div class="label">Workers Count</div><div class="value">' + (contractor.workers_count || 0) + '</div></div></div></div><div class="contractor-detail-section"><h6><i class="bi bi-file-text me-1"></i>Contract Details</h6><div class="contractor-info-grid"><div class="contractor-info-item"><div class="label">Start Date</div><div class="value">' + formatDate(contractor.contract_start_date) + '</div></div><div class="contractor-info-item"><div class="label">End Date</div><div class="value">' + formatDate(contractor.contract_end_date) + '</div></div><div class="contractor-info-item"><div class="label">Contract Value</div><div class="value">' + formatTZS(contractor.contract_value) + '</div></div><div class="contractor-info-item"><div class="label">Status</div><div class="value"><span class="badge bg-success">' + contractor.status + '</span></div></div></div></div>';
-        }
-        
-        var modal = document.getElementById('contractorDetailsModal');
-        if (modal) new bootstrap.Modal(modal).show();
-    } catch (error) {
-        showNotification(error.message || 'Failed to load contractor', 'error');
-    }
-}
-
-async function generateInvoiceForContractor() {
-    if (currentContractorId) await generateInvoiceForContractorById(currentContractorId);
-}
-
-async function generateInvoiceForContractorById(contractorId) {
-    var modalEl = document.getElementById('contractorDetailsModal');
-    var bsModal = bootstrap.Modal.getInstance(modalEl);
-    if (bsModal) bsModal.hide();
-    
-    // Open invoice section with pre-selected contractor
-    showSection('invoice');
-    var select = document.getElementById('invoiceContractor');
-    if (select) select.value = contractorId;
-}
-
-function filterContractors(type, btnEl) {
-    currentContractorFilter = type;
-    var btns = document.querySelectorAll('#contractorsSection .filter-btn');
-    for (var i = 0; i < btns.length; i++) {
-        btns[i].classList.remove('active');
-    }
-    if (btnEl) btnEl.classList.add('active');
-    loadContractors();
 }
 
 // ========== INVOICE FUNCTIONS ==========
@@ -1487,12 +2461,12 @@ async function loadInvoices() {
         var invoices = result.invoices || [];
         var html = '';
         if (invoices.length === 0) {
-            html = '<tr><td colspan="6" class="text-center text-muted py-4">No invoices generated yet</div></tr>';
+            html = '<tr><td colspan="6" class="text-center text-muted py-4">No invoices generated yet</td></tr>';
         } else {
             for (var i = 0; i < invoices.length; i++) {
                 var inv = invoices[i];
                 var statusConfig = getInvoiceStatusConfig(inv.status);
-                html += '<tr><td class="align-middle"><strong>#' + escapeHtml(inv.invoice_number) + '</strong></div><td class="align-middle">' + escapeHtml(inv.contractor ? inv.contractor.company_name : 'N/A') + '</div><td class="align-middle">' + formatDate(inv.invoice_date) + '</div><td class="align-middle"><strong style="color:var(--primary)">' + formatTZS(inv.total_amount) + '</strong></div><td class="align-middle"><span class="badge ' + statusConfig.class + '">' + inv.status + '</span></div><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="viewInvoice(' + inv.id + ')" title="View"><i class="bi bi-eye-fill"></i></button><button class="action-btn action-btn-download" onclick="downloadInvoice(' + inv.id + ')" title="Download PDF"><i class="bi bi-file-earmark-pdf"></i></button></div></tr>';
+                html += '<tr><td class="align-middle"><strong>#' + escapeHtml(inv.invoice_number) + '</strong></td><td class="align-middle">' + escapeHtml(inv.contractor ? inv.contractor.company_name : 'N/A') + '</td><td class="align-middle">' + formatDate(inv.invoice_date) + '</td><td class="align-middle"><strong style="color:var(--primary)">' + formatTZS(inv.total_amount) + '</strong></td><td class="align-middle"><span class="badge ' + statusConfig.class + '">' + inv.status + '</span></td><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="viewInvoice(' + inv.id + ')" title="View"><i class="bi bi-eye-fill"></i></button><button class="action-btn action-btn-download" onclick="downloadInvoice(' + inv.id + ')" title="Download PDF"><i class="bi bi-file-earmark-pdf"></i></button></td></tr>';
             }
         }
         var invoiceList = document.getElementById('invoiceList');
@@ -1537,12 +2511,58 @@ async function viewInvoice(invoiceId) {
 }
 
 function downloadInvoice(invoiceId) {
-    window.open(API.invoices.downloadPDF(invoiceId), '_blank');
+    const token = API.getAuthToken();
+    if (!token) {
+        showNotification('Please login again', 'error');
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    showNotification('Preparing download...', 'info');
+    
+    const url = API.invoices.downloadPDF(invoiceId);
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                showNotification('Session expired. Please login again.', 'error');
+                window.location.href = '/login.html';
+                return Promise.reject(new Error('Authentication failed'));
+            }
+            return response.json().then(err => {
+                throw new Error(err.message || 'Download failed');
+            });
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `invoice_${invoiceId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(downloadUrl);
+        showNotification('Invoice downloaded successfully!', 'success');
+    })
+    .catch(error => {
+        console.error('Download error:', error);
+        showNotification(error.message || 'Failed to download invoice', 'error');
+    });
 }
 
 function downloadInvoicePDF() {
     if (currentInvoiceData) {
-        window.open(API.invoices.downloadPDF(currentInvoiceData.id), '_blank');
+        downloadInvoice(currentInvoiceData.id);
+    } else {
+        showNotification('No invoice selected', 'error');
     }
 }
 
@@ -1591,12 +2611,21 @@ async function loadAllMessages() {
         
         var html = '';
         if (messages.length === 0) {
-            html = '<tr><td colspan="6" class="text-center text-muted py-4">No messages found</div></tr>';
+            html = '<tr><td colspan="6" class="text-center text-muted py-4">No messages found</td></tr>';
         } else {
             for (var i = 0; i < messages.length; i++) {
                 var msg = messages[i];
                 var statusClass = msg.status === 'unread' ? 'bg-warning' : (msg.status === 'replied' ? 'bg-success' : 'bg-secondary');
-                html += '<tr><td class="align-middle"><strong>' + escapeHtml(msg.from) + '</strong><br><small>' + escapeHtml(msg.email) + '</small></div><td class="align-middle">' + escapeHtml(msg.subject) + '</div><td class="align-middle">' + escapeHtml(msg.preview) + '</div><td class="align-middle">' + formatDate(msg.date) + '</div><td class="align-middle"><span class="badge ' + statusClass + '">' + (msg.status || 'unread') + '</span></div><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="viewMessage(' + msg.id + ')" title="View"><i class="bi bi-eye-fill"></i></button><button class="action-btn action-btn-reply" onclick="openReplyModal(' + msg.id + ')" title="Reply"><i class="bi bi-reply-fill"></i></button></div></tr>';
+                var sourceBadge = '';
+                if (msg.source === 'supervisor') {
+                    sourceBadge = '<span class="badge bg-info me-1">Supervisor</span>';
+                } else if (msg.source === 'report') {
+                    sourceBadge = '<span class="badge bg-primary me-1">Report</span>';
+                } else {
+                    sourceBadge = '<span class="badge bg-secondary me-1">Customer</span>';
+                }
+                
+                html += '<tr><td class="align-middle"><strong>' + escapeHtml(msg.from) + '</strong><br><small>' + escapeHtml(msg.email) + '</small></td><td class="align-middle">' + sourceBadge + ' ' + escapeHtml(msg.subject) + '</td><td class="align-middle">' + escapeHtml(msg.preview || msg.message) + '</td><td class="align-middle">' + formatDate(msg.date) + '</td><td class="align-middle"><span class="badge ' + statusClass + '">' + (msg.status || 'unread') + '</span></td><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="viewMessage(' + msg.id + ')" title="View"><i class="bi bi-eye-fill"></i></button><button class="action-btn action-btn-reply" onclick="openReplyModal(' + msg.id + ')" title="Reply"><i class="bi bi-reply-fill"></i></button></td></tr>';
             }
         }
         var messageList = document.getElementById('messageList');
@@ -1617,6 +2646,7 @@ async function viewMessage(messageId) {
         var bodyEl = document.getElementById('viewMessageBody');
         if (bodyEl) {
             bodyEl.innerHTML = '<div class="message-detail-row"><span class="message-detail-label">From</span><span class="message-detail-value"><strong>' + escapeHtml(msg.from) + '</strong></span></div>' +
+                '<div class="message-detail-row"><span class="message-detail-label">Type</span><span class="message-detail-value">' + (msg.type || 'Customer') + '</span></div>' +
                 '<div class="message-detail-row"><span class="message-detail-label">Email</span><span class="message-detail-value">' + escapeHtml(msg.email) + '</span></div>' +
                 '<div class="message-detail-row"><span class="message-detail-label">Subject</span><span class="message-detail-value">' + escapeHtml(msg.subject) + '</span></div>' +
                 '<div class="message-detail-row"><span class="message-detail-label">Date</span><span class="message-detail-value">' + formatDateTime(msg.date) + '</span></div>' +
@@ -1640,7 +2670,6 @@ function openReplyModal(messageId) {
     var modal = document.getElementById('replyMessageModal');
     if (modal) new bootstrap.Modal(modal).show();
     
-    // Load message details
     API.contact.getById(messageId).then(function(result) {
         var msg = result.inquiry;
         if (originalEl) {
@@ -1807,7 +2836,7 @@ async function renderApplicationsTable() {
         if (!tbody) return;
         
         if (apps.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No applications found</div></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No applications found</td></tr>';
             return;
         }
         
@@ -1817,7 +2846,7 @@ async function renderApplicationsTable() {
             var statusConfig = getAppStatusConfig(app.status);
             var date = formatDate(app.date);
             
-            tableHtml += '<tr><td class="align-middle"><strong>' + escapeHtml(app.reference_number) + '</strong></div><td class="align-middle">' + escapeHtml(app.full_name) + '</div><td class="align-middle">' + escapeHtml(app.position) + '</div><td class="align-middle">' + escapeHtml(app.phone || '—') + '</div><td class="align-middle">' + escapeHtml(app.email) + '</div><td class="align-middle">' + date + '</div><td class="align-middle"><span class="application-status ' + statusConfig.class + '">' + statusConfig.icon + ' ' + statusConfig.label + '</span></div><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="viewApplicationDetail(' + app.id + ')" title="View Details"><i class="bi bi-eye-fill"></i></button><button class="action-btn action-btn-edit" onclick="openReviewApplicationModal(' + app.id + ')" title="Review"><i class="bi bi-pencil-fill"></i></button></div></tr>';
+            tableHtml += '<tr><td class="align-middle"><strong>' + escapeHtml(app.reference_number) + '</strong></td><td class="align-middle">' + escapeHtml(app.full_name) + '</td><td class="align-middle">' + escapeHtml(app.position) + '</td><td class="align-middle">' + escapeHtml(app.phone || '—') + '</td><td class="align-middle">' + escapeHtml(app.email) + '</td><td class="align-middle">' + date + '</td><td class="align-middle"><span class="application-status ' + statusConfig.class + '">' + statusConfig.icon + ' ' + statusConfig.label + '</span></td><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="viewApplicationDetail(' + app.id + ')" title="View Details"><i class="bi bi-eye-fill"></i></button><button class="action-btn action-btn-edit" onclick="openReviewApplicationModal(' + app.id + ')" title="Review"><i class="bi bi-pencil-fill"></i></button></td></tr>';
         }
         tbody.innerHTML = tableHtml;
     } catch (error) {
@@ -1947,14 +2976,14 @@ function updateStaffInfoStats(issues) {
 function renderStaffIssuesTable(issues) {
     var html = '';
     if (issues.length === 0) {
-        html = '<tr><td colspan="8" class="text-center text-muted py-4">No staff issues found</div></tr>';
+        html = '<tr><td colspan="8" class="text-center text-muted py-4">No staff issues found</td></tr>';
     } else {
         for (var i = 0; i < issues.length; i++) {
             var issue = issues[i];
             var statusClass = getIssueStatusClass(issue.status);
             var date = formatDate(issue.created_at);
             
-            html += '<tr><td class="align-middle"><strong>#' + escapeHtml(String(issue.id)) + '</strong></div><td class="align-middle"><strong>' + escapeHtml(issue.staff.name) + '</strong></div><td class="align-middle"><span class="badge bg-secondary">' + escapeHtml(issue.issue_type) + '</span></div><td class="align-middle">' + escapeHtml(issue.issue_title) + '</div><td class="align-middle">' + escapeHtml(issue.issue_description.substring(0, 50)) + (issue.issue_description.length > 50 ? '…' : '') + '</div><td class="align-middle">' + formatDate(issue.expected_return_date) + '</div><td class="align-middle"><span class="' + statusClass + '">' + escapeHtml(issue.status_label) + '</span></div><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="viewStaffIssueDetail(' + issue.id + ')" title="View Details"><i class="bi bi-eye-fill"></i></button><button class="action-btn action-btn-edit" onclick="openUpdateIssueStatusModal(' + issue.id + ')" title="Update Status"><i class="bi bi-pencil-fill"></i></button></div></tr>';
+            html += '<tr><td class="align-middle"><strong>#' + escapeHtml(String(issue.id)) + '</strong></td><td class="align-middle"><strong>' + escapeHtml(issue.staff.name) + '</strong></td><td class="align-middle"><span class="badge bg-secondary">' + escapeHtml(issue.issue_type) + '</span></td><td class="align-middle">' + escapeHtml(issue.issue_title) + '</td><td class="align-middle">' + escapeHtml(issue.issue_description.substring(0, 50)) + (issue.issue_description.length > 50 ? '…' : '') + '</td><td class="align-middle">' + formatDate(issue.expected_return_date) + '</td><td class="align-middle"><span class="' + statusClass + '">' + escapeHtml(issue.status_label) + '</span></td><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="viewStaffIssueDetail(' + issue.id + ')" title="View Details"><i class="bi bi-eye-fill"></i></button><button class="action-btn action-btn-edit" onclick="openUpdateIssueStatusModal(' + issue.id + ')" title="Update Status"><i class="bi bi-pencil-fill"></i></button></td></tr>';
         }
     }
     var issuesList = document.getElementById('staffIssuesList');
@@ -2027,7 +3056,7 @@ async function confirmUpdateIssueStatus() {
     }
 }
 
-// ========== SERVICES ASSIGNMENT ==========
+// ========== ASSIGNMENT FUNCTIONS ==========
 async function loadAssignmentSection() {
     var activeTab = document.querySelector('.assign-tab-btn.active');
     if (activeTab) {
@@ -2058,238 +3087,214 @@ function switchAssignTab(tabName, btnEl) {
     else if (tabName === 'unassignedServices') renderUnassignedServicesTab();
 }
 
+// ========== RENDER ALL STAFF TAB ==========
 async function renderAllStaffTab() {
     try {
         const result = await API.assignments.getAllStaffWithStatus();
         var staff = result.staff || [];
         var html = '';
         if (staff.length === 0) {
-            html = '<tr><td colspan="6" class="text-center text-muted py-4">No staff members found</div></tr>';
+            html = '<tr><td colspan="6" class="text-center text-muted py-4">No staff members found</td></tr>';
         } else {
             for (var i = 0; i < staff.length; i++) {
                 var member = staff[i];
-                var avatarHtml = '<div class="staff-initials">' + (member.full_name.charAt(0) || '?') + '</div>';
-                var statusClass = member.status === 'Assigned' ? 'assign-status-badge assigned' : 'assign-status-badge not-assigned';
                 
-                html += '<tr><td class="align-middle">' + avatarHtml + '</div><td class="align-middle"><strong>' + escapeHtml(member.full_name) + '</strong></div><td class="align-middle">' + escapeHtml(member.email) + '</div><td class="align-middle"><span class="' + statusClass + '">' + member.status + '</span></div><td class="align-middle"><span class="progress-badge progress-red">' + member.progress + '</span></div><td class="align-middle text-center"><span class="services-count-badge">' + (member.services || 0) + '</span></div></tr>';
+                var avatarHtml = member.photo ? 
+                    '<img src="' + escapeHtml(member.photo) + '" alt="' + escapeHtml(member.full_name) + '" class="staff-avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">' : 
+                    '<div class="staff-initials" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">' + (member.full_name.charAt(0) || '?') + '</div>';
+                
+                var statusColor = '';
+                var statusText = member.status || 'Not Assigned';
+                if (statusText === 'Assigned') {
+                    statusColor = 'background: #22c55e; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 600;';
+                } else if (statusText === 'Not Assigned') {
+                    statusColor = 'background: #ef4444; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 600;';
+                } else if (statusText === 'In Progress') {
+                    statusColor = 'background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 600;';
+                } else {
+                    statusColor = 'background: #ef4444; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 600;';
+                }
+                
+                var typeColor = '';
+                var typeLabel = member.staff_type_label || 'Staff';
+                if (member.staff_type === 'supervisor') {
+                    typeColor = 'color: #1f2937; background: #e5e7eb; padding: 2px 8px; border-radius: 12px; font-size: 10px;';
+                } else if (member.staff_type === 'general_supervisor') {
+                    typeColor = 'color: #7c3aed; background: #ede9fe; padding: 2px 8px; border-radius: 12px; font-size: 10px;';
+                } else {
+                    typeColor = 'color: #db2777; background: #fce7f3; padding: 2px 8px; border-radius: 12px; font-size: 10px;';
+                }
+                
+                html += '<tr>' +
+                    '<td class="align-middle">' + avatarHtml + '</td>' +
+                    '<td class="align-middle"><strong>' + escapeHtml(member.full_name) + '</strong><br><small style="' + typeColor + '">' + escapeHtml(typeLabel) + '</small></td>' +
+                    '<td class="align-middle">' + escapeHtml(member.email) + '</td>' +
+                    '<td class="align-middle"><span style="' + statusColor + '">' + escapeHtml(statusText) + '</span></td>' +
+                    '<td class="align-middle"><strong>' + escapeHtml(member.supervisor_name || 'N/A') + '</strong></td>' +
+                    '<td class="align-middle text-center"><span class="services-count-badge" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 4px 12px; border-radius: 20px;">' + (member.total_assignments || 0) + '</span></td>' +
+                '</tr>';
             }
         }
         var allStaffList = document.getElementById('allStaffAssignList');
         if (allStaffList) allStaffList.innerHTML = html;
     } catch (error) {
         console.error('Render all staff error:', error);
+        showNotification('Failed to load staff data', 'error');
     }
 }
-
 async function renderAssignedStaffTab() {
     try {
         const result = await API.assignments.getAssignedStaff();
         var staff = result.staff || [];
         var html = '';
         if (staff.length === 0) {
-            html = '<tr><td colspan="6" class="text-center text-muted py-4">No assigned staff</div></tr>';
+            html = '<tr><td colspan="6" class="text-center text-muted py-4">No assigned staff found</td></tr>';
         } else {
             for (var i = 0; i < staff.length; i++) {
                 var member = staff[i];
-                var avatarHtml = '<div class="staff-initials">' + (member.full_name.charAt(0) || '?') + '</div>';
-                var progressClass = member.progress === 'in_progress' ? 'progress-blue' : (member.progress === 'just_started' ? 'progress-yellow' : (member.progress === 'completed' ? 'progress-green' : 'progress-red'));
-                var progressLabel = member.progress === 'in_progress' ? 'In Progress' : (member.progress === 'just_started' ? 'Just Started' : (member.progress === 'completed' ? 'Complete' : 'Not Started'));
                 
-                html += '<tr><td class="align-middle">' + avatarHtml + '</div><td class="align-middle"><strong>' + escapeHtml(member.full_name) + '</strong></div><td class="align-middle">' + escapeHtml(member.email) + '</div><td class="align-middle"><span class="progress-badge ' + progressClass + '">' + progressLabel + '</span></div><td class="align-middle text-center"><span class="services-count-badge">' + (member.total_services || 0) + '</span></div><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="openViewStaffServices(' + member.id + ')"><i class="bi bi-eye-fill"></i></button></div></tr>';
+                var avatarHtml = member.photo ? 
+                    '<img src="' + escapeHtml(member.photo) + '" alt="' + escapeHtml(member.full_name) + '" class="staff-avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">' : 
+                    '<div class="staff-initials" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">' + (member.full_name.charAt(0) || '?') + '</div>';
+                
+                // Show supervisor name or "Not Assigned"
+                var supervisorDisplay = member.supervisor_name ? 
+                    escapeHtml(member.supervisor_name) : 
+                    '<span style="color: #ef4444; font-style: italic; font-size: 12px;">Not Assigned</span>';
+                
+                html += '<tr>' +
+                    '<td class="align-middle">' + avatarHtml + '</td>' +
+                    '<td class="align-middle"><strong>' + escapeHtml(member.full_name) + '</strong><br><small style="color: #6b7280; font-size: 11px;">' + escapeHtml(member.role || 'Staff') + '</small></td>' +
+                    '<td class="align-middle">' + escapeHtml(member.email) + '</td>' +
+                    '<td class="align-middle">' + supervisorDisplay + '</td>' +
+                    '<td class="align-middle text-center"><span class="services-count-badge" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 4px 12px; border-radius: 20px;">' + (member.total_services || 0) + '</span></td>' +
+                    '<td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="openViewStaffServices(' + member.id + ')" title="View Details"><i class="bi bi-eye-fill"></i></button></td>' +
+                '</tr>';
             }
         }
         var assignedStaffList = document.getElementById('assignedStaffList');
         if (assignedStaffList) assignedStaffList.innerHTML = html;
     } catch (error) {
         console.error('Render assigned staff error:', error);
+        showNotification('Failed to load assigned staff data', 'error');
     }
 }
 
+// ========== RENDER UNASSIGNED STAFF TAB ==========
 async function renderUnassignedStaffTab() {
     try {
         const result = await API.assignments.getUnassignedStaff();
         var staff = result.staff || [];
         var html = '';
         if (staff.length === 0) {
-            html = '<tr><td colspan="5" class="text-center text-muted py-4">All staff assigned</div></tr>';
+            html = '<tr><td colspan="5" class="text-center text-muted py-4">All staff have been assigned</td></tr>';
         } else {
             for (var i = 0; i < staff.length; i++) {
                 var member = staff[i];
-                html += '<tr><td class="align-middle"><div class="staff-initials">' + (member.full_name.charAt(0) || '?') + '</div></div><td class="align-middle"><strong>' + escapeHtml(member.full_name) + '</strong></div><td class="align-middle">' + escapeHtml(member.email) + '</div><td class="align-middle">' + escapeHtml(member.phone || '—') + '</div><td class="align-middle text-center"><button class="action-btn action-btn-edit" onclick="switchAssignTab(\'unassignedServices\', null)"><i class="bi bi-plus-circle-fill"></i></button></div></tr>';
+                
+                var avatarHtml = member.photo ? 
+                    '<img src="' + escapeHtml(member.photo) + '" alt="' + escapeHtml(member.full_name) + '" class="staff-avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">' : 
+                    '<div class="staff-initials" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">' + (member.full_name.charAt(0) || '?') + '</div>';
+                
+                html += '<tr>' +
+                    '<td class="align-middle">' + avatarHtml + '</td>' +
+                    '<td class="align-middle"><strong>' + escapeHtml(member.full_name) + '</strong></td>' +
+                    '<td class="align-middle">' + escapeHtml(member.email) + '</td>' +
+                    '<td class="align-middle">' + escapeHtml(member.phone || '—') + '</td>' +
+                    '<td class="align-middle text-center"><button class="action-btn action-btn-edit" onclick="switchAssignTab(\'unassignedServices\', null)" title="Assign Service"><i class="bi bi-plus-circle-fill"></i></button></td>' +
+                '</tr>';
             }
         }
         var unassignedStaffList = document.getElementById('unassignedStaffList');
         if (unassignedStaffList) unassignedStaffList.innerHTML = html;
     } catch (error) {
         console.error('Render unassigned staff error:', error);
+        showNotification('Failed to load unassigned staff data', 'error');
     }
 }
 
+// ========== RENDER ASSIGNED SERVICES TAB ==========
 async function renderAssignedServicesTab() {
     try {
         const result = await API.assignments.getAssignedServices();
         var services = result.services || [];
         var html = '';
         if (services.length === 0) {
-            html = '<tr><td colspan="5" class="text-center"><div class="empty-state"><i class="bi bi-inbox"></i><p>No services have been assigned yet</p></div></div></tr>';
+            html = '<tr><td colspan="5" class="text-center"><div class="empty-state"><i class="bi bi-inbox"></i><p>No services have been assigned yet</p></div></td></tr>';
         } else {
             for (var i = 0; i < services.length; i++) {
                 var service = services[i];
-                var imgHtml = service.image ? '<img src="' + escapeHtml(service.image) + '" alt="' + escapeHtml(service.name) + '" class="service-thumb">' : '<div class="no-image-thumb"><i class="bi bi-image"></i></div>';
+                var imgHtml = service.image ? 
+                    '<img src="' + escapeHtml(service.image) + '" alt="' + escapeHtml(service.name) + '" class="service-thumb" style="width: 46px; height: 38px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">' : 
+                    '<div class="no-image-thumb" style="width: 46px; height: 38px; background: var(--bg-section-alt); border-radius: 8px; border: 1px dashed var(--border-dashed); display: flex; align-items: center; justify-content: center; color: var(--text-light); font-size: 16px;"><i class="bi bi-image"></i></div>';
                 
-                html += '<tr><td class="align-middle">' + imgHtml + '</div><td class="align-middle"><strong>' + escapeHtml(service.name) + '</strong></div><td class="align-middle"><strong style="color:var(--primary)">' + formatTZS(service.price) + '</strong></div><td class="align-middle"><div class="assigned-to-chip"><span>' + escapeHtml(service.assigned_to || 'Staff') + '</span></div></div><td class="align-middle text-center"><button class="action-btn action-btn-edit" onclick="openAssignServiceModal(' + service.id + ')" title="Reassign"><i class="bi bi-arrow-repeat"></i></button><button class="action-btn action-btn-delete" onclick="unassignService(' + service.id + ')" title="Remove"><i class="bi bi-trash3-fill"></i></button></div></tr>';
+                var staffHtml = '';
+                if (service.staff_list && service.staff_list.length > 0) {
+                    staffHtml = '<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">';
+                    service.staff_list.forEach(function(staff) {
+                        var staffAvatar = staff.photo ? 
+                            '<img src="' + escapeHtml(staff.photo) + '" alt="' + escapeHtml(staff.name) + '" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0;">' : 
+                            '<div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">' + (staff.name.charAt(0) || '?') + '</div>';
+                        staffHtml += '<div title="' + escapeHtml(staff.name) + ' (' + escapeHtml(staff.staff_type || 'Staff') + ')" style="display: flex; align-items: center; gap: 4px;">' + staffAvatar + '</div>';
+                    });
+                    staffHtml += '</div>';
+                } else {
+                    staffHtml = '<span class="text-muted" style="font-size: 12px;">' + escapeHtml(service.assigned_to || 'No staff assigned') + '</span>';
+                }
+                
+                html += '<tr>' +
+                    '<td class="align-middle">' + imgHtml + '</td>' +
+                    '<td class="align-middle"><strong>' + escapeHtml(service.name) + '</strong></td>' +
+                    '<td class="align-middle"><strong style="color:var(--primary)">' + formatTZS(service.price) + '</strong></td>' +
+                    '<td class="align-middle">' + staffHtml + '</td>' +
+                    '<td class="align-middle text-center">' +
+                        '<button class="action-btn action-btn-edit" onclick="openAssignServiceModal(' + service.id + ')" title="Reassign"><i class="bi bi-arrow-repeat"></i></button>' +
+                        '<button class="action-btn action-btn-delete" onclick="unassignService(' + service.id + ')" title="Remove"><i class="bi bi-trash3-fill"></i></button>' +
+                    '</td>' +
+                '</tr>';
             }
         }
         var assignedServicesList = document.getElementById('assignedServicesList');
         if (assignedServicesList) assignedServicesList.innerHTML = html;
     } catch (error) {
         console.error('Render assigned services error:', error);
+        showNotification('Failed to load assigned services data', 'error');
     }
 }
 
+// ========== RENDER UNASSIGNED SERVICES TAB ==========
 async function renderUnassignedServicesTab() {
     try {
-        const result = await API.assignments.getUnassignedServices();
+        const result = await API.assignments.getPaidUnassigned();
         var services = result.services || [];
         var html = '';
+        
         if (services.length === 0) {
-            html = '<tr><td colspan="5" class="text-center"><div class="empty-state"><i class="bi bi-check-circle"></i><p>All services have been assigned to staff</p></div></div></tr>';
+            html = '<tr><td colspan="5" class="text-center"><div class="empty-state"><i class="bi bi-check-circle"></i><p>All paid bookings have been assigned to staff</p></div></td></tr>';
         } else {
             for (var i = 0; i < services.length; i++) {
                 var service = services[i];
-                var imgHtml = service.image ? '<img src="' + escapeHtml(service.image) + '" alt="' + escapeHtml(service.name) + '" class="service-thumb">' : '<div class="no-image-thumb"><i class="bi bi-image"></i></div>';
-                var locIcon = service.location === 'Unguja' ? '🏝' : (service.location === 'Pemba' ? '🌿' : '🗺');
-                var locClass = service.location === 'Unguja' ? 'location-unguja' : (service.location === 'Pemba' ? 'location-pemba' : 'location-both');
+                var imgHtml = service.image ? 
+                    '<img src="' + escapeHtml(service.image) + '" alt="' + escapeHtml(service.name) + '" class="service-thumb" style="width: 46px; height: 38px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">' : 
+                    '<div class="no-image-thumb" style="width: 46px; height: 38px; background: var(--bg-section-alt); border-radius: 8px; border: 1px dashed var(--border-dashed); display: flex; align-items: center; justify-content: center; color: var(--text-light); font-size: 16px;"><i class="bi bi-image"></i></div>';
+                var locIcon = service.location === 'Unguja Island' ? '🏝' : (service.location === 'Pemba Island' ? '🌿' : '🗺');
+                var locClass = service.location === 'Unguja Island' ? 'location-unguja' : (service.location === 'Pemba Island' ? 'location-pemba' : 'location-both');
                 
-                html += '<tr><td class="align-middle">' + imgHtml + '</div><td class="align-middle"><strong>' + escapeHtml(service.name) + '</strong>' + (service.description ? '<div style="font-size:11px;color:var(--text-muted);">' + escapeHtml(service.description.substring(0, 50)) + (service.description.length > 50 ? '…' : '') + '</div>' : '') + '</div><td class="align-middle"><strong style="color:var(--primary)">' + formatTZS(service.price) + '</strong></div><td class="align-middle"><span class="location-badge ' + locClass + '">' + locIcon + ' ' + escapeHtml(service.location) + '</span></div><td class="align-middle text-center"><button class="btn-assign-now" onclick="openAssignServiceModal(' + service.id + ')" title="Assign to staff"><i class="bi bi-person-plus-fill me-1"></i>Assign</button></div></tr>';
+                html += '<tr><td class="align-middle">' + imgHtml + '</td>' +
+                    '<td class="align-middle"><strong>' + escapeHtml(service.name) + '</strong>' + (service.description ? '<div style="font-size:11px;color:var(--text-muted);">' + escapeHtml(service.description.substring(0, 50)) + (service.description.length > 50 ? '…' : '') + '</div>' : '') + '</td>' +
+                    '<td class="align-middle"><strong style="color:var(--primary)">' + formatTZS(service.price) + '</strong></td>' +
+                    '<td class="align-middle"><span class="location-badge ' + locClass + '" style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">' + locIcon + ' ' + escapeHtml(service.location) + '</span></td>' +
+                    '<td class="align-middle"><div style="font-size:11px;color:var(--text-muted);">Customer: ' + escapeHtml(service.customer_name || 'N/A') + '<br>Date: ' + formatDate(service.service_date) + ' at ' + escapeHtml(service.service_time || '') + '</div></td>' +
+                    '<td class="align-middle text-center"><button class="btn-assign-now" onclick="openAssignServiceModal(' + service.id + ', ' + service.booking_id + ')" title="Assign to staff" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; font-family: Inter, sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.25s; box-shadow: 0 4px 12px rgba(102,126,234,0.3);"><i class="bi bi-person-plus-fill me-1"></i>Assign</button></td>' +
+                '</tr>';
             }
         }
+        
         var unassignedServicesList = document.getElementById('unassignedServicesList');
         if (unassignedServicesList) unassignedServicesList.innerHTML = html;
     } catch (error) {
         console.error('Render unassigned services error:', error);
-    }
-}
-
-async function openAssignServiceModal(serviceId) {
-    currentAssignServiceId = serviceId;
-    selectedAssignStaffId = null;
-    
-    try {
-        const servicesResult = await API.services.getById(serviceId);
-        var service = servicesResult.service;
-        if (!service) return;
-        
-        var staffResult = await API.assignments.getStaffSortedByAssignments();
-        var staff = staffResult.staff || [];
-        
-        var imgHtml = service.image ? '<img src="' + escapeHtml(service.image) + '" alt="' + escapeHtml(service.name) + '" style="width:56px;height:44px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border);margin-right:12px;">' : '<div style="width:56px;height:44px;background:#f7fafc;border-radius:8px;border:1.5px dashed #cbd5e1;display:inline-flex;align-items:center;justify-content:center;margin-right:12px;"><i class="bi bi-image" style="color:#a0aec0;font-size:18px;"></i></div>';
-        
-        var infoEl = document.getElementById('assignServiceInfo');
-        if (infoEl) {
-            infoEl.innerHTML = '<div style="display:flex;align-items:center;padding:14px 16px;background:#f7fafc;border-radius:var(--radius-sm);border:1.5px solid var(--border);">' + imgHtml + '<div><strong style="font-size:15px;">' + escapeHtml(service.name) + '</strong><div style="font-size:12px;color:var(--text-muted);">' + formatTZS(service.price) + ' · ' + escapeHtml(service.duration) + ' · ' + escapeHtml(service.location) + '</div></div></div>';
-        }
-        
-        var pickerHtml = '';
-        if (staff.length === 0) {
-            pickerHtml = '<div class="empty-state"><i class="bi bi-people"></i><p>No staff members available</p></div>';
-        } else {
-            for (var i = 0; i < staff.length; i++) {
-                var member = staff[i];
-                var initials = member.full_name ? member.full_name.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2) : '?';
-                pickerHtml += '<div class="assign-staff-pick-item" data-staffid="' + member.id + '" onclick="selectAssignStaff(this, ' + member.id + ')"><div class="assign-picker-initials">' + escapeHtml(initials) + '</div><div class="assign-pick-info"><strong>' + escapeHtml(member.full_name) + '</strong><span>' + escapeHtml(member.email) + '</span></div><div class="assign-pick-count"><span class="services-count-badge">' + (member.total_assignments || 0) + '</span><small>services</small></div></div>';
-            }
-        }
-        
-        var pickerList = document.getElementById('assignStaffPickerList');
-        if (pickerList) pickerList.innerHTML = pickerHtml;
-        var confirmBtn = document.getElementById('confirmAssignBtn');
-        if (confirmBtn) confirmBtn.disabled = true;
-        
-        var modal = document.getElementById('assignServiceModal');
-        if (modal) new bootstrap.Modal(modal).show();
-    } catch (error) {
-        showNotification(error.message || 'Failed to load assignment data', 'error');
-    }
-}
-
-function selectAssignStaff(el, staffId) {
-    var items = document.querySelectorAll('.assign-staff-pick-item');
-    for (var i = 0; i < items.length; i++) {
-        items[i].classList.remove('selected');
-    }
-    el.classList.add('selected');
-    selectedAssignStaffId = staffId;
-    var confirmBtn = document.getElementById('confirmAssignBtn');
-    if (confirmBtn) confirmBtn.disabled = false;
-}
-
-async function confirmAssignService() {
-    if (!selectedAssignStaffId || !currentAssignServiceId) return;
-    
-    try {
-        await API.assignments.assign(selectedAssignStaffId, currentAssignServiceId);
-        
-        var modalEl = document.getElementById('assignServiceModal');
-        var bsModal = bootstrap.Modal.getInstance(modalEl);
-        if (bsModal) bsModal.hide();
-        
-        showNotification('Service assigned successfully!', 'success');
-        var activeTab = document.querySelector('.assign-tab-btn.active');
-        if (activeTab) switchAssignTab(activeTab.dataset.tab, activeTab);
-    } catch (error) {
-        showNotification(error.message || 'Failed to assign service', 'error');
-    }
-}
-
-async function unassignService(serviceId) {
-    if (!confirm('Remove assignment for this service?')) return;
-    
-    try {
-        var assignments = await API.assignments.getAll();
-        var assignmentToDelete = null;
-        for (var i = 0; i < assignments.assignments.length; i++) {
-            if (assignments.assignments[i].service.id === serviceId) {
-                assignmentToDelete = assignments.assignments[i];
-                break;
-            }
-        }
-        if (assignmentToDelete) {
-            await API.assignments.remove(assignmentToDelete.id);
-            showNotification('Assignment removed.', 'success');
-            var activeTab = document.querySelector('.assign-tab-btn.active');
-            if (activeTab) switchAssignTab(activeTab.dataset.tab, activeTab);
-        }
-    } catch (error) {
-        showNotification(error.message || 'Failed to remove assignment', 'error');
-    }
-}
-
-async function openViewStaffServices(staffId) {
-    try {
-        const result = await API.assignments.getStaffServices(staffId);
-        var data = result;
-        
-        var body = '<div style="margin-bottom:20px;"><strong>' + escapeHtml(data.staff_name || 'Staff') + '</strong><div>' + (data.total_services || 0) + ' services assigned</div></div>';
-        
-        if (data.services && data.services.length === 0) {
-            body += '<div class="empty-state"><i class="bi bi-inbox"></i><p>No services assigned yet</p></div>';
-        } else {
-            body += '<div class="staff-services-grid">';
-            for (var i = 0; i < (data.services || []).length; i++) {
-                var service = data.services[i];
-                body += '<div class="staff-service-card"><div class="card-body"><strong>' + escapeHtml(service.service.name) + '</strong><div class="card-meta">' + formatTZS(service.service.price) + ' · ' + escapeHtml(service.service.duration) + '</div><div class="card-meta" style="margin-top:4px;">Status: ' + escapeHtml(service.status) + '</div></div></div>';
-            }
-            body += '</div>';
-        }
-        
-        var bodyEl = document.getElementById('viewStaffServicesBody');
-        if (bodyEl) bodyEl.innerHTML = body;
-        
-        var modal = document.getElementById('viewStaffServicesModal');
-        if (modal) new bootstrap.Modal(modal).show();
-    } catch (error) {
-        showNotification(error.message || 'Failed to load staff services', 'error');
+        showNotification('Failed to load unassigned services', 'error');
     }
 }
 
@@ -2321,6 +3326,29 @@ async function saveSettings() {
 }
 
 // ========== REPORT FUNCTIONS ==========
+async function loadReportsHistory() {
+    try {
+        const result = await API.reports.getHistory();
+        var reportsList = result.reports || [];
+        var html = '';
+        if (reportsList.length === 0) {
+            html = '<tr><td colspan="5" class="text-center text-muted py-4">No reports generated yet</td></tr>';
+        } else {
+            for (var i = 0; i < reportsList.length; i++) {
+                var r = reportsList[i];
+                html += '<tr><td class="align-middle"><strong>#' + escapeHtml(r.id) + '</strong></td><td class="align-middle">' + escapeHtml(r.report_type) + '</td><td class="align-middle">' + formatDate(r.date_range.from) + ' — ' + formatDate(r.date_range.to) + '</td><td class="align-middle">' + formatDate(r.created_at) + '</td><td class="align-middle text-center">' +
+                    '<button class="action-btn action-btn-download" onclick="downloadReport(' + r.id + ')" title="Download PDF"><i class="bi bi-file-earmark-pdf"></i></button>' +
+                    '<button class="action-btn action-btn-reply" onclick="shareReportViaEmail(' + r.id + ')" title="Share via Email"><i class="bi bi-share-fill"></i></button>' +
+                    '</td></tr>';
+            }
+        }
+        var reportHistoryList = document.getElementById('reportHistoryList');
+        if (reportHistoryList) reportHistoryList.innerHTML = html;
+    } catch (error) {
+        console.error('Load reports history error:', error);
+    }
+}
+
 async function generateReport() {
     var fromDate = document.getElementById('reportFromDate') ? document.getElementById('reportFromDate').value : '';
     var toDate = document.getElementById('reportToDate') ? document.getElementById('reportToDate').value : '';
@@ -2342,12 +3370,77 @@ async function generateReport() {
         });
         
         showNotification('Report generated successfully!', 'success');
+        loadReportsHistory();
         
-        if (result.report && result.report.file_path) {
-            window.open(result.report.file_path, '_blank');
+        if (result.report && result.report.download_url) {
+            showNotification('Report ready. Use the download button to save it.', 'success');
         }
     } catch (error) {
         showNotification(error.message || 'Failed to generate report', 'error');
+    }
+}
+
+function downloadReport(reportId) {
+    const token = API.getAuthToken();
+    if (!token) {
+        showNotification('Please login again', 'error');
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    showNotification('Preparing download...', 'info');
+    const url = API.reports.download(reportId);
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                showNotification('Session expired. Please login again.', 'error');
+                window.location.href = '/login.html';
+                return Promise.reject(new Error('Authentication failed'));
+            }
+            return response.json().then(err => {
+                throw new Error(err.message || 'Download failed');
+            });
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `report_${reportId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(downloadUrl);
+        showNotification('Report downloaded successfully!', 'success');
+    })
+    .catch(error => {
+        console.error('Download error:', error);
+        showNotification(error.message || 'Failed to download report', 'error');
+    });
+}
+
+async function shareReportViaEmail(reportId) {
+    const email = prompt('Enter the email address to share this report with:');
+    if (!email) return;
+    
+    const message = prompt('Optional: Add a message to include with the report:');
+    
+    try {
+        showNotification('Sharing report...', 'info');
+        const result = await API.reports.shareViaEmail(reportId, email, message || '');
+        if (result.success) {
+            showNotification(result.message || 'Report shared successfully!', 'success');
+        }
+    } catch (error) {
+        showNotification(error.message || 'Failed to share report', 'error');
     }
 }
 
@@ -2427,16 +3520,232 @@ function addToNotificationCenter(message, type) {
     updateNotificationBadge();
 }
 
-// Session check on page load
+// ========== SESSION CHECK ==========
 document.addEventListener('DOMContentLoaded', function() {
-    if (API.auth.isLoggedIn() && sessionStorage.getItem('adminLoggedIn') === 'true') {
+    const token = API.getAuthToken();
+    const adminLoggedIn = sessionStorage.getItem('adminLoggedIn') === 'true';
+    
+    if (token && adminLoggedIn) {
+        try {
+            const parts = token.split('.');
+            const payload = JSON.parse(atob(parts[1]));
+            if (payload.role === 'admin') {
+                var loginSection = document.getElementById('loginSection');
+                var dashboard = document.getElementById('dashboard');
+                if (loginSection) loginSection.style.display = 'none';
+                if (dashboard) {
+                    dashboard.style.display = 'flex';
+                    dashboard.style.flexDirection = 'column';
+                }
+                if (payload.email) {
+                    document.getElementById('adminName').textContent = payload.email.split('@')[0];
+                }
+                initDashboard();
+                return;
+            }
+        } catch (e) {
+            console.error('Token validation error:', e);
+        }
+    }
+    
+    var loginSection = document.getElementById('loginSection');
+    var dashboard = document.getElementById('dashboard');
+    if (loginSection) loginSection.style.display = 'flex';
+    if (dashboard) dashboard.style.display = 'none';
+});
+
+// ========== SESSION CHECK INTERVAL ==========
+setInterval(function() {
+    const token = API.getAuthToken();
+    const adminLoggedIn = sessionStorage.getItem('adminLoggedIn') === 'true';
+    
+    if (!token || !adminLoggedIn) {
         var loginSection = document.getElementById('loginSection');
         var dashboard = document.getElementById('dashboard');
-        if (loginSection) loginSection.style.display = 'none';
-        if (dashboard) {
-            dashboard.style.display = 'flex';
-            dashboard.style.flexDirection = 'column';
-        }
-        initDashboard();
+        if (loginSection) loginSection.style.display = 'flex';
+        if (dashboard) dashboard.style.display = 'none';
     }
+}, 60000);
+
+// ========== PAYMENT STATUS POLLING ==========
+console.log('🔥 Loading ultimate payment status fix...');
+
+async function checkAllPaymentStatuses() {
+    try {
+        const bookingsSection = document.getElementById('bookingsSection');
+        if (!bookingsSection || !bookingsSection.classList.contains('active')) return;
+        
+        const rows = document.querySelectorAll('#bookingList tr');
+        if (rows.length === 0) return;
+        
+        const bookingIds = [];
+        for (const row of rows) {
+            const idCell = row.querySelector('td:first-child');
+            if (idCell) {
+                const match = idCell.textContent.match(/#(\d+)/);
+                if (match) bookingIds.push(parseInt(match[1]));
+            }
+        }
+        
+        if (bookingIds.length === 0) return;
+        
+        let updated = 0;
+        for (const id of bookingIds) {
+            try {
+                const result = await API.bookings.getById(id);
+                if (result && result.booking) {
+                    const booking = result.booking;
+                    const paymentStatus = booking.payment ? booking.payment.payment_status : 'unpaid';
+                    
+                    for (const row of rows) {
+                        const idCell = row.querySelector('td:first-child');
+                        if (idCell && idCell.textContent.includes(`#${id}`)) {
+                            const cells = row.querySelectorAll('td');
+                            if (cells.length >= 7) {
+                                const currentPaymentCell = cells[6];
+                                const currentText = currentPaymentCell ? currentPaymentCell.textContent : '';
+                                
+                                if (paymentStatus === 'paid' && currentText.includes('Unpaid')) {
+                                    const paymentConfig = getPaymentStatusConfig('paid');
+                                    currentPaymentCell.innerHTML = `<span class="payment-status-badge ${paymentConfig.class}">${paymentConfig.icon} ${paymentConfig.label}</span>`;
+                                    
+                                    if (booking.status === 'completed') {
+                                        const statusConfig = getBookingStatusConfig('completed');
+                                        cells[5].innerHTML = `<span class="booking-status-badge ${statusConfig.class}">${statusConfig.icon} ${statusConfig.label}</span>`;
+                                    }
+                                    
+                                    updated++;
+                                    showNotification(`💳 Booking #${id} has been paid!`, 'success');
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (err) {}
+        }
+        
+        if (updated) {
+            const result = await API.bookings.getAll();
+            if (result && result.bookings) updateBookingStats(result.bookings);
+        }
+    } catch (error) {
+        console.error('Payment check error:', error);
+    }
+}
+
+function startUltimatePolling() {
+    if (window._ultimatePollInterval) clearInterval(window._ultimatePollInterval);
+    window._ultimatePollInterval = setInterval(checkAllPaymentStatuses, 2000);
+    console.log('✅ Ultimate payment polling started (every 2 seconds)');
+}
+
+document.addEventListener('click', function(e) {
+    const target = e.target.closest('[data-section="bookings"]');
+    if (target) setTimeout(checkAllPaymentStatuses, 1000);
 });
+
+setTimeout(startUltimatePolling, 3000);
+
+// ========== EXPOSE FUNCTIONS GLOBALLY ==========
+window.verifyCredentials = verifyCredentials;
+window.verifyOTP = verifyOTP;
+window.resendOTP = resendOTP;
+window.backToLogin = backToLogin;
+window.moveToNext = moveToNext;
+window.validateOTP = validateOTP;
+window.showDemoCredentials = showDemoCredentials;
+window.initiateLogout = initiateLogout;
+window.cancelLogout = cancelLogout;
+window.confirmLogout = confirmLogout;
+window.showSection = showSection;
+window.addService = addService;
+window.deleteService = deleteService;
+window.openEditServiceModal = openEditServiceModal;
+window.saveEditedService = saveEditedService;
+window.addIncludedField = addIncludedField;
+window.removeIncludedField = removeIncludedField;
+window.clearServiceImage = clearServiceImage;
+window.openImageUploadModal = openImageUploadModal;
+window.handleModalImageSelect = handleModalImageSelect;
+window.handleDragOver = handleDragOver;
+window.handleDrop = handleDrop;
+window.confirmImageUpload = confirmImageUpload;
+window.loadBookings = loadBookings;
+window.filterBookings = filterBookings;
+window.filterBookingsByStatus = filterBookingsByStatus;
+window.viewFullBooking = viewFullBooking;
+window.openPriceEstimation = openPriceEstimation;
+window.calculateEstimationTotal = calculateEstimationTotal;
+window.saveEstimationAndGenerateInvoice = saveEstimationAndGenerateInvoice;
+window.downloadCustomerInvoice = downloadCustomerInvoice;
+window.openBookingStatusUpdate = openBookingStatusUpdate;
+window.showNotificationWithCallback = showNotificationWithCallback;
+window.togglePassword = togglePassword;
+window.loadStaff = loadStaff;
+window.addStaff = addStaff;
+window.deleteStaff = deleteStaff;
+window.openEditStaffModal = openEditStaffModal;
+window.saveEditedStaff = saveEditedStaff;
+window.clearStaffImage = clearStaffImage;
+window.clearEditServiceImage = clearEditServiceImage;
+window.loadContractors = loadContractors;
+window.viewContractorDetails = viewContractorDetails;
+window.generateInvoiceForContractor = generateInvoiceForContractor;
+window.generateInvoiceForContractorById = generateInvoiceForContractorById;
+window.filterContractors = filterContractors;
+window.openEditContractorModal = openEditContractorModal;
+window.saveEditedContractor = saveEditedContractor;
+window.generateInvoice = generateInvoice;
+window.loadInvoices = loadInvoices;
+window.viewInvoice = viewInvoice;
+window.downloadInvoice = downloadInvoice;
+window.downloadInvoicePDF = downloadInvoicePDF;
+window.openSendInvoiceModal = openSendInvoiceModal;
+window.sendInvoiceToCustomer = sendInvoiceToCustomer;
+window.loadAllMessages = loadAllMessages;
+window.viewMessage = viewMessage;
+window.openReplyModal = openReplyModal;
+window.sendReply = sendReply;
+window.replyToMessage = replyToMessage;
+window.loadApplications = loadApplications;
+window.toggleApplicationWindow = toggleApplicationWindow;
+window.filterApplicationStatus = filterApplicationStatus;
+window.filterApplications = filterApplications;
+window.viewApplicationDetail = viewApplicationDetail;
+window.openReviewApplicationModal = openReviewApplicationModal;
+window.reviewApplicationFromModal = reviewApplicationFromModal;
+window.confirmReviewApplication = confirmReviewApplication;
+window.loadStaffIssues = loadStaffIssues;
+window.filterStaffIssues = filterStaffIssues;
+window.filterStaffIssuesByStatus = filterStaffIssuesByStatus;
+window.viewStaffIssueDetail = viewStaffIssueDetail;
+window.openUpdateIssueStatusModal = openUpdateIssueStatusModal;
+window.confirmUpdateIssueStatus = confirmUpdateIssueStatus;
+window.loadAssignmentSection = loadAssignmentSection;
+window.switchAssignTab = switchAssignTab;
+window.loadSettings = loadSettings;
+window.saveSettings = saveSettings;
+window.generateReport = generateReport;
+window.downloadReport = downloadReport;
+window.shareReportViaEmail = shareReportViaEmail;
+window.openReportGenerator = openReportGenerator;
+window.initCharts = initCharts;
+window.updateNotificationBadge = updateNotificationBadge;
+window.toggleNotificationPanel = toggleNotificationPanel;
+window.clearAllNotifications = clearAllNotifications;
+window.addToNotificationCenter = addToNotificationCenter;
+window.forceRefreshBookings = forceRefreshBookings;
+window.loadSupervisorsForDropdown = loadSupervisorsForDropdown;
+
+// Supervisor Dashboard Functions
+window.renderSupervisorDashboard = renderSupervisorDashboard;
+window.confirmCustomerStart = confirmCustomerStart;
+window.startJob = startJob;
+window.confirmCustomerComplete = confirmCustomerComplete;
+window.completeJob = completeJob;
+window.viewJobLogs = viewJobLogs;
+window.markNotificationRead = markNotificationRead;
+window.openGlobalModal = openGlobalModal;
+
+console.log('✅ Admin panel loaded successfully with Supervisor Dashboard and Supervisor Assignment!');
