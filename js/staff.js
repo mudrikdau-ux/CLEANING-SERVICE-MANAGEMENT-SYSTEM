@@ -51,26 +51,27 @@ const StaffJobManager = {
                 
                 if (pendingVerification) {
                     verificationBadge = `<span class="verification-badge pending"><i class="bi bi-clock-history"></i> Awaiting Verification</span>`;
-                } else if (job.customer_confirmed_start) {
-                    verificationBadge = `<span class="verification-badge confirmed"><i class="bi bi-check-circle"></i> Verified</span>`;
-                }
-                
-                if ((job.status === 'confirmed' || job.status === 'pending') && !pendingVerification) {
+                    actionButtons = `
+                        <button class="btn btn-warning btn-sm" disabled>
+                            <i class="bi bi-hourglass-split"></i> Pending Verification
+                        </button>
+                    `;
+                } else if (job.status === 'in_progress') {
+                    actionButtons = `
+                        <button class="btn btn-primary btn-sm" onclick="StaffJobManager.requestComplete(${job.id})">
+                            <i class="bi bi-check-circle-fill"></i> Request Complete
+                        </button>
+                    `;
+                } else if (job.status === 'confirmed' || job.status === 'pending') {
                     actionButtons = `
                         <button class="btn btn-primary btn-sm" onclick="StaffJobManager.requestStart(${job.id})">
                             <i class="bi bi-play-fill"></i> Request Start
                         </button>
                     `;
-                } else if (job.status === 'in_progress' && !pendingVerification) {
+                } else if (job.status === 'completed') {
                     actionButtons = `
-                        <button class="btn btn-success btn-sm" onclick="StaffJobManager.requestComplete(${job.id})">
-                            <i class="bi bi-check-circle-fill"></i> Request Complete
-                        </button>
-                    `;
-                } else if (pendingVerification) {
-                    actionButtons = `
-                        <button class="btn btn-warning btn-sm" disabled>
-                            <i class="bi bi-hourglass-split"></i> Pending Verification
+                        <button class="btn btn-success btn-sm" disabled>
+                            <i class="bi bi-check-circle-fill"></i> Completed
                         </button>
                     `;
                 }
@@ -382,7 +383,6 @@ function loadStaffData() {
 
 // ========== ASSIGNED JOBS (API: /staff/jobs) - Legacy support ==========
 async function loadJobs() {
-    // Use the new StaffJobManager
     await StaffJobManager.loadMyJobs();
 }
 
@@ -427,7 +427,10 @@ async function loadJobHistory() {
         container.innerHTML = html;
     } catch (error) {
         console.error('Load history error:', error);
-        document.getElementById('historyContainer').innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle-fill"></i><h4>Error Loading History</h4><p>${error.message}</p></div>`;
+        const container = document.getElementById('historyContainer');
+        if (container) {
+            container.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle-fill"></i><h4>Error Loading History</h4><p>${escapeHtml(error.message)}</p></div>`;
+        }
     }
 }
 
@@ -459,7 +462,10 @@ async function loadStats() {
         container.innerHTML = html;
     } catch (error) {
         console.error('Load stats error:', error);
-        document.getElementById('statsContainer').innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle-fill"></i><h4>Error Loading Stats</h4><p>${error.message}</p></div>`;
+        const container = document.getElementById('statsContainer');
+        if (container) {
+            container.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle-fill"></i><h4>Error Loading Stats</h4><p>${escapeHtml(error.message)}</p></div>`;
+        }
     }
 }
 
@@ -489,7 +495,10 @@ async function loadProfile() {
                 <div class="col-12 mt-3"><button type="button" id="changePasswordBtn" class="btn-change-pwd w-100"><i class="bi bi-check-circle"></i> Update Password</button></div>
             </div></div>`;
         
-        document.getElementById('changePasswordBtn').addEventListener('click', changeStaffPassword);
+        const changeBtn = document.getElementById('changePasswordBtn');
+        if (changeBtn) {
+            changeBtn.addEventListener('click', changeStaffPassword);
+        }
     } catch (error) {
         console.error('Load profile error:', error);
     }
@@ -926,6 +935,7 @@ async function loadGSTeam() {
     }
 }
 
+// ==================== LOAD GS JOBS ====================
 async function loadGSJobs() {
     try {
         const statusFilter = document.getElementById('gsStatusFilter')?.value || 'all';
@@ -934,46 +944,335 @@ async function loadGSJobs() {
         if (statusFilter !== 'all') filters.status = statusFilter;
         if (workerFilter !== 'all') filters.staff_id = workerFilter;
         
+        console.log('📊 Loading GS jobs with filters:', filters);
+        
         const response = await API.generalSupervisor.getAllTeamJobs(filters);
         const jobs = response.jobs || [];
+        
+        console.log('📊 Found jobs:', jobs.length);
+        
         const container = document.getElementById('gsJobsContainer');
         if (!container) return;
         
         if (jobs.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No jobs found.</p>';
+            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No jobs found for your team.</p>';
             return;
         }
         
         let html = '';
         jobs.forEach(job => {
-            const statusClass = job.status === 'pending' ? 'status-pending' : job.status === 'in_progress' ? 'status-in-progress' : 'status-completed';
-            html += `<div class="gs-job-item"><div class="gs-job-info"><div class="gs-job-service">${escapeHtml(job.service?.name || 'Service')}</div>
-                <div class="gs-job-meta"><span><i class="bi bi-person"></i> ${escapeHtml(job.staff?.name || 'Unassigned')}</span> · 
-                <span><i class="bi bi-geo-alt"></i> ${escapeHtml(job.location?.address || 'N/A')}</span> · 
-                <span><i class="bi bi-calendar"></i> ${formatDate(job.schedule?.date)}</span></div></div>
-                <div><span class="status-badge ${statusClass}">${getStatusLabel(job.status)}</span>
-                <span style="margin-left: 8px; font-weight: 600; color: #28a745;">TZS ${formatNumber(job.payment?.total_price || 0)}</span></div></div>`;
+            const statusClass = job.status === 'pending' ? 'status-pending' : 
+                               job.status === 'in_progress' ? 'status-in-progress' : 
+                               job.status === 'pending_start_approval' ? 'status-pending' :
+                               job.status === 'pending_complete_approval' ? 'status-pending' :
+                               'status-completed';
+            
+            // Get the correct price
+            let displayPrice = 0;
+            if (job.final_total && parseFloat(job.final_total) > 0) {
+                displayPrice = job.final_total;
+            } else if (job.payment?.total_price && parseFloat(job.payment.total_price) > 0) {
+                displayPrice = job.payment.total_price;
+            } else if (job.total_price && parseFloat(job.total_price) > 0) {
+                displayPrice = job.total_price;
+            } else if (job.service?.price && parseFloat(job.service.price) > 0) {
+                displayPrice = job.service.price;
+            }
+            
+            // Show verification badges
+            let verificationBadges = '';
+            if (job.has_pending_start) {
+                verificationBadges += `<span class="badge bg-warning text-dark ms-2">⏳ Pending Start</span>`;
+            }
+            if (job.has_pending_complete) {
+                verificationBadges += `<span class="badge bg-warning text-dark ms-2">⏳ Pending Complete</span>`;
+            }
+            if (job.customer_confirmed_start) {
+                verificationBadges += `<span class="badge bg-success ms-2">✅ Start Confirmed</span>`;
+            }
+            if (job.customer_confirmed_complete) {
+                verificationBadges += `<span class="badge bg-success ms-2">✅ Complete Confirmed</span>`;
+            }
+            
+            const assignmentId = job.assignment_id || job.id;
+            const bookingId = job.id;
+            
+            html += `
+                <div class="gs-job-item" data-job-id="${bookingId}" data-assignment-id="${assignmentId}">
+                    <div class="gs-job-info">
+                        <div class="gs-job-service">
+                            ${escapeHtml(job.service?.name || 'Service')}
+                            ${verificationBadges}
+                        </div>
+                        <div class="gs-job-meta">
+                            <span><i class="bi bi-person"></i> ${escapeHtml(job.staff?.name || 'Unassigned')}</span> · 
+                            <span><i class="bi bi-geo-alt"></i> ${escapeHtml(job.location?.address || 'N/A')}</span> · 
+                            <span><i class="bi bi-calendar"></i> ${formatDate(job.schedule?.date)}</span>
+                            <span class="status-badge ${statusClass}">${getStatusLabel(job.status)}</span>
+                            <span style="font-weight: 600; color: #28a745;">TZS ${formatNumber(displayPrice)}</span>
+                        </div>
+                    </div>
+                    ${job.has_pending_start ? `
+                    <div class="gs-job-actions mt-2">
+                        <button class="btn btn-sm btn-success confirm-start-btn" data-assignment-id="${assignmentId}" data-booking-id="${bookingId}">
+                            <i class="bi bi-check-circle"></i> Confirm Customer Start
+                        </button>
+                        <button class="btn btn-sm btn-primary mark-started-btn" data-assignment-id="${assignmentId}" data-booking-id="${bookingId}">
+                            <i class="bi bi-play-fill"></i> Mark Started
+                        </button>
+                    </div>
+                    ` : ''}
+                    ${job.has_pending_complete ? `
+                    <div class="gs-job-actions mt-2">
+                        <button class="btn btn-sm btn-success confirm-complete-btn" data-assignment-id="${assignmentId}" data-booking-id="${bookingId}">
+                            <i class="bi bi-check-circle"></i> Confirm Customer Complete
+                        </button>
+                        <button class="btn btn-sm btn-primary mark-completed-btn" data-assignment-id="${assignmentId}" data-booking-id="${bookingId}">
+                            <i class="bi bi-check2-all"></i> Mark Completed
+                        </button>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
         });
         container.innerHTML = html;
+        
+        // Attach event listeners with correct assignment ID
+        container.querySelectorAll('.confirm-start-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const assignmentId = this.dataset.assignmentId;
+                const bookingId = this.dataset.bookingId;
+                confirmCustomerStart(assignmentId, bookingId);
+            });
+        });
+        
+        container.querySelectorAll('.mark-started-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const assignmentId = this.dataset.assignmentId;
+                const bookingId = this.dataset.bookingId;
+                startJob(assignmentId, bookingId);
+            });
+        });
+        
+        container.querySelectorAll('.confirm-complete-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const assignmentId = this.dataset.assignmentId;
+                const bookingId = this.dataset.bookingId;
+                confirmCustomerComplete(assignmentId, bookingId);
+            });
+        });
+        
+        container.querySelectorAll('.mark-completed-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const assignmentId = this.dataset.assignmentId;
+                const bookingId = this.dataset.bookingId;
+                completeJob(assignmentId, bookingId);
+            });
+        });
+        
+        await loadGSJobSelect();
+        
     } catch (error) {
         console.error('Load GS jobs error:', error);
+        showNotification('Failed to load team jobs: ' + error.message, 'error');
     }
 }
 
+// ==================== LOAD GS JOB SELECT ====================
 async function loadGSJobSelect() {
     try {
-        const response = await API.generalSupervisor.getAllTeamJobs({ status: 'pending,in-progress' });
+        const response = await API.generalSupervisor.getAllTeamJobs({});
         const jobs = response.jobs || [];
+        
         const select = document.getElementById('gsJobSelect');
         if (!select) return;
         
+        const updatableJobs = jobs.filter(job => 
+            job.status === 'pending_start_approval' || 
+            job.status === 'pending_complete_approval' || 
+            job.status === 'in_progress' ||
+            job.status === 'confirmed'
+        );
+        
         let options = '<option value="">-- Select Job to Update --</option>';
-        jobs.forEach(job => {
-            options += `<option value="${job.id}">#${job.id} - ${escapeHtml(job.service?.name)} (${job.status})</option>`;
-        });
+        if (updatableJobs.length === 0) {
+            options += '<option value="" disabled>No jobs available for update</option>';
+        } else {
+            updatableJobs.forEach(job => {
+                const staffName = job.staff?.name || 'Unassigned';
+                const serviceName = job.service?.name || 'Service';
+                const statusLabel = getStatusLabel(job.status);
+                let displayPrice = job.final_total || job.total_price || job.service?.price || 0;
+                const assignmentId = job.assignment_id || job.id;
+                options += `<option value="${assignmentId}" data-booking-id="${job.id}" data-status="${job.status}">
+                    #${job.id} - ${escapeHtml(serviceName)} (${escapeHtml(staffName)}) - ${statusLabel} - TZS ${formatNumber(displayPrice)}
+                </option>`;
+            });
+        }
         select.innerHTML = options;
+        
     } catch (error) {
         console.error('Load job select error:', error);
+        const select = document.getElementById('gsJobSelect');
+        if (select) {
+            select.innerHTML = '<option value="">Error loading jobs</option>';
+        }
+    }
+}
+
+// ==================== GS BUTTON FUNCTIONS ====================
+
+/**
+ * Confirm customer start (Supervisor calls customer)
+ */
+async function confirmCustomerStart(assignmentId, bookingId) {
+    console.log(`📝 confirmCustomerStart called with assignmentId: ${assignmentId}, bookingId: ${bookingId}`);
+    
+    if (!assignmentId || assignmentId === 'undefined' || assignmentId === 'null' || assignmentId === 0) {
+        assignmentId = bookingId;
+        console.log(`⚠️ Using bookingId as assignmentId: ${assignmentId}`);
+    }
+    
+    if (!confirm('Have you confirmed with the customer that the staff has arrived and started the service?')) {
+        return;
+    }
+
+    try {
+        showNotification('Confirming customer start...', 'info');
+        const response = await API.generalSupervisor.confirmCustomerStart(assignmentId, true, 'Customer confirmed start via phone');
+        if (response.success) {
+            showNotification('✅ Customer start confirmed! You can now mark the job as started.', 'success');
+        } else {
+            showNotification(response.message || 'Failed to confirm customer start', 'error');
+        }
+        await loadGSJobs();
+        await loadGSJobSelect();
+    } catch (error) {
+        console.error('Confirm customer start error:', error);
+        showNotification(error.message || 'Failed to confirm customer start', 'error');
+    }
+}
+
+/**
+ * Start job (Supervisor) - uses assignmentId
+ */
+async function startJob(assignmentId, bookingId) {
+    console.log(`📝 startJob called with assignmentId: ${assignmentId}, bookingId: ${bookingId}`);
+    
+    if (!assignmentId || assignmentId === 'undefined' || assignmentId === 'null' || assignmentId === 0) {
+        assignmentId = bookingId;
+        console.log(`⚠️ Using bookingId as assignmentId: ${assignmentId}`);
+    }
+    
+    if (!confirm('Are you sure you want to mark this job as started?')) {
+        return;
+    }
+
+    try {
+        showNotification('Marking job as started...', 'info');
+        const response = await API.generalSupervisor.markJobStarted(assignmentId);
+        if (response.success) {
+            showNotification('✅ Job marked as started successfully!', 'success');
+        } else {
+            showNotification(response.message || 'Failed to start job', 'error');
+        }
+        await loadGSJobs();
+        await loadGSJobSelect();
+    } catch (error) {
+        console.error('Start job error:', error);
+        showNotification(error.message || 'Failed to start job', 'error');
+    }
+}
+
+/**
+ * Confirm customer completion - uses assignmentId with fallback to bookingId
+ */
+async function confirmCustomerComplete(assignmentId, bookingId) {
+    console.log(`📝 confirmCustomerComplete called with assignmentId: ${assignmentId}, bookingId: ${bookingId}`);
+    
+    // If assignmentId is not provided or looks like a booking ID, use bookingId as fallback
+    if (!assignmentId || assignmentId === 'undefined' || assignmentId === 'null' || assignmentId === 0) {
+        assignmentId = bookingId;
+        console.log(`⚠️ Using bookingId as assignmentId: ${assignmentId}`);
+    }
+    
+    if (!confirm('Have you confirmed with the customer that the job has been completed successfully?')) {
+        return;
+    }
+
+    try {
+        showNotification('Confirming customer completion...', 'info');
+        
+        // Try the API call with the assignmentId
+        const response = await API.generalSupervisor.confirmCustomerCompletion(assignmentId, true, 'Customer confirmed completion via phone');
+        
+        if (response.success) {
+            showNotification('✅ Customer completion confirmed! You can now mark the job as completed.', 'success');
+        } else {
+            showNotification(response.message || 'Failed to confirm customer completion', 'error');
+        }
+        
+        // Refresh the jobs list
+        await loadGSJobs();
+        await loadGSJobSelect();
+        
+    } catch (error) {
+        console.error('Confirm customer completion error:', error);
+        showNotification(error.message || 'Failed to confirm customer completion', 'error');
+    }
+}
+
+/**
+ * Complete job (Supervisor) - uses assignmentId with fallback to bookingId
+ */
+async function completeJob(assignmentId, bookingId) {
+    console.log(`📝 completeJob called with assignmentId: ${assignmentId}, bookingId: ${bookingId}`);
+    
+    // If assignmentId is not provided or looks like a booking ID, use bookingId as fallback
+    if (!assignmentId || assignmentId === 'undefined' || assignmentId === 'null' || assignmentId === 0) {
+        assignmentId = bookingId;
+        console.log(`⚠️ Using bookingId as assignmentId: ${assignmentId}`);
+    }
+    
+    // First check if customer has been confirmed
+    const jobElement = document.querySelector(`.gs-job-item[data-booking-id="${bookingId}"]`);
+    if (jobElement) {
+        const hasCompleteConfirmation = jobElement.querySelector('.badge-success')?.textContent.includes('Complete Confirmed');
+        if (!hasCompleteConfirmation) {
+            const confirmFirst = confirm('Customer has not been confirmed yet. Would you like to confirm customer completion first?');
+            if (confirmFirst) {
+                await confirmCustomerComplete(assignmentId, bookingId);
+                // After confirming, try to complete again
+                setTimeout(() => completeJob(assignmentId, bookingId), 1000);
+                return;
+            }
+        }
+    }
+    
+    if (!confirm('Are you sure you want to mark this job as completed?')) {
+        return;
+    }
+
+    try {
+        showNotification('Marking job as completed...', 'info');
+        const response = await API.generalSupervisor.markJobCompleted(assignmentId);
+        
+        if (response.success) {
+            showNotification('✅ Job marked as completed successfully!', 'success');
+        } else {
+            showNotification(response.message || 'Failed to complete job', 'error');
+        }
+        
+        await loadGSJobs();
+        await loadGSJobSelect();
+        
+    } catch (error) {
+        console.error('Complete job error:', error);
+        showNotification(error.message || 'Failed to complete job', 'error');
     }
 }
 
@@ -1422,5 +1721,9 @@ window.downloadGSReportById = downloadGSReportById;
 window.downloadGSReport = downloadGSReport;
 window.submitGSReportToAdmin = submitGSReportToAdmin;
 window.validateGSCashPayment = validateGSCashPayment;
+window.confirmCustomerStart = confirmCustomerStart;
+window.startJob = startJob;
+window.confirmCustomerComplete = confirmCustomerComplete;
+window.completeJob = completeJob;
 
 console.log('✅ Staff page loaded successfully with StaffJobManager!');

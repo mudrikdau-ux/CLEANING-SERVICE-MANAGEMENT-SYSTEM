@@ -1009,63 +1009,88 @@
             </div>
 
             <!-- REPORTS SECTION -->
-            <div id="reportsSection" class="admin-section">
-                <div class="section-header">
-                    <h2><i class="bi bi-graph-up"></i> Reports &amp; Analytics</h2>
-                    <p>View system statistics and generate professional reports (Revenue in TZS)</p>
-                </div>
+<div id="reportsSection" class="admin-section">
+    <div class="section-header">
+        <h2><i class="bi bi-graph-up"></i> Reports &amp; Analytics</h2>
+        <p>View system statistics and generate professional reports (Revenue in TZS)</p>
+    </div>
 
-                <div class="form-card mb-4">
-                    <h5><i class="bi bi-file-earmark-bar-graph me-2"></i>Generate Report</h5>
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-2">
-                            <label class="form-label field-label">From Date</label>
-                            <input type="date" id="reportFromDate" class="form-control">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label field-label">To Date</label>
-                            <input type="date" id="reportToDate" class="form-control">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label field-label">Report Type</label>
-                            <select id="reportType" class="form-select">
-                                <option value="comprehensive">Comprehensive</option>
-                                <option value="booking">Bookings</option>
-                                <option value="revenue">Revenue</option>
-                                <option value="staff_report">Staff Performance</option>
-                                <option value="contractors">Contractors</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label field-label">Format</label>
-                            <select id="reportFormat" class="form-select">
-                                <option value="detailed">Detailed Report</option>
-                                <option value="summary">Summary</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button onclick="generateReport()" class="btn btn-primary w-100">
-                                <i class="bi bi-graph-up me-1"></i>Generate
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="chart-card">
-                            <h5>Booking Trends</h5>
-                            <canvas id="bookingChart" style="max-height: 300px;"></canvas>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="chart-card">
-                            <h5>Revenue Overview (TZS)</h5>
-                            <canvas id="revenueChart" style="max-height: 300px;"></canvas>
-                        </div>
-                    </div>
-                </div>
+    <!-- Report Generator Form -->
+    <div class="form-card mb-4">
+        <h5><i class="bi bi-file-earmark-bar-graph me-2"></i>Generate Report</h5>
+        <div class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label field-label">From Date</label>
+                <input type="date" id="reportFromDate" class="form-control">
             </div>
+            <div class="col-md-2">
+                <label class="form-label field-label">To Date</label>
+                <input type="date" id="reportToDate" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label field-label">Report Type</label>
+                <select id="reportType" class="form-select">
+                    <option value="comprehensive">Comprehensive</option>
+                    <option value="booking">Booking</option>
+                    <option value="revenue">Revenue</option>
+                    <option value="contractors">Contractors</option>
+                    <option value="staff_report">Staff Report</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label field-label">Format</label>
+                <select id="reportFormat" class="form-select">
+                    <option value="detailed">Detailed</option>
+                    <option value="summary">Summary</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button onclick="generateReport()" class="btn btn-primary w-100">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>Generate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report History -->
+    <div class="form-card mb-4">
+        <h5><i class="bi bi-clock-history me-2"></i>Report History</h5>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Type</th>
+                        <th>Period</th>
+                        <th>Generated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="reportHistoryList">
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No reports generated yet</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h5>Booking Trends</h5>
+                <canvas id="bookingChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h5>Revenue Overview (TZS)</h5>
+                <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- SETTINGS SECTION -->
             <div id="settingsSection" class="admin-section">

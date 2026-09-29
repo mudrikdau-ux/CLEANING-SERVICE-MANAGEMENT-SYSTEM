@@ -8,6 +8,9 @@ let authCheckComplete = false;
 let retryCount = 0;
 const MAX_RETRIES = 3;
 
+// Global variable to store all bookings
+let allBookings = [];
+
 // ----------------------------- AUTHENTICATION CHECK -----------------------------
 
 async function checkAuthAndLoad() {
@@ -221,6 +224,7 @@ function escapeHtml(str) {
 function formatPrice(price) {
     if (!price) return 'TZS 0';
     const num = typeof price === 'number' ? price : parseFloat(price);
+    if (isNaN(num)) return 'TZS 0';
     return `TZS ${num.toLocaleString()}`;
 }
 
@@ -299,76 +303,179 @@ function openGlobalModal(title, bodyHtml, footerHtml = '') {
     return null;
 }
 
-// ----------------------------- STAFF DETAILS MODAL -----------------------------
+// ==================== STAFF DETAILS MODAL - COMPLETELY FIXED ====================
 
 async function openStaffModal(bookingId) {
     try {
-        const response = await API.bookings.getById(bookingId);
-        if (!response || !response.booking) {
-            showNotification('Could not load booking details', 'danger');
+        console.log('📋 Opening staff modal for booking:', bookingId);
+        
+        // ✅ FIX: Find the booking in the already loaded data
+        const booking = allBookings.find(b => b.id === bookingId);
+        
+        if (!booking) {
+            showNotification('Booking not found', 'danger');
             return;
         }
         
-        const b = response.booking;
-        const staff = b.assigned_staff;
+        console.log('📋 Booking found:', booking);
         
         const modalBody = document.getElementById('staffModalBody');
-        if (!modalBody) return;
+        if (!modalBody) {
+            console.error('Modal body element not found');
+            return;
+        }
         
-        const staffInfo = staff ? `
-            <div class="staff-profile-banner">
-                <div class="staff-avatar-wrap">
-                    <div class="staff-avatar-placeholder">${staff.first_name?.charAt(0) || 'S'}${staff.last_name?.charAt(0) || ''}</div>
-                    <span class="staff-online-dot"></span>
-                </div>
-                <div class="staff-name">${escapeHtml(staff.full_name || 'Staff Member')}</div>
-                <div class="staff-role">${escapeHtml(staff.staff_type || 'Cleaning Professional')}</div>
-            </div>
-            <div class="staff-details-body">
-                <div class="staff-info-card">
-                    <div class="staff-info-row">
-                        <div class="staff-info-icon icon-blue"><i class="bi bi-telephone-fill"></i></div>
-                        <div><span class="staff-info-label">Phone</span><span class="staff-info-value">${escapeHtml(staff.phone || 'N/A')}</span></div>
-                    </div>
-                    <div class="staff-info-row">
-                        <div class="staff-info-icon icon-green"><i class="bi bi-envelope-fill"></i></div>
-                        <div><span class="staff-info-label">Email</span><span class="staff-info-value">${escapeHtml(staff.email || 'N/A')}</span></div>
-                    </div>
-                    <div class="staff-info-row">
-                        <div class="staff-info-icon icon-orange"><i class="bi bi-calendar3"></i></div>
-                        <div><span class="staff-info-label">Service Date</span><span class="staff-info-value">${formatDate(b.schedule?.date)} at ${b.schedule?.time || 'TBD'}</span></div>
-                    </div>
-                </div>
-            </div>
-        ` : `
-            <div class="staff-profile-banner">
-                <div class="staff-avatar-wrap">
-                    <div class="staff-avatar-placeholder">CS</div>
-                </div>
-                <div class="staff-name">Staff Assignment Pending</div>
-                <div class="staff-role">A staff member will be assigned soon</div>
-            </div>
-            <div class="staff-details-body">
-                <div class="staff-info-card">
-                    <div class="staff-info-row">
-                        <div class="staff-info-icon icon-orange"><i class="bi bi-calendar3"></i></div>
-                        <div><span class="staff-info-label">Service Date</span><span class="staff-info-value">${formatDate(b.schedule?.date)} at ${b.schedule?.time || 'TBD'}</span></div>
-                    </div>
-                </div>
-            </div>
-        `;
+        const serviceName = booking.service?.name || 'Cleaning Service';
+        const staff = booking.assigned_staff;
         
-        const isCompleted = b.status === 'completed';
+        let staffInfo = '';
+        
+        if (staff && staff.id) {
+            const staffName = staff.full_name || `${staff.first_name || ''} ${staff.last_name || ''}`.trim() || 'Staff Member';
+            const staffType = staff.staff_type || 'Cleaning Professional';
+            const staffPhone = staff.phone || 'N/A';
+            const staffEmail = staff.email || 'N/A';
+            
+            staffInfo = `
+                <div class="staff-profile-banner">
+                    <div class="staff-avatar-wrap">
+                        <div class="staff-avatar-placeholder">${staffName.charAt(0) || 'S'}</div>
+                        <span class="staff-online-dot"></span>
+                    </div>
+                    <div class="staff-name">${escapeHtml(staffName)}</div>
+                    <div class="staff-role">${escapeHtml(staffType)}</div>
+                </div>
+                <div class="staff-details-body">
+                    <div class="staff-info-card">
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-blue"><i class="bi bi-telephone-fill"></i></div>
+                            <div>
+                                <span class="staff-info-label">Phone</span>
+                                <span class="staff-info-value">${escapeHtml(staffPhone)}</span>
+                            </div>
+                        </div>
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-green"><i class="bi bi-envelope-fill"></i></div>
+                            <div>
+                                <span class="staff-info-label">Email</span>
+                                <span class="staff-info-value">${escapeHtml(staffEmail)}</span>
+                            </div>
+                        </div>
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-orange"><i class="bi bi-calendar3"></i></div>
+                            <div>
+                                <span class="staff-info-label">Service Date</span>
+                                <span class="staff-info-value">${formatDate(booking.schedule?.date)} at ${booking.schedule?.time || 'TBD'}</span>
+                            </div>
+                        </div>
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-purple"><i class="bi bi-house-fill"></i></div>
+                            <div>
+                                <span class="staff-info-label">Address</span>
+                                <span class="staff-info-value">${escapeHtml(booking.location?.address || booking.address || 'N/A')}</span>
+                            </div>
+                        </div>
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-gold"><i class="bi bi-cash-stack"></i></div>
+                            <div>
+                                <span class="staff-info-label">Total Price</span>
+                                <span class="staff-info-value" style="font-weight:700;color:#059669;">${formatPrice(booking.payment?.display_price || booking.total_price || 0)}</span>
+                            </div>
+                        </div>
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-red"><i class="bi bi-credit-card"></i></div>
+                            <div>
+                                <span class="staff-info-label">Payment Status</span>
+                                <span class="staff-info-value">${booking.payment?.payment_status === 'paid' ? '✅ Paid' : '❌ Unpaid'}</span>
+                            </div>
+                        </div>
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-info"><i class="bi bi-info-circle"></i></div>
+                            <div>
+                                <span class="staff-info-label">Booking Status</span>
+                                <span class="staff-info-value"><span class="status-badge-large ${booking.status || 'pending'}">${booking.status_label || booking.status || 'Pending'}</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            staffInfo = `
+                <div class="staff-profile-banner">
+                    <div class="staff-avatar-wrap">
+                        <div class="staff-avatar-placeholder">CS</div>
+                    </div>
+                    <div class="staff-name">${escapeHtml(serviceName)}</div>
+                    <div class="staff-role">Booking #${booking.id}</div>
+                </div>
+                <div class="staff-details-body">
+                    <div class="staff-info-card">
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-orange"><i class="bi bi-calendar3"></i></div>
+                            <div>
+                                <span class="staff-info-label">Service Date</span>
+                                <span class="staff-info-value">${formatDate(booking.schedule?.date)} at ${booking.schedule?.time || 'TBD'}</span>
+                            </div>
+                        </div>
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-purple"><i class="bi bi-house-fill"></i></div>
+                            <div>
+                                <span class="staff-info-label">Address</span>
+                                <span class="staff-info-value">${escapeHtml(booking.location?.address || booking.address || 'N/A')}</span>
+                            </div>
+                        </div>
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-gold"><i class="bi bi-cash-stack"></i></div>
+                            <div>
+                                <span class="staff-info-label">Total Price</span>
+                                <span class="staff-info-value" style="font-weight:700;color:#059669;">${formatPrice(booking.payment?.display_price || booking.total_price || 0)}</span>
+                            </div>
+                        </div>
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-red"><i class="bi bi-credit-card"></i></div>
+                            <div>
+                                <span class="staff-info-label">Payment Status</span>
+                                <span class="staff-info-value">${booking.payment?.payment_status === 'paid' ? '✅ Paid' : '❌ Unpaid'}</span>
+                            </div>
+                        </div>
+                        <div class="staff-info-row">
+                            <div class="staff-info-icon icon-info"><i class="bi bi-info-circle"></i></div>
+                            <div>
+                                <span class="staff-info-label">Booking Status</span>
+                                <span class="staff-info-value"><span class="status-badge-large ${booking.status || 'pending'}">${booking.status_label || booking.status || 'Pending'}</span></span>
+                            </div>
+                        </div>
+                        <div class="staff-info-row" style="border-bottom: none; padding-bottom: 0;">
+                            <div class="staff-info-icon icon-warning"><i class="bi bi-clock-history"></i></div>
+                            <div>
+                                <span class="staff-info-label">Staff Assignment</span>
+                                <span class="staff-info-value" style="color: #f59e0b;">A staff member will be assigned soon</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        const isCompleted = booking.status === 'completed';
         
         let actionHtml = '';
         if (isCompleted) {
-            actionHtml = `<div class="staff-modal-actions"><button class="btn-rate-service" id="openRatingModalBtn" data-booking-id="${bookingId}"><i class="bi bi-star-half"></i> Rate This Service</button></div>`;
+            actionHtml = `
+                <div class="staff-modal-actions">
+                    <button class="btn-rate-service" id="openRatingModalBtn" data-booking-id="${booking.id}">
+                        <i class="bi bi-star-half"></i> Rate This Service
+                    </button>
+                </div>
+            `;
         }
         
         modalBody.innerHTML = staffInfo + actionHtml;
         
         const labelEl = document.getElementById('staffModalLabel');
-        if (labelEl) labelEl.innerHTML = `<i class="bi bi-person-badge me-2"></i>${escapeHtml(b.service?.name || 'Service Details')}`;
+        if (labelEl) {
+            labelEl.innerHTML = `<i class="bi bi-person-badge me-2"></i>${escapeHtml(serviceName)}`;
+        }
         
         const staffModal = new bootstrap.Modal(document.getElementById('staffModal'));
         staffModal.show();
@@ -377,13 +484,13 @@ async function openStaffModal(bookingId) {
         if (rateBtn) {
             rateBtn.addEventListener('click', () => {
                 staffModal.hide();
-                openRatingModal(bookingId);
+                openRatingModal(booking.id);
             });
         }
         
     } catch (error) {
         console.error('Open staff modal error:', error);
-        showNotification('Could not load booking details', 'danger');
+        showNotification('Could not load booking details: ' + error.message, 'danger');
     }
 }
 
@@ -505,7 +612,7 @@ async function openRatingModal(bookingId) {
     }
 }
 
-// ==================== FIXED: BOOKINGS LOAD FUNCTION ====================
+// ==================== BOOKINGS LOAD FUNCTION ====================
 
 async function loadBookings(type) {
     const bookingListEl = document.getElementById('bookingList');
@@ -557,7 +664,7 @@ async function loadBookings(type) {
             const serviceName = booking.service?.name || 'Cleaning Service';
             const serviceDate = booking.schedule?.date || 'Date TBD';
             
-            // ✅ FIX 1: Get correct address
+            // Get correct address
             let address = 'Address not provided';
             if (booking.location?.address) {
                 address = booking.location.address;
@@ -571,10 +678,8 @@ async function loadBookings(type) {
                 address = booking.city;
             }
             
-            // ✅ FIX 2: Get correct price - USE THE FLAT FIELDS
+            // Get correct price
             let price = 0;
-            
-            // Check all possible price locations - PRIORITIZE final_price from admin estimation
             if (booking.final_price && parseFloat(booking.final_price) > 0) {
                 price = booking.final_price;
             } else if (booking.total_price && parseFloat(booking.total_price) > 0) {
@@ -590,9 +695,6 @@ async function loadBookings(type) {
             } else if (booking.estimation?.final_total && parseFloat(booking.estimation.final_total) > 0) {
                 price = booking.estimation.final_total;
             }
-            
-            // Debug log to see what's happening
-            console.log(`Booking #${booking.id} - Price: ${price}, final_price: ${booking.final_price}, total_price: ${booking.total_price}`);
             
             const formattedPrice = formatPrice(price);
             
@@ -659,7 +761,7 @@ async function loadBookings(type) {
     }
 }
 
-// ==================== COMPLETE PAYMENT FLOW ====================
+// ==================== PAYMENT FUNCTIONS ====================
 
 // Store payment state
 let paymentState = {
@@ -1100,29 +1202,6 @@ async function processPayment(modal) {
         
         if (result && result.booking_updated) {
             showNotification('✅ Payment successful! Booking status updated to PAID.', 'success');
-            
-            try {
-                await API.contact.submit({
-                    full_name: 'Payment Notification',
-                    email: 'admin@cleanspark.co.tz',
-                    phone: '0000000000',
-                    service_type: 'Payment',
-                    subject: `Payment Received - Booking #${paymentState.bookingId}`,
-                    message: `Payment of ${paymentState.amount} has been received for booking #${paymentState.bookingId}. Status has been updated to PAID.`,
-                    subscribe: false
-                });
-                console.log('✅ Admin notified about payment');
-            } catch (err) {
-                console.log('Admin notification failed:', err.message);
-            }
-            
-            if (window.socket) {
-                window.socket.emit('payment_updated', {
-                    booking_id: paymentState.bookingId,
-                    payment_status: 'paid',
-                    amount: paymentState.amount
-                });
-            }
         } else {
             showNotification('✅ Payment successful!', 'success');
         }
@@ -1223,7 +1302,7 @@ function openPaymentDetailsModal(payment) {
     });
 }
 
-// ==================== FIXED: INVOICES LOAD FUNCTION ====================
+// ==================== INVOICES LOAD FUNCTION ====================
 
 async function loadInvoices() {
     const invoiceListEl = document.getElementById('invoiceList');
@@ -1347,7 +1426,7 @@ async function loadInvoices() {
             });
         });
         
-        // ✅ FIX: Pay Now button in invoice menu - passes booking_id correctly
+        // Pay Now button handler
         invoiceListEl.querySelectorAll('.btn-pay-invoice').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -1356,7 +1435,6 @@ async function loadInvoices() {
                 const amount = btn.dataset.amount;
                 const invoice = invoices.find(i => i.id == invoiceId);
                 if (invoice) {
-                    // ✅ FIX: Pass the actual booking_id from the invoice
                     const actualBookingId = invoice.booking_id || bookingId;
                     console.log('💰 Pay Invoice clicked:', { invoiceId, bookingId: actualBookingId, amount });
                     showPaymentMethodsWithInvoice(formatPrice(amount), actualBookingId, invoiceId);
@@ -1370,10 +1448,9 @@ async function loadInvoices() {
     }
 }
 
-// ==================== SHOW PAYMENT METHODS WITH INVOICE (FIXED) ====================
+// ==================== SHOW PAYMENT METHODS WITH INVOICE ====================
 
 function showPaymentMethodsWithInvoice(amount, bookingId, invoiceId) {
-    // ✅ FIX: Ensure bookingId is properly handled - convert 'undefined' string to null
     let safeBookingId = bookingId;
     if (safeBookingId === 'undefined' || safeBookingId === 'null' || safeBookingId === undefined || safeBookingId === null) {
         safeBookingId = null;
@@ -1589,7 +1666,7 @@ function showPaymentMethodsWithInvoice(amount, bookingId, invoiceId) {
     }
 }
 
-// ==================== PROCESS INVOICE PAYMENT (FIXED) ====================
+// ==================== PROCESS INVOICE PAYMENT ====================
 
 async function processInvoicePayment(modal) {
     try {
@@ -1603,7 +1680,6 @@ async function processInvoicePayment(modal) {
         
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // ✅ FIX: Get booking_id from the invoice
         let bookingId = paymentState.bookingId;
         
         // If bookingId is undefined or null, try to get it from the invoice
@@ -1642,7 +1718,7 @@ async function processInvoicePayment(modal) {
             }
         }
         
-        // If still no bookingId, use null (allow NULL in database)
+        // If still no bookingId, use null
         if (!bookingId || bookingId === 'undefined' || bookingId === 'null' || isNaN(bookingId)) {
             bookingId = null;
             console.log('⚠️ No valid booking_id found, using NULL');
@@ -1670,7 +1746,6 @@ async function processInvoicePayment(modal) {
                 reference: paymentState.accountNumber || `REF-${Date.now()}`
             });
         } else {
-            // If no booking_id, create payment without booking_id
             const amountNum = parseFloat(paymentState.amount.replace(/[^0-9.-]/g, ''));
             result = await API.payments.makePayment({
                 booking_id: null,
@@ -2117,3 +2192,10 @@ window.logoutUser = logoutUser;
 window.openChatbot = openChatbot;
 window.renderPanel = renderPanel;
 window.redirectToLogin = redirectToLogin;
+window.loadBookings = loadBookings;
+window.loadInvoices = loadInvoices;
+window.loadOutstandingPayments = loadOutstandingPayments;
+window.loadPaymentHistory = loadPaymentHistory;
+window.openStaffModal = openStaffModal;
+window.openRatingModal = openRatingModal;
+window.submitFeedback = submitFeedback;

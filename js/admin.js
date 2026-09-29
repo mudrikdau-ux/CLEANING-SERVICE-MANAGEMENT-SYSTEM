@@ -517,6 +517,8 @@ async function loadStaff() {
     }
 }
 
+// admin.js - Add Staff
+
 async function addStaff() {
     var firstName = document.getElementById('staffFirstName') ? document.getElementById('staffFirstName').value.trim() : '';
     var lastName = document.getElementById('staffLastName') ? document.getElementById('staffLastName').value.trim() : '';
@@ -524,8 +526,7 @@ async function addStaff() {
     var staffType = document.getElementById('staffType') ? document.getElementById('staffType').value : 'normal';
     var phone = document.getElementById('staffPhone') ? document.getElementById('staffPhone').value.trim() : '';
     var password = document.getElementById('staffPass') ? document.getElementById('staffPass').value : '';
-    var supervisorSelect = document.getElementById('supervisorSelect');
-    var supervisorId = supervisorSelect ? supervisorSelect.value : '';
+    var supervisorId = document.getElementById('supervisorSelect') ? document.getElementById('supervisorSelect').value : '';
     
     if (!firstName || !lastName || !email || !password) {
         showNotification('Please fill in all required staff details', 'error');
@@ -556,13 +557,14 @@ async function addStaff() {
     formData.append('staff_type', staffType);
     formData.append('phone', phone);
     formData.append('password', password);
-    formData.append('general_supervisor_id', supervisorId || null);
+    formData.append('general_supervisor_id', supervisorId || '');  // ✅ Send empty string for null
     if (pendingStaffImage) {
         var blob = dataURLtoBlob(pendingStaffImage);
         formData.append('photo', blob, 'staff_photo.jpg');
     }
 
     try {
+        showNotification('Adding staff...', 'info');
         await API.adminStaff.add(formData);
         showNotification('Staff member added successfully!', 'success');
         
@@ -571,7 +573,7 @@ async function addStaff() {
         if (document.getElementById('staffEmail')) document.getElementById('staffEmail').value = '';
         if (document.getElementById('staffPhone')) document.getElementById('staffPhone').value = '';
         if (document.getElementById('staffPass')) document.getElementById('staffPass').value = '';
-        if (supervisorSelect) supervisorSelect.value = '';
+        if (document.getElementById('supervisorSelect')) document.getElementById('supervisorSelect').value = '';
         clearStaffImage();
         
         loadStaff();
@@ -646,6 +648,8 @@ async function openEditStaffModal(staffId) {
     }
 }
 
+// admin.js - Edit Staff Modal
+
 async function saveEditedStaff() {
     var staffId = parseInt(document.getElementById('editStaffId').value);
     var firstName = document.getElementById('editStaffFirstName').value.trim();
@@ -654,10 +658,7 @@ async function saveEditedStaff() {
     var staffType = document.getElementById('editStaffType').value;
     var phone = document.getElementById('editStaffPhone').value.trim();
     var newPass = document.getElementById('editStaffPassword').value;
-    
-    // SAFE: Get supervisor value with null check
-    var editSupervisorSelect = document.getElementById('editSupervisorSelect');
-    var supervisorId = editSupervisorSelect ? editSupervisorSelect.value : '';
+    var supervisorId = document.getElementById('editSupervisorSelect') ? document.getElementById('editSupervisorSelect').value : '';
     
     if (!firstName || !lastName || !email) {
         showNotification('Name and email are required', 'error');
@@ -681,7 +682,7 @@ async function saveEditedStaff() {
     formData.append('email', email);
     formData.append('staff_type', staffType);
     formData.append('phone', phone);
-    formData.append('general_supervisor_id', supervisorId || null);
+    formData.append('general_supervisor_id', supervisorId || '');  // ✅ Send empty string for null
     if (newPass) formData.append('password', newPass);
     if (pendingEditStaffImage && pendingEditStaffImage.startsWith('data:image')) {
         var blob = dataURLtoBlob(pendingEditStaffImage);
@@ -689,6 +690,7 @@ async function saveEditedStaff() {
     }
 
     try {
+        showNotification('Updating staff...', 'info');
         await API.adminStaff.update(staffId, formData);
         var modalEl = document.getElementById('editStaffModal');
         var bsModal = bootstrap.Modal.getInstance(modalEl);
@@ -1093,6 +1095,8 @@ async function loadRecentBookings() {
 }
 
 // ========== BOOKING FUNCTIONS ==========
+// admin.js - loadBookings function already fetches the latest status
+// The status will automatically show as 'in_progress' or 'completed'
 
 function getBookingStatusConfig(status) {
     var configs = {
@@ -2592,6 +2596,8 @@ function sendInvoiceToCustomer() {
 }
 
 // ========== MESSAGE FUNCTIONS ==========
+// admin.js - Updated message functions
+
 async function loadAllMessages() {
     try {
         var filters = {};
@@ -2616,36 +2622,51 @@ async function loadAllMessages() {
             for (var i = 0; i < messages.length; i++) {
                 var msg = messages[i];
                 var statusClass = msg.status === 'unread' ? 'bg-warning' : (msg.status === 'replied' ? 'bg-success' : 'bg-secondary');
-                var sourceBadge = '';
-                if (msg.source === 'supervisor') {
-                    sourceBadge = '<span class="badge bg-info me-1">Supervisor</span>';
-                } else if (msg.source === 'report') {
-                    sourceBadge = '<span class="badge bg-primary me-1">Report</span>';
-                } else {
-                    sourceBadge = '<span class="badge bg-secondary me-1">Customer</span>';
-                }
                 
-                html += '<tr><td class="align-middle"><strong>' + escapeHtml(msg.from) + '</strong><br><small>' + escapeHtml(msg.email) + '</small></td><td class="align-middle">' + sourceBadge + ' ' + escapeHtml(msg.subject) + '</td><td class="align-middle">' + escapeHtml(msg.preview || msg.message) + '</td><td class="align-middle">' + formatDate(msg.date) + '</td><td class="align-middle"><span class="badge ' + statusClass + '">' + (msg.status || 'unread') + '</span></td><td class="align-middle text-center"><button class="action-btn action-btn-view" onclick="viewMessage(' + msg.id + ')" title="View"><i class="bi bi-eye-fill"></i></button><button class="action-btn action-btn-reply" onclick="openReplyModal(' + msg.id + ')" title="Reply"><i class="bi bi-reply-fill"></i></button></td></tr>';
+                html += '<tr>' +
+                    '<td class="align-middle"><strong>' + escapeHtml(msg.from) + '</strong><br><small>' + escapeHtml(msg.email) + '</small></td>' +
+                    '<td class="align-middle">' + escapeHtml(msg.subject) + '</td>' +
+                    '<td class="align-middle">' + escapeHtml(msg.preview || msg.message) + '</td>' +
+                    '<td class="align-middle">' + formatDate(msg.date) + '</td>' +
+                    '<td class="align-middle"><span class="badge ' + statusClass + '">' + (msg.status || 'unread') + '</span></td>' +
+                    '<td class="align-middle text-center">' +
+                        '<button class="action-btn action-btn-view" onclick="viewMessage(' + msg.id + ')" title="View"><i class="bi bi-eye-fill"></i></button>' +
+                        '<button class="action-btn action-btn-reply" onclick="openReplyModal(' + msg.id + ')" title="Reply"><i class="bi bi-reply-fill"></i></button>' +
+                    '</td>' +
+                '</tr>';
             }
         }
         var messageList = document.getElementById('messageList');
         if (messageList) messageList.innerHTML = html;
     } catch (error) {
         console.error('Load messages error:', error);
-        showNotification('Failed to load messages', 'error');
+        showNotification('Failed to load messages: ' + error.message, 'error');
     }
 }
 
 async function viewMessage(messageId) {
     currentMessageId = messageId;
+    
+    // Show loading state
+    var bodyEl = document.getElementById('viewMessageBody');
+    if (bodyEl) {
+        bodyEl.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="mt-2">Loading message details...</p></div>';
+    }
+    
     try {
         const result = await API.contact.getById(messageId);
         var msg = result.inquiry;
-        if (!msg) return;
         
-        var bodyEl = document.getElementById('viewMessageBody');
+        if (!msg) {
+            if (bodyEl) {
+                bodyEl.innerHTML = '<div class="text-center text-danger py-4">Message not found</div>';
+            }
+            return;
+        }
+        
         if (bodyEl) {
-            bodyEl.innerHTML = '<div class="message-detail-row"><span class="message-detail-label">From</span><span class="message-detail-value"><strong>' + escapeHtml(msg.from) + '</strong></span></div>' +
+            bodyEl.innerHTML = 
+                '<div class="message-detail-row"><span class="message-detail-label">From</span><span class="message-detail-value"><strong>' + escapeHtml(msg.from) + '</strong></span></div>' +
                 '<div class="message-detail-row"><span class="message-detail-label">Type</span><span class="message-detail-value">' + (msg.type || 'Customer') + '</span></div>' +
                 '<div class="message-detail-row"><span class="message-detail-label">Email</span><span class="message-detail-value">' + escapeHtml(msg.email) + '</span></div>' +
                 '<div class="message-detail-row"><span class="message-detail-label">Subject</span><span class="message-detail-value">' + escapeHtml(msg.subject) + '</span></div>' +
@@ -2655,27 +2676,55 @@ async function viewMessage(messageId) {
         }
         
         var modal = document.getElementById('viewMessageModal');
-        if (modal) new bootstrap.Modal(modal).show();
+        if (modal) {
+            var bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        }
     } catch (error) {
-        showNotification(error.message || 'Failed to load message', 'error');
+        console.error('View message error:', error);
+        if (bodyEl) {
+            bodyEl.innerHTML = '<div class="text-center text-danger py-4">Failed to load message: ' + escapeHtml(error.message) + '</div>';
+        }
+        showNotification('Failed to load message: ' + error.message, 'error');
     }
 }
 
 function openReplyModal(messageId) {
     currentMessageId = messageId;
+    
     var originalEl = document.getElementById('replyMessageOriginal');
-    if (originalEl) originalEl.innerHTML = '<p>Loading message details...</p>';
+    if (originalEl) {
+        originalEl.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary"></div> Loading...</div>';
+    }
+    
     var textarea = document.getElementById('replyMessageText');
     if (textarea) textarea.value = '';
-    var modal = document.getElementById('replyMessageModal');
-    if (modal) new bootstrap.Modal(modal).show();
     
-    API.contact.getById(messageId).then(function(result) {
-        var msg = result.inquiry;
-        if (originalEl) {
-            originalEl.innerHTML = '<strong>From ' + escapeHtml(msg.from) + ':</strong><div style="font-size:12px;margin-top:4px;">' + escapeHtml(msg.message.substring(0, 200)) + '</div>';
-        }
-    }).catch(console.error);
+    var modal = document.getElementById('replyMessageModal');
+    if (modal) {
+        var bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+    
+    // Load the message details
+    API.contact.getById(messageId)
+        .then(function(result) {
+            var msg = result.inquiry;
+            if (originalEl && msg) {
+                originalEl.innerHTML = 
+                    '<strong>From ' + escapeHtml(msg.from) + ':</strong>' +
+                    '<div style="font-size:12px;margin-top:4px;color:var(--text-muted);">' + 
+                    escapeHtml(msg.message.substring(0, 200)) + 
+                    (msg.message.length > 200 ? '...' : '') + 
+                    '</div>';
+            }
+        })
+        .catch(function(error) {
+            console.error('Load message for reply error:', error);
+            if (originalEl) {
+                originalEl.innerHTML = '<div class="text-danger">Failed to load message</div>';
+            }
+        });
 }
 
 async function sendReply() {
@@ -2686,10 +2735,13 @@ async function sendReply() {
     }
     
     try {
+        showNotification('Sending reply...', 'info');
         await API.contact.reply(currentMessageId, replyText);
+        
         var modalEl = document.getElementById('replyMessageModal');
         var bsModal = bootstrap.Modal.getInstance(modalEl);
         if (bsModal) bsModal.hide();
+        
         loadAllMessages();
         showNotification('Reply sent successfully!', 'success');
     } catch (error) {
@@ -3326,6 +3378,7 @@ async function saveSettings() {
 }
 
 // ========== REPORT FUNCTIONS ==========
+
 async function loadReportsHistory() {
     try {
         const result = await API.reports.getHistory();
@@ -3336,16 +3389,27 @@ async function loadReportsHistory() {
         } else {
             for (var i = 0; i < reportsList.length; i++) {
                 var r = reportsList[i];
-                html += '<tr><td class="align-middle"><strong>#' + escapeHtml(r.id) + '</strong></td><td class="align-middle">' + escapeHtml(r.report_type) + '</td><td class="align-middle">' + formatDate(r.date_range.from) + ' — ' + formatDate(r.date_range.to) + '</td><td class="align-middle">' + formatDate(r.created_at) + '</td><td class="align-middle text-center">' +
-                    '<button class="action-btn action-btn-download" onclick="downloadReport(' + r.id + ')" title="Download PDF"><i class="bi bi-file-earmark-pdf"></i></button>' +
-                    '<button class="action-btn action-btn-reply" onclick="shareReportViaEmail(' + r.id + ')" title="Share via Email"><i class="bi bi-share-fill"></i></button>' +
-                    '</td></tr>';
+                var reportTypeLabel = r.report_type ? r.report_type.replace(/_/g, ' ').toUpperCase() : 'Unknown';
+                html += '<tr>' +
+                    '<td class="align-middle"><strong>#' + escapeHtml(r.id) + '</strong></td>' +
+                    '<td class="align-middle"><span class="badge bg-primary">' + escapeHtml(reportTypeLabel) + '</span></td>' +
+                    '<td class="align-middle">' + formatDate(r.date_range.from) + ' — ' + formatDate(r.date_range.to) + '</td>' +
+                    '<td class="align-middle">' + formatDateTime(r.created_at) + '</td>' +
+                    '<td class="align-middle text-center">' +
+                        '<button class="action-btn action-btn-download" onclick="downloadReport(' + r.id + ')" title="Download PDF"><i class="bi bi-file-earmark-pdf"></i></button>' +
+                        '<button class="action-btn action-btn-reply" onclick="shareReportViaEmail(' + r.id + ')" title="Share via Email"><i class="bi bi-share-fill"></i></button>' +
+                    '</td>' +
+                '</tr>';
             }
         }
         var reportHistoryList = document.getElementById('reportHistoryList');
         if (reportHistoryList) reportHistoryList.innerHTML = html;
     } catch (error) {
         console.error('Load reports history error:', error);
+        var reportHistoryList = document.getElementById('reportHistoryList');
+        if (reportHistoryList) {
+            reportHistoryList.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Failed to load reports history</td></tr>';
+        }
     }
 }
 
@@ -3360,8 +3424,23 @@ async function generateReport() {
         return;
     }
     
+    // Validate date range
+    if (new Date(toDate) < new Date(fromDate)) {
+        showNotification('End date must be after start date', 'error');
+        return;
+    }
+    
+    // Show loading state
+    var generateBtn = document.getElementById('generateReportBtn');
+    if (generateBtn) {
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Generating...';
+    }
+    
     try {
+        console.log('📊 Generating report with:', { fromDate, toDate, reportType, format });
         showNotification('Generating report...', 'info');
+        
         const result = await API.reports.generate({
             date_from: fromDate,
             date_to: toDate,
@@ -3369,14 +3448,27 @@ async function generateReport() {
             format: format
         });
         
+        console.log('✅ Report generated:', result);
         showNotification('Report generated successfully!', 'success');
         loadReportsHistory();
         
         if (result.report && result.report.download_url) {
             showNotification('Report ready. Use the download button to save it.', 'success');
         }
+        
+        // Update charts with new data
+        if (result.report && result.report.data) {
+            updateChartsWithData(result.report.data);
+        }
+        
     } catch (error) {
-        showNotification(error.message || 'Failed to generate report', 'error');
+        console.error('❌ Generate report error:', error);
+        showNotification(error.message || 'Failed to generate report. Please check console for details.', 'error');
+    } finally {
+        if (generateBtn) {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="bi bi-file-earmark-pdf me-2"></i> Generate Report';
+        }
     }
 }
 
@@ -3431,7 +3523,13 @@ async function shareReportViaEmail(reportId) {
     const email = prompt('Enter the email address to share this report with:');
     if (!email) return;
     
-    const message = prompt('Optional: Add a message to include with the report:');
+    // Validate email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showNotification('Please enter a valid email address', 'error');
+        return;
+    }
+    
+    const message = prompt('Optional: Add a message to include with the report:', '');
     
     try {
         showNotification('Sharing report...', 'info');
@@ -3446,6 +3544,50 @@ async function shareReportViaEmail(reportId) {
 
 function openReportGenerator() {
     showSection('reports');
+    // Refresh charts when switching to reports section
+    setTimeout(function() {
+        refreshCharts();
+    }, 300);
+}
+
+async function refreshCharts() {
+    try {
+        const result = await API.adminStats.getChartData('monthly');
+        if (result.success && result.data) {
+            updateChartsWithData(result.data);
+        }
+    } catch (error) {
+        console.error('Refresh charts error:', error);
+    }
+}
+
+function updateChartsWithData(data) {
+    // Update booking chart if data exists
+    if (data && data.booking_trends) {
+        updateBookingChart(data.booking_trends);
+    }
+    // Update revenue chart if data exists
+    if (data && data.revenue_trends) {
+        updateRevenueChart(data.revenue_trends);
+    }
+}
+
+function updateBookingChart(data) {
+    if (!bookingChart || !data) return;
+    var labels = data.map(function(d) { return d.label || d.date || d.month; });
+    var values = data.map(function(d) { return d.bookings || d.count || 0; });
+    bookingChart.data.labels = labels;
+    bookingChart.data.datasets[0].data = values;
+    bookingChart.update();
+}
+
+function updateRevenueChart(data) {
+    if (!revenueChart || !data) return;
+    var labels = data.map(function(d) { return d.label || d.date || d.month; });
+    var values = data.map(function(d) { return d.revenue || d.total || 0; });
+    revenueChart.data.labels = labels;
+    revenueChart.data.datasets[0].data = values;
+    revenueChart.update();
 }
 
 function initCharts() {
@@ -3458,23 +3600,124 @@ function initCharts() {
             type: 'line',
             data: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{ label: 'Bookings', data: [0, 0, 0, 0, 0, 0], borderColor: '#1a56db', backgroundColor: 'rgba(26,86,219,0.08)', tension: 0.4, fill: true }]
+                datasets: [{
+                    label: 'Bookings',
+                    data: [0, 0, 0, 0, 0, 0],
+                    borderColor: '#1a56db',
+                    backgroundColor: 'rgba(26,86,219,0.08)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#1a56db',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
             },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
         });
     }
+    
     if (ctx2 && typeof Chart !== 'undefined') {
         if (revenueChart) revenueChart.destroy();
         revenueChart = new Chart(ctx2, {
             type: 'bar',
             data: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{ label: 'Revenue (TZS)', data: [0, 0, 0, 0, 0, 0], backgroundColor: 'rgba(124,58,237,0.8)', borderRadius: 6 }]
+                datasets: [{
+                    label: 'Revenue (TZS)',
+                    data: [0, 0, 0, 0, 0, 0],
+                    backgroundColor: 'rgba(124,58,237,0.8)',
+                    borderColor: 'rgba(124,58,237,1)',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    hoverBackgroundColor: 'rgba(124,58,237,1)'
+                }]
             },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { callback: function(val) { return 'TZS ' + (val/1000).toFixed(0) + 'K'; } } } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(val) {
+                                if (val >= 1000000) return 'TZS ' + (val/1000000).toFixed(1) + 'M';
+                                if (val >= 1000) return 'TZS ' + (val/1000).toFixed(0) + 'K';
+                                return 'TZS ' + val;
+                            }
+                        }
+                    }
+                }
+            }
         });
     }
 }
+
+// ========== SET DEFAULT DATES FOR REPORTS ==========
+
+function setDefaultReportDates() {
+    var fromDateInput = document.getElementById('reportFromDate');
+    var toDateInput = document.getElementById('reportToDate');
+    
+    if (fromDateInput) {
+        // Set to 30 days ago
+        var fromDate = new Date();
+        fromDate.setDate(fromDate.getDate() - 30);
+        fromDateInput.value = fromDate.toISOString().split('T')[0];
+    }
+    
+    if (toDateInput) {
+        // Set to today
+        var toDate = new Date();
+        toDateInput.value = toDate.toISOString().split('T')[0];
+    }
+}
+
+// ========== EXPOSE FUNCTIONS GLOBALLY ==========
+
+// Report functions
+window.loadReportsHistory = loadReportsHistory;
+window.generateReport = generateReport;
+window.downloadReport = downloadReport;
+window.shareReportViaEmail = shareReportViaEmail;
+window.openReportGenerator = openReportGenerator;
+window.refreshCharts = refreshCharts;
+window.updateChartsWithData = updateChartsWithData;
+window.updateBookingChart = updateBookingChart;
+window.updateRevenueChart = updateRevenueChart;
+window.initCharts = initCharts;
+window.setDefaultReportDates = setDefaultReportDates;
+
+console.log('✅ Report functions loaded successfully');
 
 // ========== NOTIFICATION FUNCTIONS ==========
 function updateNotificationBadge() {

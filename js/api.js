@@ -525,11 +525,17 @@ const API = (function() {
                 method: 'PUT',
                 body: JSON.stringify({ confirmed, notes })
             }),
-        markJobCompleted: (assignmentId, notes = '') => 
-            request(`/general-supervisor/jobs/${assignmentId}/complete`, {
+        markJobCompleted: (assignmentId, notes = '') => {
+            // Ensure assignmentId is a valid number
+            const id = parseInt(assignmentId);
+            if (isNaN(id) || id <= 0) {
+                return Promise.reject(new Error('Invalid assignment ID'));
+            }
+            return request(`/general-supervisor/jobs/${id}/complete`, {
                 method: 'PUT',
-                body: JSON.stringify({ notes })
-            }),
+                body: JSON.stringify({ notes: notes || 'Job completed by supervisor' })
+            });
+        },
         
         // Notifications
         getNotifications: (unreadOnly = false) => 
